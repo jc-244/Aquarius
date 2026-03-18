@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tutor Agent Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Caveat:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-shell">
+        <div class="ambient ambient-a"></div>
+        <div class="ambient ambient-b"></div>
+
+        <header class="topbar glass">
+            <div class="brand">
+                <span class="brand-dot"></span>
+                <div>
+                    <h1>Tutor Agent</h1>
+                    <p>Visual Learning Companion</p>
+                </div>
+            </div>
+            <span class="badge">Image + Explanation</span>
+        </header>
+
+        <section class="hero">
+            <p class="kicker">Learn faster with visuals</p>
+            <h2>把抽象概念变成<br>可理解的图文讲解</h2>
+            <p class="subtitle">输入一个主题，我会返回「文字解释 + 教学配图」，用于课堂演示或自学复习。</p>
+
+            <div class="prompt-grid">
+                <button class="prompt-chip" data-prompt="讲解 BFS 原理并配图">BFS 原理</button>
+                <button class="prompt-chip" data-prompt="讲解 DFS 原理并配图">DFS 原理</button>
+                <button class="prompt-chip" data-prompt="讲解最短路径算法并配图">最短路径</button>
+                <button class="prompt-chip" data-prompt="讲解傅立叶变换原理并配图">傅立叶变换</button>
+            </div>
+        </section>
+
+        <main class="chat-stage glass">
+            <div class="chat-container" id="chatContainer">
+                <div class="welcome-card">
+                    <p class="welcome-title">👋 你好，我是你的图文学习助手</p>
+                    <p>直接输入你想学的算法或原理，我会返回：</p>
+                    <ul>
+                        <li>清晰的中文解释</li>
+                        <li>至少一张教学配图</li>
+                    </ul>
+                    <p class="welcome-tip">例如：<strong>“讲解 Dijkstra 算法”</strong>、<strong>“傅立叶变换原理”</strong></p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="input-dock glass">
+            <div class="input-wrapper">
+                <input type="text" id="userInput" placeholder="输入想学习的内容，例如：讲解 DFS 原理" autocomplete="off">
+                <button id="sendBtn" onclick="sendMessage()" aria-label="发送">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
