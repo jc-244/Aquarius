@@ -861,12 +861,17 @@ async function agentB_execute(blueprint, bookPages, webSources, language = 'en')
     // Try to parse Agent B's JSON output and convert to Markdown
     const rendered = tryParseJsonLoose(raw);
     if (rendered && Array.isArray(rendered.rendered_blocks)) {
+        console.log(`[Agent B] JSON OK — ${rendered.rendered_blocks.length} blocks`);
+        rendered.rendered_blocks.forEach((b, i) => {
+            if (b.type === 'book_image')
+                console.log(`[Agent B] block[${i}] book_image: page=${b.source_page} fig_id=${b.fig_id} file_path=${b.file_path}`);
+        });
         return await blueprintToMarkdown(rendered.rendered_blocks, existingPageImages);
     }
 
-    // If not valid JSON, return raw (it may already be Markdown)
-    console.warn('[Agent B] Output was not JSON — using raw text as Markdown.');
-    return raw;
+    // Raw fallback — strip whole-page book image refs
+    console.warn('[Agent B] Not JSON, raw fallback. First 400 chars:', raw.slice(0, 400));
+    return raw.replace(/!\[Book page\]\(\/pages\/book-\d+\.png\)/g, '');
 }
 
 /**
