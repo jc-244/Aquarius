@@ -341,21 +341,15 @@ function renderSyllabus() {
     // Normalize: support both old string[] and new {title, subsections}[] formats
     const sections = item.sections.map(s => typeof s === 'string' ? { title: s, subsections: [] } : s);
 
-    const sectionsHtml = sections.map((sec, secIdx) => {
-      const hasChildren = sec.subsections && sec.subsections.length > 0;
-      const subId = `syllabus-${chIdx}-${secIdx}`;
-      const subsHtml = hasChildren
-        ? `<div class="syllabus-subsections hidden" id="${subId}">${sec.subsections.map(sub =>
-            `<button class="syllabus-subsection" data-section="${escapeHtml(sub)}">${escapeHtml(sub)}</button>`
-          ).join('')}</div>`
-        : '';
+    // Subsections NOT shown in left sidebar — only appear in right TOC when section clicked
+    const sectionsHtml = sections.map((sec) => {
+      const subsList = sec.subsections || [];
       return `
         <div class="syllabus-section-wrap">
           <div class="syllabus-section-row">
-            ${hasChildren ? `<button class="syllabus-section-caret" data-sub-id="${subId}"><span class="caret">›</span></button>` : '<span class="syllabus-section-caret-placeholder"></span>'}
-            <button class="syllabus-section" data-section="${escapeHtml(sec.title)}">${escapeHtml(sec.title)}</button>
+            <span class="syllabus-section-caret-placeholder"></span>
+            <button class="syllabus-section" data-section="${escapeHtml(sec.title)}" data-subsections="${escapeHtml(JSON.stringify(subsList))}">${escapeHtml(sec.title)}</button>
           </div>
-          ${subsHtml}
         </div>`;
     }).join('');
 
@@ -385,26 +379,25 @@ function renderSyllabus() {
     });
   });
 
-  // Section caret (expand subsections)
-  courseSyllabus.querySelectorAll('.syllabus-section-caret').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const subId = btn.getAttribute('data-sub-id');
-      const panel = document.getElementById(subId);
-      const caret = btn.querySelector('.caret');
-      const open = panel.classList.contains('hidden');
-      panel.classList.toggle('hidden', !open);
-      caret.classList.toggle('open', open);
-    });
-  });
-
-  // Section / subsection click → open Learn Mode
-  courseSyllabus.querySelectorAll('.syllabus-section, .syllabus-subsection').forEach(btn => {
+  // Section click → show subsections in right TOC + open Learn Mode
+  courseSyllabus.querySelectorAll('.syllabus-section').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const section = btn.getAttribute('data-section');
       const title   = btn.textContent.trim();
-      openLearnMode(section, title);
+
+      // Mark active in sidebar
+      courseSyllabus.querySelectorAll('.syllabus-section').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Parse subsections stored in data attribute
+      let subs = [];
+      try {
+        const rawSubs = btn.getAttribute('data-subsections') || '[]';
+        subs = JSON.parse(rawSubs.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&'));
+      } catch(_) {}
+
+      openLearnMode(section, title, subs);
     });
   });
 }
@@ -568,7 +561,7 @@ function renderLearnWebSection(webSources) {
   learnWebSection.classList.remove('hidden');
 }
 
-async function openLearnMode(sectionId, sectionTitle) {
+async function openLearnMode(sectionId, sectionTitle, subsections = []) {
   learnSectionId = sectionId;
   learnSectionTitle = sectionTitle;
   learnPages = [];
@@ -582,8 +575,24 @@ async function openLearnMode(sectionId, sectionTitle) {
   if (learnIntroMeta) learnIntroMeta.innerHTML = '';
   showLearnView();
   showSplash();
-  // Seed TOC with section title while loading
-  buildToc([{ title: sectionTitle, depth: 1, anchor: '' }]);
+  // Build right TOC: section title + subsections
+  {
+    const tocItems = [{ title: sectionTitle, depth: 1, anchor: '' }];
+    subsections.forEach(sub => tocItems.push({ title: sub, depth: 2, anchor: '' }));
+    buildToc(tocItems);
+    // Wire subsection depth-2 items to open that subsection
+    if (tocNav && subsections.length) {
+      tocNav.querySelectorAll('.toc-item.depth-2').forEach((tocBtn, i) => {
+        const subTitle = subsections[i];
+        if (subTitle) {
+          tocBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openLearnMode(subTitle, subTitle, []);
+          });
+        }
+      });
+    }
+  }
 
   if (learnAbort) learnAbort.abort();
   learnAbort = new AbortController();

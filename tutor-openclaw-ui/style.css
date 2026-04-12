@@ -230,8 +230,9 @@ html, body {
 }
 
 .syllabus-section-caret-placeholder {
-  width: 14px;
+  width: 20px;
   flex-shrink: 0;
+  display: inline-block;
 }
 
 .syllabus-section {
@@ -251,6 +252,12 @@ html, body {
 .syllabus-section:hover {
   background: var(--bg-body);
   color: var(--accent);
+}
+.syllabus-section.active {
+  color: var(--accent);
+  font-weight: 600;
+  background: var(--bg-active);
+  border-radius: var(--radius-sm);
 }
 
 .syllabus-subsections {
