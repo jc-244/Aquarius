@@ -1363,51 +1363,34 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // /api/crop?page=book-016&fig=Fig.+B.6  — returns a cropped figure PNG
+    // /api/crop?page=book-016&fig=Fig.+B.6  — serves pre-cropped figure PNG
     if (pathname === '/api/crop') {
-        const page   = url.parse(req.url, true).query.page   || '';
-        const figId  = url.parse(req.url, true).query.fig    || '';
-        const pageId = page.replace(/[^a-zA-Z0-9-_]/g, '');
+        const query  = url.parse(req.url, true).query;
+        const pageId = (query.page || '').replace(/[^a-zA-Z0-9-_]/g, '');
+        const figId  = query.fig || '';
         if (!pageId) { res.writeHead(400); res.end('missing page'); return; }
 
-        const metaPath = path.join(OCR_DIR, `${pageId}.meta.json`);
-        const imgPath  = path.join(PAGE_IMAGE_DIR, `${pageId}.png`);
-        if (!fs.existsSync(metaPath) || !fs.existsSync(imgPath)) {
-            res.writeHead(404); res.end('page not found'); return;
+        const CROPS_DIR = path.join(GENERATED_DIR, 'crops');
+
+        // Build expected pre-cropped filename: book-016--Fig--B-6.png
+        const safeFigId = figId.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+        const cropFile  = `${pageId}--${safeFigId}.png`;
+        const cropPath  = path.join(CROPS_DIR, cropFile);
+
+        if (fs.existsSync(cropPath)) {
+            serveStaticFromDir(res, CROPS_DIR, cropFile);
+            return;
         }
 
-        const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
-        const figures = meta.figures || [];
-
-        // Find the matching figure (case-insensitive, partial match)
-        let fig = figures.find(f => f.fig_id === figId);
-        if (!fig && figId) {
-            const needle = figId.toLowerCase().replace(/\s+/g, '');
-            fig = figures.find(f => f.fig_id.toLowerCase().replace(/\s+/g, '').includes(needle));
+        // Fuzzy fallback: find any crop for this page
+        if (fs.existsSync(CROPS_DIR)) {
+            const all = fs.readdirSync(CROPS_DIR);
+            const match = all.find(f => f.startsWith(pageId + '--'));
+            if (match) { serveStaticFromDir(res, CROPS_DIR, match); return; }
         }
-        // Fallback: if only 1 figure on page, use it
-        if (!fig && figures.length === 1) fig = figures[0];
-        // Fallback: return full page
-        if (!fig) { serveStaticFromDir(res, PAGE_IMAGE_DIR, `${pageId}.png`); return; }
 
-        // Use sharp or jimp if available, else fallback to Python PIL
-        const { execFileSync } = require('child_process');
-        const outFile = path.join(GENERATED_DIR, `crop-${pageId}-${Date.now()}.png`);
-        try {
-            // Use Python PIL for cropping (always available)
-            const script = [
-                'from PIL import Image',
-                `img = Image.open(${JSON.stringify(imgPath)})`,
-                `W, H = img.size`,
-                `crop = img.crop((int(${fig.left}*W), int(${fig.top}*H), int(${fig.right}*W), int(${fig.bottom}*H)))`,
-                `crop.save(${JSON.stringify(outFile)})`
-            ].join('\n');
-            execFileSync('python3', ['-c', script], { timeout: 10000 });
-            serveStaticFromDir(res, GENERATED_DIR, path.basename(outFile));
-        } catch (e) {
-            console.error('[/api/crop] crop failed:', e.message);
-            serveStaticFromDir(res, PAGE_IMAGE_DIR, `${pageId}.png`);
-        }
+        // Last resort: full page
+        serveStaticFromDir(res, PAGE_IMAGE_DIR, `${pageId}.png`);
         return;
     }
 
