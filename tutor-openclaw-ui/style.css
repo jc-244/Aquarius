@@ -2104,3 +2104,21 @@ html, body {
   border-color: var(--accent);
   box-shadow: var(--shadow-md), 0 0 0 1px var(--accent);
 }
+
+/* ── Lesson images ─────────────────────────────────────────────────────── */
+.lesson-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 24px auto;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+  border: 1px solid var(--border);
+}
+
+/* Wrap standalone img paragraphs so they center properly */
+.explain-body p:has(> img.lesson-img:only-child),
+.learn-explain-body p:has(> img.lesson-img:only-child) {
+  text-align: center;
+  margin: 24px 0;
+}
