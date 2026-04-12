@@ -820,23 +820,23 @@ async function agentB_execute(blueprint, bookPages, webSources, language = 'en')
     );
 
     const existingPageImages = {};
+    const availableFigures = {};   // page -> [{fig_id, caption}]
     for (const p of bookPages) {
-        // full page
         existingPageImages[p.page] = `/pages/${p.pageImage}`;
-        // half-page splits if they exist
-        const leftFile = `${p.page}-left.png`;
-        const rightFile = `${p.page}-right.png`;
-        if (fs.existsSync(path.join(PAGE_IMAGE_DIR, leftFile))) {
-            existingPageImages[`${p.page}-left`] = `/pages/${leftFile}`;
-        }
-        if (fs.existsSync(path.join(PAGE_IMAGE_DIR, rightFile))) {
-            existingPageImages[`${p.page}-right`] = `/pages/${rightFile}`;
+        // Load figure metadata for precision crop
+        const metaPath = path.join(OCR_DIR, `${p.page}.meta.json`);
+        if (fs.existsSync(metaPath)) {
+            const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+            if (meta.figures && meta.figures.length) {
+                availableFigures[p.page] = meta.figures.map(f => ({ fig_id: f.fig_id, caption: f.caption }));
+            }
         }
     }
 
     const userMsg = JSON.stringify({
         blueprint,
         existing_page_images: existingPageImages,
+        available_figures: availableFigures,
         web_sources: webSources.slice(0, 8).map((w, i) => ({
             index: i + 1,
             title: w.title,
@@ -888,12 +888,34 @@ async function blueprintToMarkdown(blocks, pageImages) {
                 break;
 
             case 'book_image': {
-                const imgPath = block.file_path || (pageImages && pageImages[block.source_page]) || null;
-                if (imgPath && !block.warning) {
-                    parts.push(`![Book page](${imgPath})`);
-                    if (block.caption) parts.push(`*${block.caption}*`);
-                } else {
-                    parts.push(`*(Book image: ${block.source_page || 'unknown'} — ${block.warning || 'not available'})*`);
+                const sourcePage = block.source_page || '';
+                const figId = block.fig_id || block.caption || '';
+
+                // Try to find the figure in metadata for a precision crop
+                const metaPath = sourcePage ? path.join(OCR_DIR, `${sourcePage}.meta.json`) : null;
+                let cropUrl = null;
+                if (metaPath && fs.existsSync(metaPath)) {
+                    const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+                    const figures = meta.figures || [];
+                    let fig = figId ? figures.find(f => f.fig_id === figId) : null;
+                    if (!fig && figId) {
+                        const needle = figId.toLowerCase().replace(/\s+/g, '');
+                        fig = figures.find(f => f.fig_id.toLowerCase().replace(/\s+/g, '').includes(needle));
+                    }
+                    if (!fig && figures.length === 1) fig = figures[0];
+                    if (fig) {
+                        cropUrl = `/api/crop?page=${encodeURIComponent(sourcePage)}&fig=${encodeURIComponent(fig.fig_id)}`;
+                    }
+                }
+
+                // Fallback to full page if no crop available
+                const finalUrl = cropUrl || block.file_path || (pageImages && pageImages[sourcePage]) || null;
+                if (finalUrl && !block.warning) {
+                    const altText = figId || block.caption || 'Figure';
+                    parts.push(`![${altText}](${finalUrl})`);
+                    if (block.caption && block.caption !== figId) parts.push(`*${block.caption}*`);
+                } else if (block.warning) {
+                    parts.push(`*(Figure: ${sourcePage} — ${block.warning})*`);
                 }
                 break;
             }
@@ -1333,6 +1355,54 @@ const server = http.createServer(async (req, res) => {
     if (pathname.startsWith('/pages/')) {
         const filename = pathname.replace(/^\/pages\//, '');
         serveStaticFromDir(res, PAGE_IMAGE_DIR, filename);
+        return;
+    }
+
+    // /api/crop?page=book-016&fig=Fig.+B.6  — returns a cropped figure PNG
+    if (pathname === '/api/crop') {
+        const page   = url.parse(req.url, true).query.page   || '';
+        const figId  = url.parse(req.url, true).query.fig    || '';
+        const pageId = page.replace(/[^a-zA-Z0-9-_]/g, '');
+        if (!pageId) { res.writeHead(400); res.end('missing page'); return; }
+
+        const metaPath = path.join(OCR_DIR, `${pageId}.meta.json`);
+        const imgPath  = path.join(PAGE_IMAGE_DIR, `${pageId}.png`);
+        if (!fs.existsSync(metaPath) || !fs.existsSync(imgPath)) {
+            res.writeHead(404); res.end('page not found'); return;
+        }
+
+        const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+        const figures = meta.figures || [];
+
+        // Find the matching figure (case-insensitive, partial match)
+        let fig = figures.find(f => f.fig_id === figId);
+        if (!fig && figId) {
+            const needle = figId.toLowerCase().replace(/\s+/g, '');
+            fig = figures.find(f => f.fig_id.toLowerCase().replace(/\s+/g, '').includes(needle));
+        }
+        // Fallback: if only 1 figure on page, use it
+        if (!fig && figures.length === 1) fig = figures[0];
+        // Fallback: return full page
+        if (!fig) { serveStaticFromDir(res, PAGE_IMAGE_DIR, `${pageId}.png`); return; }
+
+        // Use sharp or jimp if available, else fallback to Python PIL
+        const { execFileSync } = require('child_process');
+        const outFile = path.join(GENERATED_DIR, `crop-${pageId}-${Date.now()}.png`);
+        try {
+            // Use Python PIL for cropping (always available)
+            const script = [
+                'from PIL import Image',
+                `img = Image.open(${JSON.stringify(imgPath)})`,
+                `W, H = img.size`,
+                `crop = img.crop((int(${fig.left}*W), int(${fig.top}*H), int(${fig.right}*W), int(${fig.bottom}*H)))`,
+                `crop.save(${JSON.stringify(outFile)})`
+            ].join('\n');
+            execFileSync('python3', ['-c', script], { timeout: 10000 });
+            serveStaticFromDir(res, GENERATED_DIR, path.basename(outFile));
+        } catch (e) {
+            console.error('[/api/crop] crop failed:', e.message);
+            serveStaticFromDir(res, PAGE_IMAGE_DIR, `${pageId}.png`);
+        }
         return;
     }
 
