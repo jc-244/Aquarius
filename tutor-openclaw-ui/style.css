@@ -1,21 +1,21 @@
 :root {
   /* Colors */
-  --bg-body: #fffbf5;
+  --bg-body: #f8f8f6;
   --bg-sidebar: #ffffff;
   --bg-main: #ffffff;
   --bg-panel: #ffffff;
   --bg-input: #ffffff;
-  --bg-hover: #fff3e0;
-  --bg-active: #ffe4c4;
-  --border: #f8eee2;
-  --border-strong: #eaddcc;
-  --border-focus: #f59e0b;
+  --bg-hover: #f3f3f3;
+  --bg-active: #ebebeb;
+  --border: #e8e8e8;
+  --border-strong: #d0d0d0;
+  --border-focus: #1a1a1a;
   
-  --text-primary: #332922;
-  --text-secondary: #5e5045;
-  --text-muted: #9c8b7c;
-  --accent: #f59e0b;
-  --text-accent: #d97706;
+  --text-primary: #111111;
+  --text-secondary: #444444;
+  --text-muted: #888888;
+  --accent: #1a1a1a;
+  --text-accent: #1a1a1a;
   --success: #10b981;
   --danger: #ef4444;
 
@@ -107,7 +107,7 @@ html, body {
 }
 
 .logo-text::after {
-  content: 'TutorAgent';
+  content: '';
 }
 
 .sidebar-nav {
@@ -1890,8 +1890,7 @@ html, body {
   gap: 8px;
 }
 .followup-bubble .fub-q::before {
-  content: '💬';
-  font-size: 16px;
+  content: '';
   flex-shrink: 0;
 }
 .followup-bubble .fub-a {
@@ -1902,7 +1901,7 @@ html, body {
 
 /* ===== VISUAL OVERHAUL ===== */
 :root {
-  --bg-body: #fffbf5;
+  --bg-body: #f8f8f6;
   --bg-sidebar: #faf7f2;
   --bg-main: #ffffff;
   --bg-panel: #ffffff;
@@ -1911,12 +1910,12 @@ html, body {
   --bg-active: #fef3c7;
   --border: #f0e6d6;
   --border-strong: #e5d5c0;
-  --border-focus: #f59e0b;
+  --border-focus: #1a1a1a;
   --text-primary: #2d241c;
   --text-secondary: #594f47;
   --text-muted: #9e8e7f;
-  --accent: #f59e0b;
-  --text-accent: #d97706;
+  --accent: #1a1a1a;
+  --text-accent: #1a1a1a;
   
   --shadow-sm: 0 2px 8px -2px rgba(138, 114, 82, 0.08);
   --shadow-md: 0 4px 16px -4px rgba(138, 114, 82, 0.12);
@@ -2121,4 +2120,75 @@ html, body {
 .learn-explain-body p:has(> img.lesson-img:only-child) {
   text-align: center;
   margin: 24px 0;
+}
+
+/* HIGH-END ACADEMIC OVERRIDES */
+.welcome-h1, .learn-title, .logo-text {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+.welcome-tag, .toc-header-label, .learn-badge, .step-label, code, pre {
+  font-family: 'DM Mono', monospace;
+}
+.welcome-tag, .toc-header-label, .learn-badge {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.learn-start-btn {
+  background: #111111 !important;
+  color: #ffffff;
+  border-radius: 4px;
+  box-shadow: none;
+  font-family: 'Inter', sans-serif;
+}
+.learn-start-btn:hover {
+  background: #333333 !important;
+  transform: none;
+  box-shadow: none;
+}
+.search-box {
+  border-radius: 4px;
+}
+.search-send {
+  background: #111111;
+  border-radius: 4px;
+}
+.search-send:not([disabled]):hover {
+  background: #333333;
+  box-shadow: none;
+  transform: none;
+}
+.chip {
+  border-radius: 4px;
+  border: 1px solid #1a1a1a;
+  background: transparent;
+}
+.chip:hover {
+  background: #1a1a1a;
+  color: white;
+}
+/* Override any remaining ambers */
+:root {
+  --bg-body: #f8f8f6 !important;
+  --bg-sidebar: #ffffff !important;
+  --bg-main: #ffffff !important;
+  --bg-hover: #f3f3f3 !important;
+  --bg-active: #ebebeb !important;
+  --border: #e8e8e8 !important;
+  --border-strong: #d0d0d0 !important;
+  --border-focus: #1a1a1a !important;
+  --text-primary: #111111 !important;
+  --text-secondary: #444444 !important;
+  --text-muted: #888888 !important;
+  --accent: #1a1a1a !important;
+  --text-accent: #1a1a1a !important;
+}
+.syllabus-section.active {
+  border-left: 2px solid #111111 !important;
+  background: #f3f3f3 !important;
+  color: #111111 !important;
+}
+.lss-item.active {
+  border-color: #111111 !important;
+  box-shadow: none !important;
+  background: #f3f3f3 !important;
 }

@@ -5,31 +5,31 @@ let currentLang = localStorage.getItem('tutorLang') || 'en'; // 'en' | 'zh'
 
 const LANG_CONFIG = {
   en: {
-    flag: '🇬🇧 EN',
+    flag: 'EN',
     placeholder: 'Ask me to explain a concept, solve a problem, or walk through a topic…',
     followupPlaceholder: 'Ask a follow-up…',
     learnFollowupPlaceholder: 'Have a question? Ask here…',
     startBtn: 'Start Learning This Section',
     chips: [
-      { label: '🔢 Complex Numbers', prompt: 'What are complex numbers? Explain from a signal processing perspective' },
-      { label: '🌀 Euler\'s Formula', prompt: "Explain Euler's formula e^j\u03c9 and its meaning in signal processing" },
-      { label: '🔗 Convolution', prompt: 'What is convolution? Explain with an example' },
-      { label: '📐 Laplace Transform', prompt: 'Explain the Laplace transform and its applications' },
-      { label: '〰️ Sine & Cosine', prompt: 'What is the relationship between sine and cosine waves?' },
+      { label: 'Complex Numbers', prompt: 'What are complex numbers? Explain from a signal processing perspective' },
+      { label: "Euler's Formula", prompt: "Explain Euler's formula e^j\u03c9 and its meaning in signal processing" },
+      { label: 'Convolution', prompt: 'What is convolution? Explain with an example' },
+      { label: 'Laplace Transform', prompt: 'Explain the Laplace transform and its applications' },
+      { label: 'Sine & Cosine', prompt: 'What is the relationship between sine and cosine waves?' },
     ]
   },
   zh: {
-    flag: '🇨🇳 中文',
+    flag: '中文',
     placeholder: '问我解释一个概念、解一道题，或者带你过一遍某个主题…',
     followupPlaceholder: '继续追问…',
     learnFollowupPlaceholder: '有问题？直接问…',
     startBtn: '开始学习这一节',
     chips: [
-      { label: '🔢 什么是复数？', prompt: '什么是复数？请从信号处理的角度解释' },
-      { label: '🌀 欧拉公式', prompt: '解释欧拉公式 e^j\u03c9 在信号处理中的意义' },
-      { label: '🔗 什么是卷积？', prompt: '什么是卷积？请举例说明' },
-      { label: '📐 拉普拉斯变换', prompt: '解释拉普拉斯变换及其应用' },
-      { label: '〰️ 正弦与余弦', prompt: '正弦波与余弦波有什么关系？' },
+      { label: '复数', prompt: '什么是复数？请从信号处理的角度解释' },
+      { label: '欧拉公式', prompt: '解释欧拉公式 e^j\u03c9 在信号处理中的意义' },
+      { label: '卷积', prompt: '什么是卷积？请举例说明' },
+      { label: '拉普拉斯变换', prompt: '解释拉普拉斯变换及其应用' },
+      { label: '正弦与余弦', prompt: '正弦波与余弦波有什么关系？' },
     ]
   }
 };
@@ -595,8 +595,8 @@ async function openLearnMode(sectionId, sectionTitle, subsections = []) {
     hideSplash();
     if (learnIntroMeta && data.bookPages && data.bookPages.length) {
       learnIntroMeta.innerHTML = [
-        `<span class="learn-intro-badge">📚 ${data.bookPages.length} key reference${data.bookPages.length !== 1 ? 's' : ''}</span>`,
-        `<span class="learn-intro-badge">💡 ${sectionTitle}</span>`
+        `<span class="learn-intro-badge">${data.bookPages.length} reference${data.bookPages.length !== 1 ? 's' : ''}</span>`,
+        `<span class="learn-intro-badge">${sectionTitle}</span>`
       ].join('');
     }
     learnIntroText.textContent = data.intro || 'Ready to start learning.';
