@@ -5,7 +5,7 @@ const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:90
 // ════════════════════════════════════════════════════════════════
 
 // ❗ Fill in your Clerk Publishable Key here after creating an app at https://clerk.com
-const CLERK_PUBLISHABLE_KEY = 'pk_test_REPLACE_WITH_YOUR_KEY';
+const CLERK_PUBLISHABLE_KEY = 'pk_test_ZHJpdmVuLXRyb2xsLTI4LmNsZXJrLmFjY291bnRzLmRldiQ';
 
 let currentUser = null;  // { uid, name, email, imageUrl }
 let userMemory  = {};    // loaded from backend after login
