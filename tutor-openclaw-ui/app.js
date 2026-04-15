@@ -23,19 +23,13 @@ function showAuthOverlay() {
   if (o) o.style.display = 'flex';
 }
 
-async function waitForClerk(ms = 10000) {
-  // First wait for window.Clerk to exist
+async function waitForClerk(ms = 15000) {
   const t = Date.now();
-  while (!window.Clerk) {
+  // Wait for window.Clerk to exist AND be loaded
+  while (true) {
+    if (window.Clerk && window.Clerk.loaded) return;
     if (Date.now() - t > ms) throw new Error('timeout');
-    await new Promise(r => setTimeout(r, 150));
-  }
-  // Then wait for it to be fully loaded (components ready)
-  if (!window.Clerk.loaded) {
-    await new Promise((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('clerk:loaded timeout')), ms);
-      document.addEventListener('clerk:loaded', () => { clearTimeout(timer); resolve(); }, { once: true });
-    });
+    await new Promise(r => setTimeout(r, 200));
   }
 }
 
