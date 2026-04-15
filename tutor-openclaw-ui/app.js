@@ -23,7 +23,7 @@ function showAuthOverlay() {
   if (o) o.style.display = 'flex';
 }
 
-async function waitForClerk(ms = 12000) {
+async function waitForClerk(ms = 3000) {
   const t = Date.now();
   while (!window.Clerk) {
     if (Date.now() - t > ms) throw new Error('timeout');
