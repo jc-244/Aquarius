@@ -826,12 +826,26 @@ async function wikipediaSearch(query) {
 function classifySourceType(url = '', title = '') {
     const text = `${url} ${title}`.toLowerCase();
     if (/youtube\.com|youtu\.be/.test(text)) return 'video';
+    if (/3blue1brown|desmos|geogebra|interactive|visual/.test(text)) return 'visual';
     if (/wikipedia\.org|mathworld|wolfram/.test(text)) return 'reference';
     if (/edu\b|mit|stanford|berkeley|cmu|ox\.ac|cam\.ac|lecture|course|notes|pdf/.test(text)) return 'course';
-    if (/3blue1brown|visual|geometry|interactive|desmos|geogebra/.test(text)) return 'visual';
+    if (/insight|betterexplained|brilliant|tutorial|guide|explained/.test(text)) return 'insight';
     if (/medium\.com|substack|blog|towardsdatascience/.test(text)) return 'blog';
     if (/stackexchange|reddit|quora/.test(text)) return 'community';
     return 'web';
+}
+
+function sourceTypeRank(type = 'web') {
+    return {
+        video: 1,
+        visual: 2,
+        course: 3,
+        reference: 4,
+        insight: 5,
+        blog: 6,
+        community: 7,
+        web: 8
+    }[type] || 99;
 }
 
 function enrichSources(sources) {
@@ -853,51 +867,74 @@ function enrichSources(sources) {
     });
 }
 
-async function collectWebSources(searchAngles) {
+function sortSourcesByType(sources = []) {
+    return [...sources].sort((a, b) => {
+        const ra = sourceTypeRank(a.sourceType);
+        const rb = sourceTypeRank(b.sourceType);
+        if (ra !== rb) return ra - rb;
+        return (a.domain || '').localeCompare(b.domain || '');
+    });
+}
+
+function buildSearchPlan(question, searchAngles = []) {
+    const q = compactWhitespace(question || '');
+    return [
+        { label: 'video', query: `${q} site:youtube.com` },
+        { label: 'visual', query: `${q} 3blue1brown OR interactive OR visual explanation` },
+        { label: 'course', query: `${q} lecture notes OR university OR site:.edu` },
+        { label: 'reference', query: `${q} wikipedia OR mathworld OR wolfram` },
+        { label: 'insight', query: `${q} intuition OR math insight OR better explained` },
+        ...searchAngles.map(angle => ({ label: 'general', query: angle }))
+    ];
+}
+
+async function collectWebSources(searchAngles, options = {}) {
     const merged = [];
     const seen = new Set();
+    const onSource = typeof options.onSource === 'function' ? options.onSource : null;
+    const question = options.question || '';
 
-    const addItems = (items) => {
-        for (const item of items) {
+    const addItems = (items, bucket = 'general') => {
+        const enriched = sortSourcesByType(enrichSources(items));
+        for (const item of enriched) {
             const key = normalizeUrl(item.url).toLowerCase();
             if (!key || seen.has(key)) continue;
             seen.add(key);
-            merged.push(item);
+            const source = { ...item, bucket };
+            merged.push(source);
+            if (onSource) onSource(source, sortSourcesByType(merged));
             if (merged.length >= 18) break;
         }
     };
 
-    // Try DuckDuckGo first with diversified angles
-    for (const angle of searchAngles) {
-        const items = await duckDuckGoSearch(angle);
-        addItems(items);
+    const plan = buildSearchPlan(question, searchAngles);
+    for (const entry of plan) {
+        let items = [];
+        if (entry.label === 'reference') {
+            items = await wikipediaSearch(entry.query);
+        } else {
+            items = await duckDuckGoSearch(entry.query);
+        }
+        addItems(items, entry.label);
         if (merged.length >= 18) break;
     }
 
-    // Always add at least some reference-style sources for coverage
-    for (const angle of searchAngles.slice(0, 2)) {
-        const items = await wikipediaSearch(angle);
-        addItems(items);
-        if (merged.length >= 18) break;
-    }
-
-    // If still too sparse, expand with targeted educational variants
     if (merged.length < 6) {
-        const fallbackAngles = uniqueStrings(searchAngles.flatMap(angle => [
-            `${angle} site:youtube.com`,
-            `${angle} lecture notes`,
-            `${angle} intuitive explanation`
-        ]), 6);
-
-        for (const angle of fallbackAngles) {
+        for (const angle of uniqueStrings([
+            `${question} site:youtube.com`,
+            `${question} lecture notes`,
+            `${question} intuitive explanation`,
+            `${question} 3blue1brown`
+        ], 4)) {
             const items = await duckDuckGoSearch(angle);
-            addItems(items);
+            addItems(items, 'fallback');
             if (merged.length >= 18) break;
         }
     }
 
-    console.log(`[Search] collectWebSources: ${merged.length} sources for angles: ${searchAngles.join(' | ')}`);
-    return enrichSources(merged.slice(0, 14));
+    const finalSources = sortSourcesByType(merged.slice(0, 14));
+    console.log(`[Search] collectWebSources: ${finalSources.length} sources for question: ${question || searchAngles.join(' | ')}`);
+    return finalSources;
 }
 
 function buildBookContext(bookPages) {
@@ -1850,10 +1887,16 @@ const server = http.createServer(async (req, res) => {
                 ? data.webSources
                 : [];
             let searchAngles = [];
+            let liveSearchEvents = [];
             // Remove the stringent mode !== 'followup' limitation so that followups can also search new angles if helpful
             if (!webSources.length || mode === 'followup') {
                 searchAngles = await generateSearchAngles(question);
-                const newWebSources = await collectWebSources(searchAngles);
+                const newWebSources = await collectWebSources(searchAngles, {
+                    question,
+                    onSource: (source, currentSorted) => {
+                        liveSearchEvents.push({ type: 'source', source, sources: currentSorted.slice(0, 8) });
+                    }
+                });
                 // merge avoiding duplicates by url
                 const seenUrls = new Set(webSources.map(w => w.url));
                 for (const w of newWebSources) {
@@ -1862,6 +1905,7 @@ const server = http.createServer(async (req, res) => {
                         webSources.push(w);
                     }
                 }
+                webSources = sortSourcesByType(webSources);
             }
 
             let explanation = await generateExplanation(question, relatedBooks, webSources, {
@@ -1889,6 +1933,7 @@ const server = http.createServer(async (req, res) => {
                     keywords: item.keywords
                 })),
                 webSources,
+                liveSearchEvents,
                 steps: [
                     `✅ 找到 ${relatedBooks.length} 个相关书页`,
                     `✅ 搜索到 ${webSources.length} 个网页来源`,

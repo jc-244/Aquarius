@@ -2315,10 +2315,33 @@ function sourceTypeLabel(type) {
     visual: 'Visual',
     reference: 'Reference',
     course: 'Course',
+    insight: 'Insight',
     blog: 'Blog',
     community: 'Community',
     web: 'Web'
   }[type] || 'Web';
+}
+
+function sourceTypeRank(type) {
+  return {
+    video: 1,
+    visual: 2,
+    course: 3,
+    reference: 4,
+    insight: 5,
+    blog: 6,
+    community: 7,
+    web: 8
+  }[type] || 99;
+}
+
+function sortSourcesByType(sources = []) {
+  return [...sources].sort((a, b) => {
+    const ra = sourceTypeRank(a.sourceType);
+    const rb = sourceTypeRank(b.sourceType);
+    if (ra !== rb) return ra - rb;
+    return String(a.domain || '').localeCompare(String(b.domain || ''));
+  });
 }
 
 function sourceTypeIcon(type) {
@@ -2327,6 +2350,7 @@ function sourceTypeIcon(type) {
     visual: '◎',
     reference: '◈',
     course: '📘',
+    insight: '✦',
     blog: '✎',
     community: '💬',
     web: '•'
@@ -2335,11 +2359,18 @@ function sourceTypeIcon(type) {
 
 function renderWebSourceCards(sources = [], options = {}) {
   const compact = !!options.compact;
-  return sources.map(w => {
+  const showBuckets = !!options.showBuckets;
+  const sorted = sortSourcesByType(sources);
+  let lastType = null;
+  return sorted.map(w => {
     const d = w.domain || domainOf(w.url);
     const fav = d ? `https://www.google.com/s2/favicons?sz=32&domain=${encodeURIComponent(d)}` : '';
     const type = w.sourceType || 'web';
-    return `<a class="web-source-inline-card${compact ? ' compact' : ''}" href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer">
+    const bucketHeader = showBuckets && type !== lastType
+      ? `<div class="wsic-group-header"><span class="wsic-group-icon">${sourceTypeIcon(type)}</span><span>${escapeHtml(sourceTypeLabel(type))}</span></div>`
+      : '';
+    lastType = type;
+    return `${bucketHeader}<a class="web-source-inline-card${compact ? ' compact' : ''}" href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer">
       <div class="wsic-left">
         <div class="wsic-type-badge wsic-type-${escapeHtml(type)}">${sourceTypeIcon(type)}</div>
         ${fav ? `<img class="wsic-fav" src="${fav}" alt="">` : '<span class="wsic-fav-placeholder"></span>'}
@@ -2367,7 +2398,7 @@ function renderLearnWebSources(sources) {
   learnWebData = sources;
   learnWebCount.textContent = sources.length;
   learnWebToggle.classList.remove('hidden');
-  learnWebSources.innerHTML = renderWebSourceCards(sources);
+  learnWebSources.innerHTML = renderWebSourceCards(sources, { showBuckets: true });
 }
 
 function renderLearnWebSection(webSources) {
@@ -2643,11 +2674,7 @@ async function sendLearnFollowup(rawPrompt) {
 
     const target = document.getElementById(answerId);
     if (target) {
-      const liveSources = target.querySelector('.search-live-sources');
-      if (liveSources && data.webSources && data.webSources.length) {
-        liveSources.classList.remove('hidden');
-        liveSources.innerHTML = renderWebSourceCards(data.webSources.slice(0, 6), { compact: true }) + (data.webSources.length > 6 ? `<div class="search-live-more">还有 ${data.webSources.length - 6} 个...</div>` : '');
-      }
+      replayLiveSearchEvents(target, data.liveSearchEvents || [], data.webSources || []);
       const finalStep = target.querySelectorAll('.search-step')[2];
       if (finalStep) {
         const sp = finalStep.querySelector('.step-icon');
@@ -3145,7 +3172,7 @@ function renderWebSourcesInline(webSources = []) {
   webSourcesToggle.classList.remove('open');
   webSourcesInline.classList.add('hidden'); // collapsed by default
 
-  webSourcesInline.innerHTML = renderWebSourceCards(webSources, { compact: true });
+  webSourcesInline.innerHTML = renderWebSourceCards(webSources, { compact: true, showBuckets: true });
 }
 
 function renderExplanation(markdown) {
@@ -3180,6 +3207,41 @@ async function callAsk(prompt, signal, extra = {}) {
 
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
   return data;
+}
+
+function replayLiveSearchEvents(container, events = [], finalSources = []) {
+  if (!container) return;
+  const liveSources = container.querySelector('.search-live-sources');
+  if (!liveSources) return;
+
+  liveSources.classList.remove('hidden');
+  liveSources.innerHTML = '<div class="search-tree-title">搜索网络</div>';
+
+  const snapshots = [];
+  for (const evt of events) {
+    if (evt && evt.type === 'source' && Array.isArray(evt.sources)) {
+      snapshots.push(evt.sources);
+    }
+  }
+
+  if (!snapshots.length) {
+    const rendered = sortSourcesByType(finalSources).slice(0, 8);
+    liveSources.innerHTML = '<div class="search-tree-title">搜索网络 ✓</div>' + renderWebSourceCards(rendered, { compact: true, showBuckets: true });
+    return;
+  }
+
+  let idx = 0;
+  const tick = () => {
+    const current = sortSourcesByType(snapshots[idx]).slice(0, 8);
+    liveSources.innerHTML = `<div class="search-tree-title">搜索网络${idx === snapshots.length - 1 ? ' ✓' : ' ...'}</div>` + renderWebSourceCards(current, { compact: true, showBuckets: true });
+    idx += 1;
+    if (idx < snapshots.length) {
+      setTimeout(tick, Math.min(220, 60 + idx * 15));
+    } else if (finalSources.length > 8) {
+      liveSources.innerHTML += `<div class="search-live-more">还有 ${finalSources.length - 8} 个...</div>`;
+    }
+  };
+  tick();
 }
 
 let loadingTimer = null;
@@ -3264,11 +3326,7 @@ async function sendQuestion(rawPrompt) {
       attachments: attachments.map(a => ({ type: a.type, name: a.name, dataUrl: a.dataUrl, mimeType: a.mimeType }))
     });
     stopStepAnimation();
-    const liveSources = answerContent.querySelector('.search-live-sources');
-    if (liveSources && data.webSources && data.webSources.length) {
-      liveSources.classList.remove('hidden');
-      liveSources.innerHTML = renderWebSourceCards(data.webSources.slice(0, 6), { compact: true }) + (data.webSources.length > 6 ? `<div class="search-live-more">还有 ${data.webSources.length - 6} 个...</div>` : '');
-    }
+    replayLiveSearchEvents(answerContent, data.liveSearchEvents || [], data.webSources || []);
     const finalStep = answerContent.querySelectorAll('.search-step')[2];
     if (finalStep) {
       const label = finalStep.textContent.replace(/^\s*3\.\s*🧠\s*/, '').trim();

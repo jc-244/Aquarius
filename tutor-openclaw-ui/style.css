@@ -1185,6 +1185,7 @@ html, body {
 .wsic-type-visual { background: #EDE9FE; color: #6D28D9; }
 .wsic-type-reference { background: #DBEAFE; color: #1D4ED8; }
 .wsic-type-course { background: #DCFCE7; color: #15803D; }
+.wsic-type-insight { background: #FCE7F3; color: #BE185D; }
 .wsic-type-blog { background: #FEF3C7; color: #B45309; }
 .wsic-type-community { background: #F3E8FF; color: #7E22CE; }
 .wsic-fav {
@@ -1248,6 +1249,29 @@ html, body {
   flex-shrink: 0;
   color: var(--text-muted);
   margin-top: 3px;
+}
+.wsic-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #475569;
+  padding: 8px 0 2px 22px;
+  text-transform: uppercase;
+}
+.wsic-group-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+}
+.search-tree-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  padding: 4px 0 6px 22px;
 }
 .search-live-more {
   font-size: 12px;
