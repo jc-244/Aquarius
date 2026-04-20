@@ -2792,8 +2792,14 @@ function inlineFormat(text) {
   s = s.replace(/\*(.*?)\*/g, '<em>$1</em>');
   
   // Automatically fix inline math improperly wrapped in backticks (e.g. `e^{j\theta}`)
-  s = s.replace(/`([^`]*(?:\\|&#94;|&amp;)[^`]*)`/g, '\\($1\\)');
-  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/`([^`]+)`/g, (match, codeContent) => {
+    // If the backtick code contains common math markers, switch it to MathJax inline `\( ... \)`
+    if (/\\|&#94;|&amp;|\{|=|cos\b|sin\b|tan\b|θ|π|\^|_/i.test(codeContent)) {
+      return `\\(${codeContent}\\)`;
+    }
+    return `<code>${codeContent}</code>`;
+  });
+  
   // Images (must come before links)
   s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="lesson-img" loading="lazy">');
   // Links
