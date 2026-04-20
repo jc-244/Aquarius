@@ -655,16 +655,25 @@ async function extractKeywords(question) {
 }
 
 async function generateSearchAngles(question) {
+    const base = compactWhitespace(question || '');
+    const deterministic = uniqueStrings([
+        `${base} intuition`,
+        `${base} visual explanation`,
+        `${base} worked example`,
+        `${base} university notes`,
+        `${base} wikipedia`
+    ], 5);
+
     try {
         const text = await callOpenRouterChat({
             model: 'openai/gpt-5.4',
             timeoutMs: 30000,
             temperature: 0.1,
-            maxTokens: 220,
+            maxTokens: 320,
             messages: [
                 {
                     role: 'system',
-                    content: 'Generate exactly 3 short English web search queries for learning research. Return a strict JSON array of strings only. No markdown.'
+                    content: 'Generate exactly 5 short English web search queries for learning research. The 5 queries should intentionally diversify source types: intuition/visual, tutorial, worked example, university notes, and reference. Return a strict JSON array of strings only. No markdown.'
                 },
                 {
                     role: 'user',
@@ -675,18 +684,14 @@ async function generateSearchAngles(question) {
 
         const parsed = tryParseJsonLoose(text);
         if (Array.isArray(parsed)) {
-            const queries = uniqueStrings(parsed, 3);
+            const queries = uniqueStrings([...parsed, ...deterministic], 5);
             if (queries.length) return queries;
         }
     } catch (err) {
         console.warn('[Search] Search-angle fallback:', err.message);
     }
 
-    return uniqueStrings([
-        `${question} explained`,
-        `${question} tutorial`,
-        `${question} worked example`
-    ], 3);
+    return deterministic;
 }
 
 function scoreBookEntry(entry, keywords, question) {
@@ -816,6 +821,17 @@ async function wikipediaSearch(query) {
     }
 }
 
+function classifySourceType(url = '', title = '') {
+    const text = `${url} ${title}`.toLowerCase();
+    if (/youtube\.com|youtu\.be/.test(text)) return 'video';
+    if (/wikipedia\.org|mathworld|wolfram/.test(text)) return 'reference';
+    if (/edu\b|mit|stanford|berkeley|cmu|ox\.ac|cam\.ac|lecture|course|notes|pdf/.test(text)) return 'course';
+    if (/3blue1brown|visual|geometry|interactive|desmos|geogebra/.test(text)) return 'visual';
+    if (/medium\.com|substack|blog|towardsdatascience/.test(text)) return 'blog';
+    if (/stackexchange|reddit|quora/.test(text)) return 'community';
+    return 'web';
+}
+
 function enrichSources(sources) {
     return sources.map(item => {
         let domain = '';
@@ -829,7 +845,8 @@ function enrichSources(sources) {
             title: compactWhitespace(item.title),
             url: item.url,
             snippet: compactWhitespace(item.snippet),
-            domain
+            domain,
+            sourceType: classifySourceType(item.url, item.title)
         };
     });
 }
@@ -844,29 +861,41 @@ async function collectWebSources(searchAngles) {
             if (!key || seen.has(key)) continue;
             seen.add(key);
             merged.push(item);
-            if (merged.length >= 15) break;
+            if (merged.length >= 18) break;
         }
     };
 
-    // Try DuckDuckGo first
+    // Try DuckDuckGo first with diversified angles
     for (const angle of searchAngles) {
         const items = await duckDuckGoSearch(angle);
         addItems(items);
-        if (merged.length >= 15) break;
+        if (merged.length >= 18) break;
     }
 
-    // If DDG returned nothing, fallback to Wikipedia
-    if (merged.length === 0) {
-        console.log('[Search] DDG returned empty, falling back to Wikipedia...');
-        for (const angle of searchAngles) {
-            const items = await wikipediaSearch(angle);
+    // Always add at least some reference-style sources for coverage
+    for (const angle of searchAngles.slice(0, 2)) {
+        const items = await wikipediaSearch(angle);
+        addItems(items);
+        if (merged.length >= 18) break;
+    }
+
+    // If still too sparse, expand with targeted educational variants
+    if (merged.length < 6) {
+        const fallbackAngles = uniqueStrings(searchAngles.flatMap(angle => [
+            `${angle} site:youtube.com`,
+            `${angle} lecture notes`,
+            `${angle} intuitive explanation`
+        ]), 6);
+
+        for (const angle of fallbackAngles) {
+            const items = await duckDuckGoSearch(angle);
             addItems(items);
-            if (merged.length >= 12) break;
+            if (merged.length >= 18) break;
         }
     }
 
     console.log(`[Search] collectWebSources: ${merged.length} sources for angles: ${searchAngles.join(' | ')}`);
-    return enrichSources(merged.slice(0, 12));
+    return enrichSources(merged.slice(0, 14));
 }
 
 function buildBookContext(bookPages) {

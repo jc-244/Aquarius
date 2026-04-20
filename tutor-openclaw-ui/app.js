@@ -2309,6 +2309,56 @@ if (bookNextBtn) {
   });
 }
 
+function sourceTypeLabel(type) {
+  return {
+    video: 'Video',
+    visual: 'Visual',
+    reference: 'Reference',
+    course: 'Course',
+    blog: 'Blog',
+    community: 'Community',
+    web: 'Web'
+  }[type] || 'Web';
+}
+
+function sourceTypeIcon(type) {
+  return {
+    video: '▶',
+    visual: '◎',
+    reference: '◈',
+    course: '📘',
+    blog: '✎',
+    community: '💬',
+    web: '•'
+  }[type] || '•';
+}
+
+function renderWebSourceCards(sources = [], options = {}) {
+  const compact = !!options.compact;
+  return sources.map(w => {
+    const d = w.domain || domainOf(w.url);
+    const fav = d ? `https://www.google.com/s2/favicons?sz=32&domain=${encodeURIComponent(d)}` : '';
+    const type = w.sourceType || 'web';
+    return `<a class="web-source-inline-card${compact ? ' compact' : ''}" href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer">
+      <div class="wsic-left">
+        <div class="wsic-type-badge wsic-type-${escapeHtml(type)}">${sourceTypeIcon(type)}</div>
+        ${fav ? `<img class="wsic-fav" src="${fav}" alt="">` : '<span class="wsic-fav-placeholder"></span>'}
+        <div class="wsic-body">
+          <div class="wsic-title-row">
+            <div class="wsic-title">${escapeHtml(w.title || d || w.url)}</div>
+            <span class="wsic-domain-pill">${escapeHtml(d || w.url)}</span>
+          </div>
+          ${!compact && w.snippet ? `<div class="wsic-snippet">${escapeHtml(w.snippet)}</div>` : ''}
+          <div class="wsic-meta-row">
+            <span class="wsic-type-label">${escapeHtml(sourceTypeLabel(type))}</span>
+          </div>
+        </div>
+      </div>
+      <svg class="wsic-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+    </a>`;
+  }).join('');
+}
+
 function renderLearnWebSources(sources) {
   if (!sources || !sources.length) {
     learnWebToggle.classList.add('hidden');
@@ -2317,21 +2367,7 @@ function renderLearnWebSources(sources) {
   learnWebData = sources;
   learnWebCount.textContent = sources.length;
   learnWebToggle.classList.remove('hidden');
-  learnWebSources.innerHTML = sources.map(w => {
-    const d = w.domain || domainOf(w.url);
-    const fav = d ? `https://www.google.com/s2/favicons?sz=32&domain=${encodeURIComponent(d)}` : '';
-    return `<a class="web-source-inline-card" href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer">
-      <div class="wsic-left">
-        ${fav ? `<img class="wsic-fav" src="${fav}" alt="">` : '<span class="wsic-fav-placeholder"></span>'}
-        <div class="wsic-body">
-          <div class="wsic-title">${escapeHtml(w.title || d || w.url)}</div>
-          <div class="wsic-url">${escapeHtml(d || w.url)}</div>
-          ${w.snippet ? `<div class="wsic-snippet">${escapeHtml(w.snippet)}</div>` : ''}
-        </div>
-      </div>
-      <svg class="wsic-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-    </a>`;
-  }).join('');
+  learnWebSources.innerHTML = renderWebSourceCards(sources);
 }
 
 function renderLearnWebSection(webSources) {
@@ -2550,8 +2586,9 @@ async function sendLearnFollowup(rawPrompt) {
           <summary>Thinking with context and web sources...</summary>
           <div style="font-size: 0.9em; padding-top: 10px; color: #555;">
             <div class="search-step"><span class="step-icon step-spinner"></span> Reading Section Objectives...</div>
-            <div class="search-step" style="opacity: 0.5;"><span class="step-icon step-spinner"></span> Searching Online Explanations...</div>
-            <div class="search-step" style="opacity: 0.2;"><span class="step-icon step-spinner"></span> Reasoning Concept Connections...</div>
+            <div class="search-step" style="opacity: 0.5;"><span class="step-icon step-spinner"></span> Searching Across the Web...</div>
+            <div class="search-live-sources hidden"></div>
+            <div class="search-step" style="opacity: 0.2;"><span class="step-icon step-spinner"></span> Generating Final Explanation...</div>
           </div>
         </details>
       </div>
@@ -2606,6 +2643,11 @@ async function sendLearnFollowup(rawPrompt) {
 
     const target = document.getElementById(answerId);
     if (target) {
+      const liveSources = target.querySelector('.search-live-sources');
+      if (liveSources && data.webSources && data.webSources.length) {
+        liveSources.classList.remove('hidden');
+        liveSources.innerHTML = renderWebSourceCards(data.webSources.slice(0, 6), { compact: true }) + (data.webSources.length > 6 ? `<div class="search-live-more">还有 ${data.webSources.length - 6} 个...</div>` : '');
+      }
       const finalStep = target.querySelectorAll('.search-step')[2];
       if (finalStep) {
         const sp = finalStep.querySelector('.step-icon');
@@ -2617,17 +2659,9 @@ async function sendLearnFollowup(rawPrompt) {
       answerDiv.classList.remove('ghost');
       answerDiv.className = 'fub-a learn-explain-content';
 
-      // Build source list as separate DOM element (never overwritten by explanation)
-      let sourceDom = '';
-      if (data.webSources && data.webSources.length > 0) {
-        sourceDom = `<details class="web-sources-list"><summary>References searched (${data.webSources.length})</summary><ul class="web-sources-ul">` +
-          data.webSources.map(w => `<li><a href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(w.title || w.url)}</a></li>`).join('') +
-          `</ul></details>`;
-      }
-
-      // Render explanation + persistent sources block
+      // Render explanation only; web sources now surface in the upper search panel instead of a bottom details block
       try {
-        answerDiv.innerHTML = markdownToHtml(data.explanation || 'No explanation available.') + sourceDom;
+        answerDiv.innerHTML = markdownToHtml(data.explanation || 'No explanation available.');
       } catch (renderErr) {
         answerDiv.innerHTML = `<p>${escapeHtml(data.explanation || 'No explanation available.')}</p>`;
       }
@@ -3111,23 +3145,7 @@ function renderWebSourcesInline(webSources = []) {
   webSourcesToggle.classList.remove('open');
   webSourcesInline.classList.add('hidden'); // collapsed by default
 
-  webSourcesInline.innerHTML = webSources.map((w, i) => {
-    const d = w.domain || domainOf(w.url);
-    const fav = d ? `https://www.google.com/s2/favicons?sz=32&domain=${encodeURIComponent(d)}` : '';
-    return `
-      <a class="web-source-inline-card" href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer">
-        <div class="wsic-left">
-          ${fav ? `<img class="wsic-fav" src="${fav}" alt="">` : '<span class="wsic-fav-placeholder"></span>'}
-          <div class="wsic-body">
-            <div class="wsic-title">${escapeHtml(w.title || d || w.url)}</div>
-            <div class="wsic-url">${escapeHtml(d || w.url)}</div>
-            ${w.snippet ? `<div class="wsic-snippet">${escapeHtml(w.snippet)}</div>` : ''}
-          </div>
-        </div>
-        <svg class="wsic-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-      </a>
-    `;
-  }).join('');
+  webSourcesInline.innerHTML = renderWebSourceCards(webSources, { compact: true });
 }
 
 function renderExplanation(markdown) {
@@ -3212,8 +3230,9 @@ async function sendQuestion(rawPrompt) {
       <summary>Thinking with context from this section...</summary>
       <div style="font-size: 0.9em; padding-top: 10px; color: #555;">
         <div class="search-step">1. 📚 Reading Section Objectives...</div>
-        <div class="search-step" style="opacity: 0.5;">2. 🔍 Retrieving Relevant Explanations...</div>
-        <div class="search-step" style="opacity: 0.2;">3. 🧠 Reasoning Concept Connections...</div>
+        <div class="search-step" style="opacity: 0.5;">2. 🔍 Searching Across the Web...</div>
+        <div class="search-live-sources hidden"></div>
+        <div class="search-step" style="opacity: 0.2;">3. 🧠 Generating Final Explanation...</div>
       </div>
     </details>
   `;
@@ -3245,6 +3264,11 @@ async function sendQuestion(rawPrompt) {
       attachments: attachments.map(a => ({ type: a.type, name: a.name, dataUrl: a.dataUrl, mimeType: a.mimeType }))
     });
     stopStepAnimation();
+    const liveSources = answerContent.querySelector('.search-live-sources');
+    if (liveSources && data.webSources && data.webSources.length) {
+      liveSources.classList.remove('hidden');
+      liveSources.innerHTML = renderWebSourceCards(data.webSources.slice(0, 6), { compact: true }) + (data.webSources.length > 6 ? `<div class="search-live-more">还有 ${data.webSources.length - 6} 个...</div>` : '');
+    }
     const finalStep = answerContent.querySelectorAll('.search-step')[2];
     if (finalStep) {
       const label = finalStep.textContent.replace(/^\s*3\.\s*🧠\s*/, '').trim();
