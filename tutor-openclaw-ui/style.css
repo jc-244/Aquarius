@@ -2910,3 +2910,45 @@ button:focus, input:focus, textarea:focus {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0,0,0,0.2);
 }
+
+/* Resizer Handle */
+.learn-resizer {
+  width: 10px;
+  background-color: transparent;
+  cursor: col-resize;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  margin-left: -5px;
+  margin-right: -5px;
+}
+
+.learn-resizer::before {
+  content: '';
+  display: block;
+  width: 2px;
+  height: 48px;
+  background-color: var(--border);
+  border-radius: 4px;
+  transition: height 0.2s ease, background-color 0.2s ease;
+}
+
+.learn-resizer:hover, .learn-resizer:active {
+  background-color: rgba(69, 137, 247, 0.1);
+}
+
+.learn-resizer:hover::before, .learn-resizer:active::before {
+  background-color: var(--primary);
+  height: 100%;
+}
+
+/* Ensure generated math/python diagram plots with transparent backgrounds don't render black on dark mode environments */
+.lesson-img, .fub-a img, .learn-explain-content img {
+  background-color: white !important;
+  border-radius: 6px;
+  padding: 8px; /* Extra padding looks better framing charts */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* Slight elevation */
+}

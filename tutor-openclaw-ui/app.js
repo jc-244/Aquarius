@@ -3305,3 +3305,40 @@ setTimeout(() => {
     });
   }
 }, 500);
+
+// --- Resizer Logic ---
+const learnResizer = document.getElementById('learnResizer');
+const learnExplainCol = document.querySelector('.learn-explain-col');
+const learnChatCol = document.getElementById('learnChatCol');
+let isResizing = false;
+
+if (learnResizer) {
+  learnResizer.addEventListener('mousedown', (e) => {
+    isResizing = true;
+    document.body.style.cursor = 'col-resize';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isResizing) return;
+    const containerWidth = learnExplainCol.parentElement.offsetWidth;
+    let newWidth = e.clientX - learnExplainCol.getBoundingClientRect().left;
+    if (newWidth < 300) newWidth = 300;
+    if (newWidth > containerWidth - 300) newWidth = containerWidth - 300;
+    
+    // Switch from flex-grow to fixed pixel widths for precision drag
+    learnExplainCol.style.flex = 'none';
+    learnExplainCol.style.width = newWidth + 'px';
+    learnChatCol.style.flex = '1';
+    
+    // Automatically trigger resize/reflow for contained panels
+    autoResize(document.getElementById('learnFollowupInput'));
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isResizing) {
+      isResizing = false;
+      document.body.style.cursor = 'default';
+    }
+  });
+}
