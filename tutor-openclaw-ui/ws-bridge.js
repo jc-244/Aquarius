@@ -54,6 +54,8 @@ const MATPLOTLIB_GEN = path.join(__dirname, 'matplotlib_gen.py');
 const GENERATED_DIR = path.join(__dirname, 'generated');
 try { if (!fs.existsSync(GENERATED_DIR)) fs.mkdirSync(GENERATED_DIR, { recursive: true }); } catch (_) {}
 
+const { processEmbeddedPython } = require('./process-python.js');
+
 const MIME_TYPES = {
     '.html': 'text/html; charset=utf-8',
     '.css': 'text/css; charset=utf-8',
@@ -958,7 +960,7 @@ async function generateExplanation(question, bookPages, webSources, options = {}
         language === 'zh' ? '3. 如果这是继续追问，必须优先承接上文，不要把它当成全新的陌生问题。' : '3. Prioritize context if this is a follow-up question.',
         language === 'zh' ? '4. 引用时只使用 [书页N] / [来源N] 这样的标注，自然嵌入正文中，**千万不要在结尾专门罗列来源列表**。' : '4. Cite sources naturally inline as [PageN] or [SourceN]. **Do not list sources at the end.**',
         language === 'zh' ? '6. 如果出现数学公式，使用 LaTeX，块级公式写成 $$...$$，行内公式写成 $...$。' : '6. Use LaTeX for math. $$...$$ for block, $...$ for inline.',
-        language === 'zh' ? '7. 如果需要生成图表或代码，优先给出对应的 Python (matplotlib) 代码而非抽象比喻。' : '7. Explain using Python (matplotlib) code snippets if you need to illustrate a chart or graph mathematically.',
+        language === 'zh' ? '7. 如果需要可视化图示、坐标轴分析、函数图等，不要使用 ASCII 图。请始终返回可直接执行的 Python3 matplotlib 代码块（包含在 ```python 闭包内）。你需要设置 `plt.savefig()` 并将图片保存至 `/tmp/tutor-plot-auto.png` 路径，不要使用 `plt.show()`。只输出用于可视化的独立 python 区块，讲解文字和其他内容保持正常 Markdown 输出。' : '7. Explanations containing coordinate systems, plots or analytical diagrams MUST NOT use ASCII art. You MUST provide runnable Python3 (matplotlib) code blocks wrapped in ```python which save the output figure via `plt.savefig("/tmp/tutor-plot-auto.png", dpi=150)` (do not use plt.show). Deliver the normal textual explanation with this python code block embedded.',
         language === 'zh' ? '8. 优先结合教材，再补充联网资料。' : '8. Prioritize textbook content, then web sources.',
         language === 'zh' ? '9. 如果联网资料为空，也照常基于书页完成讲解。' : '9. Answer using book context if web sources are empty.'
     ].filter(Boolean).join('\n');
@@ -1862,7 +1864,7 @@ const server = http.createServer(async (req, res) => {
                 }
             }
 
-            const explanation = await generateExplanation(question, relatedBooks, webSources, {
+            let explanation = await generateExplanation(question, relatedBooks, webSources, {
                 history,
                 sectionTitle: sectionTitle || sectionId,
                 lessonContext,
@@ -1871,6 +1873,9 @@ const server = http.createServer(async (req, res) => {
                 userProfilePrompt,
                 attachments
             });
+
+            // Post-process pure python outputs into images
+            explanation = await processEmbeddedPython(explanation, GENERATED_DIR);
 
             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
             res.end(JSON.stringify({
@@ -1923,6 +1928,12 @@ const server = http.createServer(async (req, res) => {
             apiTutor: true,
             skillScript: SKILL_SCRIPT
         }));
+        return;
+    }
+
+    if (pathname.startsWith('/generated/')) {
+        const filename = pathname.replace(/^\/generated\//, '');
+        serveStaticFile(res, path.join(GENERATED_DIR, filename));
         return;
     }
 
