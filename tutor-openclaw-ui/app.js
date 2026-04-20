@@ -3144,7 +3144,16 @@ async function sendQuestion(rawPrompt) {
   renderBookSources([]);
   renderWebSources([]);
   sourcesSection.classList.add('hidden');
-  answerContent.innerHTML = '<p class="ghost">Preparing concepts, formulas, and references...</p>';
+  answerContent.innerHTML = `
+    <details open class="search-progress">
+      <summary>Thinking with context from this section...</summary>
+      <div style="font-size: 0.9em; padding-top: 10px; color: #555;">
+        <div class="search-step">1. 📚 Reading Section Objectives...</div>
+        <div class="search-step" style="opacity: 0.5;">2. 🔍 Retrieving Relevant Explanations...</div>
+        <div class="search-step" style="opacity: 0.2;">3. 🧠 Reasoning Concept Connections...</div>
+      </div>
+    </details>
+  `;
   answerScroll.scrollTop = 0;
 
   // Abort any in-flight request
@@ -3152,7 +3161,15 @@ async function sendQuestion(rawPrompt) {
   currentAbortController = new AbortController();
   stopBtn.classList.remove('hidden');
 
-  startStepAnimation();
+  let step = 1;
+  renderStepState(step);
+  loadingTimer = setInterval(() => {
+    step = Math.min(3, step + 1);
+    renderStepState(step);
+    const steps = answerContent.querySelectorAll('.search-step');
+    if (step >= 2 && steps[1]) steps[1].style.opacity = '1';
+    if (step >= 3 && steps[2]) steps[2].style.opacity = '1';
+  }, 1500);
 
   try {
     const data = await callAsk(prompt, currentAbortController.signal, {

@@ -892,16 +892,14 @@ async function generateExplanation(question, bookPages, webSources, options = {}
         buildWebContext(webSources),
         '',
         '输出要求：',
-        language === 'zh' ? '1. 用中文回答，适合初学者。' : '1. Answer in clear beginner-friendly English.',
-        '2. 用 Markdown 输出。',
-        '3. 如果这是继续追问，必须优先承接上文，不要把它当成全新的陌生问题。',
-        '4. 如果用户用了代词（比如“这个”“刚才那个”“q1”），优先根据历史对话和当前讲解内容解析指代。',
-        '5. 引用时只使用 [书页N] / [来源N] 这样的标注。',
-        '6. 如果出现数学公式，使用 LaTeX，块级公式写成 $$...$$，行内公式写成 $...$。',
-        '7. 需要表格时必须用标准 Markdown 表格语法（| 列 | 列 | 换行 |---|---| 换行 | 值 | 值 |），禁止用 ASCII 字符堆砌，表格内数学符号用 $...$ 包裹。',
-        '8. 优先结合教材，再补充联网资料。',
-        '9. 如果联网资料为空，也照常基于书页完成讲解。',
-        '10. 结尾加一个“来源列表”小节，列出所有实际引用到的来源。'
+        language === 'zh' ? '1. 用中文回答，优先用通俗易懂的方式讲解。' : '1. Answer in clear beginner-friendly English.',
+        language === 'zh' ? '2. 用 Markdown 输出。' : '2. Use Markdown formatting.',
+        language === 'zh' ? '3. 如果这是继续追问，必须优先承接上文，不要把它当成全新的陌生问题。' : '3. Prioritize context if this is a follow-up question.',
+        language === 'zh' ? '4. 引用时只使用 [书页N] / [来源N] 这样的标注，自然嵌入正文中，**千万不要在结尾专门罗列来源列表**。' : '4. Cite sources naturally inline as [PageN] or [SourceN]. **Do not list sources at the end.**',
+        language === 'zh' ? '6. 如果出现数学公式，使用 LaTeX，块级公式写成 $$...$$，行内公式写成 $...$。' : '6. Use LaTeX for math. $$...$$ for block, $...$ for inline.',
+        language === 'zh' ? '7. 如果需要生成图表或代码，优先给出对应的 Python (matplotlib) 代码而非抽象比喻。' : '7. Explain using Python (matplotlib) code snippets if you need to illustrate a chart or graph mathematically.',
+        language === 'zh' ? '8. 优先结合教材，再补充联网资料。' : '8. Prioritize textbook content, then web sources.',
+        language === 'zh' ? '9. 如果联网资料为空，也照常基于书页完成讲解。' : '9. Answer using book context if web sources are empty.'
     ].filter(Boolean).join('\n');
 
     // Build user message content — supports multimodal (text + images)
@@ -1112,7 +1110,7 @@ async function agentA_plan(sectionId, sectionTitle, bookPages, webSources, langu
     const existingPageImages = bookPages.map(p => p.page);
     const availableFigures = {};
     for (const p of bookPages) {
-        const metaPath = path.join(OCR_DIR, `${p.page}.meta.json`);
+        const metaPath = path.join((p.textPath ? path.dirname(p.textPath) : OCR_DIR), `${p.page}.meta.json`);
         if (fs.existsSync(metaPath)) {
             const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
             if (meta.figures && meta.figures.length) {
@@ -1205,7 +1203,7 @@ async function agentB_execute(blueprint, bookPages, webSources, language = 'en')
     for (const p of bookPages) {
         existingPageImages[p.page] = `/pages/${p.pageImage}`;
         // Load figure metadata for precision crop
-        const metaPath = path.join(OCR_DIR, `${p.page}.meta.json`);
+        const metaPath = path.join((p.textPath ? path.dirname(p.textPath) : OCR_DIR), `${p.page}.meta.json`);
         if (fs.existsSync(metaPath)) {
             const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
             if (meta.figures && meta.figures.length) {
@@ -1243,7 +1241,22 @@ async function agentB_execute(blueprint, bookPages, webSources, language = 'en')
     const rendered = tryParseJsonLoose(raw);
     if (rendered && Array.isArray(rendered.rendered_blocks)) {
         console.log(`[Agent B] JSON OK — ${rendered.rendered_blocks.length} blocks`);
+        // Auto-fill missing fig_id for book_image blocks using metadata
         rendered.rendered_blocks.forEach((b, i) => {
+            if (b.type === 'book_image' && b.source_page && !b.fig_id) {
+                const metaPath = fs.existsSync(path.join(OCR_DIR_NEW, `${b.source_page}.meta.json`))
+                    ? path.join(OCR_DIR_NEW, `${b.source_page}.meta.json`)
+                    : path.join(OCR_DIR_OLD, `${b.source_page}.meta.json`);
+                if (fs.existsSync(metaPath)) {
+                    const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+                    const figs = meta.figures || [];
+                    if (figs.length === 1) {
+                        b.fig_id = figs[0].fig_id;
+                        if (!b.caption) b.caption = figs[0].caption;
+                        console.log(`[Agent B] Auto-filled fig_id for block[${i}]: ${figs[0].fig_id}`);
+                    }
+                }
+            }
             if (b.type === 'book_image')
                 console.log(`[Agent B] block[${i}] book_image: page=${b.source_page} fig_id=${b.fig_id} file_path=${b.file_path}`);
         });
@@ -1278,7 +1291,11 @@ async function blueprintToMarkdown(blocks, pageImages) {
                 const figId = block.fig_id || block.caption || '';
 
                 // Try to find the figure in metadata for a precision crop
-                const metaPath = sourcePage ? path.join(OCR_DIR, `${sourcePage}.meta.json`) : null;
+                const metaPath = sourcePage
+                    ? (fs.existsSync(path.join(OCR_DIR_NEW, `${sourcePage}.meta.json`))
+                        ? path.join(OCR_DIR_NEW, `${sourcePage}.meta.json`)
+                        : path.join(OCR_DIR_OLD, `${sourcePage}.meta.json`))
+                    : null;
                 let cropUrl = null;
                 if (metaPath && fs.existsSync(metaPath)) {
                     const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
