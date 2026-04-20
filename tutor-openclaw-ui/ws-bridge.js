@@ -167,6 +167,7 @@ const USERS_DIR = path.join(__dirname, 'users');
 try { if (!fs.existsSync(USERS_DIR)) fs.mkdirSync(USERS_DIR, { recursive: true }); } catch (_) {}
 
 const LESSON_CACHE_DIR = path.join(__dirname, '../tutor-materials/lesson-cache');
+const LESSON_CACHE_VERSION = 'v2';
 try { if (!fs.existsSync(LESSON_CACHE_DIR)) fs.mkdirSync(LESSON_CACHE_DIR, { recursive: true }); } catch (_) {}
 
 /**
@@ -192,8 +193,8 @@ function readLessonCache(sectionId, memory) {
     const key = `${q.goal}|${q.math}|${q.timeline}`;
     const normId = normalizeSectionId(sectionId);
     const dir = path.join(LESSON_CACHE_DIR, normId);
-    const file = path.join(dir, `${key}.en.md`);
-    console.log(`[LessonCache] lookup: ${sectionId} → ${normId} / ${key}`);
+    const file = path.join(dir, `${key}.${LESSON_CACHE_VERSION}.en.md`);
+    console.log(`[LessonCache] lookup: ${sectionId} → ${normId} / ${key} / ${LESSON_CACHE_VERSION}`);
     if (!fs.existsSync(file)) return null;
     try {
         const content = fs.readFileSync(file, 'utf8');
@@ -211,9 +212,9 @@ function writeLessonCache(sectionId, memory, lesson) {
     const dir = path.join(LESSON_CACHE_DIR, normId);
     try {
         fs.mkdirSync(dir, { recursive: true });
-        const file = path.join(dir, `${key}.en.md`);
+        const file = path.join(dir, `${key}.${LESSON_CACHE_VERSION}.en.md`);
         fs.writeFileSync(file, lesson, 'utf8');
-        console.log(`[LessonCache] SAVED: ${normId} / ${key}`);
+        console.log(`[LessonCache] SAVED: ${normId} / ${key} / ${LESSON_CACHE_VERSION}`);
     } catch (e) {
         console.error('[LessonCache] write error:', e.message);
     }
@@ -1174,6 +1175,7 @@ async function agentA_plan(sectionId, sectionTitle, bookPages, webSources, langu
                 blueprint.blocks.splice(Math.min(2, blueprint.blocks.length), 0, {
                     type: 'book_image',
                     source_page: page,
+                    fig_id: canonical.fig_id,
                     crop_hint: 'full',
                     caption_instruction: 'Add a one-sentence caption explaining what this textbook figure shows and why it matters for the core concept of this section.'
                 });
@@ -1288,7 +1290,9 @@ async function blueprintToMarkdown(blocks, pageImages) {
                     }
                     if (!fig && figures.length === 1) fig = figures[0];
                     if (fig) {
-                        cropUrl = `/api/crop?page=${encodeURIComponent(sourcePage)}&fig=${encodeURIComponent(fig.fig_id)}`;
+                        cropUrl = fig.crop_file
+                            ? `/figures/${encodeURIComponent(fig.crop_file)}`
+                            : `/api/crop?page=${encodeURIComponent(sourcePage)}&fig=${encodeURIComponent(fig.fig_id)}`;
                     }
                 }
 
@@ -1845,6 +1849,13 @@ const server = http.createServer(async (req, res) => {
         } else {
             serveStaticFromDir(res, PAGE_IMAGE_DIR_NEW, filename);
         }
+        return;
+    }
+
+    if (pathname.startsWith('/figures/')) {
+        const filename = pathname.replace(/^\/figures\//, '');
+        const figurePath = path.join(__dirname, '../tutor-materials/new-book-figures', filename);
+        serveStaticFile(res, figurePath);
         return;
     }
 
