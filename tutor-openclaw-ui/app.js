@@ -2547,11 +2547,11 @@ async function sendLearnFollowup(rawPrompt) {
       <div class="fub-q">${escapeHtml(prompt)}</div>
       <div class="fub-a ghost">
         <details open class="search-progress">
-          <summary>Thinking with context from this section...</summary>
+          <summary>Thinking with context and web sources...</summary>
           <div style="font-size: 0.9em; padding-top: 10px; color: #555;">
-            <div class="search-step">1. 📚 Reading Section Objectives...</div>
-            <div class="search-step" style="opacity: 0.5;">2. 🔍 Retrieving Relevant Explanations...</div>
-            <div class="search-step" style="opacity: 0.2;">3. 🧠 Reasoning Concept Connections...</div>
+            <div class="search-step"><span class="step-icon">⏳</span> Reading Section Objectives...</div>
+            <div class="search-step" style="opacity: 0.5;"><span class="step-icon">⏳</span> Searching Online Explanations...</div>
+            <div class="search-step" style="opacity: 0.2;"><span class="step-icon">⏳</span> Reasoning Concept Connections...</div>
           </div>
         </details>
       </div>
@@ -2568,9 +2568,16 @@ async function sendLearnFollowup(rawPrompt) {
     if (!answerEl) return clearInterval(loadingTimerLearn);
     learnStep = Math.min(3, learnStep + 1);
     const steps = answerEl.querySelectorAll('.search-step');
-    if (learnStep >= 2 && steps[1]) steps[1].style.opacity = '1';
-    if (learnStep >= 3 && steps[2]) steps[2].style.opacity = '1';
-  }, 1500);
+    if (learnStep >= 1 && steps[0]) steps[0].innerHTML = steps[0].innerHTML.replace('⏳', '✓<span style="color:var(--success);"></span>');
+    if (learnStep >= 2 && steps[1]) {
+      steps[1].style.opacity = '1';
+      setTimeout(() => steps[1].innerHTML = steps[1].innerHTML.replace('⏳', '✓<span style="color:var(--success);"></span>'), 800);
+    }
+    if (learnStep >= 3 && steps[2]) {
+      steps[2].style.opacity = '1';
+      setTimeout(() => steps[2].innerHTML = steps[2].innerHTML.replace('⏳', '✓<span style="color:var(--success);"></span>'), 800);
+    }
+  }, 1200);
 
   try {
     const data = await callAsk(prompt, learnAbort.signal, {
@@ -3358,6 +3365,7 @@ if (learnResizer) {
     learnChatCol.style.flex = '1';
     
     // Automatically trigger resize/reflow for contained panels
+    learnFollowupInput.style.width = '100%';
     autoResize(document.getElementById('learnFollowupInput'));
   });
 
@@ -3365,6 +3373,8 @@ if (learnResizer) {
     if (isResizing) {
       isResizing = false;
       document.body.style.cursor = 'default';
+      learnFollowupInput.style.width = '';
+      autoResize(document.getElementById('learnFollowupInput'));
     }
   });
 }

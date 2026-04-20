@@ -1787,9 +1787,18 @@ const server = http.createServer(async (req, res) => {
                 ? data.webSources
                 : [];
             let searchAngles = [];
-            if (!webSources.length && mode !== 'followup') {
+            // Remove the stringent mode !== 'followup' limitation so that followups can also search new angles if helpful
+            if (!webSources.length || mode === 'followup') {
                 searchAngles = await generateSearchAngles(question);
-                webSources = await collectWebSources(searchAngles);
+                const newWebSources = await collectWebSources(searchAngles);
+                // merge avoiding duplicates by url
+                const seenUrls = new Set(webSources.map(w => w.url));
+                for (const w of newWebSources) {
+                    if (!seenUrls.has(w.url)) {
+                        seenUrls.add(w.url);
+                        webSources.push(w);
+                    }
+                }
             }
 
             const explanation = await generateExplanation(question, relatedBooks, webSources, {
