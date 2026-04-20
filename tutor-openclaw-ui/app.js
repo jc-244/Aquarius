@@ -2594,17 +2594,22 @@ async function sendLearnFollowup(rawPrompt) {
 
     clearInterval(loadingTimerLearn);
 
-    let sourceHtml = '';
-    if (data.webSources && data.webSources.length > 0) {
-      sourceHtml = `\n\n<details><summary>Searched Web Sources</summary><ul>` + data.webSources.map(w => `<li><a href="${escapeHtml(w.url)}" target="_blank">${escapeHtml(w.title)}</a></li>`).join('') + `</ul></details>`;
-    }
-
     const target = document.getElementById(answerId);
     if (target) {
       const answerDiv = target.querySelector('.fub-a') || target;
       answerDiv.classList.remove('ghost');
       answerDiv.className = 'fub-a learn-explain-content';
-      answerDiv.innerHTML = markdownToHtml((data.explanation || 'No explanation available.') + sourceHtml);
+
+      // Build source list as separate DOM element (never overwritten by explanation)
+      let sourceDom = '';
+      if (data.webSources && data.webSources.length > 0) {
+        sourceDom = `<details class="web-sources-list"><summary>References searched (${data.webSources.length})</summary><ul class="web-sources-ul">` +
+          data.webSources.map(w => `<li><a href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(w.title || w.url)}</a></li>`).join('') +
+          `</ul></details>`;
+      }
+
+      // Render explanation + persistent sources block
+      answerDiv.innerHTML = markdownToHtml(data.explanation || 'No explanation available.') + sourceDom;
       setTimeout(() => {
         if (window.MathJax && window.MathJax.typesetPromise) {
           window.MathJax.typesetPromise([answerDiv]).catch(() => {});

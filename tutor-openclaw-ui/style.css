@@ -2967,3 +2967,34 @@ button:focus, input:focus, textarea:focus {
   word-break: break-word;
   overflow-wrap: break-word;
 }
+
+/* Web Sources List in chat */
+.web-sources-list {
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  font-size: 0.85em;
+}
+.web-sources-list summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--primary);
+  user-select: none;
+  padding: 4px 0;
+}
+.web-sources-ul {
+  margin: 8px 0 0 0;
+  padding-left: 18px;
+}
+.web-sources-ul li {
+  margin: 4px 0;
+}
+.web-sources-ul a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  word-break: break-all;
+}
+.web-sources-ul a:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
