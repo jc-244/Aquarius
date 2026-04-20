@@ -2589,6 +2589,7 @@ async function sendLearnFollowup(rawPrompt) {
     renderLearnWebSection(tutorState.learnWebSources);
     learnChatScroll.scrollTop = learnChatScroll.scrollHeight;
   } catch (err) {
+    clearInterval(loadingTimerLearn);
     if (err.name === 'AbortError') return;
     const target = document.getElementById(answerId);
     if (target) {
