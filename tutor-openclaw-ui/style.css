@@ -2969,6 +2969,31 @@ button:focus, input:focus, textarea:focus {
 }
 
 /* Web Sources List in chat */
+/* search-step spinner */
+.step-icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.step-spinner {
+  border: 2px solid rgba(99,102,241,0.25);
+  border-top-color: var(--primary, #6366f1);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.step-done {
+  color: var(--success, #22c55e);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+  animation: none;
+  border: none;
+}
+
 .web-sources-list {
   margin-top: 16px;
   border-top: 1px solid var(--border);

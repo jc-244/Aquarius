@@ -800,6 +800,22 @@ async function duckDuckGoSearch(query) {
     }
 }
 
+async function wikipediaSearch(query) {
+    try {
+        const endpoint = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=4&format=json&origin=*`;
+        const payload = await httpRequestJson(endpoint, { method: 'GET', headers: { 'Accept': 'application/json', 'User-Agent': 'TutorAgent/1.0 (educational-app; contact@example.com)' } }, null, 10000);
+        if (!payload || !payload.query || !Array.isArray(payload.query.search)) return [];
+        return payload.query.search.map(item => ({
+            title: item.title || '',
+            url: `https://en.wikipedia.org/wiki/${encodeURIComponent((item.title || '').replace(/ /g, '_'))}`,
+            snippet: (item.snippet || '').replace(/<[^>]*>/g, '').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim()
+        }));
+    } catch (err) {
+        console.warn('[Search] Wikipedia failed:', query, err.message);
+        return [];
+    }
+}
+
 function enrichSources(sources) {
     return sources.map(item => {
         let domain = '';
@@ -822,8 +838,7 @@ async function collectWebSources(searchAngles) {
     const merged = [];
     const seen = new Set();
 
-    for (const angle of searchAngles) {
-        const items = await duckDuckGoSearch(angle);
+    const addItems = (items) => {
         for (const item of items) {
             const key = normalizeUrl(item.url).toLowerCase();
             if (!key || seen.has(key)) continue;
@@ -831,9 +846,26 @@ async function collectWebSources(searchAngles) {
             merged.push(item);
             if (merged.length >= 15) break;
         }
+    };
+
+    // Try DuckDuckGo first
+    for (const angle of searchAngles) {
+        const items = await duckDuckGoSearch(angle);
+        addItems(items);
         if (merged.length >= 15) break;
     }
 
+    // If DDG returned nothing, fallback to Wikipedia
+    if (merged.length === 0) {
+        console.log('[Search] DDG returned empty, falling back to Wikipedia...');
+        for (const angle of searchAngles) {
+            const items = await wikipediaSearch(angle);
+            addItems(items);
+            if (merged.length >= 12) break;
+        }
+    }
+
+    console.log(`[Search] collectWebSources: ${merged.length} sources for angles: ${searchAngles.join(' | ')}`);
     return enrichSources(merged.slice(0, 12));
 }
 
