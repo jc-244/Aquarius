@@ -2568,16 +2568,24 @@ async function sendLearnFollowup(rawPrompt) {
   if (window.loadingTimerLearn) clearInterval(window.loadingTimerLearn);
   window.loadingTimerLearn = setInterval(() => {
     if (!answerEl) return clearInterval(window.loadingTimerLearn);
-    learnStep = Math.min(3, learnStep + 1);
+    learnStep = Math.min(2, learnStep + 1);
     const steps = answerEl.querySelectorAll('.search-step');
-    if (learnStep >= 1 && steps[0]) { const sp = steps[0].querySelector('.step-icon'); if (sp) { sp.className = 'step-icon step-done'; sp.textContent = '✓'; } }
+    if (steps[0]) {
+      const sp = steps[0].querySelector('.step-icon');
+      if (sp) { sp.className = 'step-icon step-done'; sp.textContent = '✓'; }
+    }
     if (learnStep >= 2 && steps[1]) {
       steps[1].style.opacity = '1';
-      setTimeout(() => { const sp = steps[1].querySelector('.step-icon'); if (sp) { sp.className = 'step-icon step-done'; sp.textContent = '✓'; } }, 800);
+      const sp = steps[1].querySelector('.step-icon');
+      if (sp) { sp.className = 'step-icon step-done'; sp.textContent = '✓'; }
     }
-    if (learnStep >= 3 && steps[2]) {
+    if (steps[2]) {
       steps[2].style.opacity = '1';
-      setTimeout(() => { const sp = steps[2].querySelector('.step-icon'); if (sp) { sp.className = 'step-icon step-done'; sp.textContent = '✓'; } }, 800);
+      const sp = steps[2].querySelector('.step-icon');
+      if (sp && !sp.classList.contains('step-done')) {
+        sp.className = 'step-icon step-spinner';
+        sp.textContent = '';
+      }
     }
   }, 1200);
 
@@ -2597,6 +2605,13 @@ async function sendLearnFollowup(rawPrompt) {
     if (window.loadingTimerLearn) clearInterval(window.loadingTimerLearn);
 
     const target = document.getElementById(answerId);
+    if (target) {
+      const finalStep = target.querySelectorAll('.search-step')[2];
+      if (finalStep) {
+        const sp = finalStep.querySelector('.step-icon');
+        if (sp) { sp.className = 'step-icon step-done'; sp.textContent = '✓'; }
+      }
+    }
     if (target) {
       const answerDiv = target.querySelector('.fub-a') || target;
       answerDiv.classList.remove('ghost');
@@ -3213,11 +3228,11 @@ async function sendQuestion(rawPrompt) {
   renderStepState(step);
   if (loadingTimer) clearInterval(loadingTimer);
   loadingTimer = setInterval(() => {
-    step = Math.min(3, step + 1);
+    step = Math.min(2, step + 1);
     renderStepState(step);
     const steps = answerContent.querySelectorAll('.search-step');
     if (step >= 2 && steps[1]) steps[1].style.opacity = '1';
-    if (step >= 3 && steps[2]) steps[2].style.opacity = '1';
+    if (steps[2]) steps[2].style.opacity = '1';
   }, 1500);
 
   try {
@@ -3230,6 +3245,11 @@ async function sendQuestion(rawPrompt) {
       attachments: attachments.map(a => ({ type: a.type, name: a.name, dataUrl: a.dataUrl, mimeType: a.mimeType }))
     });
     stopStepAnimation();
+    const finalStep = answerContent.querySelectorAll('.search-step')[2];
+    if (finalStep) {
+      const label = finalStep.textContent.replace(/^\s*3\.\s*🧠\s*/, '').trim();
+      finalStep.innerHTML = `3. 🧠 ${label}`;
+    }
     currentAbortController = null;
     stopBtn.classList.add('hidden');
 
