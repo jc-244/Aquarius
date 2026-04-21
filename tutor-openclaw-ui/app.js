@@ -2323,13 +2323,21 @@ function renderLearnPages() {
   }
 
   if (currentBookPageIndex >= pages.length) currentBookPageIndex = pages.length - 1;
-  const currentPage = pages[currentBookPageIndex];
+  const currentPage = pages[currentBookPageIndex] || {};
+  const rawSrc = currentPage.path || currentPage.image || (currentPage.pageImage ? `/pages/${currentPage.pageImage}` : '');
+  const finalSrc = rawSrc && /^https?:\/\//.test(rawSrc)
+    ? rawSrc
+    : `${API_BASE}${rawSrc || ''}`;
 
-  learnBookPages.innerHTML = `
-    <div class="book-page-wrap">
-      <img src="${API_BASE}${currentPage.path}" alt="Book Page">
-    </div>
-  `;
+  if (!finalSrc) {
+    learnBookPages.innerHTML = '<div class="ghost" style="margin:auto;">Saved conversation restored, but no page image is available.</div>';
+  } else {
+    learnBookPages.innerHTML = `
+      <div class="book-page-wrap">
+        <img src="${finalSrc}" alt="Book Page">
+      </div>
+    `;
+  }
 
   if (bookPageIndicator) bookPageIndicator.textContent = `Page ${currentBookPageIndex + 1} of ${pages.length}`;
   if (bookPrevBtn) bookPrevBtn.disabled = currentBookPageIndex === 0;
@@ -2783,11 +2791,19 @@ async function sendLearnFollowup(rawPrompt) {
       { role: 'user', content: prompt },
       { role: 'assistant', content: data.explanation || '' }
     );
-    updateRecentConversations();
-    tutorState.learnBookPages = data.bookPages || tutorState.learnBookPages;
+
+    if (Array.isArray(data.bookPages) && data.bookPages.length) {
+      tutorState.learnBookPages = data.bookPages;
+      currentBookPageIndex = 0;
+      renderLearnPages();
+    } else if (tutorState.learnBookPages && tutorState.learnBookPages.length) {
+      renderLearnPages();
+    }
+
     tutorState.learnWebSources = data.webSources || tutorState.learnWebSources;
     renderLearnWebSources(tutorState.learnWebSources);
     renderLearnWebSection(tutorState.learnWebSources);
+    updateRecentConversations();
     learnChatScroll.scrollTop = learnChatScroll.scrollHeight;
   } catch (err) {
     if (window.loadingTimerLearn) clearInterval(window.loadingTimerLearn);
