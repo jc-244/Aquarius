@@ -293,18 +293,32 @@
 
     </main>
 
-    <!-- ════════════════════ RIGHT TOC SIDEBAR (always visible) ════════════════════ -->
-    <aside class="toc-sidebar" id="tocSidebar">
-      <div id="userBadgeContainer" style="padding:12px 12px 8px;border-bottom:1px solid #F1F5F9;"></div>
-      <div class="toc-header" id="tocHeader">
-        <span class="toc-header-label">Table of Contents</span>
-      </div>
-      <nav class="toc-nav" id="tocNav">
-        <!-- Populated by JS -->
-        <div class="toc-empty">
-          <p>Select a section<br>from the syllabus<br>to begin.</p>
+        <!-- ════════════════════ RIGHT TOC SIDEBAR (always visible) ════════════════════ -->
+    <aside class="toc-sidebar" id="tocSidebar" style="display: flex; flex-direction: column;">
+      <!-- Top: User info -->
+      <div id="userBadgeContainer" style="padding:12px 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;"></div>
+      
+      <!-- Upper Half: Section TOC (Collapsible) -->
+      <div style="flex: 1 1 50%; overflow-y: auto; display: flex; flex-direction: column; border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <div class="toc-header" id="tocHeader" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: none; user-select: none;">
+          <span class="toc-header-label" style="text-transform: none; letter-spacing: normal; font-weight: 600; font-size: 14px; color: #E2E8F0;" id="tocHeaderTitle">Table of Contents</span>
+          <svg id="tocHeaderChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s; color: #94A3B8;"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
-      </nav>
+        <nav class="toc-nav" id="tocNav" style="flex: 1; padding-top: 0;">
+          <div class="toc-empty"><p>Select a section<br>from the syllabus<br>to begin.</p></div>
+        </nav>
+      </div>
+
+      <!-- Lower Half: Recent Conversations -->
+      <div style="flex: 1 1 50%; overflow-y: auto; display: flex; flex-direction: column; background: rgba(0,0,0,0.15);">
+        <div class="toc-header" style="padding: 16px; border-bottom: none;">
+          <span class="toc-header-label" style="text-transform: none; letter-spacing: normal; font-weight: 600; font-size: 14px; color: #E2E8F0;">Recent Conversations</span>
+        </div>
+        <div id="recentConversationsNav" style="padding: 0 16px 16px; color: #94A3B8; font-size: 13px;">
+          <!-- Items will go here -->
+          <div style="opacity: 0.5; font-style: italic;">No recent queries yet.</div>
+        </div>
+      </div>
     </aside>
 
   </div><!-- .app -->

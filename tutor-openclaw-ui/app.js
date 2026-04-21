@@ -2780,6 +2780,7 @@ async function sendLearnFollowup(rawPrompt) {
       { role: 'user', content: prompt },
       { role: 'assistant', content: data.explanation || '' }
     );
+    updateRecentConversations();
     tutorState.learnBookPages = data.bookPages || tutorState.learnBookPages;
     tutorState.learnWebSources = data.webSources || tutorState.learnWebSources;
     renderLearnWebSources(tutorState.learnWebSources);
@@ -3427,6 +3428,7 @@ async function sendQuestion(rawPrompt) {
       { role: 'user', content: prompt },
       { role: 'assistant', content: data.explanation || '' }
     );
+    updateRecentConversations();
     tutorState.currentBookPages = data.bookPages || [];
     tutorState.currentWebSources = data.webSources || [];
 
@@ -3591,3 +3593,61 @@ if (webSearchBtnLearn) {
     webSearchBtnLearn.style.color = webSearchBtnLearn.classList.contains('active') ? '#2563EB' : '#94A3B8';
   });
 }
+
+
+// Add event listener for top half (TOC) collapse
+const tocHeader = document.getElementById('tocHeader');
+const tocNav = document.getElementById('tocNav');
+const tocHeaderChevron = document.getElementById('tocHeaderChevron');
+
+if (tocHeader && tocNav) {
+  tocHeader.addEventListener('click', () => {
+    const isHidden = tocNav.style.display === 'none';
+    tocNav.style.display = isHidden ? 'block' : 'none';
+    if (tocHeaderChevron) {
+      tocHeaderChevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+    }
+  });
+}
+
+// Update tocHeaderTitle on section change
+// Inside startLesson or when rendering a specific section's outline
+function updateSidebarNav(title) {
+  const t = document.getElementById('tocHeaderTitle');
+  if (t) t.textContent = title ? title : 'Table of Contents';
+}
+
+function updateRecentConversations() {
+  const container = document.getElementById('recentConversationsNav');
+  if (!container) return;
+  // Get history
+  const history = tutorState.chatHistory || [];
+  const userMessages = history.filter(msg => msg.role === 'user');
+  
+  if (!userMessages.length) {
+    container.innerHTML = '<div style="opacity: 0.5; font-style: italic;">No recent queries yet.</div>';
+    return;
+  }
+  
+  const itemsHtml = userMessages.slice(-8).reverse().map(msg => {
+    let truncated = msg.content;
+    if (truncated.length > 35) truncated = truncated.slice(0, 35) + '...';
+    return `<div style="
+        background: rgba(255,255,255,0.05); 
+        padding: 8px 12px; 
+        border-radius: 4px; 
+        margin-bottom: 8px; 
+        color: #E2E8F0;
+        cursor: pointer;
+        transition: background 0.15s;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+      "
+      onmouseover="this.style.background='rgba(255,255,255,0.08)'"
+      onmouseout="this.style.background='rgba(255,255,255,0.05)'"
+      onclick="document.getElementById('learnChatScroll')?.lastElementChild?.scrollIntoView({behavior:'smooth'})"
+      >${escapeHtml(truncated)}</div>`;
+  }).join('');
+  
+  container.innerHTML = itemsHtml;
+}
+
