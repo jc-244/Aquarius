@@ -1844,8 +1844,12 @@ html, body {
   border-radius: var(--radius-md);
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   object-fit: contain;
-  cursor: default;
+  cursor: grab;
+  transform-origin: center center;
+  transition: transform 0.12s ease;
+  user-select: none;
 }
+.lightbox-img.is-dragging { cursor: grabbing; }
 .lightbox-close {
   position: absolute;
   top: 20px; right: 24px;
@@ -2583,13 +2587,14 @@ html, body {
 
 .lesson-img {
   display: block;
-  max-width: min(480px, 92%);
+  max-width: min(320px, 26vw, 92%);
   width: auto;
   height: auto;
-  margin: 18px auto;
+  margin: 16px auto;
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 20px rgba(0,0,0,0.10);
   border: 1px solid var(--border);
+  cursor: zoom-in;
 }
 
 /* Wrap standalone img paragraphs so they center properly */
@@ -3116,4 +3121,23 @@ button:focus, input:focus, textarea:focus {
 .web-sources-ul a:hover {
   color: var(--primary);
   text-decoration: underline;
+}
+
+/* Fix learn-followup-bar layout to accommodate new toggles */
+.followup-bar-row {
+  display: flex !important;
+  align-items: center;
+  gap: 8px; /* space out components */
+  width: 100%;
+}
+.learn-followup-input {
+  flex: 1 1 auto;
+}
+.learn-followup-send {
+  flex-shrink: 0;
+  position: static !important;
+  margin-left: 0 !important;
+}
+#answerLengthToggleLearn {
+  flex-shrink: 0;
 }
