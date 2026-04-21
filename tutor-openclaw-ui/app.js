@@ -2213,6 +2213,49 @@ const learnWebSources = document.getElementById('learnWebSources') || { innerHTM
 const lightbox        = document.getElementById('lightbox');
 const lightboxImg     = document.getElementById('lightboxImg');
 const lightboxClose   = document.getElementById('lightboxClose');
+let lightboxScale = 1;
+let lightboxPanX = 0;
+let lightboxPanY = 0;
+let lightboxDragging = false;
+let lightboxDragStartX = 0;
+let lightboxDragStartY = 0;
+
+function applyLightboxTransform() {
+  if (!lightboxImg) return;
+  lightboxImg.style.transform = `translate(${lightboxPanX}px, ${lightboxPanY}px) scale(${lightboxScale})`;
+}
+
+function resetLightboxTransform() {
+  lightboxScale = 1;
+  lightboxPanX = 0;
+  lightboxPanY = 0;
+  lightboxDragging = false;
+  if (lightboxImg) lightboxImg.classList.remove('is-dragging');
+  applyLightboxTransform();
+}
+
+function openLightbox(src, alt = '') {
+  if (!lightbox || !lightboxImg) return;
+  lightboxImg.src = src;
+  lightboxImg.alt = alt || '';
+  resetLightboxTransform();
+  lightbox.classList.remove('hidden');
+}
+
+function closeLightbox() {
+  if (!lightbox) return;
+  lightbox.classList.add('hidden');
+  resetLightboxTransform();
+}
+
+function bindExpandableLessonImages(root) {
+  if (!root) return;
+  root.querySelectorAll('img.lesson-img').forEach(img => {
+    if (img.dataset.zoomBound === '1') return;
+    img.dataset.zoomBound = '1';
+    img.addEventListener('click', () => openLightbox(img.src, img.alt || ''));
+  });
+}
 
 let learnPages = [];
 let learnPageIndex = 0;
@@ -2552,6 +2595,7 @@ async function startLesson() {
       : [];
     renderLearnPages();
     learnExplainContent.innerHTML = markdownToHtml(data.lesson || 'No explanation available.');
+    bindExpandableLessonImages(learnExplainContent);
     if (learnChatContent) learnChatContent.innerHTML = ''; // Clear chat history on new section
     setTimeout(() => {
       if (window.MathJax && window.MathJax.typesetPromise) {
@@ -2588,8 +2632,38 @@ learnWebBtn.addEventListener('click', () => {
   learnWebSources.classList.toggle('hidden', open);
   learnWebBtn.classList.toggle('open', !open);
 });
-lightboxClose.addEventListener('click', () => lightbox.classList.add('hidden'));
-lightbox.addEventListener('click', e => { if (e.target === lightbox) lightbox.classList.add('hidden'); });
+lightboxClose.addEventListener('click', () => closeLightbox());
+lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && lightbox && !lightbox.classList.contains('hidden')) closeLightbox();
+});
+lightboxImg.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const delta = e.deltaY < 0 ? 0.12 : -0.12;
+  lightboxScale = Math.max(1, Math.min(4, lightboxScale + delta));
+  if (lightboxScale === 1) {
+    lightboxPanX = 0;
+    lightboxPanY = 0;
+  }
+  applyLightboxTransform();
+}, { passive: false });
+lightboxImg.addEventListener('mousedown', (e) => {
+  if (lightboxScale <= 1) return;
+  lightboxDragging = true;
+  lightboxDragStartX = e.clientX - lightboxPanX;
+  lightboxDragStartY = e.clientY - lightboxPanY;
+  lightboxImg.classList.add('is-dragging');
+});
+document.addEventListener('mousemove', (e) => {
+  if (!lightboxDragging || lightboxScale <= 1) return;
+  lightboxPanX = e.clientX - lightboxDragStartX;
+  lightboxPanY = e.clientY - lightboxDragStartY;
+  applyLightboxTransform();
+});
+document.addEventListener('mouseup', () => {
+  lightboxDragging = false;
+  if (lightboxImg) lightboxImg.classList.remove('is-dragging');
+});
 
 learnFollowupInput.addEventListener('input', () => {
   autoResize(learnFollowupInput);
@@ -2667,6 +2741,7 @@ async function sendLearnFollowup(rawPrompt) {
       bookPages: tutorState.learnBookPages,
       webSources: tutorState.learnWebSources,
       useWebSearch: document.getElementById('webSearchToggleFollowup')?.checked,
+      answerLength: document.getElementById('answerLengthToggleFollowup')?.value || 'medium',
       language: detectLang(prompt),
       attachments: attachments.map(a => ({ type: a.type, name: a.name, dataUrl: a.dataUrl, mimeType: a.mimeType }))
     });
@@ -2690,6 +2765,7 @@ async function sendLearnFollowup(rawPrompt) {
       // Render explanation only; web sources now surface in the upper search panel instead of a bottom details block
       try {
         answerDiv.innerHTML = markdownToHtml(data.explanation || 'No explanation available.');
+        bindExpandableLessonImages(answerDiv);
       } catch (renderErr) {
         answerDiv.innerHTML = `<p>${escapeHtml(data.explanation || 'No explanation available.')}</p>`;
       }
@@ -3178,6 +3254,7 @@ function renderWebSourcesInline(webSources = []) {
 
 function renderExplanation(markdown) {
   answerContent.innerHTML = markdownToHtml(markdown || '暂无讲解内容');
+  bindExpandableLessonImages(answerContent);
   if (window.MathJax && window.MathJax.typesetPromise) {
     window.MathJax.typesetPromise([answerContent]).catch(() => {});
   }
@@ -3272,8 +3349,11 @@ async function sendQuestion(rawPrompt) {
   const attachments = isFollowup ? [...attachmentsFollowup] : [...attachmentsMain];
 
   const webSearchToggle = document.getElementById('webSearchToggle')?.checked;
+  const answerLengthToggle = document.getElementById('answerLengthToggle')?.value || 'medium';
   const webSearchToggleFollowup = document.getElementById('webSearchToggleFollowup')?.checked;
+  const answerLengthToggleFollowup = document.getElementById('answerLengthToggleFollowup')?.value || 'medium';
   const useWebSearch = isFollowup ? webSearchToggleFollowup : webSearchToggle;
+  const answerLength = isFollowup ? answerLengthToggleFollowup : answerLengthToggle;
 
 
   userInput.value = prompt;
@@ -3329,6 +3409,7 @@ async function sendQuestion(rawPrompt) {
       bookPages: tutorState.currentBookPages,
       webSources: tutorState.currentWebSources,
       useWebSearch: useWebSearch,
+      answerLength: answerLength,
       language: detectLang(prompt),
       attachments: attachments.map(a => ({ type: a.type, name: a.name, dataUrl: a.dataUrl, mimeType: a.mimeType }))
     });
