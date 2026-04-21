@@ -2583,9 +2583,10 @@ html, body {
 
 .lesson-img {
   display: block;
-  max-width: 100%;
+  max-width: min(480px, 92%);
+  width: auto;
   height: auto;
-  margin: 24px auto;
+  margin: 18px auto;
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 20px rgba(0,0,0,0.10);
   border: 1px solid var(--border);

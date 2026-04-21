@@ -1035,7 +1035,7 @@ async function generateExplanation(question, bookPages, webSources, options = {}
             : [{ type: 'text', text: `【Planner Instructions】\n${planFormat}\n\n` }].concat(userContent);
 
         teachingPlan = await callOpenRouterChat({
-            model: 'google/gemini-3.1-flash',
+            model: 'google/gemini-3.1-pro-preview',
             timeoutMs: 60000,
             temperature: 0.3,
             maxTokens: 1000,
@@ -1063,8 +1063,8 @@ async function generateExplanation(question, bookPages, webSources, options = {}
             {
                 role: 'system',
                 content: language === 'zh'
-                    ? '你是一位耐心、准确、会讲人话的理工科导师。请基于给定教材 OCR、网页摘要和已有对话上下文生成结构化讲解，不要编造未给出的参考文献。对于 follow-up 问题，必须延续上下文。绝对不要输出 ```python 代码块。' + userProfilePrompt
-                    : 'You are a patient, accurate, and approachable STEM tutor. Generate structured explanations based on the given textbook OCR, web summaries, and conversation history. Do not fabricate references not provided. For follow-up questions, always continue from the existing context. Never output ```python code blocks.' + userProfilePrompt
+                    ? '你是一位耐心、准确、会讲人话的理工科导师。请基于给定教材 OCR、网页摘要和已有对话上下文生成结构化讲解，不要编造未给出的参考文献。对于 follow-up 问题，必须延续上下文。绝对不要输出 ```python 代码块，也绝对不要输出 ASCII 图、纯文本示意图、字符画坐标轴；如果需要图示，只能在正文里说明，交给独立绘图模型生成。' + userProfilePrompt
+                    : 'You are a patient, accurate, and approachable STEM tutor. Generate structured explanations based on the given textbook OCR, web summaries, and conversation history. Do not fabricate references not provided. For follow-up questions, always continue from the existing context. Never output ```python code blocks, ASCII diagrams, plain-text sketches, or character-drawn axes; if a figure is needed, mention it in prose only and leave the actual rendering to a separate drawing model.' + userProfilePrompt
             },
             {
                 role: 'user',
@@ -1076,15 +1076,15 @@ async function generateExplanation(question, bookPages, webSources, options = {}
     const wantsDiagram = /complex plane|phasor|plot|graph|diagram|visual|sketch|draw|坐标|图示|画图|复平面|波形|图像/i.test(question + '\n' + explanation);
     if (!wantsDiagram) return explanation;
 
-    console.log('[ASK] Pipeline Step 3/3: Generating diagram code with gpt5.3codex...');
+    console.log('[ASK] Pipeline Step 3/3: Generating diagram code with gpt5.4...');
     try {
         const codePrompt = [
             language === 'zh'
                 ? '你是一个只负责画教学图的 Python 工程师。请基于下面的问题、教材上下文和讲解正文，输出一段可直接运行的 Python3 matplotlib 代码。'
                 : 'You are a Python engineer focused only on educational diagrams. Based on the question, textbook context, and explanation below, output runnable Python3 matplotlib code.',
             language === 'zh'
-                ? '硬性要求：只输出一个 ```python 代码块；不要输出任何解释文字；代码必须使用 matplotlib；必须包含 plt.savefig("/tmp/tutor-plot-auto.png", dpi=150)；不要使用 plt.show()；字符串和括号必须闭合。'
-                : 'Hard requirements: output exactly one ```python code block; no explanatory text; use matplotlib; include plt.savefig("/tmp/tutor-plot-auto.png", dpi=150); do not use plt.show(); all strings and parentheses must be closed.',
+                ? '硬性要求：只输出一个 ```python 代码块；不要输出任何解释文字；代码必须使用 matplotlib；必须包含 plt.savefig("/tmp/tutor-plot-auto.png", dpi=150)；不要使用 plt.show()；字符串和括号必须闭合；图必须简洁，只保留必要标签；严禁在图里放大段说明文字、顶部大文本框、长标题、规则列表；默认优先使用更小的 figsize（如 4.6x3.6、4.8x3.8，最多不超过 5x4），让图在聊天中自然嵌入，不要占满整块区域；坐标轴范围只包住必要内容，不要留太多空白；使用 tight_layout(pad=0.4) 并控制边距。'
+                : 'Hard requirements: output exactly one ```python code block; no explanatory text; use matplotlib; include plt.savefig("/tmp/tutor-plot-auto.png", dpi=150); do not use plt.show(); all strings and parentheses must be closed; keep the figure compact with only essential labels; do NOT put long explanatory text, top text boxes, rule lists, or oversized titles inside the figure; strongly prefer a smaller figsize (such as 4.6x3.6 or 4.8x3.8, and do not exceed 5x4 unless absolutely necessary) so the image sits naturally in chat instead of filling the whole area; keep axis limits tight around the relevant content instead of leaving large empty margins; use tight_layout(pad=0.4) and control margins.',
             '',
             `Question: ${question}`,
             '',
@@ -1096,7 +1096,7 @@ async function generateExplanation(question, bookPages, webSources, options = {}
         ].join('\n');
 
         const diagramCode = await callOpenRouterChat({
-            model: 'openai/gpt-5.3-codex',
+            model: 'openai/gpt-5.4',
             timeoutMs: 90000,
             temperature: 0.1,
             maxTokens: 1400,
