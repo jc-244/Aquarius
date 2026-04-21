@@ -3583,3 +3583,11 @@ if (learnResizer) {
     }
   });
 }
+
+const webSearchBtnLearn = document.getElementById('webSearchToggleBtnLearn');
+if (webSearchBtnLearn) {
+  webSearchBtnLearn.addEventListener('click', () => {
+    webSearchBtnLearn.classList.toggle('active');
+    webSearchBtnLearn.style.color = webSearchBtnLearn.classList.contains('active') ? '#2563EB' : '#94A3B8';
+  });
+}
