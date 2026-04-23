@@ -3507,6 +3507,78 @@ function inlineFormat(text) {
     }
   }
 
+  function parseGeneratedFollowupQuestion(rawText, pointLabel) {
+    const raw = String(rawText || '').trim();
+    if (!raw) return null;
+
+    const candidates = [];
+
+    const fencedBlocks = [...raw.matchAll(/```(?:json)?\s*([\s\S]*?)```/gi)].map(m => m[1]?.trim()).filter(Boolean);
+    candidates.push(...fencedBlocks);
+
+    const firstIdx = raw.indexOf('{');
+    const lastIdx = raw.lastIndexOf('}');
+    if (firstIdx !== -1 && lastIdx !== -1 && lastIdx > firstIdx) {
+      candidates.push(raw.substring(firstIdx, lastIdx + 1).trim());
+    }
+
+    candidates.push(raw);
+
+    function tryNormalize(obj) {
+      if (!obj || typeof obj !== 'object') return null;
+      const stem = obj.stem || obj.question || obj.prompt || obj.title;
+      const options = Array.isArray(obj.options)
+        ? obj.options
+        : Array.isArray(obj.choices)
+          ? obj.choices
+          : Array.isArray(obj.answers)
+            ? obj.answers
+            : null;
+      let correctOption = obj.correct_option || obj.correctOption || obj.correct_answer || obj.correctAnswer || obj.answer;
+      const explanation = obj.explanation || obj.reason || obj.rationale || obj.why || '';
+
+      if (!stem || !options || options.length < 2) return null;
+
+      const normalizedOptions = options.map(opt => String(opt || '').trim()).filter(Boolean);
+      if (normalizedOptions.length < 2) return null;
+
+      if (typeof correctOption === 'number' && normalizedOptions[correctOption]) {
+        correctOption = String.fromCharCode(65 + correctOption);
+      }
+      correctOption = String(correctOption || '').trim();
+
+      if (!/^[A-D]$/i.test(correctOption)) {
+        const matchedIndex = normalizedOptions.findIndex(opt => opt === correctOption || opt.replace(/^[A-D][\).:\-]\s*/, '') === correctOption);
+        if (matchedIndex >= 0) correctOption = String.fromCharCode(65 + matchedIndex);
+      }
+      if (!/^[A-D]$/i.test(correctOption)) correctOption = 'A';
+
+      const labeledOptions = normalizedOptions.map((opt, idx) => {
+        const letter = String.fromCharCode(65 + idx);
+        return /^[A-D][\).:\-]\s*/i.test(opt) ? opt : `${letter}. ${opt}`;
+      });
+
+      return {
+        type: 'multiple_choice',
+        stem: String(stem).trim(),
+        options: labeledOptions.slice(0, 4),
+        correct_option: correctOption.toUpperCase(),
+        explanation: String(explanation || `This follow-up question targets ${pointLabel}.`).trim()
+      };
+    }
+
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      try {
+        const parsed = JSON.parse(candidate);
+        const normalized = tryNormalize(parsed);
+        if (normalized) return normalized;
+      } catch (_) {}
+    }
+
+    return null;
+  }
+
   async function generateFollowupQuestion(pointLabel, previousQuestion) {
     const loadingEl = document.getElementById('kcLoading');
     const feedbackEl = document.getElementById('kcFeedback');
@@ -3517,7 +3589,6 @@ function inlineFormat(text) {
     const answerBox = document.getElementById('kcAnswerBox');
     const inputEl = document.getElementById('kcAnswerInput');
     
-    // Clear out the left column completely
     if (questionEl) questionEl.style.display = 'none';
     if (optionsEl) optionsEl.style.display = 'none';
     if (answerBox) answerBox.style.display = 'none';
@@ -3529,7 +3600,6 @@ function inlineFormat(text) {
       nextBtn.textContent = 'Generating...';
     }
     
-    // Show a prominent, clear-screen loading block
     feedbackEl.style.display = 'block';
     feedbackEl.innerHTML = `
       <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:300px; text-align:center;">
@@ -3542,8 +3612,10 @@ function inlineFormat(text) {
     
     try {
       const parentQ = previousQuestion.stem || previousQuestion.question;
-      const res = await callAsk(
-        `I just failed the concept "${pointLabel}" from the question: "${parentQ}". Generate ONE new targeted multiple choice challenge question (JSON format) directly covering this. Use {"type":"multiple_choice","stem":"...","options":["A...","B...","C...","D..."],"correct_option":"A","explanation":"..."}`,
+      const promptBase = `I just failed the concept "${pointLabel}" from the question: "${parentQ}". Generate ONE targeted multiple choice challenge question directly covering this concept.`;
+      const strictJsonInstruction = `Return ONLY valid JSON. No markdown, no code fences, no commentary. Use exactly this schema: {"type":"multiple_choice","stem":"...","options":["A. ...","B. ...","C. ...","D. ..."],"correct_option":"A","explanation":"..."}`;
+      let res = await callAsk(
+        `${promptBase} ${strictJsonInstruction}`,
         null,
         {
            mode: 'followup',
@@ -3555,27 +3627,35 @@ function inlineFormat(text) {
         }
       );
       
-      const rawText = res.explanation || res.answer || '';
-      let newQ = null;
-      try {
-        const firstIdx = rawText.indexOf('{');
-        const lastIdx = rawText.lastIndexOf('}');
-        if (firstIdx !== -1 && lastIdx !== -1 && lastIdx > firstIdx) {
-          const cleanJson = rawText.substring(firstIdx, lastIdx + 1);
-          newQ = JSON.parse(cleanJson);
-        }
-      } catch(e) {}
-      
-      if (!newQ || newQ.type !== 'multiple_choice') {
-        throw new Error("Failed to parse Haiku's dynamically generated JSON question.");
+      let rawText = res.explanation || res.answer || '';
+      let newQ = parseGeneratedFollowupQuestion(rawText, pointLabel);
+
+      if (!newQ) {
+        res = await callAsk(
+          `${promptBase} Reply again and output STRICT JSON only. Do not include any sentence before or after the JSON object.` ,
+          null,
+          {
+             mode: 'followup',
+             history: [],
+             sectionId: kcSectionId,
+             sectionTitle: kcSectionTitle,
+             language: 'en',
+             useWebSearch: false
+          }
+        );
+        rawText = res.explanation || res.answer || '';
+        newQ = parseGeneratedFollowupQuestion(rawText, pointLabel);
       }
       
-      // Inject into the flat list right after current
+      if (!newQ || newQ.type !== 'multiple_choice') {
+        throw new Error("Haiku returned content, but it was not valid quiz JSON.");
+      }
+      
       kcFlatQuestions.splice(kcCurrentIndex + 1, 0, {
         pointId: kcCurrentPointId,
         pointLabel: kcCurrentPointLabel,
         pointIndex: kcCurrentQuestion.pointIndex,
-        questionIndex: kcCurrentQuestion.questionIndex + 1, // virtual
+        questionIndex: kcCurrentQuestion.questionIndex + 1,
         streakRequired: kcCurrentQuestion.streakRequired,
         point: kcCurrentQuestion.point,
         question: newQ
@@ -3584,7 +3664,6 @@ function inlineFormat(text) {
       kcCurrentIndex++;
       kcCurrentQuestion = kcFlatQuestions[kcCurrentIndex];
       
-      // Cleanup the generation block
       if (questionEl) questionEl.style.display = 'block';
       if (nextBtn) {
         nextBtn.disabled = false;
