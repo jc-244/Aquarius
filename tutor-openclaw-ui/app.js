@@ -450,6 +450,7 @@ async function saveSessionSummary(summary) {
 let recentConversationMenuState = null;
 let recentConversationMenuTargetTimestamp = null;
 let pendingDeleteRecentConversationTimestamp = null;
+let recentConversationDeleteOverlay = null;
 const deletedRecentConversationTimestamps = new Set();
 
 function closeRecentConversationMenu() {
@@ -460,15 +461,21 @@ function closeRecentConversationMenu() {
 }
 
 function closeDeleteConversationConfirm() {
-  const overlay = document.getElementById('recentConversationConfirmOverlay');
-  if (overlay) overlay.remove();
+  if (recentConversationDeleteOverlay) {
+    recentConversationDeleteOverlay.remove();
+    recentConversationDeleteOverlay = null;
+  }
   pendingDeleteRecentConversationTimestamp = null;
 }
 
 function showDeleteConversationConfirm(timestamp) {
   pendingDeleteRecentConversationTimestamp = timestamp;
-  const existing = document.getElementById('recentConversationConfirmOverlay');
-  if (existing) existing.remove();
+  closeDeleteConversationConfirm();
+  pendingDeleteRecentConversationTimestamp = timestamp;
+
+  const session = loadRecentConversations().find(s => s.timestamp === timestamp);
+  const rawTitle = session?.customTitle || session?.summaryTitle || session?.title || 'this conversation';
+  const safeTitle = String(rawTitle).replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   const overlay = document.createElement('div');
   overlay.id = 'recentConversationConfirmOverlay';
@@ -484,38 +491,75 @@ function showDeleteConversationConfirm(timestamp) {
     'padding: 24px'
   ].join(';');
 
-  overlay.innerHTML = `
-    <div role="dialog" aria-modal="true" style="width:min(460px, calc(100vw - 32px)); background:#FFFFFF; border:1px solid rgba(191, 219, 254, 0.95); border-radius:22px; box-shadow:0 30px 80px rgba(15, 23, 42, 0.24); overflow:hidden;">
-      <div style="padding:22px 22px 14px; display:flex; align-items:flex-start; gap:14px;">
-        <div style="width:42px; height:42px; border-radius:14px; background:#FEF2F2; color:#B91C1C; display:flex; align-items:center; justify-content:center; font-size:20px; flex:0 0 auto;">🗑️</div>
-        <div style="flex:1; min-width:0;">
-          <div style="font-size:18px; font-weight:700; line-height:1.3; color:#0F172A; margin-bottom:8px;">Delete this conversation?</div>
-          <div style="font-size:14px; line-height:1.65; color:#475569;">This will permanently remove the conversation and clear its impact from the user profile and memory.</div>
-        </div>
-      </div>
-      <div style="display:flex; justify-content:flex-end; gap:10px; padding:16px 22px 22px; border-top:1px solid #E2E8F0; background:#FCFDFF;">
-        <button type="button" onclick="window.cancelRecentConversationDelete()" style="height:42px; padding:0 16px; border-radius:12px; border:1px solid #CBD5E1; background:#FFFFFF; color:#334155; font-size:14px; font-weight:600; cursor:pointer;">Cancel</button>
-        <button type="button" onclick="this.disabled=true; this.textContent='Deleting...'; this.style.opacity='0.8'; window.confirmRecentConversationDelete()" style="height:42px; padding:0 16px; border-radius:12px; border:none; background:linear-gradient(135deg, #DC2626 0%, #B91C1C 100%); color:#FFFFFF; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 14px 28px rgba(185, 28, 28, 0.28);">Delete</button>
+  const dialog = document.createElement('div');
+  dialog.setAttribute('role', 'dialog');
+  dialog.setAttribute('aria-modal', 'true');
+  dialog.style.cssText = 'width:min(460px, calc(100vw - 32px)); background:#FFFFFF; border:1px solid rgba(191, 219, 254, 0.95); border-radius:22px; box-shadow:0 30px 80px rgba(15, 23, 42, 0.24); overflow:hidden;';
+
+  dialog.innerHTML = `
+    <div style="padding:22px 22px 14px; display:flex; align-items:flex-start; gap:14px;">
+      <div style="width:42px; height:42px; border-radius:14px; background:#FEF2F2; color:#B91C1C; display:flex; align-items:center; justify-content:center; font-size:20px; flex:0 0 auto;">🗑️</div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:18px; font-weight:700; line-height:1.3; color:#0F172A; margin-bottom:8px;">Delete this conversation?</div>
+        <div style="font-size:14px; line-height:1.65; color:#475569; margin-bottom:8px;">This will permanently remove the conversation and clear its impact from the user profile and memory.</div>
+        <div style="font-size:13px; line-height:1.5; color:#0F172A; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:10px 12px;">${safeTitle}</div>
       </div>
     </div>
+    <div style="display:flex; justify-content:flex-end; gap:10px; padding:16px 22px 22px; border-top:1px solid #E2E8F0; background:#FCFDFF;"></div>
   `;
 
-  document.body.appendChild(overlay);
-  overlay.onclick = (event) => {
+  const actions = dialog.lastElementChild;
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.style.cssText = 'height:42px; padding:0 16px; border-radius:12px; border:1px solid #CBD5E1; background:#FFFFFF; color:#334155; font-size:14px; font-weight:600; cursor:pointer;';
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.type = 'button';
+  confirmBtn.textContent = 'Delete';
+  confirmBtn.style.cssText = 'height:42px; padding:0 16px; border-radius:12px; border:none; background:linear-gradient(135deg, #DC2626 0%, #B91C1C 100%); color:#FFFFFF; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 14px 28px rgba(185, 28, 28, 0.28);';
+
+  cancelBtn.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeDeleteConversationConfirm();
+  });
+
+  confirmBtn.addEventListener('click', async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const targetTs = pendingDeleteRecentConversationTimestamp;
+    if (!targetTs) return;
+    confirmBtn.disabled = true;
+    cancelBtn.disabled = true;
+    confirmBtn.textContent = 'Deleting...';
+    confirmBtn.style.opacity = '0.8';
+    try {
+      await deleteRecentConversation(targetTs);
+      closeDeleteConversationConfirm();
+    } catch (err) {
+      console.error('[recentConversations] delete failed:', err);
+      confirmBtn.disabled = false;
+      cancelBtn.disabled = false;
+      confirmBtn.textContent = 'Delete';
+      confirmBtn.style.opacity = '1';
+      alert(`Failed to delete conversation: ${err?.message || err}`);
+    }
+  });
+
+  overlay.addEventListener('click', (event) => {
     if (event.target === overlay) closeDeleteConversationConfirm();
-  };
+  });
+  dialog.addEventListener('click', (event) => {
+    event.stopPropagation();
+  });
+
+  actions.appendChild(cancelBtn);
+  actions.appendChild(confirmBtn);
+  overlay.appendChild(dialog);
+  document.body.appendChild(overlay);
+  recentConversationDeleteOverlay = overlay;
 }
-
-window.cancelRecentConversationDelete = function() {
-  closeDeleteConversationConfirm();
-};
-
-window.confirmRecentConversationDelete = async function() {
-  const targetTs = pendingDeleteRecentConversationTimestamp;
-  if (!targetTs) return;
-  closeDeleteConversationConfirm();
-  await deleteRecentConversation(targetTs);
-};
 
 window.openRecentConversationMenu = function(timestamp, anchorEl) {
   closeRecentConversationMenu();
@@ -4943,14 +4987,7 @@ window.renameRecentConversation = function(timestamp) {
 };
 
 window.deleteRecentConversation = function(timestamp) {
-  const session = loadRecentConversations().find(s => s.timestamp === timestamp);
-  if (!session) return;
-
-  const title = session.customTitle || session.summaryTitle || session.title || 'this conversation';
-  const confirmed = window.confirm(`Delete "${title}"?\n\nThis will permanently remove it from Recent Conversations and rebuild user memory.`);
-  if (!confirmed) return;
-
-  deleteRecentConversation(timestamp);
+  showDeleteConversationConfirm(timestamp);
 };
 
 function saveCurrentLearnSession() {
