@@ -4689,21 +4689,86 @@ function loadRecentConversations() {
   return [];
 }
 
+function saveRecentConversations(sessions) {
+  localStorage.setItem('tutorRecentSessions', JSON.stringify(Array.isArray(sessions) ? sessions : []));
+}
+
+function summarizeRecentConversation(history = [], sectionTitle = '') {
+  const cleaned = (history || [])
+    .filter(m => m && typeof m.content === 'string' && m.content.trim())
+    .map(m => ({ role: m.role, content: m.content.replace(/\s+/g, ' ').trim() }));
+
+  const userMsgs = cleaned.filter(m => m.role === 'user').map(m => m.content);
+  const assistantMsgs = cleaned.filter(m => m.role === 'assistant').map(m => m.content);
+  const firstUser = userMsgs[0] || '';
+  const lastUser = userMsgs[userMsgs.length - 1] || '';
+  const lastAssistant = assistantMsgs[assistantMsgs.length - 1] || '';
+
+  const stripMarkdown = (text) => String(text || '')
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[[^\]]+\]\([^)]*\)/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/[>*_~\-]+/g, ' ')
+    .replace(/\$\$[\s\S]*?\$\$/g, ' ')
+    .replace(/\$[^$]+\$/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const compact = (text, max = 52) => {
+    const normalized = stripMarkdown(text).replace(/^[:：,，.。!?！？\-–—\s]+/, '').trim();
+    if (!normalized) return '';
+    return normalized.length > max ? normalized.slice(0, max).trim() + '…' : normalized;
+  };
+
+  const pickSentence = (text) => {
+    const normalized = stripMarkdown(text);
+    if (!normalized) return '';
+    const parts = normalized.split(/(?<=[。！？.!?])\s+|\n+/).map(s => s.trim()).filter(Boolean);
+    return compact(parts[0] || normalized);
+  };
+
+  const sectionPrefix = sectionTitle ? `${sectionTitle} · ` : '';
+
+  if (lastAssistant) {
+    const sentence = pickSentence(lastAssistant);
+    if (sentence) return compact(sectionPrefix + sentence, 64);
+  }
+  if (lastUser && lastUser !== firstUser) {
+    return compact(sectionPrefix + lastUser, 64);
+  }
+  if (firstUser) {
+    return compact(sectionPrefix + firstUser, 64);
+  }
+  return compact(sectionPrefix + 'Saved conversation', 64) || 'Saved conversation';
+}
+
+function deleteRecentConversation(timestamp) {
+  const sessions = loadRecentConversations().filter(s => s.timestamp !== timestamp);
+  saveRecentConversations(sessions);
+  updateRecentConversationsUI();
+}
+
+window.deleteRecentConversation = function(timestamp) {
+  if (!window.confirm('Delete this saved conversation?')) return;
+  deleteRecentConversation(timestamp);
+};
+
 function saveCurrentLearnSession() {
   if (!tutorState.learnHistory || tutorState.learnHistory.length < 2) return;
-  
-  const firstUserMsg = tutorState.learnHistory.find(m => m.role === 'user');
-  if (!firstUserMsg) return;
   
   let sessions = loadRecentConversations();
   
   // if current session already exists in top, replace it to update history
   const sessionId = tutorState.learnSectionId + '-' + (tutorState.sessionStartTime || Date.now());
   const existingIdx = sessions.findIndex(s => s.id === sessionId);
+  const generatedTitle = summarizeRecentConversation(tutorState.learnHistory, tutorState.learnSectionTitle);
   
   const currentSession = {
     id: sessionId,
-    title: firstUserMsg.content,
+    title: generatedTitle,
+    summaryTitle: generatedTitle,
     timestamp: tutorState.sessionStartTime || Date.now(),
     sectionId: tutorState.learnSectionId,
     sectionTitle: tutorState.learnSectionTitle,
@@ -4721,7 +4786,7 @@ function saveCurrentLearnSession() {
   }
   
   sessions = sessions.slice(0, 30); // max 30
-  localStorage.setItem('tutorRecentSessions', JSON.stringify(sessions));
+  saveRecentConversations(sessions);
   updateRecentConversationsUI();
 }
 
@@ -4810,15 +4875,26 @@ function updateRecentConversationsUI() {
   const container = document.getElementById('recentConversationsNav');
   if (!container) return;
   
-  const sessions = loadRecentConversations();
+  let sessions = loadRecentConversations();
+  let changed = false;
+  sessions = sessions.map(session => {
+    const computedTitle = summarizeRecentConversation(session.history || [], session.sectionTitle || '');
+    if (session.summaryTitle !== computedTitle || session.title !== computedTitle) {
+      changed = true;
+      return { ...session, title: computedTitle, summaryTitle: computedTitle };
+    }
+    return session;
+  });
+  if (changed) saveRecentConversations(sessions);
+
   if (!sessions.length) {
     container.innerHTML = '<div style="opacity: 0.55; font-style: italic; color:#222; font-size:12px;">No saved conversations yet.</div>';
     return;
   }
   
   const itemsHtml = sessions.map(session => {
-    let truncated = session.title;
-    if (truncated.length > 35) truncated = truncated.slice(0, 35) + '...';
+    let truncated = session.summaryTitle || session.title || 'Saved conversation';
+    if (truncated.length > 52) truncated = truncated.slice(0, 52) + '...';
     // Format timestamp nicely
     const dt = new Date(session.timestamp);
     const dateStr = dt.getMonth()+1 + '/' + dt.getDate() + ' ' + dt.getHours() + ':' + String(dt.getMinutes()).padStart(2, '0');
@@ -4834,7 +4910,7 @@ function updateRecentConversationsUI() {
         box-shadow: inset 0 0 0 1px #DBEAFE;
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 4px;
       "
       onmouseover="this.style.background='#EFF6FF'"
       onmouseout="this.style.background='#FFFFFF'"
@@ -4842,7 +4918,18 @@ function updateRecentConversationsUI() {
       onmouseup="this.style.transform='scale(1)'"
       onclick="window.loadHistoricalSession(${session.timestamp})"
       >
-        <div style="font-weight: 600; font-size: 12px; color: #000; line-height:1.35;">${escapeHtml(truncated)}</div>
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
+          <div style="font-weight: 600; font-size: 12px; color: #000; line-height:1.35; flex:1; min-width:0;">${escapeHtml(truncated)}</div>
+          <button
+            type="button"
+            title="Delete conversation"
+            aria-label="Delete conversation"
+            onclick="event.stopPropagation(); window.deleteRecentConversation(${session.timestamp})"
+            style="border:none; background:transparent; color:#64748B; cursor:pointer; padding:0; width:18px; height:18px; line-height:18px; font-size:14px; border-radius:4px; flex:0 0 auto;"
+            onmouseover="this.style.background='#DBEAFE'; this.style.color='#1D4ED8'"
+            onmouseout="this.style.background='transparent'; this.style.color='#64748B'"
+          >×</button>
+        </div>
         <div style="font-size: 10px; color: #222; display: flex; justify-content: space-between; gap:8px; opacity:0.72;">
            <span>${escapeHtml(session.sectionTitle || 'General')}</span>
            <span>${dateStr}</span>
