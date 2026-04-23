@@ -2996,7 +2996,16 @@ async function startLesson() {
     const res = await fetch(`${API_BASE}/api/section`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sectionId: learnSectionId, sectionTitle: learnSectionTitle, mode: 'lesson', language: 'en', uid: getUid(), bookSource: currentBook, profileOverride: userMemory && userMemory.quiz ? { ...userMemory.quiz } : undefined }),
+      body: JSON.stringify({
+        sectionId: learnSectionId,
+        sectionTitle: learnSectionTitle,
+        mode: 'lesson',
+        language: 'en',
+        uid: getUid(),
+        bookSource: 'new',
+        webSources: [],
+        profileOverride: userMemory && userMemory.quiz ? { ...userMemory.quiz } : undefined
+      }),
       signal: learnAbort.signal
     });
     setSplashStage(4); // charts / rendering

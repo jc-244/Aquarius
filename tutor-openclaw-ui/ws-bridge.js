@@ -190,12 +190,12 @@ const USERS_DIR = path.join(__dirname, 'users');
 try { if (!fs.existsSync(USERS_DIR)) fs.mkdirSync(USERS_DIR, { recursive: true }); } catch (_) {}
 
 const LESSON_CACHE_DIR = path.join(__dirname, '../tutor-materials/lesson-cache');
-const LESSON_CACHE_VERSION = 'v7'; // bumped: page-aware planning + cache isolation by bookSource (old/new editions)
+const LESSON_CACHE_VERSION = 'v8'; // bumped: third-ed lesson cache now isolates full preference profile + no-web lesson generation
 try { if (!fs.existsSync(LESSON_CACHE_DIR)) fs.mkdirSync(LESSON_CACHE_DIR, { recursive: true }); } catch (_) {}
 
 /**
  * Returns cached lesson markdown or null.
- * Cache key = sectionId (dots→underscores) / <goal>|<math>|<timeline>.en.md
+ * Cache key = sectionId (dots→underscores) / <book>__<goal>|<math>|<timeline>|s:<style>|o:<outcome>.en.md
  */
 /**
  * Normalize sectionId to a consistent cache directory name.
@@ -209,12 +209,24 @@ function normalizeSectionId(raw) {
     return code.toLowerCase().replace(/\./g, '_');
 }
 
-function readLessonCache(sectionId, memory, bookSource = 'old') {
+function normalizePreferenceList(value) {
+    const arr = Array.isArray(value) ? value : (value ? [value] : []);
+    return [...new Set(arr.map(v => compactWhitespace(String(v || '')).toLowerCase()).filter(Boolean))].sort();
+}
+
+function buildLessonCacheKey(memory, bookSource = 'old') {
     if (!memory || !memory.quiz) return null;
     const q = memory.quiz;
     if (!q.goal || !q.math || !q.timeline) return null;
     const sourceKey = bookSource === 'new' ? 'new' : 'old';
-    const key = `${sourceKey}__${q.goal}|${q.math}|${q.timeline}`;
+    const styleKey = normalizePreferenceList(q.style).join('+') || 'none';
+    const outcomeKey = normalizePreferenceList(q.outcome).join('+') || 'none';
+    return `${sourceKey}__${q.goal}|${q.math}|${q.timeline}|s:${styleKey}|o:${outcomeKey}`;
+}
+
+function readLessonCache(sectionId, memory, bookSource = 'old') {
+    const key = buildLessonCacheKey(memory, bookSource);
+    if (!key) return null;
     const normId = normalizeSectionId(sectionId);
     const dir = path.join(LESSON_CACHE_DIR, normId);
     const file = path.join(dir, `${key}.${LESSON_CACHE_VERSION}.en.md`);
@@ -228,11 +240,8 @@ function readLessonCache(sectionId, memory, bookSource = 'old') {
 }
 
 function writeLessonCache(sectionId, memory, lesson, bookSource = 'old') {
-    if (!memory || !memory.quiz) return;
-    const q = memory.quiz;
-    if (!q.goal || !q.math || !q.timeline) return;
-    const sourceKey = bookSource === 'new' ? 'new' : 'old';
-    const key = `${sourceKey}__${q.goal}|${q.math}|${q.timeline}`;
+    const key = buildLessonCacheKey(memory, bookSource);
+    if (!key) return;
     const normId = normalizeSectionId(sectionId);
     const dir = path.join(LESSON_CACHE_DIR, normId);
     try {
@@ -1458,6 +1467,24 @@ async function generateSectionIntro(sectionId, sectionTitle, bookPages, language
 const AGENT_A_MODEL = 'openai/gpt-5.4';
 const AGENT_B_MODEL = 'anthropic/claude-sonnet-4.6';
 
+const PREGEN_STYLE_COMBOS = [
+    ['example_first'],
+    ['principle_first'],
+    ['visual'],
+    ['step_by_step'],
+    ['example_first', 'visual'],
+    ['principle_first', 'step_by_step']
+];
+
+const PREGEN_OUTCOME_COMBOS = [
+    ['one_liner'],
+    ['worked_example'],
+    ['exam_cheatsheet'],
+    ['formula_ref'],
+    ['one_liner', 'worked_example'],
+    ['exam_cheatsheet', 'formula_ref']
+];
+
 /**
  * Agent A — Lesson Architect (Gemini 3.1 Pro Preview)
  * Reads OCR + existing page images, outputs a Rendering Blueprint JSON.
@@ -1764,6 +1791,51 @@ async function blueprintToMarkdown(blocks, pageImages) {
 /**
  * 生成小节完整讲解 — now powered by dual-agent pipeline
  */
+function buildSyntheticProfileMemory(baseMemory, overrides = {}) {
+    const baseQuiz = (baseMemory && baseMemory.quiz) ? { ...baseMemory.quiz } : {};
+    const nextQuiz = { ...baseQuiz, ...overrides };
+    return { ...(baseMemory || {}), quiz: nextQuiz };
+}
+
+async function prewarmLessonVariants(sectionId, sectionTitle, bookPages, baseMemory, bookSource = 'new', language = 'en') {
+    if (bookSource !== 'new') return { scheduled: 0, generated: 0 };
+    if (!baseMemory || !baseMemory.quiz) return { scheduled: 0, generated: 0 };
+    const q = baseMemory.quiz;
+    if (!q.goal || !q.math || !q.timeline) return { scheduled: 0, generated: 0 };
+
+    const candidates = [];
+    for (const styles of PREGEN_STYLE_COMBOS) {
+        for (const outcomes of PREGEN_OUTCOME_COMBOS) {
+            candidates.push(buildSyntheticProfileMemory(baseMemory, {
+                style: styles,
+                outcome: outcomes
+            }));
+        }
+    }
+
+    setTimeout(async () => {
+        let generated = 0;
+        for (const memory of candidates) {
+            const cacheKey = buildLessonCacheKey(memory, bookSource);
+            if (!cacheKey) continue;
+            if (readLessonCache(sectionId, memory, bookSource)) continue;
+            try {
+                const profilePrompt = buildUserProfilePrompt(memory);
+                const lesson = await generateSectionLesson(sectionId, sectionTitle, bookPages, [], language, profilePrompt);
+                if (lesson) {
+                    writeLessonCache(sectionId, memory, lesson, bookSource);
+                    generated += 1;
+                }
+            } catch (err) {
+                console.warn(`[LessonCache] prewarm failed for ${sectionId} / ${cacheKey}: ${err.message}`);
+            }
+        }
+        console.log(`[LessonCache] prewarm finished for ${sectionId}: generated=${generated}`);
+    }, 0);
+
+    return { scheduled: candidates.length, generated: 0 };
+}
+
 async function generateSectionLesson(sectionId, sectionTitle, bookPages, webSources, language = 'en', userProfilePrompt = '') {
     // ── Agent A: Plan ──────────────────────────────────────────────────────────
     let blueprint = null;
@@ -2090,21 +2162,21 @@ const server = http.createServer(async (req, res) => {
                     return;
                 }
 
-                // Allow caller to pass webSources directly (empty = skip search, e.g. pre-generation)
+                // Lesson generation should be textbook-first. Passing [] means: do NOT search the web.
                 let webSources;
                 if (Array.isArray(data.webSources)) {
                     webSources = data.webSources;  // use as-is (can be [])
                 } else {
-                    const searchAngles = [`${sectionTitle} signal processing explained`, `${sectionTitle} linear systems tutorial`];
-                    webSources = await collectWebSources(searchAngles);
+                    webSources = [];
                 }
-                console.log(`[SECTION] Starting dual-agent pipeline for ${sectionId} (lang=${language}, uid=${uid})…`);
+                console.log(`[SECTION] Starting dual-agent pipeline for ${sectionId} (lang=${language}, uid=${uid}, book=${data.bookSource || 'old'}, web=${webSources.length ? 'on' : 'off'})…`);
                 let lesson = await generateSectionLesson(sectionId, sectionTitle, rawPages, webSources, language, userProfilePrompt);
                 lesson = convertLegacyQuickCheckToKcBlocks(lesson);
                 // ── Auto-save to lesson cache ───────────────────────────────
                 if (lesson && profileMemory) {
                     writeLessonCache(sectionId, profileMemory, lesson, data.bookSource);
                 }
+                const prewarm = await prewarmLessonVariants(sectionId, sectionTitle, rawPages, profileMemory, data.bookSource === 'new' ? 'new' : 'old', language);
                 res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
                 res.end(JSON.stringify({
                     sectionId,
@@ -2117,7 +2189,8 @@ const server = http.createServer(async (req, res) => {
                         title: p.title,
                         summary: p.summary
                     })),
-                    webSources
+                    webSources,
+                    prewarm
                 }));
             } else {
                 res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
