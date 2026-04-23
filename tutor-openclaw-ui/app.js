@@ -448,7 +448,7 @@ async function saveSessionSummary(summary) {
 }
 
 let recentConversationMenuState = null;
-let deletedRecentConversationIds = new Set();
+const deletedRecentConversationTimestamps = new Set();
 
 function closeRecentConversationMenu() {
   const menu = document.getElementById('recentConversationContextMenu');
@@ -4907,19 +4907,15 @@ function summarizeRecentConversation(history = [], sectionTitle = '') {
 }
 
 async function deleteRecentConversation(timestamp) {
-  const sessionsBefore = loadRecentConversations();
-  const deletedSession = sessionsBefore.find(s => s.timestamp === timestamp);
-  const sessions = sessionsBefore.filter(s => s.timestamp !== timestamp);
-  if (deletedSession?.id) deletedRecentConversationIds.add(deletedSession.id);
+  // Mark this timestamp permanently deleted so saveCurrentLearnSession cannot re-add it
+  deletedRecentConversationTimestamps.add(timestamp);
+
+  const sessions = loadRecentConversations().filter(s => s.timestamp !== timestamp);
 
   if ((tutorState.sessionStartTime || 0) === timestamp) {
-    tutorState.sessionStartTime = null;
+    // Keep sessionStartTime as-is so we can match it in the guard below;
+    // just ensure we don't re-save this session
     tutorState.learnHistory = [];
-    tutorState.learnSectionId = '';
-    tutorState.learnSectionTitle = '';
-    tutorState.learnLessonMarkdown = '';
-    tutorState.learnBookPages = [];
-    tutorState.learnWebSources = [];
   }
 
   saveRecentConversations(sessions);
@@ -4968,7 +4964,7 @@ function saveCurrentLearnSession() {
   // if current session already exists in top, replace it to update history
   const sessionId = tutorState.learnSectionId + '-' + (tutorState.sessionStartTime || Date.now());
   const existingIdx = sessions.findIndex(s => s.id === sessionId);
-  if (deletedRecentConversationIds.has(sessionId)) return;
+  if (deletedRecentConversationTimestamps.has(tutorState.sessionStartTime)) return;
 
   const generatedTitle = summarizeRecentConversation(tutorState.learnHistory, tutorState.learnSectionTitle);
   const existingSession = existingIdx !== -1 ? sessions[existingIdx] : null;
