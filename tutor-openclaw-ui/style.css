@@ -2774,7 +2774,7 @@ html, body {
 
 .lesson-img {
   display: block;
-  max-width: min(320px, 26vw, 92%);
+  max-width: min(240px, 22%, 240px);
   width: auto;
   height: auto;
   margin: 16px auto;
@@ -3237,6 +3237,14 @@ button:focus, input:focus, textarea:focus {
   border-radius: 6px;
   padding: 8px; /* Extra padding looks better framing charts */
   box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* Slight elevation */
+}
+
+.learn-explain-body img:not(.lesson-img) {
+  max-width: min(240px, 22%, 240px);
+  width: auto;
+  height: auto;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Fix for chat column width and wrapping */
