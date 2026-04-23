@@ -4857,16 +4857,29 @@ function updateSidebarNav(title) {
 
 
 // Persistent Recent Conversations replacing transient one
+function normalizeRecentConversationTimestamp(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : String(value ?? '');
+}
+
 function loadRecentConversations() {
   const saved = localStorage.getItem('tutorRecentSessions');
   if (saved) {
-    try { return JSON.parse(saved) || []; } catch(e) {}
+    try {
+      return (JSON.parse(saved) || []).map(session => ({
+        ...session,
+        timestamp: normalizeRecentConversationTimestamp(session.timestamp)
+      }));
+    } catch(e) {}
   }
   return [];
 }
 
 function saveRecentConversations(sessions) {
-  localStorage.setItem('tutorRecentSessions', JSON.stringify(Array.isArray(sessions) ? sessions : []));
+  localStorage.setItem('tutorRecentSessions', JSON.stringify(Array.isArray(sessions) ? sessions.map(session => ({
+    ...session,
+    timestamp: normalizeRecentConversationTimestamp(session.timestamp)
+  })) : []));
 }
 
 async function rebuildUserMemoryFromRemainingSessions(sessions) {
@@ -4943,15 +4956,14 @@ function summarizeRecentConversation(history = [], sectionTitle = '') {
 }
 
 async function deleteRecentConversation(timestamp) {
-  // Mark this timestamp permanently deleted so saveCurrentLearnSession cannot re-add it
-  deletedRecentConversationTimestamps.add(timestamp);
+  const normalizedTs = normalizeRecentConversationTimestamp(timestamp);
+  deletedRecentConversationTimestamps.add(normalizedTs);
 
-  const sessions = loadRecentConversations().filter(s => s.timestamp !== timestamp);
+  const sessions = loadRecentConversations().filter(s => normalizeRecentConversationTimestamp(s.timestamp) !== normalizedTs);
 
-  if ((tutorState.sessionStartTime || 0) === timestamp) {
-    // Keep sessionStartTime as-is so we can match it in the guard below;
-    // just ensure we don't re-save this session
+  if (normalizeRecentConversationTimestamp(tutorState.sessionStartTime || 0) === normalizedTs) {
     tutorState.learnHistory = [];
+    tutorState.sessionStartTime = normalizedTs;
   }
 
   saveRecentConversations(sessions);
@@ -4960,8 +4972,9 @@ async function deleteRecentConversation(timestamp) {
 }
 
 window.toggleRecentConversationStar = function(timestamp) {
+  const normalizedTs = normalizeRecentConversationTimestamp(timestamp);
   const sessions = loadRecentConversations();
-  const next = sessions.map(session => session.timestamp === timestamp ? { ...session, starred: !session.starred } : session);
+  const next = sessions.map(session => normalizeRecentConversationTimestamp(session.timestamp) === normalizedTs ? { ...session, starred: !session.starred } : session);
   next.sort((a, b) => {
     if (!!b.starred !== !!a.starred) return Number(!!b.starred) - Number(!!a.starred);
     return (b.timestamp || 0) - (a.timestamp || 0);
@@ -4971,14 +4984,15 @@ window.toggleRecentConversationStar = function(timestamp) {
 };
 
 window.renameRecentConversation = function(timestamp) {
+  const normalizedTs = normalizeRecentConversationTimestamp(timestamp);
   const sessions = loadRecentConversations();
-  const session = sessions.find(s => s.timestamp === timestamp);
+  const session = sessions.find(s => normalizeRecentConversationTimestamp(s.timestamp) === normalizedTs);
   if (!session) return;
   const currentTitle = session.customTitle || session.summaryTitle || session.title || '';
   const renamed = window.prompt('Rename this conversation', currentTitle);
   if (renamed == null) return;
   const cleanTitle = String(renamed).trim();
-  const next = sessions.map(s => s.timestamp === timestamp
+  const next = sessions.map(s => normalizeRecentConversationTimestamp(s.timestamp) === normalizedTs
     ? { ...s, customTitle: cleanTitle || '', summaryTitle: cleanTitle || summarizeRecentConversation(s.history || [], s.sectionTitle || ''), title: cleanTitle || summarizeRecentConversation(s.history || [], s.sectionTitle || '') }
     : s
   );
@@ -4996,9 +5010,10 @@ function saveCurrentLearnSession() {
   let sessions = loadRecentConversations();
 
   // if current session already exists in top, replace it to update history
-  const sessionId = tutorState.learnSectionId + '-' + (tutorState.sessionStartTime || Date.now());
-  const existingIdx = sessions.findIndex(s => s.id === sessionId);
-  if (deletedRecentConversationTimestamps.has(tutorState.sessionStartTime)) return;
+  const normalizedSessionTs = normalizeRecentConversationTimestamp(tutorState.sessionStartTime || Date.now());
+  const sessionId = tutorState.learnSectionId + '-' + normalizedSessionTs;
+  const existingIdx = sessions.findIndex(s => normalizeRecentConversationTimestamp(s.timestamp) === normalizedSessionTs || s.id === sessionId);
+  if (deletedRecentConversationTimestamps.has(normalizedSessionTs)) return;
 
   const generatedTitle = summarizeRecentConversation(tutorState.learnHistory, tutorState.learnSectionTitle);
   const existingSession = existingIdx !== -1 ? sessions[existingIdx] : null;
@@ -5010,7 +5025,7 @@ function saveCurrentLearnSession() {
     summaryTitle: displayTitle,
     customTitle: existingSession?.customTitle || '',
     starred: !!existingSession?.starred,
-    timestamp: tutorState.sessionStartTime || Date.now(),
+    timestamp: normalizedSessionTs,
     sectionId: tutorState.learnSectionId,
     sectionTitle: tutorState.learnSectionTitle,
     lessonMarkdown: tutorState.learnLessonMarkdown,
@@ -5023,7 +5038,7 @@ function saveCurrentLearnSession() {
     sessions[existingIdx] = currentSession;
   } else {
     sessions.unshift(currentSession);
-    tutorState.sessionStartTime = currentSession.timestamp;
+    tutorState.sessionStartTime = normalizedSessionTs;
   }
 
   sessions = sessions.slice(0, 30); // max 30
@@ -5032,8 +5047,9 @@ function saveCurrentLearnSession() {
 }
 
 window.loadHistoricalSession = function(timestamp) {
+  const normalizedTs = normalizeRecentConversationTimestamp(timestamp);
   const sessions = loadRecentConversations();
-  const session = sessions.find(s => s.timestamp === timestamp);
+  const session = sessions.find(s => normalizeRecentConversationTimestamp(s.timestamp) === normalizedTs);
   if (!session) return;
 
   try {
