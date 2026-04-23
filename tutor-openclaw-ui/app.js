@@ -4326,18 +4326,31 @@ function buildTocFromSyllabus(chapterTitle, sections) {
   buildToc(items);
 }
 
+function shouldPreserveTocSubsectionsForCurrentLesson() {
+  const sectionId = String(tutorState.learnSectionId || '').trim();
+  const sectionTitle = String(tutorState.learnSectionTitle || '').trim();
+  const probe = `${sectionId} ${sectionTitle}`;
+  // Sub-lessons like B.1-2 / 1.2-3 should NOT keep parent module list in the right TOC.
+  // Only aggregate/index pages (e.g. B.1 / 1.2) should preserve subsection items above the Index divider.
+  return !/(^|\s)([A-Z]?\.?\d+|\d+\.\d+)-\d+(\b|\s)/i.test(probe);
+}
+
 // Generate TOC from rendered lesson HTML headings
-// Preserves existing subsection items (depth-2) above a divider, then appends content anchors below
+// For aggregate/index pages: preserve subsection items above an Index divider.
+// For sub-lessons: show only the current page's own content anchors.
 function buildTocFromContent(containerEl) {
   if (!containerEl || !tocNav) return;
   const headings = containerEl.querySelectorAll('h1, h2, h3, h4');
   if (!headings.length) return;
 
-  // Collect existing subsection items to preserve them
+  const preserveSubItems = shouldPreserveTocSubsectionsForCurrentLesson();
+
   const existingSubItems = [];
-  tocNav.querySelectorAll('.toc-item.depth-2').forEach(btn => {
-    existingSubItems.push(btn.cloneNode(true));
-  });
+  if (preserveSubItems) {
+    tocNav.querySelectorAll('.toc-item.depth-2:not(.content-anchor)').forEach(btn => {
+      existingSubItems.push(btn.cloneNode(true));
+    });
+  }
 
   const items = [];
   let counter = 0;
@@ -4349,43 +4362,44 @@ function buildTocFromContent(containerEl) {
     items.push({ title, depth, anchor });
   });
 
- // Rebuild: subsections first, then a divider, then content headings
-tocNav.innerHTML = '';
-if (existingSubItems.length) {
+  tocNav.innerHTML = '';
+
+  if (existingSubItems.length) {
     existingSubItems.forEach(btn => tocNav.appendChild(btn));
     const divider = document.createElement('div');
     divider.className = 'toc-divider';
     divider.textContent = 'Index';
-    // 新增:文字黑色 + 加粗
-    divider.style.color = "#000";
-    divider.style.fontWeight = "bold";
+    divider.style.color = '#000';
+    divider.style.fontWeight = 'bold';
     tocNav.appendChild(divider);
-}
-items.forEach(item => {
+  }
+
+  items.forEach(item => {
     const btn = document.createElement('button');
     btn.className = `toc-item depth-${item.depth || 1} content-anchor`;
     btn.dataset.anchor = item.anchor || '';
     btn.textContent = item.title;
     btn.addEventListener('click', () => {
-        const el = document.getElementById(item.anchor);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        tocNav.querySelectorAll('.toc-item').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    });
-    tocNav.appendChild(btn);
-});
-  // Re-wire preserved subsection clicks
-  tocNav.querySelectorAll('.toc-item.depth-2:not(.content-anchor)').forEach((btn, i) => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const subTitle = btn.textContent.trim();
+      const el = document.getElementById(item.anchor);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       tocNav.querySelectorAll('.toc-item').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      openLearnModeKeepToc(subTitle, subTitle);
     });
+    tocNav.appendChild(btn);
   });
 
-  // Intersection observer to highlight active content section
+  if (existingSubItems.length) {
+    tocNav.querySelectorAll('.toc-item.depth-2:not(.content-anchor)').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const subTitle = btn.textContent.trim();
+        tocNav.querySelectorAll('.toc-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        openLearnModeKeepToc(subTitle, subTitle);
+      });
+    });
+  }
+
   const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
