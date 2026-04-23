@@ -3050,7 +3050,8 @@ async function sendLearnFollowup(rawPrompt) {
       bookPages: tutorState.learnBookPages,
       webSources: tutorState.learnWebSources,
       useWebSearch: document.getElementById('webSearchToggleFollowup')?.checked,
-      answerLength: document.getElementById('answerLengthToggleFollowup')?.value || 'medium',
+      answerLength: normalizeAnswerStyle(document.getElementById('answerLengthToggleLearn')?.value || 'balanced'),
+      answerStyleInstruction: getAnswerStyleInstruction(document.getElementById('answerLengthToggleLearn')?.value || 'balanced', detectLang(prompt)),
       language: detectLang(prompt),
       attachments: attachments.map(a => ({ type: a.type, name: a.name, dataUrl: a.dataUrl, mimeType: a.mimeType }))
     });
@@ -4563,6 +4564,34 @@ function detectLang(text) {
   return /[\u4e00-\u9fa5]/.test(t) ? 'zh' : 'en';
 }
 
+function normalizeAnswerStyle(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (raw === 'short') return 'fast';
+  if (raw === 'medium') return 'balanced';
+  if (raw === 'long') return 'detailed';
+  if (raw === 'fast' || raw === 'balanced' || raw === 'detailed') return raw;
+  return 'balanced';
+}
+
+function getAnswerStyleInstruction(style, lang = 'en') {
+  const normalized = normalizeAnswerStyle(style);
+  const instructions = {
+    fast: {
+      en: 'Explain in a fast, low-friction way. Prioritize the core idea, the exam-relevant takeaway, and at most one minimal example. Avoid long derivations and unnecessary background.',
+      zh: '请用快速、低负担的方式解释。优先讲核心概念、考试相关结论，最多给一个最小例子。避免冗长推导和不必要背景。'
+    },
+    balanced: {
+      en: 'Explain in a balanced teaching style. Cover the key idea clearly, include essential reasoning steps, and use one helpful example or intuition when appropriate. Keep it clear and complete without overwhelming detail.',
+      zh: '请用平衡型教学风格解释。清楚讲明核心概念，包含必要推理步骤，并在合适时加入一个有帮助的例子或直觉解释。保持清楚完整，但不要信息过载。'
+    },
+    detailed: {
+      en: 'Explain in a detailed but student-friendly way. Expand the reasoning step by step, include intuition, common mistakes, and exam-relevant implications. Depth should improve clarity, not create verbosity for its own sake.',
+      zh: '请用详细但对学生友好的方式解释。分步骤展开推理，补充直觉、常见错误和考试相关提醒。深入是为了更清楚，不是为了单纯变长。'
+    }
+  };
+  return instructions[normalized]?.[lang] || instructions[normalized]?.en || instructions.balanced.en;
+}
+
 async function callAsk(prompt, signal, extra = {}) {
   const res = await fetch(`${API_BASE}/api/ask`, {
     method: 'POST',
@@ -4645,11 +4674,10 @@ async function sendQuestion(rawPrompt) {
   const attachments = isFollowup ? [...attachmentsFollowup] : [...attachmentsMain];
 
   const webSearchToggle = document.getElementById('webSearchToggle')?.checked;
-  const answerLengthToggle = document.getElementById('answerLengthToggle')?.value || 'medium';
+  const answerStyleToggle = document.getElementById('answerLengthToggleLearn')?.value || 'balanced';
   const webSearchToggleFollowup = document.getElementById('webSearchToggleFollowup')?.checked;
-  const answerLengthToggleFollowup = document.getElementById('answerLengthToggleFollowup')?.value || 'medium';
   const useWebSearch = isFollowup ? webSearchToggleFollowup : webSearchToggle;
-  const answerLength = isFollowup ? answerLengthToggleFollowup : answerLengthToggle;
+  const answerLength = normalizeAnswerStyle(answerStyleToggle);
 
 
   userInput.value = prompt;
@@ -4706,6 +4734,7 @@ async function sendQuestion(rawPrompt) {
       webSources: tutorState.currentWebSources,
       useWebSearch: useWebSearch,
       answerLength: answerLength,
+      answerStyleInstruction: getAnswerStyleInstruction(answerLength, detectLang(prompt)),
       language: detectLang(prompt),
       attachments: attachments.map(a => ({ type: a.type, name: a.name, dataUrl: a.dataUrl, mimeType: a.mimeType }))
     });
