@@ -4957,18 +4957,27 @@ function summarizeRecentConversation(history = [], sectionTitle = '') {
 
 async function deleteRecentConversation(timestamp) {
   const normalizedTs = normalizeRecentConversationTimestamp(timestamp);
+  console.log('[DELETE] target normalizedTs:', normalizedTs, typeof normalizedTs);
   deletedRecentConversationTimestamps.add(normalizedTs);
 
-  const sessions = loadRecentConversations().filter(s => normalizeRecentConversationTimestamp(s.timestamp) !== normalizedTs);
+  const allSessions = loadRecentConversations();
+  console.log('[DELETE] sessions before:', allSessions.length, 'timestamps:', allSessions.map(s => normalizeRecentConversationTimestamp(s.timestamp)));
+
+  const sessions = allSessions.filter(s => normalizeRecentConversationTimestamp(s.timestamp) !== normalizedTs);
+  console.log('[DELETE] sessions after filter:', sessions.length);
 
   if (normalizeRecentConversationTimestamp(tutorState.sessionStartTime || 0) === normalizedTs) {
+    console.log('[DELETE] clearing current session history');
     tutorState.learnHistory = [];
     tutorState.sessionStartTime = normalizedTs;
   }
 
   saveRecentConversations(sessions);
+  console.log('[DELETE] saved to localStorage, now has:', loadRecentConversations().length, 'sessions');
   updateRecentConversationsUI();
+  console.log('[DELETE] UI updated');
   await rebuildUserMemoryFromRemainingSessions(sessions);
+  console.log('[DELETE] memory rebuilt, final localStorage count:', loadRecentConversations().length);
 }
 
 window.toggleRecentConversationStar = function(timestamp) {
@@ -5006,14 +5015,18 @@ window.deleteRecentConversation = function(timestamp) {
 
 function saveCurrentLearnSession() {
   if (!tutorState.learnHistory || tutorState.learnHistory.length < 2) return;
-
+  
   let sessions = loadRecentConversations();
-
+  
   // if current session already exists in top, replace it to update history
   const normalizedSessionTs = normalizeRecentConversationTimestamp(tutorState.sessionStartTime || Date.now());
   const sessionId = tutorState.learnSectionId + '-' + normalizedSessionTs;
   const existingIdx = sessions.findIndex(s => normalizeRecentConversationTimestamp(s.timestamp) === normalizedSessionTs || s.id === sessionId);
-  if (deletedRecentConversationTimestamps.has(normalizedSessionTs)) return;
+  if (deletedRecentConversationTimestamps.has(normalizedSessionTs)) {
+    console.log('[SAVE] BLOCKED by deletedSet, ts:', normalizedSessionTs);
+    return;
+  }
+  console.log('[SAVE] saving session ts:', normalizedSessionTs, 'history len:', tutorState.learnHistory.length);
 
   const generatedTitle = summarizeRecentConversation(tutorState.learnHistory, tutorState.learnSectionTitle);
   const existingSession = existingIdx !== -1 ? sessions[existingIdx] : null;
