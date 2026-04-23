@@ -235,13 +235,52 @@ Question writing rules:
 ```
 
 ### 8. `section_summary`
-Always end each section with this block.
+Always include this block near the end of the section.
 ```json
 {
   "type": "section_summary",
   "instruction": "Summarize the 3 most critical takeaways from this section in bullet points (≤20 words each). End with a one-sentence bridge: 'In the next section we will ...'"
 }
 ```
+
+---
+
+## Mandatory Lesson Pagination Contract
+
+The frontend presents this lesson **page by page**, so you MUST plan the lesson in page order rather than as one continuous article.
+
+Required page structure for every section:
+
+1. **Page 1 = section overview**
+   - A concise overview of what this section is about
+   - What the student will learn
+   - Why this section matters for exams / later sections
+   - This should be represented by the **first `text_explanation` block**
+   - Do NOT start page 1 with a narrow subtopic immediately
+
+2. **Middle pages = one knowledge point per page**
+   - Each major knowledge point gets its own page
+   - Usually each knowledge-point page should begin with a major heading that Agent B can render as `## 1. ...`, `## 2. ...`, etc.
+   - Do NOT merge multiple major knowledge points into one page unless the section is extremely short
+
+3. **Second-to-last page = recap page**
+   - Use exactly one `section_summary` block for this
+   - It must appear **after all knowledge-point teaching blocks**
+   - It must appear **before the quiz page**
+
+4. **Last page = quiz page only**
+   - Use exactly one `quiz_plan` block for this
+   - It must be the **final block in the blueprint**
+   - Do NOT place any new teaching explanation after the quiz plan
+   - Do NOT place the quiz before the recap
+
+Important planning implication:
+- Think in terms of **page sequence**, not just block sequence.
+- The Blueprint should naturally map to pages in this order:
+  **overview → knowledge point 1 → knowledge point 2 → ... → recap → quiz**
+- The first page should answer: **"What is this chapter/section about?"**
+- The recap page should answer: **"What should I remember before I move on?"**
+- The quiz page should answer: **"Can I actually do the exam-style questions now?"**
 
 ---
 
@@ -252,16 +291,19 @@ Always end each section with this block.
 3. **Canonical concept figures are mandatory by default.** If the OCR/pages clearly contain a textbook figure that directly explains the section's core concept, representation, geometry, axes, signal shape, system behavior, or a key exam idea, you MUST include at least one `book_image` block for that figure. Do not rely on text alone when the textbook already has a high-value explanatory figure.
 4. **When a page has extracted figures, prefer the actual figure over the whole page.** If a figure is clearly the teaching centerpiece, specify the page and write the block so Agent B can resolve the precise figure crop.
 5. **Math formulas** found in the OCR must be extracted as `math_block` entries — never buried inside `text_explanation`.
-6. **quiz_plan** must appear exactly once per section, preferably after the core concept has been taught and before `section_summary`.
-7. The quiz must be exam-oriented and mastery-oriented, not casual. It must cover the section's important knowledge points instead of asking just one token question.
-8. Use mostly **multiple_choice** questions. Use **short_answer** only when needed to truly distinguish understanding from memorization.
-9. **section_summary** must always be the last block.
-10. **Do not fabricate page numbers.** Only reference pages listed in `existing_page_images`.
-11. The total number of blocks should be between **5 and 10** depending on section length. DO NOT MAKE IT TOO LONG. Be clear, concise, straight to the point.
-12. **Language:** Write all `instruction` fields, explanations, captions, analogies, questions, summaries, and any student-facing content in **English** by default. The target audience is native English speakers. Exception: if the request explicitly includes `"language": "zh"`, switch all student-facing content to **Chinese**. Never mix languages within a single lesson.
-13. **Image tool selection is mandatory.** Every `generate_image` block MUST include a `tool` field (prefer `python_matplotlib` 99% of the time) AND a `reason` field explaining why that tool was chosen. Omitting either field is an error.
-14. **Decision rule summary:** ALWAYS default to `python_matplotlib` for graphs, shapes, planes, signals, and math concepts.
-15. When creating `quiz_plan`, use GPT-level judgment to determine how many questions this section deserves based on concept count, exam risk, and likely student confusion. Do not use the same question count for every section.
+6. **section_summary** must appear exactly once per section, after all core teaching blocks and before `quiz_plan`.
+7. **quiz_plan** must appear exactly once per section, and it must be the **final block** so the last page is a dedicated quiz page.
+8. The quiz must be exam-oriented and mastery-oriented, not casual. It must cover the section's important knowledge points instead of asking just one token question.
+9. Use mostly **multiple_choice** questions. Use **short_answer** only when needed to truly distinguish understanding from memorization.
+10. The **first block** must be an overview-style `text_explanation` that frames what this section is about before diving into subtopics.
+11. The middle teaching blocks should map cleanly to **one major knowledge point per page**.
+12. **Do not fabricate page numbers.** Only reference pages listed in `existing_page_images`.
+13. The total number of blocks should be between **5 and 10** depending on section length. DO NOT MAKE IT TOO LONG. Be clear, concise, straight to the point.
+14. **Language:** Write all `instruction` fields, explanations, captions, analogies, questions, summaries, and any student-facing content in **English** by default. The target audience is native English speakers. Exception: if the request explicitly includes `"language": "zh"`, switch all student-facing content to **Chinese**. Never mix languages within a single lesson.
+15. **Image tool selection is mandatory.** Every `generate_image` block MUST include a `tool` field (prefer `python_matplotlib` 99% of the time) AND a `reason` field explaining why that tool was chosen. Omitting either field is an error.
+16. **Decision rule summary:** ALWAYS default to `python_matplotlib` for graphs, shapes, planes, signals, and math concepts.
+17. When creating `quiz_plan`, use GPT-level judgment to determine how many questions this section deserves based on concept count, exam risk, and likely student confusion. Do not use the same question count for every section.
+18. Think explicitly in page order: **overview page → knowledge-point pages → recap page → quiz page**.
 
 ---
 

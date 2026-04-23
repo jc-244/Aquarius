@@ -190,7 +190,7 @@ const USERS_DIR = path.join(__dirname, 'users');
 try { if (!fs.existsSync(USERS_DIR)) fs.mkdirSync(USERS_DIR, { recursive: true }); } catch (_) {}
 
 const LESSON_CACHE_DIR = path.join(__dirname, '../tutor-materials/lesson-cache');
-const LESSON_CACHE_VERSION = 'v5'; // bumped: b64 quiz encoding
+const LESSON_CACHE_VERSION = 'v6'; // bumped: page-aware lesson planning order (overview -> knowledge points -> recap -> quiz)
 try { if (!fs.existsSync(LESSON_CACHE_DIR)) fs.mkdirSync(LESSON_CACHE_DIR, { recursive: true }); } catch (_) {}
 
 /**
@@ -1734,13 +1734,6 @@ async function blueprintToMarkdown(blocks, pageImages) {
                 break;
             }
 
-            case 'quiz_plan': {
-                const b64Json = Buffer.from(JSON.stringify(block || {})).toString('base64');
-                const quizHtml = `<div class="kc-quiz-plan" data-quiz-b64="${b64Json}" style="display:none;"></div>`;
-                parts.push(`%%KC_BLOCK%%${quizHtml}%%KC_END%%`);
-                break;
-            }
-
             case 'section_summary':
                 parts.push('---\n**📌 Key Takeaways**');
                 if (Array.isArray(block.bullets)) {
@@ -1748,6 +1741,13 @@ async function blueprintToMarkdown(blocks, pageImages) {
                 }
                 if (block.transition) parts.push(`\n*${block.transition}*`);
                 break;
+
+            case 'quiz_plan': {
+                const b64Json = Buffer.from(JSON.stringify(block || {})).toString('base64');
+                const quizHtml = `<div class="kc-quiz-plan" data-quiz-b64="${b64Json}" style="display:none;"></div>`;
+                parts.push(`%%KC_BLOCK%%${quizHtml}%%KC_END%%`);
+                break;
+            }
 
             default:
                 if (block.content) parts.push(block.content);
@@ -1788,6 +1788,7 @@ async function generateSectionLesson(sectionId, sectionTitle, bookPages, webSour
             '', 'Textbook OCR:', bookContext,
             '', 'Web sources:', webContext,
             '', 'Instructions:', langNote,
+            'This lesson is page-based. Page 1 must be a section overview. Middle pages should be one major knowledge point per page. The second-to-last page must be a recap/summary. The final page must be a dedicated exam-oriented quiz_plan page only.',
             'Use Markdown. LaTeX for math ($$...$$). Also include one exam-oriented quiz_plan that covers the section\'s important knowledge points, uses mostly multiple-choice questions, and adds short-answer only when needed.'
         ].join('\n');
         return callOpenRouterChat({
