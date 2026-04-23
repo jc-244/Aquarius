@@ -552,9 +552,12 @@ function showDeleteConversationConfirm(timestamp) {
     confirmBtn.textContent = 'Deleting...';
     confirmBtn.style.opacity = '0.8';
     try {
-      await deleteRecentConversation(targetTs);
+      pushRecentConversationDebug('modal:before-perform-delete', { targetTs });
+      await window.performDeleteRecentConversation(targetTs);
+      pushRecentConversationDebug('modal:after-perform-delete', { targetTs });
       closeDeleteConversationConfirm();
     } catch (err) {
+      pushRecentConversationDebug('modal:perform-delete-error', { targetTs, message: err?.message || String(err) });
       console.error('[recentConversations] delete failed:', err);
       confirmBtn.disabled = false;
       cancelBtn.disabled = false;
@@ -4974,7 +4977,7 @@ function summarizeRecentConversation(history = [], sectionTitle = '') {
   return compact(sectionPrefix + 'Saved conversation', 64) || 'Saved conversation';
 }
 
-async function deleteRecentConversation(timestamp) {
+async function performDeleteRecentConversation(timestamp) {
   const normalizedTs = normalizeRecentConversationTimestamp(timestamp);
   pushRecentConversationDebug('delete:start', {
     normalizedTs,
@@ -5044,7 +5047,13 @@ window.renameRecentConversation = function(timestamp) {
 };
 
 window.deleteRecentConversation = function(timestamp) {
+  pushRecentConversationDebug('delete:entry-via-window', { timestamp });
   showDeleteConversationConfirm(timestamp);
+};
+
+window.performDeleteRecentConversation = function(timestamp) {
+  pushRecentConversationDebug('delete:entry-via-window-perform', { timestamp });
+  return performDeleteRecentConversation(timestamp);
 };
 
 function saveCurrentLearnSession(source = 'unknown') {
