@@ -194,6 +194,7 @@ html, body {
 }
 
 .syllabus-item { margin-bottom: 0; }
+.syllabus > .syllabus-item + .syllabus-item { margin-top: 2px; }
 
 .syllabus-chapter {
   width: 100%;
@@ -230,8 +231,8 @@ html, body {
   display: flex;
   flex-direction: column;
   padding-left: 16px;
-  padding-top: 1px;
-  padding-bottom: 3px;
+  padding-top: 0;
+  padding-bottom: 1px;
 }
 
 .syllabus-section-wrap {
@@ -2235,8 +2236,9 @@ html, body {
 .sidebar .syllabus-chapter, .syllabus-chapter {
   color: var(--sidebar-text-primary);
   font-size: 13px;
-  padding: 6px 8px;
-  margin-top: 1px;
+  padding: 4px 8px;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 .sidebar .syllabus-chapter:hover, .syllabus-chapter:hover {
   background: var(--sidebar-hover);
