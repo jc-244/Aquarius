@@ -224,7 +224,21 @@
             </div>
 
             <!-- Left: Explanation (The Lesson) -->
-            <div class="learn-explain-col" style="border-right: 1px solid var(--border);">
+            <div class="learn-explain-col" id="learnExplainCol" style="border-right: 1px solid var(--border);">
+              <div class="learn-explain-toolbar" id="learnExplainToolbar">
+                <div class="learn-kp-nav">
+                  <button class="learn-kp-btn" id="learnKpPrevBtn" title="Previous knowledge point">←</button>
+                  <div class="learn-kp-meta">
+                    <div class="learn-kp-label">Knowledge Point</div>
+                    <div class="learn-kp-title" id="learnKpTitle">Preparing lesson...</div>
+                  </div>
+                  <button class="learn-kp-btn" id="learnKpNextBtn" title="Next knowledge point">→</button>
+                </div>
+                <button class="learn-focus-btn" id="learnFocusBtn" title="Focus mode">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                  <span>Focus</span>
+                </button>
+              </div>
               <div class="learn-explain-scroll" id="learnExplainScroll">
                 <div class="learn-explain-body" id="learnExplainContent">
                   <p class="ghost">Lesson is being prepared...</p>
@@ -312,6 +326,21 @@
   <div class="lightbox hidden" id="lightbox">
     <button class="lightbox-close" id="lightboxClose">✕</button>
     <img class="lightbox-img" id="lightboxImg" src="" alt="">
+  </div>
+
+  <!-- Focus Mode -->
+  <div class="learn-focus-modal hidden" id="learnFocusModal">
+    <div class="learn-focus-backdrop" id="learnFocusBackdrop"></div>
+    <div class="learn-focus-dialog" id="learnFocusDialog">
+      <div class="learn-focus-header">
+        <div class="learn-focus-headings">
+          <div class="learn-focus-eyebrow">Focus Mode</div>
+          <div class="learn-focus-title" id="learnFocusTitle">Knowledge Point</div>
+        </div>
+        <button class="learn-focus-close" id="learnFocusClose" aria-label="Close focus mode">✕</button>
+      </div>
+      <div class="learn-focus-content learn-explain-body" id="learnFocusContent"></div>
+    </div>
   </div>
 
   <!-- MathJax -->
@@ -490,6 +519,6 @@
   </div> <!-- End Wrapper -->
 </div>
 
-  <script src="app.js?v=20260424-05"></script>
+  <script src="app.js?v=20260424-06"></script>
 </body>
 </html>

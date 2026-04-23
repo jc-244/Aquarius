@@ -2421,6 +2421,16 @@ const learnChatScroll  = document.getElementById('learnChatScroll');
 const learnExplainScroll  = document.getElementById('learnExplainScroll');
 const learnFollowupInput  = document.getElementById('learnFollowupInput');
 const learnFollowupBtn    = document.getElementById('learnFollowupBtn');
+const learnExplainColEl   = document.getElementById('learnExplainCol');
+const learnKpPrevBtn      = document.getElementById('learnKpPrevBtn');
+const learnKpNextBtn      = document.getElementById('learnKpNextBtn');
+const learnKpTitle        = document.getElementById('learnKpTitle');
+const learnFocusBtn       = document.getElementById('learnFocusBtn');
+const learnFocusModal     = document.getElementById('learnFocusModal');
+const learnFocusBackdrop  = document.getElementById('learnFocusBackdrop');
+const learnFocusClose     = document.getElementById('learnFocusClose');
+const learnFocusTitle     = document.getElementById('learnFocusTitle');
+const learnFocusContent   = document.getElementById('learnFocusContent');
 const learnWebToggle  = document.getElementById('learnWebToggle') || { classList: { add() {}, remove() {}, toggle() {} } };
 const learnWebBtn     = document.getElementById('learnWebBtn') || { classList: { add() {}, remove() {}, toggle() {} }, addEventListener() {} };
 const learnWebCount   = document.getElementById('learnWebCount') || { textContent: '' };
@@ -2434,6 +2444,9 @@ let lightboxPanY = 0;
 let lightboxDragging = false;
 let lightboxDragStartX = 0;
 let lightboxDragStartY = 0;
+let learnKnowledgePoints = [];
+let currentKnowledgePointIndex = 0;
+let currentFullLessonHtml = '';
 
 function applyLightboxTransform() {
   if (!lightboxImg) return;
@@ -2470,6 +2483,107 @@ function bindExpandableLessonImages(root) {
     img.dataset.zoomBound = '1';
     img.addEventListener('click', () => openLightbox(img.src, img.alt || ''));
   });
+}
+
+function resetLearnKnowledgePointState() {
+  learnKnowledgePoints = [];
+  currentKnowledgePointIndex = 0;
+  currentFullLessonHtml = '';
+  if (learnKpTitle) learnKpTitle.textContent = 'Preparing lesson...';
+  if (learnKpPrevBtn) learnKpPrevBtn.disabled = true;
+  if (learnKpNextBtn) learnKpNextBtn.disabled = true;
+}
+
+function splitLessonIntoKnowledgePoints(html) {
+  const source = String(html || '').trim();
+  if (!source) return [];
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = source;
+  const nodes = Array.from(wrapper.childNodes);
+  const blocks = [];
+  let current = null;
+
+  const pushCurrent = () => {
+    if (!current) return;
+    const content = current.parts.join('').trim();
+    if (content && content.replace(/<[^>]+>/g, '').trim()) {
+      blocks.push({ title: current.title, html: content });
+    }
+    current = null;
+  };
+
+  nodes.forEach((node) => {
+    if (node.nodeType === Node.ELEMENT_NODE && /^H[1-3]$/.test(node.tagName)) {
+      pushCurrent();
+      current = {
+        title: (node.textContent || '').trim() || 'Knowledge Point',
+        parts: [node.outerHTML]
+      };
+      return;
+    }
+
+    if (!current) current = { title: 'Overview', parts: [] };
+    current.parts.push(node.outerHTML || node.textContent || '');
+  });
+
+  pushCurrent();
+  return blocks;
+}
+
+function renderCurrentKnowledgePoint() {
+  if (!learnExplainContent) return;
+  if (!learnKnowledgePoints.length) {
+    learnExplainContent.innerHTML = currentFullLessonHtml || '<p class="ghost">No explanation available.</p>';
+    bindExpandableLessonImages(learnExplainContent);
+    if (learnKpTitle) learnKpTitle.textContent = 'Full Lesson';
+    if (learnKpPrevBtn) learnKpPrevBtn.disabled = true;
+    if (learnKpNextBtn) learnKpNextBtn.disabled = true;
+    return;
+  }
+
+  currentKnowledgePointIndex = Math.max(0, Math.min(currentKnowledgePointIndex, learnKnowledgePoints.length - 1));
+  const block = learnKnowledgePoints[currentKnowledgePointIndex];
+  learnExplainContent.innerHTML = block.html;
+  bindExpandableLessonImages(learnExplainContent);
+  if (learnKpTitle) learnKpTitle.textContent = `${currentKnowledgePointIndex + 1}/${learnKnowledgePoints.length} · ${block.title}`;
+  if (learnKpPrevBtn) learnKpPrevBtn.disabled = currentKnowledgePointIndex === 0;
+  if (learnKpNextBtn) learnKpNextBtn.disabled = currentKnowledgePointIndex === learnKnowledgePoints.length - 1;
+  if (learnExplainScroll) learnExplainScroll.scrollTop = 0;
+
+  setTimeout(() => {
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise([learnExplainContent]).catch(() => {});
+    }
+    buildTocFromContent(learnExplainContent);
+  }, 60);
+}
+
+function setLearnLessonContent(fullHtml, options = {}) {
+  currentFullLessonHtml = String(fullHtml || '');
+  learnKnowledgePoints = splitLessonIntoKnowledgePoints(currentFullLessonHtml);
+  currentKnowledgePointIndex = Math.max(0, Math.min(options.index || 0, Math.max(learnKnowledgePoints.length - 1, 0)));
+  renderCurrentKnowledgePoint();
+}
+
+function openLearnFocusMode() {
+  if (!learnFocusModal || !learnFocusContent) return;
+  const activeBlock = learnKnowledgePoints[currentKnowledgePointIndex];
+  learnFocusContent.innerHTML = activeBlock?.html || learnExplainContent?.innerHTML || '';
+  if (learnFocusTitle) learnFocusTitle.textContent = activeBlock?.title || learnKpTitle?.textContent || 'Knowledge Point';
+  bindExpandableLessonImages(learnFocusContent);
+  learnFocusModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => {
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise([learnFocusContent]).catch(() => {});
+    }
+  }, 40);
+}
+
+function closeLearnFocusMode() {
+  if (!learnFocusModal) return;
+  learnFocusModal.classList.add('hidden');
+  document.body.style.overflow = '';
 }
 
 let learnPages = [];
@@ -2708,6 +2822,7 @@ async function openLearnMode(sectionId, sectionTitle, subsections = []) {
   learnTitle.textContent = sectionTitle;
   learnIntroCard.classList.remove('hidden');
   learnBody.classList.add('hidden');
+  resetLearnKnowledgePointState();
   showLearnView();
 
   // ── Use pre-generated preview if available (instant, no API call) ──
@@ -2833,9 +2948,7 @@ async function startLesson() {
         <button id="startTestBtn" style="background: #2563EB; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">Start Pre-generated Challenge</button>
       </div>
     `;
-    learnExplainContent.innerHTML = lessonHtml + testSectionHtml;
-
-    bindExpandableLessonImages(learnExplainContent);
+    setLearnLessonContent(lessonHtml + testSectionHtml);
     if (learnChatContent) learnChatContent.innerHTML = ''; // Clear chat history on new section
 
     // Bind the test button
@@ -2906,12 +3019,6 @@ async function startLesson() {
       }
     }, 100);
 
-    setTimeout(() => {
-      if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise([learnExplainContent]).catch(() => {});
-      }
-      buildTocFromContent(learnExplainContent);
-    }, 80);
     renderLearnWebSources(data.webSources || []);
     renderLearnWebSection(data.webSources || []);
     learnExplainScroll.scrollTop = 0;
@@ -2929,6 +3036,8 @@ async function startLesson() {
 function closeLearnMode() {
   if (learnAbort) learnAbort.abort();
   hideSplash();
+  closeLearnFocusMode();
+  resetLearnKnowledgePointState();
   showWelcome();
   clearToc();
 }
@@ -2943,7 +3052,30 @@ learnWebBtn.addEventListener('click', () => {
 });
 lightboxClose.addEventListener('click', () => closeLightbox());
 lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+if (learnKpPrevBtn) {
+  learnKpPrevBtn.addEventListener('click', () => {
+    if (currentKnowledgePointIndex > 0) {
+      currentKnowledgePointIndex -= 1;
+      renderCurrentKnowledgePoint();
+    }
+  });
+}
+if (learnKpNextBtn) {
+  learnKpNextBtn.addEventListener('click', () => {
+    if (currentKnowledgePointIndex < learnKnowledgePoints.length - 1) {
+      currentKnowledgePointIndex += 1;
+      renderCurrentKnowledgePoint();
+    }
+  });
+}
+if (learnFocusBtn) learnFocusBtn.addEventListener('click', openLearnFocusMode);
+if (learnFocusClose) learnFocusClose.addEventListener('click', closeLearnFocusMode);
+if (learnFocusBackdrop) learnFocusBackdrop.addEventListener('click', closeLearnFocusMode);
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && learnFocusModal && !learnFocusModal.classList.contains('hidden')) {
+    closeLearnFocusMode();
+    return;
+  }
   if (e.key === 'Escape' && lightbox && !lightbox.classList.contains('hidden')) closeLightbox();
 });
 lightboxImg.addEventListener('wheel', (e) => {
@@ -4873,7 +5005,7 @@ setTimeout(() => {
 
 // --- Resizer Logic ---
 const learnResizer = document.getElementById('learnResizer');
-const learnExplainCol = document.querySelector('.learn-explain-col');
+const learnExplainCol = learnExplainColEl || document.querySelector('.learn-explain-col');
 const learnChatCol = document.getElementById('learnChatCol');
 let isResizing = false;
 
@@ -4895,6 +5027,7 @@ if (learnResizer) {
     learnExplainCol.style.flex = 'none';
     learnExplainCol.style.width = newWidth + 'px';
     learnChatCol.style.flex = '1';
+    learnChatCol.style.width = 'auto';
 
     // Automatically trigger resize/reflow for contained panels
     learnFollowupInput.style.width = '100%';
@@ -5230,6 +5363,7 @@ window.loadHistoricalSession = function(timestamp) {
       bindExpandableLessonImages(contentEl);
     }
 
+    setLearnLessonContent(markdownToHtml(tutorState.learnLessonMarkdown || 'No explanation available.'));
     renderLearnPages();
     renderLearnWebSources(tutorState.learnWebSources);
     renderLearnWebSection(tutorState.learnWebSources);
@@ -5257,10 +5391,10 @@ window.loadHistoricalSession = function(timestamp) {
 
       setTimeout(() => {
         if (window.MathJax && window.MathJax.typesetPromise) {
-          const targets = [contentEl, chatContent].filter(Boolean);
+          const targets = [learnExplainContent, chatContent].filter(Boolean);
           window.MathJax.typesetPromise(targets).catch(() => {});
         }
-        buildTocFromContent(contentEl);
+        buildTocFromContent(learnExplainContent);
         chatScroll.scrollTop = chatScroll.scrollHeight;
       }, 80);
     }

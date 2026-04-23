@@ -663,9 +663,9 @@ html, body {
   font-family: 'DM Mono', monospace;
 }
 
-/* Learn Explain Col replaces fixed width with flex:1 to split 50/50 */
+/* Learn Explain Col defaults to a 6:4 split */
 .learn-explain-col {
-  flex: 1.2; /* slightly wider for lecture text */
+  flex: 1.5;
   display: flex;
   flex-direction: column;
   background: var(--bg-main);
@@ -673,7 +673,7 @@ html, body {
 }
 
 .learn-chat-col {
-  flex: 0.8; /* slightly narrower for chat */
+  flex: 1;
   display: flex;
   flex-direction: column;
   background: var(--bg-body);
@@ -1685,6 +1685,89 @@ html, body {
 .learn-web-sources.hidden { display: none; }
 
 /* Right: explanation */
+.learn-explain-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%);
+  flex-shrink: 0;
+}
+
+.learn-kp-nav {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.learn-kp-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid #DBEAFE;
+  background: #FFFFFF;
+  color: #2563EB;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+.learn-kp-btn:hover:not(:disabled) {
+  background: #EFF6FF;
+  border-color: #93C5FD;
+  transform: translateY(-1px);
+}
+.learn-kp-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.learn-kp-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.learn-kp-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94A3B8;
+  font-family: 'DM Mono', monospace;
+}
+.learn-kp-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0F172A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 520px;
+}
+
+.learn-focus-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  border: 1px solid #DBEAFE;
+  background: #FFFFFF;
+  color: #1D4ED8;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+.learn-focus-btn:hover {
+  background: #EFF6FF;
+  transform: translateY(-1px);
+}
+
 .learn-explain-scroll {
   flex: 1;
   overflow-y: auto;
@@ -1802,6 +1885,70 @@ html, body {
   100% { left: 100%; }
 }
 .learn-loading-bar-text { font-size: 12px; color: var(--text-muted); }
+
+/* Focus mode */
+.learn-focus-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.learn-focus-modal.hidden { display: none; }
+.learn-focus-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(8px);
+}
+.learn-focus-dialog {
+  position: relative;
+  width: min(920px, calc(100vw - 48px));
+  max-height: calc(100vh - 56px);
+  border-radius: 24px;
+  background: #FFFFFF;
+  box-shadow: 0 28px 90px rgba(15, 23, 42, 0.28);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.learn-focus-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border-bottom: 1px solid #E2E8F0;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%);
+}
+.learn-focus-eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #94A3B8;
+  font-family: 'DM Mono', monospace;
+}
+.learn-focus-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0F172A;
+  margin-top: 2px;
+}
+.learn-focus-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid #DBEAFE;
+  background: #FFFFFF;
+  color: #334155;
+  cursor: pointer;
+}
+.learn-focus-content {
+  overflow-y: auto;
+  padding: 28px 32px 36px;
+  max-width: none;
+}
 
 /* Lightbox */
 .lightbox {
@@ -3043,7 +3190,7 @@ button:focus, input:focus, textarea:focus {
   max-width: 100%;
 }
 .learn-explain-col {
-  flex: 1; /* Reset initially to 1:1 */
+  flex: 1.5;
   min-width: 300px;
 }
 .fub-q, .fub-a, .learn-explain-content {
