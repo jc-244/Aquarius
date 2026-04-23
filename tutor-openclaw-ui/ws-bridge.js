@@ -99,6 +99,27 @@ function compactWhitespace(value) {
     return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
+function escapeHtmlAttr(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function convertLegacyQuickCheckToKcBlocks(markdown) {
+    const src = String(markdown || '');
+    const quickCheckRegex = /(?:^|\n)---\s*\n\*\*✏️ Quick Check\*\*\s*\n\s*([\s\S]*?)\n\s*<details><summary>Show answer<\/summary>\s*\n\s*\*\*Answer:\*\*\s*([\s\S]*?)\n\s*(?:\*Hint:\s*([\s\S]*?)\*)?\s*\n\s*<\/details>/g;
+
+    return src.replace(quickCheckRegex, (_match, question, answer, hint) => {
+        const q = compactWhitespace(question);
+        const a = compactWhitespace(answer);
+        const h = compactWhitespace(hint || '');
+        const kcHtml = `<div class="kc-container" data-question="${escapeHtmlAttr(q)}" data-answer="${escapeHtmlAttr(a)}" data-hint="${escapeHtmlAttr(h)}" style="display:none;"></div>`;
+        return `\n---\n%%KC_BLOCK%%${kcHtml}%%KC_END%%\n`;
+    });
+}
+
 function inferPageTitle(meta, page) {
     const subsection = compactWhitespace(meta.subsection || '');
     const firstKeyword = Array.isArray(meta.keywords) && meta.keywords.length
@@ -169,7 +190,7 @@ const USERS_DIR = path.join(__dirname, 'users');
 try { if (!fs.existsSync(USERS_DIR)) fs.mkdirSync(USERS_DIR, { recursive: true }); } catch (_) {}
 
 const LESSON_CACHE_DIR = path.join(__dirname, '../tutor-materials/lesson-cache');
-const LESSON_CACHE_VERSION = 'v2';
+const LESSON_CACHE_VERSION = 'v3'; // bumped: kc-container placeholder support
 try { if (!fs.existsSync(LESSON_CACHE_DIR)) fs.mkdirSync(LESSON_CACHE_DIR, { recursive: true }); } catch (_) {}
 
 /**
@@ -656,44 +677,93 @@ async function extractKeywords(question) {
     return fallbackKeywordExtraction(question);
 }
 
-async function generateSearchAngles(question) {
+/**
+ * Context-aware search: uses LLM to understand what user ACTUALLY means
+ * given the full conversation context, then returns both:
+ *   - resolvedQuery: a single clear search phrase (used by buildSearchPlan)
+ *   - searchAngles: 5 diverse queries for different source types
+ */
+async function generateSearchAngles(question, options = {}) {
     const base = compactWhitespace(question || '');
-    const deterministic = uniqueStrings([
-        `${base} intuition`,
-        `${base} visual explanation`,
-        `${base} worked example`,
-        `${base} university notes`,
-        `${base} wikipedia`
-    ], 5);
+    const history = Array.isArray(options.history) ? options.history : [];
+    const sectionTitle = compactWhitespace(options.sectionTitle || '');
+    const lessonContext = compactWhitespace(options.lessonContext || '').slice(0, 2500);
+    const userProfilePrompt = compactWhitespace(options.userProfilePrompt || '').slice(0, 1200);
+
+    const historyText = history
+        .slice(-8)
+        .map(msg => {
+            const role = msg.role || msg.sender || 'unknown';
+            const text = compactWhitespace(typeof msg.content === 'string' ? msg.content : (msg.text || msg.message || ''));
+            return text ? `${role}: ${text.slice(0, 300)}` : '';
+        })
+        .filter(Boolean)
+        .join('\n');
 
     try {
         const text = await callOpenRouterChat({
             model: 'openai/gpt-5.4',
             timeoutMs: 30000,
             temperature: 0.1,
-            maxTokens: 320,
+            maxTokens: 500,
             messages: [
                 {
                     role: 'system',
-                    content: 'Generate exactly 5 short English web search queries for learning research. The 5 queries should intentionally diversify source types: intuition/visual, tutorial, worked example, university notes, and reference. Return a strict JSON array of strings only. No markdown.'
+                    content: [
+                        'You are a search query generator for an educational tutoring agent about Signal Processing and Linear Systems.',
+                        'Given the conversation context, section topic, lesson content, and the user\'s latest message, you must:',
+                        '1. FIRST: Figure out what the user actually means. "again" might mean "explain sinusoids in terms of exponentials again". "why" might mean "why does Euler\'s formula work". Resolve ALL ambiguity using the conversation history and lesson context.',
+                        '2. Output a JSON object with two fields:',
+                        '   - "resolvedQuery": a single clear English phrase (5-15 words) describing what the user is actually asking about, suitable as a web search query. This must NEVER be a single vague word.',
+                        '   - "angles": an array of exactly 5 short English search queries, diversified across: intuition/visual, tutorial/lecture, worked example, university notes, reference.',
+                        'All queries MUST be specific to the educational topic. Never generate queries that could match songs, movies, pop culture, or anything unrelated to the course.',
+                        'Return ONLY a JSON object. No markdown.'
+                    ].join(' ')
                 },
                 {
                     role: 'user',
-                    content: `Question: ${question}`
+                    content: [
+                        `Course: Signal Processing and Linear Systems`,
+                        `Current section: ${sectionTitle || 'unknown'}`,
+                        userProfilePrompt ? `Student profile: ${userProfilePrompt}` : '',
+                        lessonContext ? `Recent lesson content (excerpt): ${lessonContext}` : '',
+                        historyText ? `Recent conversation:\n${historyText}` : '',
+                        `\nUser's latest message: "${base}"`
+                    ].filter(Boolean).join('\n\n')
                 }
             ]
         });
 
         const parsed = tryParseJsonLoose(text);
-        if (Array.isArray(parsed)) {
-            const queries = uniqueStrings([...parsed, ...deterministic], 5);
-            if (queries.length) return queries;
+        if (parsed && typeof parsed === 'object') {
+            const resolved = compactWhitespace(parsed.resolvedQuery || parsed.resolved_query || '');
+            const angles = Array.isArray(parsed.angles) ? parsed.angles : (Array.isArray(parsed.queries) ? parsed.queries : []);
+            const cleaned = uniqueStrings(angles.map(item => compactWhitespace(String(item || ''))).filter(Boolean), 5);
+            if (resolved && cleaned.length) {
+                console.log(`[Search] Resolved "${base}" → "${resolved}" with ${cleaned.length} angles`);
+                return { resolvedQuery: resolved, angles: cleaned };
+            }
+            if (cleaned.length) {
+                console.log(`[Search] Got ${cleaned.length} angles (no resolved query)`);
+                return { resolvedQuery: cleaned[0], angles: cleaned };
+            }
         }
     } catch (err) {
-        console.warn('[Search] Search-angle fallback:', err.message);
+        console.warn('[Search] Search-angle LLM fallback:', err.message);
     }
 
-    return deterministic;
+    const fallbackBase = [sectionTitle, base].filter(Boolean).join(' ').trim() || 'signal processing linear systems';
+    console.log(`[Search] Using fallback queries based on: "${fallbackBase}"`);
+    return {
+        resolvedQuery: fallbackBase,
+        angles: uniqueStrings([
+            `${fallbackBase} intuition`,
+            `${fallbackBase} visual explanation`,
+            `${fallbackBase} worked example`,
+            `${fallbackBase} university notes`,
+            `${fallbackBase} reference`
+        ], 5)
+    };
 }
 
 function scoreBookEntry(entry, keywords, question) {
@@ -809,7 +879,7 @@ async function duckDuckGoSearch(query) {
 
 async function wikipediaSearch(query) {
     try {
-        const endpoint = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=4&format=json&origin=*`;
+        const endpoint = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=2&format=json&origin=*`;
         const payload = await httpRequestJson(endpoint, { method: 'GET', headers: { 'Accept': 'application/json', 'User-Agent': 'TutorAgent/1.0 (educational-app; contact@example.com)' } }, null, 10000);
         if (!payload || !payload.query || !Array.isArray(payload.query.search)) return [];
         return payload.query.search.map(item => ({
@@ -819,6 +889,29 @@ async function wikipediaSearch(query) {
         }));
     } catch (err) {
         console.warn('[Search] Wikipedia failed:', query, err.message);
+        return [];
+    }
+}
+
+async function serperSearch(query, num = 8) {
+    const apiKey = process.env.SERPER_API_KEY || 'f2b8ffdb2fdb7f4f59e167810c87f8af49bc01b6';
+    if (!apiKey) return [];
+    try {
+        const payload = await httpRequestJson('https://google.serper.dev/search', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-KEY': apiKey
+            }
+        }, JSON.stringify({ q: query, num }), 15000);
+        const organic = Array.isArray(payload && payload.organic) ? payload.organic : [];
+        return organic.map(item => ({
+            title: item.title || '',
+            url: item.link || '',
+            snippet: compactWhitespace(item.snippet || '')
+        })).filter(item => item.url);
+    } catch (err) {
+        console.warn('[Search] Serper failed:', query, err.message);
         return [];
     }
 }
@@ -872,6 +965,9 @@ function sortSourcesByType(sources = []) {
         const ra = sourceTypeRank(a.sourceType);
         const rb = sourceTypeRank(b.sourceType);
         if (ra !== rb) return ra - rb;
+        const aWiki = /wikipedia\.org$/i.test(a.domain || '');
+        const bWiki = /wikipedia\.org$/i.test(b.domain || '');
+        if (aWiki !== bWiki) return aWiki ? 1 : -1;
         return (a.domain || '').localeCompare(b.domain || '');
     });
 }
@@ -879,12 +975,13 @@ function sortSourcesByType(sources = []) {
 function buildSearchPlan(question, searchAngles = []) {
     const q = compactWhitespace(question || '');
     return [
-        { label: 'video', query: `${q} site:youtube.com` },
-        { label: 'visual', query: `${q} 3blue1brown OR interactive OR visual explanation` },
-        { label: 'course', query: `${q} lecture notes OR university OR site:.edu` },
-        { label: 'reference', query: `${q} wikipedia OR mathworld OR wolfram` },
-        { label: 'insight', query: `${q} intuition OR math insight OR better explained` },
-        ...searchAngles.map(angle => ({ label: 'general', query: angle }))
+        { label: 'video', provider: 'serper', query: `${q} site:youtube.com` },
+        { label: 'visual', provider: 'serper', query: `${q} 3blue1brown OR interactive OR visual explanation OR desmos OR geogebra` },
+        { label: 'course', provider: 'serper', query: `${q} lecture notes OR university OR site:.edu OR pdf` },
+        { label: 'insight', provider: 'serper', query: `${q} intuition OR betterexplained OR brilliant OR tutorial` },
+        { label: 'general', provider: 'serper', query: q },
+        { label: 'reference', provider: 'wikipedia', query: `${q} wikipedia OR mathworld OR wolfram` },
+        ...searchAngles.map(angle => ({ label: 'general', provider: 'serper', query: angle }))
     ];
 }
 
@@ -910,8 +1007,10 @@ async function collectWebSources(searchAngles, options = {}) {
     const plan = buildSearchPlan(question, searchAngles);
     for (const entry of plan) {
         let items = [];
-        if (entry.label === 'reference') {
+        if (entry.provider === 'wikipedia') {
             items = await wikipediaSearch(entry.query);
+        } else if (entry.provider === 'serper') {
+            items = await serperSearch(entry.query, entry.label === 'general' ? 10 : 6);
         } else {
             items = await duckDuckGoSearch(entry.query);
         }
@@ -919,20 +1018,33 @@ async function collectWebSources(searchAngles, options = {}) {
         if (merged.length >= 18) break;
     }
 
-    if (merged.length < 6) {
+    if (merged.length < 8) {
         for (const angle of uniqueStrings([
             `${question} site:youtube.com`,
             `${question} lecture notes`,
             `${question} intuitive explanation`,
-            `${question} 3blue1brown`
-        ], 4)) {
-            const items = await duckDuckGoSearch(angle);
+            `${question} 3blue1brown`,
+            `${question} site:.edu`,
+            `${question} betterexplained`
+        ], 6)) {
+            const items = await serperSearch(angle, 6);
             addItems(items, 'fallback');
             if (merged.length >= 18) break;
         }
     }
 
-    const finalSources = sortSourcesByType(merged.slice(0, 14));
+    const diverse = [];
+    const domainCount = new Map();
+    for (const item of sortSourcesByType(merged)) {
+        const d = item.domain || 'unknown';
+        const count = domainCount.get(d) || 0;
+        if (count >= 2) continue;
+        domainCount.set(d, count + 1);
+        diverse.push(item);
+        if (diverse.length >= 14) break;
+    }
+
+    const finalSources = diverse;
     console.log(`[Search] collectWebSources: ${finalSources.length} sources for question: ${question || searchAngles.join(' | ')}`);
     return finalSources;
 }
@@ -974,17 +1086,17 @@ async function generateExplanation(question, bookPages, webSources, options = {}
 
     let lengthInstruction = '';
     if (answerLength === 'short') {
-        lengthInstruction = language === 'zh' 
-            ? '10. 长度要求：必须非常精简直接，只要核心结论，一两句话或简单的核心论点即可，绝不写长篇大论。' 
-            : '10. Length preference: The user selected SHORT. Keep your answer direct, straight to the core conclusion. Do not write long analogies, build-ups, or extensive math derivations.';
+        lengthInstruction = language === 'zh'
+            ? '10. [CRITICAL] 用户选择了 SHORT。最终答案必须控制在 1-2 句内，优先 1 句；总长度尽量不超过 60 个中文字符。禁止分点、禁止长公式推导、禁止举多个例子、禁止开场白、禁止总结段。只保留最核心的直接回答。'
+            : '10. [CRITICAL CONSTRAINT] The user selected SHORT. The final answer MUST be only 1-2 sentences, ideally 1 sentence, and should stay under ~35 words. No bullets, no long derivations, no multiple examples, no intro, no recap. Only the core answer.';
     } else if (answerLength === 'long') {
-        lengthInstruction = language === 'zh' 
-            ? '10. 长度要求：必须极其详细地展开教学，包括直觉类比、初学者容易犯的误区、步骤完整的公式推导。' 
+        lengthInstruction = language === 'zh'
+            ? '10. 长度要求：必须极其详细地展开教学，包括直觉类比、初学者容易犯的误区、步骤完整的公式推导。'
             : '10. Length preference: The user selected LONG. You must instruct in an extremely detailed manner, including intuitive analogies, common beginner pitfalls, and comprehensive step-by-step formula derivations.';
     } else {
-        lengthInstruction = language === 'zh' 
-            ? '10. 长度要求：标准精炼讲解。' 
-            : '10. Length preference: Standard lecture length, with necessary formulas and clear explanation.';
+        lengthInstruction = language === 'zh'
+            ? '10. 长度要求：标准精炼讲解，控制在 2 小段内。'
+            : '10. Length preference: Standard lecture length, with necessary formulas and clear explanation in at most 2 short paragraphs.';
     }
 
 
@@ -1053,7 +1165,7 @@ async function generateExplanation(question, bookPages, webSources, options = {}
             : [{ type: 'text', text: `【Planner Instructions】\n${planFormat}\n\n` }].concat(userContent);
 
         teachingPlan = await callOpenRouterChat({
-            model: 'google/gemini-3.1-pro-preview',
+            model: 'openai/gpt-5.4',
             timeoutMs: 60000,
             temperature: 0.3,
             maxTokens: 1000,
@@ -1071,9 +1183,9 @@ async function generateExplanation(question, bookPages, webSources, options = {}
         else finalPrompt[0].text += planInsert;
     }
 
-    console.log('[ASK] Pipeline Step 2/3: Generating final explanation with Sonnet...');
+    console.log('[ASK] Pipeline Step 2/3: Generating final explanation with Haiku (fast follow-up)...');
     let explanation = await callOpenRouterChat({
-        model: 'anthropic/claude-sonnet-4.6',
+        model: 'anthropic/claude-haiku-4.5',
         timeoutMs: 120000,
         temperature: 0.35,
         maxTokens: 3200,
@@ -1081,8 +1193,8 @@ async function generateExplanation(question, bookPages, webSources, options = {}
             {
                 role: 'system',
                 content: language === 'zh'
-                    ? '你是一位耐心、准确、会讲人话的理工科导师。请基于给定教材 OCR、网页摘要和已有对话上下文生成结构化讲解，不要编造未给出的参考文献。对于 follow-up 问题，必须延续上下文。绝对不要输出 ```python 代码块，也绝对不要输出 ASCII 图、纯文本示意图、字符画坐标轴，**严禁**自己伪造 `![Generated Visualization](/generated/...)` 这类的图片链接；如果需要图示，只能在正文里用文字说明，后置的绘图模型会自动接管画图。' + userProfilePrompt
-                    : 'You are a patient, accurate, and approachable STEM tutor. Generate structured explanations based on the given textbook OCR, web summaries, and conversation history. Do not fabricate references not provided. For follow-up questions, always continue from the existing context. Never output ```python code blocks, ASCII diagrams, plain-text sketches, or character-drawn axes, and **NEVER** hallucinate or output markdown image links like `![Generated Visualization](/generated/...)` yourself; if a figure is needed, mention it in prose only and leave the actual image rendering to the subsequent drawing model.' + userProfilePrompt
+                    ? '你是一位耐心、准确、会讲人话的理工科导师，但**你绝对不要做无痛喂饭的复读机**。请基于给定教材 OCR、网页摘要和已有对话上下文生成结构化讲解。\n【追问处理必须遵循的核心法则】：\n当学生答错测验题、或者对概念理解有偏差（哪怕只有一点点）时，**绝对不要直接给出正确答案或马上把定义贴给他**。你必须：\n1. 指出他结论中哪个环节的逻辑断链了；\n2. 抛出一个基于他当前错误逻辑的**反例或极其刁钻的反问**，逼他自己发现矛盾；\n3. 像苏格拉底一样，一层一层用提问扒光他的盲点，直到他自己说出正确的推演逻辑，你再帮他总结。\n（对于 follow-up 问题，必须延续上下文。绝对不要输出 ```python 代码块...）\n绝对不要输出 ASCII 图、纯文本示意图、字符画坐标轴，**严禁**自己伪造 `![Generated Visualization](/generated/...)` 这类的图片链接；如果需要图示，只能在正文里用文字说明，后置的绘图模型会自动接管画图。' + userProfilePrompt
+                    : 'You are a STEM tutor with a strict Socratic method. Generate structured explanations based on the given textbook OCR, web summaries, and conversation history.\n**Crucial rule for follow-ups/wrong answers:**\nIf the student is wrong or misunderstands a concept, DO NOT give away the answer immediately or copy-paste definitions. Instead:\n1. Identify the exact flaw in their logic.\n2. Present a "gotcha" counter-example or probing question based on their own flawed reasoning to expose the contradiction.\n3. Make them realize their own mistake and guide them to the correct conclusion via questions step-by-step.\nNever output ```python code blocks, ASCII diagrams, plain-text sketches, or character-drawn axes, and **NEVER** hallucinate or output markdown image links like `![Generated Visualization](/generated/...)` yourself; if a figure is needed, mention it in prose only and leave the actual image rendering to the subsequent drawing model.' + userProfilePrompt
             },
             {
                 role: 'user',
@@ -1120,7 +1232,7 @@ async function generateExplanation(question, bookPages, webSources, options = {}
         ].join('\n');
 
         const diagramCode = await callOpenRouterChat({
-            model: 'anthropic/claude-sonnet-4.6',
+            model: 'anthropic/claude-haiku-4.5',
             timeoutMs: 90000,
             temperature: 0.1,
             maxTokens: 1400,
@@ -1276,7 +1388,7 @@ async function generateSectionIntro(sectionId, sectionTitle, bookPages, language
         : 'You are an engineering tutor who explains topics clearly and concisely for beginners. Always respond in English.';
 
     return callOpenRouterChat({
-        model: 'anthropic/claude-sonnet-4.6',
+        model: 'anthropic/claude-haiku-4.5',
         timeoutMs: 30000,
         temperature: 0.3,
         maxTokens: 200,
@@ -1289,11 +1401,11 @@ async function generateSectionIntro(sectionId, sectionTitle, bookPages, language
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DUAL-AGENT PIPELINE
-// Agent A (Planner):  gemini-3.1-pro-preview  — produces Rendering Blueprint JSON
+// Agent A (Planner):  openai/gpt-5.4  — produces Rendering Blueprint JSON
 // Agent B (Executor): claude-sonnet-4.6        — executes each block into final MD
 // ─────────────────────────────────────────────────────────────────────────────
 
-const AGENT_A_MODEL = 'google/gemini-3.1-pro-preview';
+const AGENT_A_MODEL = 'openai/gpt-5.4';
 const AGENT_B_MODEL = 'anthropic/claude-sonnet-4.6';
 
 /**
@@ -1550,7 +1662,7 @@ async function blueprintToMarkdown(blocks, pageImages) {
                     } catch (e) {
                         parts.push(`> ⚠️ Chart render error: ${e.message}`);
                     }
-                } else if (block.tool === 'nano_banana2') {
+                } else if (block.tool === 'openai/gpt-5.4-image-2') {
                     const prompt = block.prompt || block.spec || (block.python_spec && block.python_spec.description) || block.reason || 'educational illustration';
                     try {
                         const imgResult = await callTutorSkillRaw(prompt);
@@ -1567,9 +1679,23 @@ async function blueprintToMarkdown(blocks, pageImages) {
                 }
                 break;
 
-            case 'knowledge_check':
-                parts.push(`---\n**✏️ Quick Check**\n\n${block.question}\n\n<details><summary>Show answer</summary>\n\n**Answer:** ${block.answer}\n\n${block.hint ? `*Hint: ${block.hint}*` : ''}\n\n</details>`);
+            case 'knowledge_check': {
+                // Legacy single-question support
+                const kcHtml = `<div class="kc-container" data-question="${block.question.replace(/"/g,'&quot;')}" data-answer="${block.answer.replace(/"/g,'&quot;')}" data-hint="${(block.hint||'').replace(/"/g,'&quot;')}" style="display:none;"></div>`;
+                parts.push(`%%KC_BLOCK%%${kcHtml}%%KC_END%%`);
                 break;
+            }
+
+            case 'quiz_plan': {
+                const safeJson = JSON.stringify(block || {})
+                    .replace(/&/g, '&amp;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+                const quizHtml = `<div class="kc-quiz-plan" data-quiz="${safeJson}" style="display:none;"></div>`;
+                parts.push(`%%KC_BLOCK%%${quizHtml}%%KC_END%%`);
+                break;
+            }
 
             case 'section_summary':
                 parts.push('---\n**📌 Key Takeaways**');
@@ -1618,7 +1744,7 @@ async function generateSectionLesson(sectionId, sectionTitle, bookPages, webSour
             '', 'Textbook OCR:', bookContext,
             '', 'Web sources:', webContext,
             '', 'Instructions:', langNote,
-            'Use Markdown. LaTeX for math ($$...$$). End with 1-2 quick-check questions.'
+            'Use Markdown. LaTeX for math ($$...$$). Also include one exam-oriented quiz_plan that covers the section\'s important knowledge points, uses mostly multiple-choice questions, and adds short-answer only when needed.'
         ].join('\n');
         return callOpenRouterChat({
             model: AGENT_B_MODEL, timeoutMs: 120000, temperature: 0.3, maxTokens: 5000,
@@ -1661,7 +1787,7 @@ async function _legacyGenerateSectionLesson(sectionId, sectionTitle, bookPages, 
     ].join('\n');
 
     return callOpenRouterChat({
-        model: 'anthropic/claude-sonnet-4.6',
+        model: 'anthropic/claude-haiku-4.5',
         timeoutMs: 120000,
         temperature: 0.3,
         maxTokens: 4000,
@@ -1883,10 +2009,14 @@ const server = http.createServer(async (req, res) => {
                 const cachedLesson = readLessonCache(sectionId, profileMemory);
                 if (cachedLesson) {
                     console.log(`[SECTION] Cache hit for ${sectionId}, skipping pipeline.`);
+                    const normalizedCachedLesson = convertLegacyQuickCheckToKcBlocks(cachedLesson);
+                    if (normalizedCachedLesson !== cachedLesson && profileMemory) {
+                        writeLessonCache(sectionId, profileMemory, normalizedCachedLesson);
+                    }
                     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
                     res.end(JSON.stringify({
                         sectionId, sectionTitle,
-                        lesson: cachedLesson,
+                        lesson: normalizedCachedLesson,
                         cached: true,
                         bookPages: bookPages.map(p => ({
                             page: p.page, image: p.image,
@@ -1906,7 +2036,8 @@ const server = http.createServer(async (req, res) => {
                     webSources = await collectWebSources(searchAngles);
                 }
                 console.log(`[SECTION] Starting dual-agent pipeline for ${sectionId} (lang=${language}, uid=${uid})…`);
-                const lesson = await generateSectionLesson(sectionId, sectionTitle, rawPages, webSources, language, userProfilePrompt);
+                let lesson = await generateSectionLesson(sectionId, sectionTitle, rawPages, webSources, language, userProfilePrompt);
+                lesson = convertLegacyQuickCheckToKcBlocks(lesson);
                 // ── Auto-save to lesson cache ───────────────────────────────
                 if (lesson && profileMemory) {
                     writeLessonCache(sectionId, profileMemory, lesson);
@@ -1950,6 +2081,8 @@ const server = http.createServer(async (req, res) => {
             const uid = data.uid || null;
             const userMemory = uid ? readUserMemory(uid) : null;
             const userProfilePrompt = buildUserProfilePrompt(userMemory);
+            const userPrefs = userMemory && userMemory.quiz ? userMemory.quiz : {};
+            const answerLength = userPrefs.length || data.answerLength || 'medium';
             const attachments = Array.isArray(data.attachments) ? data.attachments : [];
             const { ocrDir, pageImageDir } = getBookDirs(data.bookSource);
 
@@ -1989,12 +2122,19 @@ const server = http.createServer(async (req, res) => {
             
             // Check if web search is enabled from UI
             const useWebSearch = data.useWebSearch !== false;
-        const answerLength = data.answerLength || 'medium';
 
             if (useWebSearch && (!webSources.length || mode === 'followup')) {
-                searchAngles = await generateSearchAngles(question);
+                const searchResult = await generateSearchAngles(question, {
+                    history,
+                    sectionTitle: sectionTitle || sectionId,
+                    lessonContext,
+                    userProfilePrompt
+                });
+                searchAngles = searchResult.angles || [];
+                const resolvedQuestion = searchResult.resolvedQuery || question;
+                console.log(`[ASK] Search resolved: "${question}" → "${resolvedQuestion}"`);
                 const newWebSources = await collectWebSources(searchAngles, {
-                    question,
+                    question: resolvedQuestion,
                     onSource: (source, currentSorted) => {
                         liveSearchEvents.push({ type: 'source', source, sources: currentSorted.slice(0, 8) });
                     }
@@ -2020,8 +2160,17 @@ const server = http.createServer(async (req, res) => {
                 language,
                 mode,
                 userProfilePrompt,
-                attachments
+                attachments,
+                answerLength
             });
+
+            if (answerLength === 'short' && !explanation.includes('```')) {
+                // 极致截断：保留第一行或第一句
+                const parts = explanation.split(/[。！？\n]/);
+                if (parts.length > 1 && parts[0].length > 10) {
+                    explanation = parts[0] + (explanation.includes('。') ? '。' : '');
+                }
+            }
 
             // Post-process pure python outputs into images
             explanation = await processEmbeddedPython(explanation, GENERATED_DIR);
@@ -2042,7 +2191,7 @@ const server = http.createServer(async (req, res) => {
                 steps: [
                     `✅ 找到 ${relatedBooks.length} 个相关书页`,
                     `✅ 搜索到 ${webSources.length} 个网页来源`,
-                    '✅ Claude Opus 讲解生成完毕'
+                    '✅ Haiku 讲解生成完毕'
                 ],
                 debug: {
                     mode,
@@ -2078,6 +2227,87 @@ const server = http.createServer(async (req, res) => {
             apiTutor: true,
             skillScript: SKILL_SCRIPT
         }));
+        return;
+    }
+
+    if (pathname === '/api/favicon') {
+        const query = url.parse(req.url, true).query;
+        const target = compactWhitespace(query.url || '');
+        const domain = compactWhitespace(query.domain || '');
+        const rawTarget = target || (domain ? `https://${domain}` : '');
+        if (!rawTarget) {
+            res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('missing url/domain');
+            return;
+        }
+        let normalized;
+        try {
+            normalized = new URL(rawTarget.startsWith('http') ? rawTarget : `https://${rawTarget}`);
+        } catch (_) {
+            res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('bad url');
+            return;
+        }
+
+        const candidates = [
+            `https://www.google.com/s2/favicons?sz=32&domain_url=${encodeURIComponent(normalized.toString())}`,
+            `https://icons.duckduckgo.com/ip3/${encodeURIComponent(normalized.hostname)}.ico`
+        ];
+
+        let sent = false;
+        for (const candidate of candidates) {
+            try {
+                const parsed = new URL(candidate);
+                const body = await new Promise((resolve, reject) => {
+                    const chunks = [];
+                    const r = https.request({
+                        protocol: parsed.protocol,
+                        hostname: parsed.hostname,
+                        path: `${parsed.pathname}${parsed.search}`,
+                        method: 'GET',
+                        headers: {
+                            'User-Agent': 'TutorAgent/1.0 favicon-proxy'
+                        }
+                    }, resp => {
+                        if ((resp.statusCode || 0) < 200 || (resp.statusCode || 0) >= 300) {
+                            resp.resume();
+                            reject(new Error(`status ${resp.statusCode}`));
+                            return;
+                        }
+                        resp.on('data', c => chunks.push(c));
+                        resp.on('end', () => resolve({
+                            body: Buffer.concat(chunks),
+                            contentType: resp.headers['content-type'] || 'image/png'
+                        }));
+                    });
+                    r.on('error', reject);
+                    r.setTimeout(8000, () => r.destroy(new Error('timeout')));
+                    r.end();
+                });
+                // Validate: must be >100 bytes and look like an image
+                if (body.body.length > 100 && (body.contentType || '').startsWith('image/')) {
+                    res.writeHead(200, {
+                        'Content-Type': body.contentType,
+                        'Cache-Control': 'public, max-age=86400'
+                    });
+                    res.end(body.body);
+                    sent = true;
+                    break;
+                }
+            } catch (_) {}
+        }
+        if (!sent) {
+            // Return a 1x1 transparent PNG so <img> doesn't show broken icon
+            const TRANSPARENT_1x1_PNG = Buffer.from(
+                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAAlwSFlzAAAWJQAAFiUBSVIk8AAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC41ZYUyZQAAAA1JREFUGFdjYGBg+A8AAQIBAEK0UNwAAAAASUVORK5CYII=',
+                'base64'
+            );
+            res.writeHead(200, {
+                'Content-Type': 'image/png',
+                'Cache-Control': 'public, max-age=3600'
+            });
+            res.end(TRANSPARENT_1x1_PNG);
+        }
         return;
     }
 

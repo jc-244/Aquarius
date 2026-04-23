@@ -1,5 +1,20 @@
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:9000' : '';
 
+function renderHyperknowLinks(webSources) {
+  if (!webSources || !webSources.length) return '';
+  const cleaned = sortSourcesByType(webSources)
+    .filter(s => s && s.url)
+    .slice(0, 10);
+  if (!cleaned.length) return '';
+  return `<section class="hyperknow-links-container">
+    <div class="hyperknow-links-header">Searching Web ✓</div>
+    <div class="hyperknow-links-list">
+      ${renderWebSourceCards(cleaned, { compact: true, showBuckets: false })}
+    </div>
+  </section>`;
+}
+
+
 // ════════════════════════════════════════════════════════════════
 // CLERK AUTH + USER MEMORY
 // ════════════════════════════════════════════════════════════════
@@ -2417,7 +2432,10 @@ function renderWebSourceCards(sources = [], options = {}) {
   let lastType = null;
   return sorted.map(w => {
     const d = w.domain || domainOf(w.url);
-    const fav = d ? `https://www.google.com/s2/favicons?sz=32&domain=${encodeURIComponent(d)}` : '';
+    const favBase = typeof API_BASE !== 'undefined' ? API_BASE : '';
+    const favSrc = d
+      ? `${favBase}/api/favicon?url=${encodeURIComponent(w.url || ('https://' + d))}&domain=${encodeURIComponent(d)}`
+      : '';
     const type = w.sourceType || 'web';
     const bucketHeader = showBuckets && type !== lastType
       ? `<div class="wsic-group-header"><span class="wsic-group-icon">${sourceTypeIcon(type)}</span><span>${escapeHtml(sourceTypeLabel(type))}</span></div>`
@@ -2425,8 +2443,7 @@ function renderWebSourceCards(sources = [], options = {}) {
     lastType = type;
     return `${bucketHeader}<a class="web-source-inline-card${compact ? ' compact' : ''}" href="${escapeHtml(w.url)}" target="_blank" rel="noopener noreferrer">
       <div class="wsic-left">
-        <div class="wsic-type-badge wsic-type-${escapeHtml(type)}">${sourceTypeIcon(type)}</div>
-        ${fav ? `<img class="wsic-fav" src="${fav}" alt="">` : '<span class="wsic-fav-placeholder"></span>'}
+        ${favSrc ? `<img class="wsic-fav" src="${favSrc}" alt="" width="16" height="16" style="width:16px;height:16px;border-radius:4px;flex-shrink:0;">` : `<span class="wsic-type-badge wsic-type-${escapeHtml(type)}">${sourceTypeIcon(type)}</span>`}
         <div class="wsic-body">
           <div class="wsic-title-row">
             <div class="wsic-title">${escapeHtml(w.title || d || w.url)}</div>
@@ -2605,9 +2622,74 @@ async function startLesson() {
       ? [{ role: 'assistant', content: tutorState.learnLessonMarkdown }]
       : [];
     renderLearnPages();
-    learnExplainContent.innerHTML = markdownToHtml(data.lesson || 'No explanation available.');
+    
+    // Add the "Start Test" bottom section
+    const lessonHtml = renderHyperknowLinks(data.webSources || []) + markdownToHtml(data.lesson || 'No explanation available.');
+    const testSectionHtml = `
+      <div class="lesson-test-banner" id="testBannerCard" style="margin-top: 40px; padding: 24px; background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%); border-radius: 12px; border: 1px solid #E2E8F0; text-align: center; margin-bottom: 40px;">
+        <h3 style="margin: 0 0 8px 0; color: #0F172A; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/></svg>
+          Ready to test your knowledge?
+        </h3>
+        <p style="margin: 0 0 16px 0; color: #475569; font-size: 14px;">Take the adaptive quick check to expose any blind spots.</p>
+        <button id="startTestBtn" style="background: #2563EB; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">Start Pre-generated Challenge</button>
+      </div>
+    `;
+    learnExplainContent.innerHTML = lessonHtml + testSectionHtml;
+    
     bindExpandableLessonImages(learnExplainContent);
     if (learnChatContent) learnChatContent.innerHTML = ''; // Clear chat history on new section
+    
+    // Bind the test button
+    setTimeout(() => {
+      const startTestBtn = document.getElementById('startTestBtn');
+      const testBannerCard = document.getElementById('testBannerCard');
+      const quizPlanNode = learnExplainContent.querySelector('.kc-quiz-plan');
+      const pregenCards = learnExplainContent.querySelectorAll('.kc-container');
+
+      if (startTestBtn) {
+        startTestBtn.addEventListener('click', () => {
+          let opened = false;
+
+          if (quizPlanNode && window.openQuizPlanModal) {
+            try {
+              const raw = quizPlanNode.dataset.quiz || quizPlanNode.getAttribute('data-quiz') || '';
+              const plan = JSON.parse(decodeHtmlEntities(raw));
+              if (plan && Array.isArray(plan.knowledge_points) && plan.knowledge_points.length) {
+                window.openQuizPlanModal(plan, learnSectionId, learnSectionTitle);
+                opened = true;
+              }
+            } catch (err) {
+              console.warn('Failed to parse pre-generated quiz plan:', err);
+            }
+          }
+
+          if (!opened && pregenCards.length > 0) {
+            const card = pregenCards[0];
+            const q = card.dataset.question || card.getAttribute('data-question') || '(No question found)';
+            const a = card.dataset.answer || card.getAttribute('data-answer') || '';
+            const h = card.dataset.hint || card.getAttribute('data-hint') || '';
+            if (window.openKCModal) {
+              window.openKCModal(q, a, h, learnSectionId, learnSectionTitle);
+              opened = true;
+            }
+          }
+
+          if (!opened) {
+            startTestBtn.innerText = 'Generating challenge...';
+            startTestBtn.disabled = true;
+            const testPrompt = 'I have finished reading this section. Give me an exam-oriented quiz plan for this section. Cover the important knowledge points, use mostly multiple-choice questions, and only use short-answer when necessary.';
+            sendLearnFollowup(testPrompt)
+              .then(() => { testBannerCard.style.display = 'none'; })
+              .catch(() => {
+                startTestBtn.innerText = 'Error — try again';
+                startTestBtn.disabled = false;
+              });
+          }
+        });
+      }
+    }, 100);
+
     setTimeout(() => {
       if (window.MathJax && window.MathJax.typesetPromise) {
         window.MathJax.typesetPromise([learnExplainContent]).catch(() => {});
@@ -2775,10 +2857,10 @@ async function sendLearnFollowup(rawPrompt) {
 
       // Render explanation only; web sources now surface in the upper search panel instead of a bottom details block
       try {
-        answerDiv.innerHTML = markdownToHtml(data.explanation || 'No explanation available.');
+        answerDiv.innerHTML = renderHyperknowLinks(data.webSources || []) + markdownToHtml(data.explanation || 'No explanation available.');
         bindExpandableLessonImages(answerDiv);
       } catch (renderErr) {
-        answerDiv.innerHTML = `<p>${escapeHtml(data.explanation || 'No explanation available.')}</p>`;
+        answerDiv.innerHTML = renderHyperknowLinks(data.webSources || []) + `<p>${escapeHtml(data.explanation || 'No explanation available.')}</p>`;
       }
       setTimeout(() => {
         if (window.MathJax && window.MathJax.typesetPromise) {
@@ -2977,7 +3059,21 @@ function markdownToHtml(md) {
   // Restore raw HTML table placeholders
   html = html.replace(/\x00TABLE_(\d+)\x00/g, (_, idx) => htmlTablePlaceholders[Number(idx)] || '');
   
+  // Restore KC (knowledge_check) blocks — backend embeds them with %%KC_BLOCK%%...%%KC_END%% to survive markdown escaping
+  html = html.replace(/%%KC_BLOCK%%(.*?)%%KC_END%%/gs, (_, rawHtml) => {
+    // rawHtml may have been HTML-escaped by the parser; unescape it
+    const txt = rawHtml
+      .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"');
+    return txt;
+  });
+  
   return html;
+}
+
+function decodeHtmlEntities(text) {
+  const el = document.createElement('textarea');
+  el.innerHTML = text == null ? '' : String(text);
+  return el.value;
 }
 
 function inlineFormat(text) {
@@ -3028,6 +3124,482 @@ function inlineFormat(text) {
   
   return s;
 }
+
+
+// ── Knowledge Check / Quiz Modal ───────────────────────────────────────────
+(function() {
+  const modal      = document.getElementById('kcModal');
+  const header     = document.getElementById('kcModalHeader');
+  const closeBtn   = document.getElementById('kcModalClose');
+  const questionEl = document.getElementById('kcQuestion');
+  const answerEl   = document.getElementById('kcAnswer');
+  const hintEl     = document.getElementById('kcHint');
+  const revealBtn  = document.getElementById('kcRevealBtn');
+  const answerBox  = document.getElementById('kcAnswerBox');
+  const inputEl    = document.getElementById('kcAnswerInput');
+  const submitBtn  = document.getElementById('kcSubmitBtn');
+  const feedbackEl = document.getElementById('kcFeedback');
+  const loadingEl  = document.getElementById('kcLoading');
+  if (!modal) return;
+
+  let kcHistory = [];
+  let kcSectionId = '';
+  let kcSectionTitle = '';
+  let kcQuestion = '';
+  let kcAnswer = '';
+  let kcHint = '';
+  let kcQuizPlan = null;
+  let kcFlatQuestions = [];
+  let kcCurrentIndex = 0;
+  let kcCurrentQuestion = null;
+  let kcCurrentPointId = '';
+  let kcCurrentPointLabel = '';
+  let kcPointStates = {};
+
+  function ensureQuizChrome() {
+    let progressEl = document.getElementById('kcProgress');
+    if (!progressEl) {
+      progressEl = document.createElement('div');
+      progressEl.id = 'kcProgress';
+      progressEl.style.cssText = 'font-size:12px;color:#DBEAFE;margin-top:6px;';
+      header.querySelector('span')?.appendChild(progressEl);
+    }
+
+    let optionsEl = document.getElementById('kcOptions');
+    if (!optionsEl) {
+      optionsEl = document.createElement('div');
+      optionsEl.id = 'kcOptions';
+      optionsEl.style.cssText = 'display:none;gap:10px;flex-direction:column;margin:0 0 16px;';
+      questionEl.insertAdjacentElement('afterend', optionsEl);
+    }
+
+    let askWrap = document.getElementById('kcAskWrap');
+    if (!askWrap) {
+      askWrap = document.createElement('div');
+      askWrap.id = 'kcAskWrap';
+      askWrap.style.cssText = 'display:none;margin-top:14px;padding:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;';
+      askWrap.innerHTML = `
+        <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:8px;">ASK HAIKU ABOUT THIS QUESTION</div>
+        <textarea id="kcAskInput" rows="2" placeholder="Ask why an option is wrong, what the shortcut is for the exam, or what you still don't get…" style="width:100%;resize:vertical;border:1px solid #CBD5E1;border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;outline:none;"></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+          <button id="kcAskBtn" style="background:#0F172A;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">Ask Haiku</button>
+        </div>
+        <div id="kcAskReply" style="display:none;margin-top:10px;font-size:14px;color:#334155;line-height:1.7;"></div>
+        <div id="kcAskLoading" style="display:none;margin-top:8px;font-size:12px;color:#64748B;">Haiku is answering…</div>
+      `;
+      feedbackEl.insertAdjacentElement('afterend', askWrap);
+    }
+
+    let nextBtn = document.getElementById('kcNextBtn');
+    if (!nextBtn) {
+      nextBtn = document.createElement('button');
+      nextBtn.id = 'kcNextBtn';
+      nextBtn.style.cssText = 'display:none;margin-top:12px;background:#10B981;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;';
+      nextBtn.textContent = 'Next Knowledge Point';
+      feedbackEl.insertAdjacentElement('afterend', nextBtn);
+    }
+  }
+
+  function escapeAttr(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function resetQuizState() {
+    kcHistory = [];
+    kcQuizPlan = null;
+    kcFlatQuestions = [];
+    kcCurrentIndex = 0;
+    kcCurrentQuestion = null;
+    kcCurrentPointId = '';
+    kcCurrentPointLabel = '';
+    kcPointStates = {};
+  }
+
+  function flattenQuizPlan(plan) {
+    const items = [];
+    const points = Array.isArray(plan?.knowledge_points) ? plan.knowledge_points : [];
+    points.forEach((point, pointIndex) => {
+      const pointId = point.id || `kp_${pointIndex + 1}`;
+      const pointLabel = point.label || `Knowledge Point ${pointIndex + 1}`;
+      const streakRequired = Math.max(1, Number(point?.mastery_rule?.correct_streak_required || 1));
+      (point.questions || []).forEach((question, questionIndex) => {
+        items.push({
+          pointId,
+          pointLabel,
+          pointIndex,
+          questionIndex,
+          streakRequired,
+          point,
+          question
+        });
+      });
+      kcPointStates[pointId] = { correctStreak: 0, passed: false, attempts: 0, required: streakRequired };
+    });
+    return items;
+  }
+
+  function renderProgress() {
+    ensureQuizChrome();
+    const progressEl = document.getElementById('kcProgress');
+    if (!progressEl) return;
+    if (!kcQuizPlan || !kcFlatQuestions.length || !kcCurrentQuestion) {
+      progressEl.textContent = '';
+      return;
+    }
+    const state = kcPointStates[kcCurrentPointId] || { correctStreak: 0, required: 1 };
+    progressEl.textContent = `${kcCurrentPointLabel} · Q${Math.min(kcCurrentIndex + 1, kcFlatQuestions.length)}/${kcFlatQuestions.length} · Mastery ${state.correctStreak}/${state.required}`;
+  }
+
+  function renderCurrentQuestion() {
+    ensureQuizChrome();
+    const optionsEl = document.getElementById('kcOptions');
+    const askWrap = document.getElementById('kcAskWrap');
+    const askReply = document.getElementById('kcAskReply');
+    const askLoading = document.getElementById('kcAskLoading');
+    const askInput = document.getElementById('kcAskInput');
+    const nextBtn = document.getElementById('kcNextBtn');
+
+    answerBox.style.display = 'none';
+    revealBtn.style.display = 'none';
+    feedbackEl.style.display = 'none';
+    feedbackEl.innerHTML = '';
+    inputEl.value = '';
+    inputEl.placeholder = 'Your answer…';
+    inputEl.style.display = 'block';
+    submitBtn.style.display = 'inline-block';
+    submitBtn.textContent = 'Submit';
+    nextBtn.style.display = 'none';
+    askWrap.style.display = 'none';
+    askReply.style.display = 'none';
+    askReply.innerHTML = '';
+    askLoading.style.display = 'none';
+    askInput.value = '';
+
+    if (!kcCurrentQuestion) {
+      questionEl.textContent = kcQuestion;
+      answerEl.textContent = kcAnswer;
+      hintEl.textContent = kcHint ? '💡 Hint: ' + kcHint : '';
+      revealBtn.style.display = 'inline-block';
+      optionsEl.style.display = 'none';
+      renderProgress();
+      return;
+    }
+
+    const q = kcCurrentQuestion.question || {};
+    questionEl.innerHTML = `<div style="font-size:12px;font-weight:700;color:#2563EB;margin-bottom:8px;letter-spacing:0.04em;">${escapeHtml(kcCurrentPointLabel.toUpperCase())}</div>${escapeHtml(q.stem || q.question || '(No question)')}`;
+    answerEl.textContent = q.type === 'multiple_choice'
+      ? `${q.correct_option || ''} — ${(q.explanation || '').trim()}`
+      : (q.ideal_answer || q.answer || q.explanation || '');
+    hintEl.textContent = q.hint ? '💡 Hint: ' + q.hint : '';
+
+    if (q.type === 'multiple_choice' && Array.isArray(q.options) && q.options.length) {
+      optionsEl.innerHTML = q.options.map((opt, idx) => `
+        <button class="kc-option-btn" data-option-index="${idx}" style="text-align:left;background:#fff;border:1px solid #CBD5E1;border-radius:10px;padding:10px 12px;font-size:14px;color:#1E293B;cursor:pointer;transition:all 0.15s;">${escapeHtml(opt)}</button>
+      `).join('');
+      optionsEl.style.display = 'flex';
+      inputEl.style.display = 'none';
+      optionsEl.querySelectorAll('.kc-option-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          optionsEl.querySelectorAll('.kc-option-btn').forEach(x => x.style.borderColor = '#CBD5E1');
+          btn.style.borderColor = '#2563EB';
+          inputEl.value = btn.textContent.trim();
+        });
+      });
+    } else {
+      optionsEl.style.display = 'none';
+      inputEl.style.display = 'block';
+      inputEl.placeholder = q.type === 'short_answer'
+        ? 'Explain your reasoning…'
+        : 'Your answer…';
+    }
+
+    renderProgress();
+  }
+
+  function advanceToNextPoint() {
+    if (!kcFlatQuestions.length) return;
+    const currentPoint = kcCurrentPointId;
+    let nextIndex = kcCurrentIndex + 1;
+    while (nextIndex < kcFlatQuestions.length && kcFlatQuestions[nextIndex].pointId === currentPoint) {
+      nextIndex += 1;
+    }
+    if (nextIndex >= kcFlatQuestions.length) {
+      questionEl.innerHTML = '<strong>🎯 Mastery complete.</strong> You cleared all current knowledge points in this section.';
+      document.getElementById('kcOptions').style.display = 'none';
+      inputEl.style.display = 'none';
+      submitBtn.style.display = 'none';
+      revealBtn.style.display = 'none';
+      answerBox.style.display = 'none';
+      feedbackEl.style.display = 'block';
+      feedbackEl.innerHTML = '<div style="padding:12px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:10px;">Nice. The quiz engine thinks you have passed the current section\'s major knowledge points. You can still use Haiku below to ask about any item.</div>';
+      document.getElementById('kcAskWrap').style.display = 'block';
+      renderProgress();
+      return;
+    }
+    kcCurrentIndex = nextIndex;
+    kcCurrentQuestion = kcFlatQuestions[kcCurrentIndex];
+    kcCurrentPointId = kcCurrentQuestion.pointId;
+    kcCurrentPointLabel = kcCurrentQuestion.pointLabel;
+    kcHistory = [];
+    renderCurrentQuestion();
+  }
+
+  function moveWithinPointOnWrong() {
+    const samePointIndexes = kcFlatQuestions
+      .map((item, idx) => ({ item, idx }))
+      .filter(({ item }) => item.pointId === kcCurrentPointId)
+      .map(({ idx }) => idx);
+    const currentPos = samePointIndexes.indexOf(kcCurrentIndex);
+    const nextPos = currentPos >= 0 && currentPos < samePointIndexes.length - 1 ? currentPos + 1 : currentPos;
+    kcCurrentIndex = samePointIndexes[Math.max(0, nextPos)];
+    kcCurrentQuestion = kcFlatQuestions[kcCurrentIndex];
+  }
+
+  function evaluateLocally(userAnswer) {
+    const q = kcCurrentQuestion?.question || {};
+    if (!q.type) return { correct: false, explanation: '', answerHtml: '' };
+
+    if (q.type === 'multiple_choice') {
+      const raw = String(userAnswer || '').trim();
+      const selectedLetter = (raw.match(/^([A-D])/i) || [null, ''])[1].toUpperCase();
+      const correct = selectedLetter && selectedLetter === String(q.correct_option || '').trim().toUpperCase();
+      const wrongMap = q.wrong_option_explanations || {};
+      const optionExplanation = correct ? '' : (wrongMap[selectedLetter] || 'This option sounds tempting, but it reveals a misunderstanding of the concept.');
+      return {
+        correct,
+        answerHtml: `
+          <div style="padding:12px;background:${correct ? '#ECFDF5' : '#FEF2F2'};border:1px solid ${correct ? '#A7F3D0' : '#FECACA'};border-radius:10px;">
+            <div style="font-weight:700;color:${correct ? '#047857' : '#B91C1C'};margin-bottom:6px;">${correct ? 'Correct' : 'Not yet'}</div>
+            <div style="margin-bottom:8px;"><strong>Right answer:</strong> ${escapeHtml(q.correct_option || '')}</div>
+            <div style="margin-bottom:8px;"><strong>Why:</strong> ${escapeHtml(q.explanation || '')}</div>
+            ${!correct ? `<div><strong>Why your choice is wrong:</strong> ${escapeHtml(optionExplanation)}</div>` : ''}
+          </div>
+        `
+      };
+    }
+
+    const rubric = Array.isArray(q.grading_rubric) ? q.grading_rubric : [];
+    const normalized = String(userAnswer || '').toLowerCase();
+    const hits = rubric.filter(line => {
+      const keywords = String(line).toLowerCase().replace(/must\s+|should\s+/g, '').split(/[^a-z0-9]+/).filter(Boolean);
+      return keywords.some(k => k.length > 3 && normalized.includes(k));
+    }).length;
+    const threshold = rubric.length ? Math.max(1, Math.ceil(rubric.length * 0.5)) : 1;
+    const correct = hits >= threshold;
+    return {
+      correct,
+      answerHtml: `
+        <div style="padding:12px;background:${correct ? '#ECFDF5' : '#FEF2F2'};border:1px solid ${correct ? '#A7F3D0' : '#FECACA'};border-radius:10px;">
+          <div style="font-weight:700;color:${correct ? '#047857' : '#B91C1C'};margin-bottom:6px;">${correct ? 'Good enough to pass this step' : 'Your explanation is still missing key logic'}</div>
+          <div style="margin-bottom:8px;"><strong>Ideal answer:</strong> ${escapeHtml(q.ideal_answer || q.answer || '')}</div>
+          <div style="margin-bottom:8px;"><strong>Why:</strong> ${escapeHtml(q.explanation || '')}</div>
+          ${rubric.length ? `<div><strong>What the grader looks for:</strong><ul style="margin:6px 0 0 18px;">${rubric.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>` : ''}
+        </div>
+      `
+    };
+  }
+
+  async function askHaikuAboutCurrent(questionText) {
+    const askReply = document.getElementById('kcAskReply');
+    const askLoading = document.getElementById('kcAskLoading');
+    askReply.style.display = 'none';
+    askLoading.style.display = 'block';
+    try {
+      const q = kcCurrentQuestion?.question || {};
+      const res = await callAsk(questionText, null, {
+        mode: 'followup',
+        history: [
+          {
+            role: 'assistant',
+            content: [
+              `Current challenge: ${q.stem || kcQuestion}`,
+              q.type === 'multiple_choice' && Array.isArray(q.options) ? `Options: ${q.options.join(' | ')}` : '',
+              `Correct answer: ${q.correct_option || q.ideal_answer || kcAnswer}`,
+              `Explanation: ${q.explanation || kcAnswer}`,
+              q.hint ? `Hint: ${q.hint}` : ''
+            ].filter(Boolean).join('\n')
+          }
+        ],
+        sectionId: kcSectionId,
+        sectionTitle: kcSectionTitle,
+        language: 'en',
+        useWebSearch: false
+      });
+      const reply = res.explanation || res.answer || 'No response.';
+      askReply.innerHTML = markdownToHtml(reply);
+      askReply.style.display = 'block';
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([askReply]).catch(() => {});
+      }
+    } catch (err) {
+      askReply.innerHTML = '<span style="color:#EF4444">Error: ' + (err.message || err) + '</span>';
+      askReply.style.display = 'block';
+    } finally {
+      askLoading.style.display = 'none';
+    }
+  }
+
+  function openLegacy(question, answer, hint, sectionId, sectionTitle) {
+    resetQuizState();
+    kcQuestion = question;
+    kcAnswer = answer;
+    kcHint = hint || '';
+    kcSectionId = sectionId;
+    kcSectionTitle = sectionTitle;
+    modal.style.display = 'flex';
+    renderCurrentQuestion();
+  }
+
+  function openQuizPlan(plan, sectionId, sectionTitle) {
+    resetQuizState();
+    kcSectionId = sectionId;
+    kcSectionTitle = sectionTitle;
+    kcQuizPlan = plan;
+    kcFlatQuestions = flattenQuizPlan(plan);
+    if (!kcFlatQuestions.length) {
+      openLegacy('(No question found)', '', '', sectionId, sectionTitle);
+      return;
+    }
+    kcCurrentIndex = 0;
+    kcCurrentQuestion = kcFlatQuestions[0];
+    kcCurrentPointId = kcCurrentQuestion.pointId;
+    kcCurrentPointLabel = kcCurrentQuestion.pointLabel;
+    modal.style.display = 'flex';
+    renderCurrentQuestion();
+  }
+
+  window.openKCModal = function(question, answer, hint, sectionId, sectionTitle) {
+    openLegacy(question, answer, hint, sectionId, sectionTitle);
+  };
+
+  window.openQuizPlanModal = function(plan, sectionId, sectionTitle) {
+    openQuizPlan(plan, sectionId, sectionTitle);
+  };
+
+  closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+
+  revealBtn.addEventListener('click', () => {
+    answerBox.style.display = 'block';
+    revealBtn.style.display = 'none';
+    document.getElementById('kcAskWrap').style.display = 'block';
+  });
+
+  let dragging = false, dx = 0, dy = 0;
+  header.addEventListener('mousedown', e => {
+    dragging = true;
+    const r = modal.getBoundingClientRect();
+    dx = e.clientX - r.left; dy = e.clientY - r.top;
+    header.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    let nx = e.clientX - dx, ny = e.clientY - dy;
+    nx = Math.max(0, Math.min(window.innerWidth - modal.offsetWidth, nx));
+    ny = Math.max(0, Math.min(window.innerHeight - modal.offsetHeight, ny));
+    modal.style.left = nx + 'px';
+    modal.style.top = ny + 'px';
+    modal.style.transform = 'none';
+  });
+  document.addEventListener('mouseup', () => { dragging = false; header.style.cursor = 'grab'; });
+
+  async function submitAnswer() {
+    const userAnswer = inputEl.value.trim();
+    if (!userAnswer) return;
+    submitBtn.disabled = true;
+    loadingEl.style.display = 'block';
+    feedbackEl.style.display = 'none';
+
+    if (!kcCurrentQuestion) {
+      inputEl.value = '';
+      kcHistory.push({ role: 'user', content: userAnswer });
+      try {
+        const res = await callAsk(userAnswer, null, {
+          mode: 'followup',
+          history: [
+            { role: 'assistant', content: 'Challenge question: ' + kcQuestion + '\n\nCorrect answer: ' + kcAnswer },
+            ...kcHistory.slice(0, -1)
+          ],
+          sectionId: kcSectionId,
+          sectionTitle: kcSectionTitle,
+          language: 'en'
+        });
+        const reply = res.explanation || res.answer || 'No response.';
+        kcHistory.push({ role: 'assistant', content: reply });
+        feedbackEl.innerHTML = markdownToHtml(reply);
+        feedbackEl.style.display = 'block';
+        document.getElementById('kcAskWrap').style.display = 'block';
+        if (window.MathJax && window.MathJax.typesetPromise) {
+          window.MathJax.typesetPromise([feedbackEl]).catch(() => {});
+        }
+      } catch (err) {
+        feedbackEl.innerHTML = '<span style="color:#EF4444">Error: ' + (err.message || err) + '</span>';
+        feedbackEl.style.display = 'block';
+      } finally {
+        loadingEl.style.display = 'none';
+        submitBtn.disabled = false;
+      }
+      return;
+    }
+
+    const result = evaluateLocally(userAnswer);
+    const state = kcPointStates[kcCurrentPointId] || { correctStreak: 0, attempts: 0, required: 1 };
+    state.attempts += 1;
+    if (result.correct) {
+      state.correctStreak += 1;
+      if (state.correctStreak >= state.required) state.passed = true;
+    } else {
+      state.correctStreak = 0;
+    }
+    kcPointStates[kcCurrentPointId] = state;
+
+    inputEl.value = '';
+    feedbackEl.innerHTML = result.answerHtml;
+    feedbackEl.style.display = 'block';
+    answerBox.style.display = 'block';
+    document.getElementById('kcAskWrap').style.display = 'block';
+    const nextBtn = document.getElementById('kcNextBtn');
+    if (result.correct && state.passed) {
+      nextBtn.textContent = 'Next Knowledge Point';
+      nextBtn.style.display = 'inline-block';
+    } else if (!result.correct) {
+      nextBtn.textContent = 'Try another question on this concept';
+      nextBtn.style.display = 'inline-block';
+      moveWithinPointOnWrong();
+    } else {
+      nextBtn.textContent = 'One more on this concept';
+      nextBtn.style.display = 'inline-block';
+      moveWithinPointOnWrong();
+    }
+
+    renderProgress();
+    loadingEl.style.display = 'none';
+    submitBtn.disabled = false;
+  }
+
+  submitBtn.addEventListener('click', submitAnswer);
+  inputEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submitAnswer(); }
+  });
+
+  document.addEventListener('click', e => {
+    if (e.target && e.target.id === 'kcNextBtn') {
+      const state = kcPointStates[kcCurrentPointId] || { passed: false };
+      if (state.passed) advanceToNextPoint();
+      else renderCurrentQuestion();
+    }
+    if (e.target && e.target.id === 'kcAskBtn') {
+      const askInput = document.getElementById('kcAskInput');
+      const val = askInput.value.trim();
+      if (!val) return;
+      askHaikuAboutCurrent(val);
+    }
+  });
+})();
 
 // ── View switcher ───────────────────────────────────────────────────────────
 function showWelcome() {
