@@ -455,6 +455,63 @@ function closeRecentConversationMenu() {
   recentConversationMenuState = null;
 }
 
+function showDeleteConversationConfirm() {
+  return new Promise((resolve) => {
+    const existing = document.getElementById('recentConversationConfirmOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'recentConversationConfirmOverlay';
+    overlay.style.cssText = [
+      'position: fixed',
+      'inset: 0',
+      'z-index: 10000',
+      'background: rgba(15, 23, 42, 0.28)',
+      'backdrop-filter: blur(4px)',
+      'display: flex',
+      'align-items: center',
+      'justify-content: center',
+      'padding: 24px'
+    ].join(';');
+
+    overlay.innerHTML = `
+      <div role="dialog" aria-modal="true" aria-labelledby="recentConversationConfirmTitle" style="width:min(460px, calc(100vw - 32px)); background:#FFFFFF; border:1px solid rgba(191, 219, 254, 0.95); border-radius:22px; box-shadow:0 30px 80px rgba(15, 23, 42, 0.24); overflow:hidden; transform:translateY(0);">
+        <div style="padding:22px 22px 14px; display:flex; align-items:flex-start; gap:14px;">
+          <div style="width:42px; height:42px; border-radius:14px; background:#FEF2F2; color:#B91C1C; display:flex; align-items:center; justify-content:center; font-size:20px; flex:0 0 auto;">🗑️</div>
+          <div style="flex:1; min-width:0;">
+            <div id="recentConversationConfirmTitle" style="font-size:18px; font-weight:700; line-height:1.3; color:#0F172A; margin-bottom:8px;">Delete this conversation?</div>
+            <div style="font-size:14px; line-height:1.65; color:#475569;">This will permanently remove the conversation and clear its impact from the user profile and memory.</div>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; padding:16px 22px 22px; border-top:1px solid #E2E8F0; background:#FCFDFF;">
+          <button type="button" id="recentConversationCancelBtn" style="height:42px; padding:0 16px; border-radius:12px; border:1px solid #CBD5E1; background:#FFFFFF; color:#334155; font-size:14px; font-weight:600; cursor:pointer;">Cancel</button>
+          <button type="button" id="recentConversationConfirmBtn" style="height:42px; padding:0 16px; border-radius:12px; border:none; background:linear-gradient(135deg, #DC2626 0%, #B91C1C 100%); color:#FFFFFF; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 14px 28px rgba(185, 28, 28, 0.28);">Delete</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const cleanup = (value) => {
+      overlay.remove();
+      document.removeEventListener('keydown', onKeydown);
+      resolve(value);
+    };
+
+    const onKeydown = (event) => {
+      if (event.key === 'Escape') cleanup(false);
+    };
+
+    document.addEventListener('keydown', onKeydown);
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay) cleanup(false);
+    });
+    overlay.querySelector('#recentConversationCancelBtn')?.addEventListener('click', () => cleanup(false));
+    overlay.querySelector('#recentConversationConfirmBtn')?.addEventListener('click', () => cleanup(true));
+    overlay.querySelector('#recentConversationConfirmBtn')?.focus();
+  });
+}
+
 window.openRecentConversationMenu = function(timestamp, x, y) {
   closeRecentConversationMenu();
   recentConversationMenuState = { timestamp };
@@ -4836,7 +4893,8 @@ async function deleteRecentConversation(timestamp) {
 }
 
 window.deleteRecentConversation = async function(timestamp) {
-  if (!window.confirm('Delete this conversation permanently? This will also remove its impact from the user profile and memory.')) return;
+  const confirmed = await showDeleteConversationConfirm();
+  if (!confirmed) return;
   await deleteRecentConversation(timestamp);
 };
 
