@@ -2653,14 +2653,32 @@ async function startLesson() {
 
           if (quizPlanNode && window.openQuizPlanModal) {
             try {
-              const raw = quizPlanNode.dataset.quiz || quizPlanNode.getAttribute('data-quiz') || '';
-              const plan = JSON.parse(decodeHtmlEntities(raw));
+              // Try base64 standard first, then fall back to old decoded string approach (just in case cache hasn't flipped yet)
+              const rawB64 = quizPlanNode.dataset.quizB64 || quizPlanNode.getAttribute('data-quiz-b64');
+              let plan = null;
+              if (rawB64) {
+                const decodedJson = atob(rawB64);
+                plan = JSON.parse(decodedJson);
+              } else {
+                let raw = quizPlanNode.dataset.quiz || quizPlanNode.getAttribute('data-quiz') || '';
+                const decodeEntitiesStr = (s) => {
+                  let v = s;
+                  for (let i = 0; i < 4; i += 1) {
+                    const prev = v;
+                    v = v.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+                    if (v === prev) break;
+                  }
+                  return v;
+                };
+                plan = JSON.parse(decodeEntitiesStr(raw));
+              }
+
               if (plan && Array.isArray(plan.knowledge_points) && plan.knowledge_points.length) {
                 window.openQuizPlanModal(plan, learnSectionId, learnSectionTitle);
                 opened = true;
               }
             } catch (err) {
-              console.warn('Failed to parse pre-generated quiz plan:', err);
+              console.error('[QuizPlan] parse failed:', err);
             }
           }
 
@@ -2971,6 +2989,14 @@ function markdownToHtml(md) {
     return `\n\x00TABLE_${idx}\x00\n`;
   });
 
+  // Protect KC blocks fully
+  const kcPlaceholders = [];
+  text = text.replace(/%%KC_BLOCK%%([\s\S]*?)%%KC_END%%/g, (match) => {
+    const idx = kcPlaceholders.length;
+    kcPlaceholders.push(match);
+    return `\n\x00KC_BLOCK_${idx}\x00\n`;
+  });
+
   // Pre-process: convert $...$ to \(...\) for MathJax
   if (window.preprocessMath) {
     text = window.preprocessMath(text);
@@ -3033,7 +3059,7 @@ function markdownToHtml(md) {
       continue;
     }
 
-    if (/^\x00TABLE_\d+\x00$/.test(t)) {
+    if (/^\x00TABLE_\d+\x00$/.test(t) || /^\x00KC_BLOCK_\d+\x00$/.test(t)) {
       flushList();
       html += t;
       continue;
@@ -3059,9 +3085,12 @@ function markdownToHtml(md) {
   // Restore raw HTML table placeholders
   html = html.replace(/\x00TABLE_(\d+)\x00/g, (_, idx) => htmlTablePlaceholders[Number(idx)] || '');
   
-  // Restore KC (knowledge_check) blocks — backend embeds them with %%KC_BLOCK%%...%%KC_END%% to survive markdown escaping
-  html = html.replace(/%%KC_BLOCK%%(.*?)%%KC_END%%/gs, (_, rawHtml) => {
-    // rawHtml may have been HTML-escaped by the parser; unescape it
+  // Restore KC placeholders first
+  html = html.replace(/\x00KC_BLOCK_(\d+)\x00/g, (_, idx) => kcPlaceholders[Number(idx)] || '');
+  
+  // Now process the KC tags (it's safe now because markdown parser didn't touch it)
+  html = html.replace(/%%KC_BLOCK%%([\s\S]*?)%%KC_END%%/g, (_, rawHtml) => {
+    // rawHtml hasn't been mangled into <p> tags, just unescape base HTML entities
     const txt = rawHtml
       .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"');
     return txt;
@@ -3071,9 +3100,15 @@ function markdownToHtml(md) {
 }
 
 function decodeHtmlEntities(text) {
-  const el = document.createElement('textarea');
-  el.innerHTML = text == null ? '' : String(text);
-  return el.value;
+  let value = text == null ? '' : String(text);
+  for (let i = 0; i < 3; i += 1) {
+    const el = document.createElement('textarea');
+    el.innerHTML = value;
+    const decoded = el.value;
+    if (decoded === value) break;
+    value = decoded;
+  }
+  return value;
 }
 
 function inlineFormat(text) {
@@ -3155,16 +3190,13 @@ function inlineFormat(text) {
   let kcCurrentPointId = '';
   let kcCurrentPointLabel = '';
   let kcPointStates = {};
+  let isMaximized = false;
+  let isMinimized = false;
 
   function ensureQuizChrome() {
-    let progressEl = document.getElementById('kcProgress');
-    if (!progressEl) {
-      progressEl = document.createElement('div');
-      progressEl.id = 'kcProgress';
-      progressEl.style.cssText = 'font-size:12px;color:#DBEAFE;margin-top:6px;';
-      header.querySelector('span')?.appendChild(progressEl);
-    }
 
+
+    const modalEl = document.getElementById('kcModal');
     let optionsEl = document.getElementById('kcOptions');
     if (!optionsEl) {
       optionsEl = document.createElement('div');
@@ -3173,31 +3205,9 @@ function inlineFormat(text) {
       questionEl.insertAdjacentElement('afterend', optionsEl);
     }
 
-    let askWrap = document.getElementById('kcAskWrap');
-    if (!askWrap) {
-      askWrap = document.createElement('div');
-      askWrap.id = 'kcAskWrap';
-      askWrap.style.cssText = 'display:none;margin-top:14px;padding:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;';
-      askWrap.innerHTML = `
-        <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:8px;">ASK HAIKU ABOUT THIS QUESTION</div>
-        <textarea id="kcAskInput" rows="2" placeholder="Ask why an option is wrong, what the shortcut is for the exam, or what you still don't get…" style="width:100%;resize:vertical;border:1px solid #CBD5E1;border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;outline:none;"></textarea>
-        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-          <button id="kcAskBtn" style="background:#0F172A;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">Ask Haiku</button>
-        </div>
-        <div id="kcAskReply" style="display:none;margin-top:10px;font-size:14px;color:#334155;line-height:1.7;"></div>
-        <div id="kcAskLoading" style="display:none;margin-top:8px;font-size:12px;color:#64748B;">Haiku is answering…</div>
-      `;
-      feedbackEl.insertAdjacentElement('afterend', askWrap);
-    }
 
-    let nextBtn = document.getElementById('kcNextBtn');
-    if (!nextBtn) {
-      nextBtn = document.createElement('button');
-      nextBtn.id = 'kcNextBtn';
-      nextBtn.style.cssText = 'display:none;margin-top:12px;background:#10B981;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;';
-      nextBtn.textContent = 'Next Knowledge Point';
-      feedbackEl.insertAdjacentElement('afterend', nextBtn);
-    }
+
+
   }
 
   function escapeAttr(value) {
@@ -3217,6 +3227,32 @@ function inlineFormat(text) {
     kcCurrentPointId = '';
     kcCurrentPointLabel = '';
     kcPointStates = {};
+
+    isMaximized = false;
+    isMinimized = false;
+    const modalEl = document.getElementById('kcModal');
+    const wrapper = document.getElementById('kcModalWrapper');
+    const minBtn = document.getElementById('kcModalMinBtn');
+    const maxBtn = document.getElementById('kcModalMaxBtn');
+    if (modalEl) {
+      modalEl.style.top = '80px';
+      modalEl.style.left = '50%';
+      modalEl.style.transform = 'translateX(-50%)';
+      modalEl.style.width = '800px';
+      modalEl.style.height = 'auto';
+      modalEl.style.maxWidth = '96vw';
+      modalEl.style.maxHeight = '85vh';
+      modalEl.style.borderRadius = '16px';
+      modalEl.style.minHeight = '480px';
+      modalEl.style.right = 'auto';
+      modalEl.style.bottom = 'auto';
+    }
+    if (wrapper) wrapper.style.display = 'flex';
+    if (minBtn) minBtn.textContent = '_';
+    if (maxBtn) maxBtn.textContent = '□';
+    
+    const header = document.getElementById('kcModalHeader');
+    if (header) header.style.borderRadius = '16px 16px 0 0';
   }
 
   function flattenQuizPlan(plan) {
@@ -3244,14 +3280,61 @@ function inlineFormat(text) {
 
   function renderProgress() {
     ensureQuizChrome();
-    const progressEl = document.getElementById('kcProgress');
-    if (!progressEl) return;
+    const headerEl = document.getElementById('kcModalHeader');
+    let pbWrap = document.getElementById('kcProgressWrap');
+    if (!pbWrap && headerEl) {
+      pbWrap = document.createElement('div');
+      pbWrap.id = 'kcProgressWrap';
+      pbWrap.style.cssText = 'position:absolute; bottom:0; left:0; width:100%; height:4px; background:rgba(0,0,0,0.15); border-radius:0 0 0 0; overflow:hidden;';
+      const pbFill = document.createElement('div');
+      pbFill.id = 'kcProgressFill';
+      pbFill.style.cssText = 'height:100%; background:#10B981; width:0%; transition:width 0.3s ease-out; box-shadow:0 0 4px #10B981;';
+      pbWrap.appendChild(pbFill);
+      // Need header to be relative relative
+      headerEl.style.position = 'relative';
+      headerEl.appendChild(pbWrap);
+    }
+    
+    let textEl = document.getElementById('kcProgressText');
+    if (!textEl) {
+      textEl = document.createElement('div');
+      textEl.id = 'kcProgressText';
+      textEl.style.cssText = 'font-size:12px; color:#DBEAFE; font-weight:500; font-family:-apple-system, system-ui, sans-serif;';
+      const spanTitle = headerEl.querySelector('span');
+      if (spanTitle) spanTitle.appendChild(textEl);
+    }
+
     if (!kcQuizPlan || !kcFlatQuestions.length || !kcCurrentQuestion) {
-      progressEl.textContent = '';
+      if(textEl) textEl.textContent = '';
       return;
     }
+    
+    // Calculate progress as completed knowledge points out of total
+    const points = Array.isArray(kcQuizPlan.knowledge_points) ? kcQuizPlan.knowledge_points : [];
+    const totalPoints = points.length;
+    let completedPoints = 0;
+    
+    // Current point index (1-based for display)
+    const currentPointIndex = kcCurrentQuestion.pointIndex + 1;
+    
+    points.forEach(pt => {
+      const state = kcPointStates[pt.id];
+      if (state && state.passed) completedPoints++;
+    });
+    
+    // Fill calculated by ratio of completion
+    const percent = totalPoints > 0 ? (completedPoints / totalPoints) * 100 : 0;
+    const pbFill = document.getElementById('kcProgressFill');
+    if (pbFill) pbFill.style.width = `${percent}%`;
+
     const state = kcPointStates[kcCurrentPointId] || { correctStreak: 0, required: 1 };
-    progressEl.textContent = `${kcCurrentPointLabel} · Q${Math.min(kcCurrentIndex + 1, kcFlatQuestions.length)}/${kcFlatQuestions.length} · Mastery ${state.correctStreak}/${state.required}`;
+    
+    // Instead of raw question count, make it semantic and clear.
+    textEl.innerHTML = `<span style="opacity:0.8; margin:0 6px;">|</span> Topic <b>${currentPointIndex}</b> of ${totalPoints} <span style="opacity:0.8; margin:0 6px;">|</span> 🏆 Goal: <b>${state.correctStreak} / ${state.required}</b> streak`;
+    
+    // Also remove the old kcProgress if it was accidentally injected
+    const oldProgress = document.getElementById('kcProgress');
+    if (oldProgress) oldProgress.remove();
   }
 
   function renderCurrentQuestion() {
@@ -3272,12 +3355,11 @@ function inlineFormat(text) {
     inputEl.style.display = 'block';
     submitBtn.style.display = 'inline-block';
     submitBtn.textContent = 'Submit';
-    nextBtn.style.display = 'none';
-    askWrap.style.display = 'none';
-    askReply.style.display = 'none';
-    askReply.innerHTML = '';
-    askLoading.style.display = 'none';
-    askInput.value = '';
+    if(nextBtn) nextBtn.style.display = 'none';
+    if(askWrap) askWrap.style.display = 'none';
+    if(askReply) { askReply.style.display = 'none'; askReply.innerHTML = ''; }
+    if(askLoading) askLoading.style.display = 'none';
+    if(askInput) askInput.value = '';
 
     if (!kcCurrentQuestion) {
       questionEl.textContent = kcQuestion;
@@ -3336,7 +3418,7 @@ function inlineFormat(text) {
       answerBox.style.display = 'none';
       feedbackEl.style.display = 'block';
       feedbackEl.innerHTML = '<div style="padding:12px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:10px;">Nice. The quiz engine thinks you have passed the current section\'s major knowledge points. You can still use Haiku below to ask about any item.</div>';
-      document.getElementById('kcAskWrap').style.display = 'block';
+      if(document.getElementById('kcAskWrap')) document.getElementById('kcAskWrap').style.display = 'flex';
       renderProgress();
       return;
     }
@@ -3354,9 +3436,115 @@ function inlineFormat(text) {
       .filter(({ item }) => item.pointId === kcCurrentPointId)
       .map(({ idx }) => idx);
     const currentPos = samePointIndexes.indexOf(kcCurrentIndex);
-    const nextPos = currentPos >= 0 && currentPos < samePointIndexes.length - 1 ? currentPos + 1 : currentPos;
-    kcCurrentIndex = samePointIndexes[Math.max(0, nextPos)];
-    kcCurrentQuestion = kcFlatQuestions[kcCurrentIndex];
+    
+    if (currentPos >= 0 && currentPos < samePointIndexes.length - 1) {
+      // We have another prepared question for this knowledge point
+      kcCurrentIndex = samePointIndexes[currentPos + 1];
+      kcCurrentQuestion = kcFlatQuestions[kcCurrentIndex];
+      renderCurrentQuestion();
+    } else {
+      // Out of questions! Generate a new one on the fly.
+      generateFollowupQuestion(kcCurrentQuestion.pointLabel, kcCurrentQuestion.question);
+    }
+  }
+
+  async function generateFollowupQuestion(pointLabel, previousQuestion) {
+    const loadingEl = document.getElementById('kcLoading');
+    const feedbackEl = document.getElementById('kcFeedback');
+    const submitBtn = document.getElementById('kcSubmitBtn');
+    const nextBtn = document.getElementById('kcNextBtn');
+    const questionEl = document.getElementById('kcQuestion');
+    const optionsEl = document.getElementById('kcOptions');
+    const answerBox = document.getElementById('kcAnswerBox');
+    const inputEl = document.getElementById('kcAnswerInput');
+    
+    // Clear out the left column completely
+    if (questionEl) questionEl.style.display = 'none';
+    if (optionsEl) optionsEl.style.display = 'none';
+    if (answerBox) answerBox.style.display = 'none';
+    if (inputEl) inputEl.style.display = 'none';
+    if (submitBtn) submitBtn.style.display = 'none';
+    
+    if (nextBtn) {
+      nextBtn.disabled = true;
+      nextBtn.textContent = 'Generating...';
+    }
+    
+    // Show a prominent, clear-screen loading block
+    feedbackEl.style.display = 'block';
+    feedbackEl.innerHTML = `
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:300px; text-align:center;">
+        <div style="width:40px; height:40px; border:4px solid #E2E8F0; border-top-color:#3B82F6; border-radius:50%; animation:kcSpin 1s linear infinite; margin-bottom:20px;"></div>
+        <style>@keyframes kcSpin { 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} }</style>
+        <div style="font-size:16px; font-weight:700; color:#1E293B; margin-bottom:8px;">Haiku is crafting a new question</div>
+        <div style="font-size:13px; color:#64748B; max-width:80%;">Because you ran out of pre-made variants for <b>"${escapeHtml(pointLabel)}"</b>, we are generating a targeted one on the fly... (about 5-8s)</div>
+      </div>
+    `;
+    
+    try {
+      const parentQ = previousQuestion.stem || previousQuestion.question;
+      const res = await callAsk(
+        `I just failed the concept "${pointLabel}" from the question: "${parentQ}". Generate ONE new targeted multiple choice challenge question (JSON format) directly covering this. Use {"type":"multiple_choice","stem":"...","options":["A...","B...","C...","D..."],"correct_option":"A","explanation":"..."}`,
+        null,
+        {
+           mode: 'followup',
+           history: [],
+           sectionId: kcSectionId,
+           sectionTitle: kcSectionTitle,
+           language: 'en',
+           useWebSearch: false
+        }
+      );
+      
+      const rawText = res.explanation || res.answer || '';
+      let newQ = null;
+      try {
+        const firstIdx = rawText.indexOf('{');
+        const lastIdx = rawText.lastIndexOf('}');
+        if (firstIdx !== -1 && lastIdx !== -1 && lastIdx > firstIdx) {
+          const cleanJson = rawText.substring(firstIdx, lastIdx + 1);
+          newQ = JSON.parse(cleanJson);
+        }
+      } catch(e) {}
+      
+      if (!newQ || newQ.type !== 'multiple_choice') {
+        throw new Error("Failed to parse Haiku's dynamically generated JSON question.");
+      }
+      
+      // Inject into the flat list right after current
+      kcFlatQuestions.splice(kcCurrentIndex + 1, 0, {
+        pointId: kcCurrentPointId,
+        pointLabel: kcCurrentPointLabel,
+        pointIndex: kcCurrentQuestion.pointIndex,
+        questionIndex: kcCurrentQuestion.questionIndex + 1, // virtual
+        streakRequired: kcCurrentQuestion.streakRequired,
+        point: kcCurrentQuestion.point,
+        question: newQ
+      });
+      
+      kcCurrentIndex++;
+      kcCurrentQuestion = kcFlatQuestions[kcCurrentIndex];
+      
+      // Cleanup the generation block
+      if (questionEl) questionEl.style.display = 'block';
+      if (nextBtn) {
+        nextBtn.disabled = false;
+      }
+      renderCurrentQuestion();
+      
+    } catch (e) {
+      feedbackEl.innerHTML = `
+        <div style="padding:16px; background:#FEF2F2; border:1px solid #FECACA; border-radius:10px; text-align:center;">
+          <div style="font-weight:700; color:#B91C1C; margin-bottom:6px;">Failed to generate new question</div>
+          <div style="font-size:13px; color:#991B1B;">${e.message}</div>
+          <div style="margin-top:12px; font-size:13px;">You can click the <b>Next Variant</b> button below to retry.</div>
+        </div>
+      `;
+      if (nextBtn) {
+        nextBtn.disabled = false;
+        nextBtn.textContent = 'Retry Generation';
+      }
+    }
   }
 
   function evaluateLocally(userAnswer) {
@@ -3480,12 +3668,140 @@ function inlineFormat(text) {
     openQuizPlan(plan, sectionId, sectionTitle);
   };
 
+  const stAskBtn = document.getElementById('kcAskBtn');
+  const stNextBtn = document.getElementById('kcNextBtn');
+  if (stAskBtn) {
+    stAskBtn.addEventListener('click', () => {
+      const askInput = document.getElementById('kcAskInput');
+      if (askInput.value.trim()) askHaikuAboutCurrent(askInput.value.trim());
+    });
+  }
+  if (stNextBtn) {
+    stNextBtn.addEventListener('click', () => {
+      const state = kcPointStates[kcCurrentPointId] || { passed: false };
+      if (state.passed) {
+        advanceToNextPoint();
+      } else {
+        moveWithinPointOnWrong();
+      }
+    });
+  }
+
+  // Already moved let isMaximized = false; etc to root closure...
+  const maxBtn = document.getElementById('kcModalMaxBtn');
+  const minBtn = document.getElementById('kcModalMinBtn');
+  const wrapper = document.getElementById('kcModalWrapper');
+  const resizer = document.getElementById('kcResizer');
+  const leftCol = document.getElementById('kcLeftCol');
+  const rightCol = document.getElementById('kcRightCol');
+
+  if (resizer && leftCol && rightCol && wrapper) {
+    let isResizing = false;
+    resizer.addEventListener('mousedown', (e) => {
+      isResizing = true;
+      resizer.style.background = '#94A3B8';
+      document.body.style.cursor = 'col-resize';
+      leftCol.style.pointerEvents = 'none';
+      rightCol.style.pointerEvents = 'none';
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      const containerRect = wrapper.getBoundingClientRect();
+      let newWidth = e.clientX - containerRect.left;
+      
+      // Keep it within bounds (20% to 80%)
+      if (newWidth < containerRect.width * 0.2) newWidth = containerRect.width * 0.2;
+      if (newWidth > containerRect.width * 0.8) newWidth = containerRect.width * 0.8;
+      
+      leftCol.style.flex = 'none';
+      leftCol.style.width = `${newWidth}px`;
+      rightCol.style.flex = '1';
+      rightCol.style.width = 'auto';
+    });
+    window.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        resizer.style.background = '#E2E8F0';
+        document.body.style.cursor = 'default';
+        leftCol.style.pointerEvents = 'auto';
+        rightCol.style.pointerEvents = 'auto';
+      }
+    });
+
+    // Hover effect
+    resizer.addEventListener('mouseenter', () => { if (!isResizing) resizer.style.background = '#CBD5E1'; });
+    resizer.addEventListener('mouseleave', () => { if (!isResizing) resizer.style.background = '#E2E8F0'; });
+  }
+  
   closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+  
+  if (maxBtn) {
+    maxBtn.addEventListener('click', () => {
+      isMaximized = !isMaximized;
+      if (isMaximized) {
+        modal.style.top = '0px';
+        modal.style.left = '0px';
+        modal.style.transform = 'none';
+        modal.style.width = '100vw';
+        modal.style.height = '100vh';
+        modal.style.maxWidth = '100vw';
+        modal.style.maxHeight = '100vh';
+        modal.style.borderRadius = '0px';
+        header.style.borderRadius = '0px';
+        maxBtn.textContent = '❐';
+      } else {
+        modal.style.top = '80px';
+        modal.style.left = '50%';
+        modal.style.transform = 'translateX(-50%)';
+        modal.style.width = '800px';
+        modal.style.height = 'auto';
+        modal.style.maxWidth = '96vw';
+        modal.style.maxHeight = '85vh';
+        modal.style.borderRadius = '16px';
+        header.style.borderRadius = '16px 16px 0 0';
+        maxBtn.textContent = '□';
+      }
+    });
+  }
+
+  if (minBtn) {
+    minBtn.addEventListener('click', () => {
+      isMinimized = !isMinimized;
+      if (isMinimized) {
+        wrapper.style.display = 'none';
+        modal.style.width = '300px';
+        modal.style.minHeight = '0';
+        modal.style.left = 'auto';
+        modal.style.right = '20px';
+        modal.style.top = 'auto';
+        modal.style.bottom = '20px';
+        modal.style.transform = 'none';
+        minBtn.textContent = '▲';
+      } else {
+        wrapper.style.display = 'flex';
+        modal.style.width = isMaximized ? '100vw' : '800px';
+        modal.style.minHeight = '480px';
+        modal.style.right = 'auto';
+        modal.style.bottom = 'auto';
+        // restore max/pos state
+        if (isMaximized) {
+          modal.style.top = '0px';
+          modal.style.left = '0px';
+        } else {
+          modal.style.top = '80px';
+          modal.style.left = '50%';
+          modal.style.transform = 'translateX(-50%)';
+        }
+        minBtn.textContent = '_';
+      }
+    });
+  }
 
   revealBtn.addEventListener('click', () => {
     answerBox.style.display = 'block';
     revealBtn.style.display = 'none';
-    document.getElementById('kcAskWrap').style.display = 'block';
+    if(document.getElementById('kcAskWrap')) document.getElementById('kcAskWrap').style.display = 'flex';
   });
 
   let dragging = false, dx = 0, dy = 0;
@@ -3532,7 +3848,7 @@ function inlineFormat(text) {
         kcHistory.push({ role: 'assistant', content: reply });
         feedbackEl.innerHTML = markdownToHtml(reply);
         feedbackEl.style.display = 'block';
-        document.getElementById('kcAskWrap').style.display = 'block';
+        if(document.getElementById('kcAskWrap')) document.getElementById('kcAskWrap').style.display = 'flex';
         if (window.MathJax && window.MathJax.typesetPromise) {
           window.MathJax.typesetPromise([feedbackEl]).catch(() => {});
         }
@@ -3561,19 +3877,20 @@ function inlineFormat(text) {
     feedbackEl.innerHTML = result.answerHtml;
     feedbackEl.style.display = 'block';
     answerBox.style.display = 'block';
-    document.getElementById('kcAskWrap').style.display = 'block';
+    if(document.getElementById('kcAskWrap')) document.getElementById('kcAskWrap').style.display = 'flex';
     const nextBtn = document.getElementById('kcNextBtn');
     if (result.correct && state.passed) {
-      nextBtn.textContent = 'Next Knowledge Point';
+      nextBtn.textContent = 'Next Knowledge Point ➔';
+      nextBtn.style.background = '#10B981';
       nextBtn.style.display = 'inline-block';
     } else if (!result.correct) {
-      nextBtn.textContent = 'Try another question on this concept';
+      nextBtn.textContent = `Next Variant — Needs ${state.required} streak`;
+      nextBtn.style.background = '#F59E0B'; // Orange warning
       nextBtn.style.display = 'inline-block';
-      moveWithinPointOnWrong();
     } else {
-      nextBtn.textContent = 'One more on this concept';
+      nextBtn.textContent = `Next (Streak ${state.correctStreak}/${state.required})`;
+      nextBtn.style.background = '#3B82F6'; // Blue progress
       nextBtn.style.display = 'inline-block';
-      moveWithinPointOnWrong();
     }
 
     renderProgress();
@@ -3587,11 +3904,6 @@ function inlineFormat(text) {
   });
 
   document.addEventListener('click', e => {
-    if (e.target && e.target.id === 'kcNextBtn') {
-      const state = kcPointStates[kcCurrentPointId] || { passed: false };
-      if (state.passed) advanceToNextPoint();
-      else renderCurrentQuestion();
-    }
     if (e.target && e.target.id === 'kcAskBtn') {
       const askInput = document.getElementById('kcAskInput');
       const val = askInput.value.trim();
