@@ -3336,7 +3336,11 @@ document.addEventListener('keydown', e => {
 });
 
 function parseMdTable(block) {
-  const rows = block.trim().split('\n').map(r => r.trim()).filter(r => r.startsWith('|'));
+  const rows = block
+    .trim()
+    .split('\n')
+    .map(r => r.trim().replace(/^>\s?/, '').trim())
+    .filter(r => r.startsWith('|'));
   if (rows.length < 2) return null;
   const isSep = r => /^\|[\s\-:|]+\|$/.test(r) && r.replace(/[|:\-\s]/g,'').length === 0;
   const headerRow = rows[0];
@@ -3372,7 +3376,20 @@ function markdownToHtml(md) {
   // Pre-process: convert markdown tables to HTML before line-by-line parsing
   let text = String(md);
 
-  // First, convert any Markdown tables to HTML tables
+  // Normalize blockquoted markdown tables like:
+  // > | Col A | Col B |
+  // > | --- | --- |
+  // > | x | y |
+  text = text.replace(/((?:^|\n)(?:>\s*\|[^\n]*\|[ \t]*\n?){2,})/g, (match) => {
+    const unquoted = match
+      .split('\n')
+      .map(line => line.replace(/^>\s?/, ''))
+      .join('\n');
+    const parsed = parseMdTable(unquoted);
+    return parsed ? '\n' + parsed + '\n' : unquoted;
+  });
+
+  // First, convert any normal Markdown tables to HTML tables
   text = text.replace(/((?:^|\n)(\|[^\n]+\|[ \t]*\n){2,})/g, (match) => {
     const parsed = parseMdTable(match);
     return parsed ? '\n' + parsed + '\n' : match;
