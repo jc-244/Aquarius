@@ -4326,29 +4326,56 @@ function buildTocFromSyllabus(chapterTitle, sections) {
   buildToc(items);
 }
 
-function shouldPreserveTocSubsectionsForCurrentLesson() {
+function getTocContextForCurrentLesson() {
   const sectionId = String(tutorState.learnSectionId || '').trim();
   const sectionTitle = String(tutorState.learnSectionTitle || '').trim();
-  const probe = `${sectionId} ${sectionTitle}`;
-  // Sub-lessons like B.1-2 / 1.2-3 should NOT keep parent module list in the right TOC.
-  // Only aggregate/index pages (e.g. B.1 / 1.2) should preserve subsection items above the Index divider.
-  return !/(^|\s)([A-Z]?\.?\d+|\d+\.\d+)-\d+(\b|\s)/i.test(probe);
+  const probe = `${sectionId} ${sectionTitle}`.trim();
+  const isSubLesson = /(^|\s)([A-Z]?\.?\d+|\d+\.\d+)-\d+(\b|\s)/i.test(probe);
+
+  if (!isSubLesson) {
+    return { mode: 'index', siblingSubsections: [] };
+  }
+
+  for (const chapter of (syllabusData || [])) {
+    const sections = (chapter.sections || []).map(s => typeof s === 'string' ? { title: s, subsections: [] } : s);
+    for (const sec of sections) {
+      const subs = Array.isArray(sec.subsections) ? sec.subsections : [];
+      if (subs.some(sub => String(sub).trim() === sectionTitle || String(sub).trim() === sectionId || probe.includes(String(sub).trim()))) {
+        return { mode: 'sublesson', siblingSubsections: subs };
+      }
+    }
+  }
+
+  return { mode: 'sublesson', siblingSubsections: [] };
 }
 
 // Generate TOC from rendered lesson HTML headings
-// For aggregate/index pages: preserve subsection items above an Index divider.
-// For sub-lessons: show only the current page's own content anchors.
+// Index pages keep their subsection list above the divider.
+// Sub-lessons keep only their sibling mini-navigation above the divider.
 function buildTocFromContent(containerEl) {
   if (!containerEl || !tocNav) return;
   const headings = containerEl.querySelectorAll('h1, h2, h3, h4');
   if (!headings.length) return;
 
-  const preserveSubItems = shouldPreserveTocSubsectionsForCurrentLesson();
-
+  const sectionId = String(tutorState.learnSectionId || '').trim();
+  const sectionTitle = String(tutorState.learnSectionTitle || '').trim();
+  const tocContext = getTocContextForCurrentLesson();
   const existingSubItems = [];
-  if (preserveSubItems) {
+
+  if (tocContext.mode === 'index') {
     tocNav.querySelectorAll('.toc-item.depth-2:not(.content-anchor)').forEach(btn => {
       existingSubItems.push(btn.cloneNode(true));
+    });
+  } else if (tocContext.mode === 'sublesson' && tocContext.siblingSubsections.length) {
+    tocContext.siblingSubsections.forEach(subTitle => {
+      const btn = document.createElement('button');
+      btn.className = 'toc-item depth-2 lesson-sibling-anchor';
+      btn.textContent = subTitle;
+      btn.dataset.lessonTitle = subTitle;
+      if (String(subTitle).trim() === sectionTitle || String(subTitle).trim() === sectionId) {
+        btn.classList.add('active');
+      }
+      existingSubItems.push(btn);
     });
   }
 
@@ -4382,7 +4409,7 @@ function buildTocFromContent(containerEl) {
     btn.addEventListener('click', () => {
       const el = document.getElementById(item.anchor);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      tocNav.querySelectorAll('.toc-item').forEach(b => b.classList.remove('active'));
+      tocNav.querySelectorAll('.toc-item.content-anchor').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     });
     tocNav.appendChild(btn);
@@ -4392,8 +4419,8 @@ function buildTocFromContent(containerEl) {
     tocNav.querySelectorAll('.toc-item.depth-2:not(.content-anchor)').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const subTitle = btn.textContent.trim();
-        tocNav.querySelectorAll('.toc-item').forEach(b => b.classList.remove('active'));
+        const subTitle = btn.dataset.lessonTitle || btn.textContent.trim();
+        tocNav.querySelectorAll('.toc-item.depth-2:not(.content-anchor)').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         openLearnModeKeepToc(subTitle, subTitle);
       });
