@@ -4977,7 +4977,7 @@ function summarizeRecentConversation(history = [], sectionTitle = '') {
   return compact(sectionPrefix + 'Saved conversation', 64) || 'Saved conversation';
 }
 
-async function performDeleteRecentConversation(timestamp) {
+const performDeleteRecentConversationImpl = async (timestamp) => {
   const normalizedTs = normalizeRecentConversationTimestamp(timestamp);
   pushRecentConversationDebug('delete:start', {
     normalizedTs,
@@ -5015,7 +5015,7 @@ async function performDeleteRecentConversation(timestamp) {
   pushRecentConversationDebug('delete:after-memory-rebuild', {
     count: loadRecentConversations().length
   });
-}
+};
 
 window.toggleRecentConversationStar = function(timestamp) {
   const normalizedTs = normalizeRecentConversationTimestamp(timestamp);
@@ -5053,7 +5053,7 @@ window.deleteRecentConversation = function(timestamp) {
 
 window.performDeleteRecentConversation = function(timestamp) {
   pushRecentConversationDebug('delete:entry-via-window-perform', { timestamp });
-  return performDeleteRecentConversation(timestamp);
+  return performDeleteRecentConversationImpl(timestamp);
 };
 
 function saveCurrentLearnSession(source = 'unknown') {
