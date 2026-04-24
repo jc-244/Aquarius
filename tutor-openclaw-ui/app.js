@@ -2587,12 +2587,7 @@ function parseLessonKnowledgePoints(html) {
 
   pushCurrent();
 
-  const summaryHtml = summaryPage ? summaryPage.parts.join('').trim() : '';
-  if (summaryHtml) {
-    const plain = summaryHtml.replace(/<[^>]+>/g, '').trim();
-    if (plain) points.push({ type: 'summary', label: 'Summary', title: '📌 Key Takeaways', html: summaryHtml });
-  }
-
+  // Add the quiz page at the very end
   const quizHtml = quizParts.join('').trim();
   if (quizHtml) {
     points.push({ type: 'quiz', label: 'Quiz', title: 'Knowledge Check', html: quizHtml });
