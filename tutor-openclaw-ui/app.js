@@ -2709,6 +2709,10 @@ function openLearnFocusMode() {
   learnFocusModal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
   syncFocusModeContent();
+  // Also bind the test button in focus mode
+  setTimeout(() => {
+    bindStartTestBtnIfPresent();
+  }, 50);
 }
 
 function closeLearnFocusMode() {
