@@ -2527,7 +2527,11 @@ function parseLessonKnowledgePoints(html) {
   const isSummaryStart = (node) => {
     if (!node || node.nodeType !== Node.ELEMENT_NODE) return false;
     const text = getNodeText(node);
-    return /^📌\s*Key Takeaways$/i.test(text) || /^Key Takeaways$/i.test(text);
+    // Match with or without bold markers / emoji variants
+    return /^📌\s*Key Takeaways$/i.test(text)
+      || /^Key Takeaways$/i.test(text)
+      || /^\*{0,2}📌\s*Key Takeaways\*{0,2}$/i.test(text)
+      || /^\*{0,2}Key Takeaways\*{0,2}$/i.test(text);
   };
 
   const pushCurrent = () => {
@@ -2628,7 +2632,57 @@ function renderCurrentKnowledgePoint() {
       window.MathJax.typesetPromise([learnExplainContent]).catch(() => {});
     }
     buildTocFromContent(learnExplainContent);
+    // Re-bind startTestBtn every time a page renders (it may be in any quiz page)
+    bindStartTestBtnIfPresent();
   }, 60);
+}
+
+function bindStartTestBtnIfPresent() {
+  const startTestBtn = document.getElementById('startTestBtn');
+  const testBannerCard = document.getElementById('testBannerCard');
+  if (!startTestBtn || startTestBtn._bound) return;
+  startTestBtn._bound = true;
+  startTestBtn.addEventListener('click', () => {
+    let opened = false;
+    const quizPlanNode = document.querySelector('.kc-quiz-plan');
+    const pregenCards = document.querySelectorAll('.kc-container');
+    if (quizPlanNode && window.openQuizPlanModal) {
+      try {
+        const rawB64 = quizPlanNode.dataset.quizB64 || quizPlanNode.getAttribute('data-quiz-b64');
+        let plan = null;
+        if (rawB64) {
+          plan = JSON.parse(atob(rawB64));
+        } else {
+          let raw = quizPlanNode.dataset.quiz || quizPlanNode.getAttribute('data-quiz') || '';
+          const decode = (s) => { let v=s; for(let i=0;i<4;i++){const p=v;v=v.replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');if(v===p)break;} return v; };
+          plan = JSON.parse(decode(raw));
+        }
+        if (plan && Array.isArray(plan.knowledge_points) && plan.knowledge_points.length) {
+          window.openQuizPlanModal(plan, learnSectionId, learnSectionTitle);
+          opened = true;
+        }
+      } catch (err) { console.error('[QuizPlan] parse failed:', err); }
+    }
+    if (!opened && pregenCards.length > 0) {
+      const card = pregenCards[0];
+      if (window.openKCModal) {
+        window.openKCModal(
+          card.dataset.question || card.getAttribute('data-question') || '(No question found)',
+          card.dataset.answer || card.getAttribute('data-answer') || '',
+          card.dataset.hint || card.getAttribute('data-hint') || '',
+          learnSectionId, learnSectionTitle
+        );
+        opened = true;
+      }
+    }
+    if (!opened) {
+      startTestBtn.innerText = 'Generating challenge...';
+      startTestBtn.disabled = true;
+      sendLearnFollowup('I have finished reading this section. Give me an exam-oriented quiz plan for this section. Cover the important knowledge points, use mostly multiple-choice questions, and only use short-answer when necessary.')
+        .then(() => { if (testBannerCard) testBannerCard.style.display = 'none'; })
+        .catch(() => { startTestBtn.innerText = 'Error - try again'; startTestBtn.disabled = false; });
+    }
+  });
 }
 
 function setLearnLessonContent(fullHtml, options = {}) {
@@ -3048,74 +3102,7 @@ async function startLesson() {
     const quizPlanNodeGlobal = quizTemp.querySelector('.kc-quiz-plan');
     const pregenCardsGlobal = quizTemp.querySelectorAll('.kc-container');
     if (learnChatContent) learnChatContent.innerHTML = ''; // Clear chat history on new section
-
-    // Bind the test button
-    setTimeout(() => {
-      const startTestBtn = document.getElementById('startTestBtn');
-      const testBannerCard = document.getElementById('testBannerCard');
-      const quizPlanNode = quizPlanNodeGlobal || document.querySelector('.kc-quiz-plan');
-      const pregenCards = pregenCardsGlobal?.length ? pregenCardsGlobal : document.querySelectorAll('.kc-container');
-
-      if (startTestBtn) {
-        startTestBtn.addEventListener('click', () => {
-          let opened = false;
-
-          if (quizPlanNode && window.openQuizPlanModal) {
-            try {
-              // Try base64 standard first, then fall back to old decoded string approach (just in case cache hasn't flipped yet)
-              const rawB64 = quizPlanNode.dataset.quizB64 || quizPlanNode.getAttribute('data-quiz-b64');
-              let plan = null;
-              if (rawB64) {
-                const decodedJson = atob(rawB64);
-                plan = JSON.parse(decodedJson);
-              } else {
-                let raw = quizPlanNode.dataset.quiz || quizPlanNode.getAttribute('data-quiz') || '';
-                const decodeEntitiesStr = (s) => {
-                  let v = s;
-                  for (let i = 0; i < 4; i += 1) {
-                    const prev = v;
-                    v = v.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-                    if (v === prev) break;
-                  }
-                  return v;
-                };
-                plan = JSON.parse(decodeEntitiesStr(raw));
-              }
-
-              if (plan && Array.isArray(plan.knowledge_points) && plan.knowledge_points.length) {
-                window.openQuizPlanModal(plan, learnSectionId, learnSectionTitle);
-                opened = true;
-              }
-            } catch (err) {
-              console.error('[QuizPlan] parse failed:', err);
-            }
-          }
-
-          if (!opened && pregenCards.length > 0) {
-            const card = pregenCards[0];
-            const q = card.dataset.question || card.getAttribute('data-question') || '(No question found)';
-            const a = card.dataset.answer || card.getAttribute('data-answer') || '';
-            const h = card.dataset.hint || card.getAttribute('data-hint') || '';
-            if (window.openKCModal) {
-              window.openKCModal(q, a, h, learnSectionId, learnSectionTitle);
-              opened = true;
-            }
-          }
-
-          if (!opened) {
-            startTestBtn.innerText = 'Generating challenge...';
-            startTestBtn.disabled = true;
-            const testPrompt = 'I have finished reading this section. Give me an exam-oriented quiz plan for this section. Cover the important knowledge points, use mostly multiple-choice questions, and only use short-answer when necessary.';
-            sendLearnFollowup(testPrompt)
-              .then(() => { testBannerCard.style.display = 'none'; })
-              .catch(() => {
-                startTestBtn.innerText = 'Error - try again';
-                startTestBtn.disabled = false;
-              });
-          }
-        });
-      }
-    }, 100);
+    // startTestBtn is bound by bindStartTestBtnIfPresent() called from renderCurrentKnowledgePoint on each page render
 
     renderLearnWebSources(data.webSources || []);
     renderLearnWebSection(data.webSources || []);
@@ -3435,6 +3422,9 @@ function markdownToHtml(md) {
   if (!md) return '<p>暂无内容</p>';
   // Pre-process: convert markdown tables to HTML before line-by-line parsing
   let text = String(md);
+
+  // Ensure a blank line after --- separators so the next element parses correctly
+  text = text.replace(/\n(---+)\n([^\n])/g, '\n$1\n\n$2');
 
   // Normalize blockquoted markdown tables like:
   // > | Col A | Col B |
