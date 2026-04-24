@@ -8,29 +8,13 @@ const http = require('http');
 const API_BASE = 'http://localhost:9000';
 const MAP_PATH = path.join(__dirname, 'section-page-map-new.json');
 
-const GOAL = process.env.PREGEN_GOAL || 'solid_b';
+const TRACKS = String(process.env.PREGEN_TRACKS || 'cram,standard,foundation')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
 const MATH = process.env.PREGEN_MATH || 'calculus_ok';
-const TIMELINE = process.env.PREGEN_TIMELINE || 'few_weeks';
 const LIMIT = Number(process.env.PREGEN_LIMIT || 6);
 const SECTION_FILTER = String(process.env.PREGEN_SECTION_FILTER || '');
-
-const STYLE_COMBOS = [
-  ['example_first'],
-  ['principle_first'],
-  ['visual'],
-  ['step_by_step'],
-  ['example_first', 'visual'],
-  ['principle_first', 'step_by_step']
-];
-
-const OUTCOME_COMBOS = [
-  ['one_liner'],
-  ['worked_example'],
-  ['exam_cheatsheet'],
-  ['formula_ref'],
-  ['one_liner', 'worked_example'],
-  ['exam_cheatsheet', 'formula_ref']
-];
 
 function post(urlPath, body, timeoutMs = 240000) {
   return new Promise((resolve, reject) => {
@@ -81,26 +65,19 @@ function loadSections() {
 }
 
 function buildProfiles() {
-  const profiles = [];
-  for (const style of STYLE_COMBOS) {
-    for (const outcome of OUTCOME_COMBOS) {
-      profiles.push({
-        goal: GOAL,
-        math: MATH,
-        timeline: TIMELINE,
-        style,
-        outcome
-      });
-    }
-  }
-  return profiles;
+  return TRACKS.map(track => ({
+    track,
+    goal: track,
+    math: MATH,
+    timeline: 'few_weeks',
+    style: [],
+    outcome: []
+  }));
 }
 
 async function generateOne(section, profile, index, total) {
   const startedAt = Date.now();
-  const styleKey = profile.style.join('+');
-  const outcomeKey = profile.outcome.join('+');
-  console.log(`\n[${index}/${total}] ${section.id} | style=${styleKey} | outcome=${outcomeKey}`);
+  console.log(`\n[${index}/${total}] ${section.id} | track=${profile.track} | math=${profile.math}`);
 
   const result = await post('/api/section', {
     sectionId: section.id,
@@ -134,7 +111,8 @@ async function main() {
   console.log(`Sections: ${sections.length}`);
   console.log(`Profiles: ${profiles.length}`);
   console.log(`Jobs: ${jobs.length}`);
-  console.log(`Base profile: ${GOAL} | ${MATH} | ${TIMELINE}`);
+  console.log(`Base math: ${MATH}`);
+  console.log(`Tracks: ${TRACKS.join(', ')}`);
 
   let i = 0;
   for (const job of jobs) {

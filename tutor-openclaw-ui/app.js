@@ -232,15 +232,14 @@ async function resetQuiz() {
 // ──────────────────────────────
 const QUIZ_QUESTIONS = [
   {
-    key: 'goal',
-    zh: '你对这门课的目标是?',
-    en: "What's your goal for this course?",
+    key: 'track',
+    zh: '你更适合哪种学习档位?',
+    en: 'Which learning track fits you best?',
     multi: false,
     options: [
-      { value: 'just_pass',     zh: '考及格就行(C 及以上)😅', en: 'Just need to pass (C or above) 😅' },
-      { value: 'solid_b',      zh: '争取 B / B+ 就好',            en: 'Aiming for a solid B / B+' },
-      { value: 'going_for_a',  zh: '我要拿 A!真正弄懂它',         en: 'Going for an A - I want to really nail this' },
-      { value: 'getting_ahead',zh: '提前预习,还没正式开课',        en: "Getting ahead - course hasn't started yet" }
+      { value: 'cram', zh: '速通档：先抓最可能考什么，尽快拿分 🚀', en: 'Cram track: focus on what is most likely to be tested 🚀' },
+      { value: 'standard', zh: '标准档：概念 + 例题 + 检查题，正常学习', en: 'Standard track: concept + example + quick check' },
+      { value: 'foundation', zh: '保底档：先补前置，再小步慢慢讲稳 🧩', en: 'Foundation track: patch prerequisites and go step by step 🧩' }
     ]
   },
   {
@@ -249,46 +248,33 @@ const QUIZ_QUESTIONS = [
     en: 'How is your math background?',
     multi: false,
     options: [
-      { value: 'all_solid',    zh: '微积分、微分方程、复数都没问题',   en: 'Calculus, ODEs, and complex numbers - all solid' },
-      { value: 'calculus_ok', zh: '微积分还行,微分方程 / 复数有点虚', en: 'Calculus OK, but ODEs / complex numbers are shaky' },
-      { value: 'math_weak',   zh: '数学比较薄弱,公式能少用就少用',   en: 'Math is weak - fewer formulas, more intuition please' }
-    ]
-  },
-  {
-    key: 'timeline',
-    zh: '距下次考试 / 用到这门课还有多久?',
-    en: 'How much time do you have before your next exam or deadline?',
-    multi: false,
-    options: [
-      { value: 'midterm_week', zh: '期中考试在 1 周内(急救模式)🚨', en: 'Midterm in < 1 week - URGENT 🚨' },
-      { value: 'final_week',   zh: 'Final 在 1 周内(急救模式)🚨',   en: 'Final in < 1 week - URGENT 🚨' },
-      { value: 'few_weeks',    zh: '还有几周,时间还够',              en: 'A few weeks away - still time' },
-      { value: 'keeping_up',   zh: '我在跟课,还没到考试',            en: 'Just keeping up with lectures' },
-      { value: 'self_study',   zh: '纯自学,没有考试压力',            en: 'Self-studying - no exam pressure' }
+      { value: 'all_solid', zh: '微积分、微分方程、复数都没问题', en: 'Calculus, ODEs, and complex numbers are solid' },
+      { value: 'calculus_ok', zh: '微积分还行，但微分方程 / 复数不太稳', en: 'Calculus is okay, but ODEs / complex numbers are shaky' },
+      { value: 'math_weak', zh: '数学偏弱，希望少公式、多直觉', en: 'Math is weak — fewer formulas, more intuition' }
     ]
   },
   {
     key: 'style',
-    zh: '怎么学你最容易进入状态?(可多选)',
-    en: 'How do you learn best? (select all that apply)',
+    zh: '展示偏好（只影响呈现，不再生成新内容）',
+    en: 'Display preferences (these only change presentation, not the core lesson)',
     multi: true,
     options: [
-      { value: 'example_first',   zh: '先给我一个具体例子,我看一遍就懂',   en: 'Example first - show me one and I\'ll get it' },
-      { value: 'principle_first', zh: '先把原理讲清楚,再用例子说明',       en: 'Principle first, then examples' },
-      { value: 'visual',          zh: '图表和可视化对我帮助最大',            en: 'Visual learner - diagrams and sketches help me most' },
-      { value: 'step_by_step',    zh: '需要一步一步带着我走,跳步我就跟不上', en: "Step-by-step - don't skip anything, I fall behind" }
+      { value: 'example_first', zh: '先看例子再抽象总结', en: 'Example first' },
+      { value: 'principle_first', zh: '先讲原理再看例子', en: 'Principle first' },
+      { value: 'visual', zh: '多一点图和可视化提示', en: 'More visual cues' },
+      { value: 'step_by_step', zh: '步骤拆细一点', en: 'Break steps down more' }
     ]
   },
   {
     key: 'outcome',
-    zh: '你希望每节学完后得到什么?(可多选)',
-    en: 'What do you want to walk away with after each section? (select all that apply)',
+    zh: '每节结束时你更想看到什么?（轻量展示偏好）',
+    en: 'What would you like to see at the end of each section? (lightweight preference only)',
     multi: true,
     options: [
-      { value: 'one_liner',     zh: '一句话核心总结,记住最关键的点',     en: 'One-liner takeaway - the single most important idea' },
-      { value: 'worked_example',zh: '例题 + 完整解题过程',               en: 'Worked example with full solution walkthrough' },
-      { value: 'exam_cheatsheet',zh: '考点清单 + 高频考题提示',          en: 'Exam cheat-sheet - key facts and likely question types' },
-      { value: 'formula_ref',   zh: '公式速查,直接能用',                en: 'Formula reference I can use right away' }
+      { value: 'one_liner', zh: '一句话重点', en: 'One-line takeaway' },
+      { value: 'worked_example', zh: '完整例题', en: 'Worked example' },
+      { value: 'exam_cheatsheet', zh: '考点提醒', en: 'Exam cheat-sheet' },
+      { value: 'formula_ref', zh: '公式速查', en: 'Formula reference' }
     ]
   }
 ];
@@ -394,6 +380,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           } catch (_) {}
         }
+        if (userMemory && userMemory.quiz && !userMemory.quiz.timeline) {
+          userMemory.quiz.timeline = 'few_weeks';
+        }
+        if (userMemory && userMemory.quiz && !userMemory.quiz.goal && userMemory.quiz.track) {
+          userMemory.quiz.goal = userMemory.quiz.track;
+        }
         renderUserBadge();
       }
     });
@@ -423,7 +415,13 @@ function fallbackLocalUid() {
         // Keep localStorage in sync
         localStorage.setItem('tutorQuiz', JSON.stringify(userMemory.quiz));
       }
-      const quizDone = userMemory.quiz && Object.keys(userMemory.quiz).length >= 5;
+      if (userMemory && userMemory.quiz && !userMemory.quiz.timeline) {
+        userMemory.quiz.timeline = 'few_weeks';
+      }
+      if (userMemory && userMemory.quiz && !userMemory.quiz.goal && userMemory.quiz.track) {
+        userMemory.quiz.goal = userMemory.quiz.track;
+      }
+      const quizDone = userMemory.quiz && ['track', 'math'].every(k => !!userMemory.quiz[k]);
       if (!quizDone) showQuiz(); else renderUserBadge();
     })
     .catch(() => showQuiz());

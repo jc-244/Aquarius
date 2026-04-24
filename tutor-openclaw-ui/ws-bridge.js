@@ -190,7 +190,7 @@ const USERS_DIR = path.join(__dirname, 'users');
 try { if (!fs.existsSync(USERS_DIR)) fs.mkdirSync(USERS_DIR, { recursive: true }); } catch (_) {}
 
 const LESSON_CACHE_DIR = path.join(__dirname, '../tutor-materials/lesson-cache');
-const LESSON_CACHE_VERSION = 'v8'; // bumped: third-ed lesson cache now isolates full preference profile + no-web lesson generation
+const LESSON_CACHE_VERSION = 'v9'; // 3-track lesson cache: only content track + math + book source affect cache identity
 try { if (!fs.existsSync(LESSON_CACHE_DIR)) fs.mkdirSync(LESSON_CACHE_DIR, { recursive: true }); } catch (_) {}
 
 /**
@@ -214,14 +214,32 @@ function normalizePreferenceList(value) {
     return [...new Set(arr.map(v => compactWhitespace(String(v || '')).toLowerCase()).filter(Boolean))].sort();
 }
 
+function normalizeQuizProfile(quiz = {}) {
+    const next = { ...(quiz || {}) };
+    const track = compactWhitespace(next.track || '').toLowerCase();
+    const legacyGoal = compactWhitespace(next.goal || '').toLowerCase();
+
+    if (!next.track) {
+        if (track) next.track = track;
+        else if (legacyGoal === 'just_pass') next.track = 'cram';
+        else if (legacyGoal === 'going_for_a' || legacyGoal === 'getting_ahead') next.track = 'foundation';
+        else if (legacyGoal === 'solid_b') next.track = 'standard';
+    }
+
+    if (!next.track) next.track = 'standard';
+    if (!next.math) next.math = 'calculus_ok';
+    if (!next.timeline) next.timeline = 'few_weeks';
+    if (!next.goal) next.goal = next.track;
+    next.style = normalizePreferenceList(next.style);
+    next.outcome = normalizePreferenceList(next.outcome);
+    return next;
+}
+
 function buildLessonCacheKey(memory, bookSource = 'old') {
     if (!memory || !memory.quiz) return null;
-    const q = memory.quiz;
-    if (!q.goal || !q.math || !q.timeline) return null;
+    const q = normalizeQuizProfile(memory.quiz);
     const sourceKey = bookSource === 'new' ? 'new' : 'old';
-    const styleKey = normalizePreferenceList(q.style).join('+') || 'none';
-    const outcomeKey = normalizePreferenceList(q.outcome).join('+') || 'none';
-    return `${sourceKey}__${q.goal}|${q.math}|${q.timeline}|s:${styleKey}|o:${outcomeKey}`;
+    return `${sourceKey}__track:${q.track}|math:${q.math}`;
 }
 
 function readLessonCache(sectionId, memory, bookSource = 'old') {
@@ -331,57 +349,38 @@ function deriveMemoryFromSessions(uid, sessions, existing = {}) {
 function buildUserProfilePrompt(memory) {
     if (!memory) return '';
     const lines = [];
-    const quiz = memory.quiz || {};
+    const quiz = normalizeQuizProfile(memory.quiz || {});
 
-    const GOAL_MAP = {
-        just_pass:   'Student goal: just pass (C or above). Be concise and exam-focused.',
-        solid_b:     'Student goal: solid B/B+. Balance depth and exam prep.',
-        going_for_a: 'Student goal: A grade. Provide rigorous explanations with full derivations.',
-        getting_ahead: 'Student is previewing — assume zero prior exposure. Start from scratch.'
+    const TRACK_MAP = {
+        cram: 'Content track: cram mode. Prioritize exam-likely points, must-know formulas, common traps, and the shortest path to scoring.',
+        standard: 'Content track: standard mode. Teach the core concept clearly, include one representative example, and add a quick check.',
+        foundation: 'Content track: foundation mode. Patch prerequisites first, use ultra-simple explanations, and move in very small steps.'
     };
     const MATH_MAP = {
-        all_solid:     'Math background: strong (calculus, ODEs, complex numbers). Use freely.',
-        calculus_ok:   'Math background: calculus OK but ODEs/complex numbers shaky. Briefly revisit before using.',
-        math_weak:     'Math background: weak. Avoid heavy derivations. Use intuition and diagrams first.'
+        all_solid: 'Math background: strong. You may use calculus, ODEs, and complex numbers normally.',
+        calculus_ok: 'Math background: mixed. Re-explain ODEs or complex-number steps briefly before relying on them.',
+        math_weak: 'Math background: weak. Prefer intuition first, lighter algebra, and explicit intermediate steps.'
     };
     const STYLE_MAP = {
-        example_first:  'Learning style: example first. Always lead with a concrete example before the general rule.',
-        principle_first:'Learning style: principle first. State concept clearly, then illustrate.',
-        visual:         'Learning style: visual. Prioritize diagrams, sketches, and visual analogies.',
-        step_by_step:   'Learning style: step-by-step. Never skip steps. Explain every line explicitly.'
-    };
-    const TIMELINE_MAP = {
-        midterm_week: 'PRIORITY MODE — midterm in < 1 week. Focus only on high-frequency exam topics. Be very concise.',
-        final_week:   'EXAM CRUNCH — final in < 1 week. Cover all testable material efficiently. No fluff.',
-        few_weeks:    'A few weeks until exam. Moderate pace. Cover key concepts with 1-2 practice problems.',
-        keeping_up:   'Keeping up with lectures. Normal pace. Full explanation with extensions.',
-        self_study:   'Self-studying with no exam pressure. Go deep, explore connections.'
-    };
-    const STRUGGLE_MAP = {
-        too_many_formulas: 'Historical struggle: too many formulas. Always explain where formulas come from — never just state them.',
-        too_abstract:      'Historical struggle: concepts feel abstract. Always connect to real-world application or physical meaning.',
-        cant_do_problems:  'Historical struggle: understands but cannot do problems. After each concept, show a fully worked example.',
-        mostly_lazy:       'Student is self-aware about motivation. Keep sections short and punchy. Show the payoff early.'
+        example_first: 'Presentation preference only: open with a concrete example before the abstraction when natural.',
+        principle_first: 'Presentation preference only: state the idea cleanly before giving examples.',
+        visual: 'Presentation preference only: add visual cues, diagrams, or plotting suggestions when useful.',
+        step_by_step: 'Presentation preference only: break multi-step derivations into smaller visible steps.'
     };
     const OUTCOME_MAP = {
-        one_liner:      'End each section with a one-liner core takeaway summary.',
-        worked_example: 'Always include at least one fully worked example with complete step-by-step solution.',
-        exam_cheatsheet:'End each section with a bullet-point exam cheat-sheet: key facts and likely exam question types.',
-        formula_ref:    'Include a concise formula reference box at the end of each explanation.'
+        one_liner: 'Lightweight ending preference: include a one-line takeaway when natural.',
+        worked_example: 'Lightweight ending preference: surface a worked example if one already fits the lesson.',
+        exam_cheatsheet: 'Lightweight ending preference: end with a short exam-oriented reminder list when useful.',
+        formula_ref: 'Lightweight ending preference: include a concise formula reference box when relevant.'
     };
 
-    if (GOAL_MAP[quiz.goal])         lines.push(GOAL_MAP[quiz.goal]);
-    if (MATH_MAP[quiz.math])         lines.push(MATH_MAP[quiz.math]);
-    if (TIMELINE_MAP[quiz.timeline]) lines.push(TIMELINE_MAP[quiz.timeline]);
-    if (STRUGGLE_MAP[quiz.struggle]) lines.push(STRUGGLE_MAP[quiz.struggle]);
+    if (TRACK_MAP[quiz.track]) lines.push(TRACK_MAP[quiz.track]);
+    if (MATH_MAP[quiz.math]) lines.push(MATH_MAP[quiz.math]);
 
-    // style: may be a single string (old) or array (multi-select)
     const styles = Array.isArray(quiz.style) ? quiz.style : (quiz.style ? [quiz.style] : []);
-    // also check dynamically inferred style updates stored in memory.inferredStyle
     const allStyles = [...new Set([...styles, ...(Array.isArray(memory.inferredStyle) ? memory.inferredStyle : [])])];
     allStyles.forEach(s => { if (STYLE_MAP[s]) lines.push(STYLE_MAP[s]); });
 
-    // outcome: may be array (multi-select)
     const outcomes = Array.isArray(quiz.outcome) ? quiz.outcome : (quiz.outcome ? [quiz.outcome] : []);
     outcomes.forEach(o => { if (OUTCOME_MAP[o]) lines.push(OUTCOME_MAP[o]); });
 
@@ -1792,26 +1791,19 @@ async function blueprintToMarkdown(blocks, pageImages) {
  * 生成小节完整讲解 — now powered by dual-agent pipeline
  */
 function buildSyntheticProfileMemory(baseMemory, overrides = {}) {
-    const baseQuiz = (baseMemory && baseMemory.quiz) ? { ...baseMemory.quiz } : {};
-    const nextQuiz = { ...baseQuiz, ...overrides };
+    const baseQuiz = normalizeQuizProfile((baseMemory && baseMemory.quiz) ? baseMemory.quiz : {});
+    const nextQuiz = normalizeQuizProfile({ ...baseQuiz, ...overrides });
     return { ...(baseMemory || {}), quiz: nextQuiz };
 }
 
 async function prewarmLessonVariants(sectionId, sectionTitle, bookPages, baseMemory, bookSource = 'new', language = 'en') {
     if (bookSource !== 'new') return { scheduled: 0, generated: 0 };
     if (!baseMemory || !baseMemory.quiz) return { scheduled: 0, generated: 0 };
-    const q = baseMemory.quiz;
-    if (!q.goal || !q.math || !q.timeline) return { scheduled: 0, generated: 0 };
 
-    const candidates = [];
-    for (const styles of PREGEN_STYLE_COMBOS) {
-        for (const outcomes of PREGEN_OUTCOME_COMBOS) {
-            candidates.push(buildSyntheticProfileMemory(baseMemory, {
-                style: styles,
-                outcome: outcomes
-            }));
-        }
-    }
+    const math = normalizeQuizProfile(baseMemory.quiz).math;
+    const candidates = ['cram', 'standard', 'foundation'].map(track =>
+        buildSyntheticProfileMemory(baseMemory, { track, goal: track, math })
+    );
 
     setTimeout(async () => {
         let generated = 0;
@@ -2052,7 +2044,7 @@ const server = http.createServer(async (req, res) => {
                 if (!uid) { res.writeHead(400); res.end(JSON.stringify({ error: 'Missing uid' })); return; }
                 const existing = readUserMemory(uid) || { uid, createdAt: new Date().toISOString() };
                 // Merge patch: quiz, knownConcepts, weakConcepts, sessionSummaries
-                if (data.quiz) existing.quiz = Object.assign({}, existing.quiz || {}, data.quiz);
+                if (data.quiz) existing.quiz = normalizeQuizProfile(Object.assign({}, existing.quiz || {}, data.quiz));
                 if (Array.isArray(data.knownConcepts)) {
                     const set = new Set([...(existing.knownConcepts || []), ...data.knownConcepts]);
                     existing.knownConcepts = [...set];
@@ -2107,7 +2099,8 @@ const server = http.createServer(async (req, res) => {
             const userMemory = uid ? readUserMemory(uid) : null;
             // profileMemory: prefer uid-based memory; fall back to inline profileOverride
             const profileMemory = userMemory
-                || (data.profileOverride ? { quiz: data.profileOverride } : null);
+                ? { ...userMemory, quiz: normalizeQuizProfile(userMemory.quiz || {}) }
+                : (data.profileOverride ? { quiz: normalizeQuizProfile(data.profileOverride) } : null);
             const userProfilePrompt = buildUserProfilePrompt(profileMemory);
             const { ocrDir: secOcrDir } = getBookDirs(data.bookSource);
 
