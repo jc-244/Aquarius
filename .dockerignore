@@ -1,0 +1,9 @@
+node_modules
+.git
+.DS_Store
+.env
+*.log
+tutor-materials/lesson-cache
+tutor-openclaw-ui/generated
+users
+__pycache__

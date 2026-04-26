@@ -1,4 +1,250 @@
-const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:9000' : '';
+const API_BASE = window.location.hostname === 'localhost' ? 'http://127.0.0.1:9000' : '';
+
+const INTRO_LANDING_SEEN_KEY = 'aquarius-intro-seen';
+let introScene = null;
+
+function hideIntroLanding(persist = true) {
+  const intro = document.getElementById('introLanding');
+  if (intro) intro.classList.add('hidden');
+  if (persist) {
+    try { localStorage.setItem(INTRO_LANDING_SEEN_KEY, '1'); } catch (_) {}
+  }
+  if (introScene && typeof introScene.destroy === 'function') {
+    introScene.destroy();
+    introScene = null;
+  }
+}
+
+function shouldShowIntroLanding() {
+  return true;
+}
+
+function initIntroLanding() {
+  const intro = document.getElementById('introLanding');
+  const button = document.getElementById('introGetStartedBtn');
+  if (!intro || !button) return;
+
+  if (!shouldShowIntroLanding()) {
+    hideIntroLanding(false);
+    return;
+  }
+
+  intro.classList.remove('hidden');
+  button.addEventListener('click', () => {
+    hideIntroLanding(true);
+  });
+
+  const navbar = document.getElementById('introNavbar');
+  const onScroll = () => {
+    if (!navbar || intro.classList.contains('hidden')) return;
+    if (intro.scrollTop > 50) {
+      navbar.classList.add('bg-deep-space/80', 'backdrop-blur-xl', 'border-b', 'border-white/10');
+      navbar.classList.remove('bg-transparent');
+    } else {
+      navbar.classList.remove('bg-deep-space/80', 'backdrop-blur-xl', 'border-b', 'border-white/10');
+      navbar.classList.add('bg-transparent');
+    }
+  };
+  intro.addEventListener('scroll', onScroll);
+  onScroll();
+
+  if (window.THREE && window.gsap && window.ScrollTrigger) {
+    introScene = createIntroCosmos();
+  }
+}
+
+function createIntroCosmos() {
+  const container = document.getElementById('introWebglContainer');
+  if (!container) return null;
+
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x020617, 0.001);
+
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 3000);
+  camera.position.z = 1000;
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  container.appendChild(renderer.domElement);
+
+  const particlesCount = 8000;
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(particlesCount * 3);
+  const colors = new Float32Array(particlesCount * 3);
+  const sizes = new Float32Array(particlesCount);
+  const colorPalette = [
+    new THREE.Color(0x38BDF8),
+    new THREE.Color(0x818CF8),
+    new THREE.Color(0xE2E8F0),
+    new THREE.Color(0x0F172A)
+  ];
+
+  for (let i = 0; i < particlesCount; i++) {
+    const i3 = i * 3;
+    const r = 800 + Math.random() * 800;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos((Math.random() * 2) - 1);
+    positions[i3] = r * Math.sin(phi) * Math.cos(theta);
+    positions[i3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+    positions[i3 + 2] = r * Math.cos(phi);
+    const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+    colors[i3] = color.r;
+    colors[i3 + 1] = color.g;
+    colors[i3 + 2] = color.b;
+    sizes[i] = Math.random() * 2.5;
+  }
+
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      time: { value: 0.0 },
+      pixelRatio: { value: renderer.getPixelRatio() }
+    },
+    vertexShader: `
+      uniform float time;
+      uniform float pixelRatio;
+      attribute float size;
+      attribute vec3 color;
+      varying vec3 vColor;
+      void main() {
+        vColor = color;
+        vec3 pos = position;
+        pos.x += sin(time * 0.5 + pos.y * 0.01) * 10.0;
+        pos.y += cos(time * 0.4 + pos.x * 0.01) * 10.0;
+        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+        gl_PointSize = size * pixelRatio * (1000.0 / -mvPosition.z);
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vColor;
+      void main() {
+        float dist = length(gl_PointCoord - vec2(0.5));
+        if (dist > 0.5) discard;
+        float glow = 1.0 - (dist * 2.0);
+        glow = pow(glow, 1.5);
+        gl_FragColor = vec4(vColor, glow * 0.8);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+
+  const particles = new THREE.Points(geometry, material);
+  scene.add(particles);
+
+  gsap.registerPlugin(ScrollTrigger);
+  const scrollRoot = document.getElementById('introLanding');
+  const particleConfig = { rotationSpeed: 0.0005, groupSpread: 1.0 };
+
+  const triggers = [
+    ScrollTrigger.create({
+      trigger: '#introPerception',
+      scroller: scrollRoot,
+      start: 'top center',
+      end: 'bottom center',
+      onEnter: () => {
+        gsap.to(particleConfig, { rotationSpeed: 0.002, groupSpread: 1.5, duration: 2, ease: 'power2.out' });
+        gsap.to(camera.position, { z: 800, duration: 2 });
+      },
+      onLeaveBack: () => {
+        gsap.to(particleConfig, { rotationSpeed: 0.0005, groupSpread: 1.0, duration: 2 });
+        gsap.to(camera.position, { z: 1000, duration: 2 });
+      }
+    }),
+    ScrollTrigger.create({
+      trigger: '#introGraph',
+      scroller: scrollRoot,
+      start: 'top center',
+      end: 'bottom center',
+      onEnter: () => {
+        gsap.to(camera.position, { y: 600, z: 600, duration: 3, ease: 'power3.inOut' });
+        gsap.to(camera.rotation, { x: -Math.PI / 4, duration: 3, ease: 'power3.inOut' });
+        gsap.to(particleConfig, { rotationSpeed: 0.005, groupSpread: 0.8, duration: 2 });
+      },
+      onLeaveBack: () => {
+        gsap.to(camera.position, { y: 0, z: 800, duration: 3, ease: 'power3.inOut' });
+        gsap.to(camera.rotation, { x: 0, duration: 3, ease: 'power3.inOut' });
+        gsap.to(particleConfig, { rotationSpeed: 0.002, groupSpread: 1.5, duration: 2 });
+      }
+    }),
+    ScrollTrigger.create({
+      trigger: '#introEngine',
+      scroller: scrollRoot,
+      start: 'top center',
+      end: 'bottom center',
+      onEnter: () => {
+        gsap.to(camera.position, { y: 0, z: 300, duration: 3, ease: 'power2.out' });
+        gsap.to(camera.rotation, { x: 0, duration: 3 });
+        gsap.to(particleConfig, { rotationSpeed: 0.01, groupSpread: 2.0, duration: 2 });
+      },
+      onLeaveBack: () => {
+        gsap.to(camera.position, { y: 600, z: 600, duration: 3, ease: 'power3.inOut' });
+        gsap.to(camera.rotation, { x: -Math.PI / 4, duration: 3, ease: 'power3.inOut' });
+        gsap.to(particleConfig, { rotationSpeed: 0.005, groupSpread: 0.8, duration: 2 });
+      }
+    })
+  ];
+
+  let mouseX = 0;
+  let mouseY = 0;
+  let targetX = 0;
+  let targetY = 0;
+  let frameId = null;
+  const clock = new THREE.Clock();
+
+  const handleMouseMove = (event) => {
+    const windowHalfX = window.innerWidth / 2;
+    const windowHalfY = window.innerHeight / 2;
+    mouseX = (event.clientX - windowHalfX);
+    mouseY = (event.clientY - windowHalfY);
+  };
+
+  const handleResize = () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    material.uniforms.pixelRatio.value = renderer.getPixelRatio();
+  };
+
+  const animate = () => {
+    frameId = window.requestAnimationFrame(animate);
+    const elapsedTime = clock.getElapsedTime();
+    material.uniforms.time.value = elapsedTime;
+    targetX = mouseX * 0.5;
+    targetY = mouseY * 0.5;
+    particles.rotation.x += 0.0002 + (targetY * 0.00005 - particles.rotation.x) * 0.05;
+    particles.rotation.y += particleConfig.rotationSpeed + (targetX * 0.00005 - particles.rotation.y) * 0.05;
+    particles.scale.set(particleConfig.groupSpread, particleConfig.groupSpread, particleConfig.groupSpread);
+    renderer.render(scene, camera);
+  };
+
+  window.addEventListener('mousemove', handleMouseMove);
+  window.addEventListener('resize', handleResize);
+  animate();
+
+  return {
+    destroy() {
+      if (frameId) window.cancelAnimationFrame(frameId);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('resize', handleResize);
+      triggers.forEach(t => t && t.kill && t.kill());
+      geometry.dispose();
+      material.dispose();
+      renderer.dispose();
+      if (renderer.domElement && renderer.domElement.parentNode) {
+        renderer.domElement.parentNode.removeChild(renderer.domElement);
+      }
+    }
+  };
+}
 
 function renderHyperknowLinks(webSources) {
   if (!webSources || !webSources.length) return '';
@@ -55,7 +301,7 @@ async function waitForClerk(ms = 15000) {
 async function initClerk() {
   try {
     await waitForClerk();
-  } catch (e) {
+   } catch (e) {
     console.warn('[Clerk] failed:', e.message);
     clerkInstance = null;
   }
@@ -130,10 +376,14 @@ async function onUserSignedIn(user) {
   } catch (_) { userMemory = {}; }
 
   // New user = show quiz; returning user = go straight in
-  const quizDone = userMemory.quiz && Object.keys(userMemory.quiz).length >= 5;
+  const quizDone = userMemory.quiz && ['track', 'math', 'timeline', 'preference', 'priority'].every(k => {
+    const v = userMemory.quiz[k];
+    return Array.isArray(v) ? v.length > 0 : !!v;
+  });
   if (!quizDone) {
     showQuiz();
   } else {
+    updateLearnModeBadge(userMemory && userMemory.quiz ? userMemory.quiz.track : null);
     renderUserBadge();
   }
 }
@@ -233,54 +483,89 @@ async function resetQuiz() {
 const QUIZ_QUESTIONS = [
   {
     key: 'track',
-    zh: '你更适合哪种学习档位?',
-    en: 'Which learning track fits you best?',
+    zh: '这节你想怎么学?',
+    en: 'LEARNING MODE · Choose how you want to learn this section.',
     multi: false,
     options: [
-      { value: 'cram', zh: '速通档：先抓最可能考什么，尽快拿分 🚀', en: 'Cram track: focus on what is most likely to be tested 🚀' },
-      { value: 'standard', zh: '标准档：概念 + 例题 + 检查题，正常学习', en: 'Standard track: concept + example + quick check' },
-      { value: 'foundation', zh: '保底档：先补前置，再小步慢慢讲稳 🧩', en: 'Foundation track: patch prerequisites and go step by step 🧩' }
+      { value: 'cram', zh: '速通保分：先抓最常考，最快进入会做题状态 🚀', en: 'Cram mode: focus on the most tested ideas first 🚀' },
+      { value: 'standard', zh: '标准提分：概念、例题、检查题一起走，稳稳提分 📘', en: 'Standard mode: concept + example + quick check 📘' },
+      { value: 'top_score', zh: '冲刺高分：补足易混点、变式题和高分思路 🏆', en: 'Top-score mode: tricky variants + high-score reasoning 🏆' }
     ]
   },
   {
     key: 'math',
     zh: '你的数学基础怎么样?',
-    en: 'How is your math background?',
+    en: 'MATH BACKGROUND · Tell me where math might slow you down.',
     multi: false,
     options: [
-      { value: 'all_solid', zh: '微积分、微分方程、复数都没问题', en: 'Calculus, ODEs, and complex numbers are solid' },
-      { value: 'calculus_ok', zh: '微积分还行，但微分方程 / 复数不太稳', en: 'Calculus is okay, but ODEs / complex numbers are shaky' },
-      { value: 'math_weak', zh: '数学偏弱，希望少公式、多直觉', en: 'Math is weak — fewer formulas, more intuition' }
+      { value: 'all_solid', zh: '基础比较稳：微积分、微分方程、复数这些都还可以', en: 'Math is solid: calculus, ODEs, and complex numbers are okay' },
+      { value: 'calculus_ok', zh: '有些地方不太稳：微积分还行，但微分方程 / 复数会卡住', en: 'Some weak spots: calculus is okay, but ODEs / complex numbers can be shaky' },
+      { value: 'math_weak', zh: '数学偏弱：希望少一点公式，多一点直觉和图像', en: 'Math feels weak: fewer formulas, more intuition and visuals' }
     ]
   },
   {
-    key: 'style',
-    zh: '展示偏好（只影响呈现，不再生成新内容）',
-    en: 'Display preferences (these only change presentation, not the core lesson)',
-    multi: true,
+    key: 'timeline',
+    zh: '距离这门课最近一次重要考试，还有多久?',
+    en: 'EXAM TIMELINE · How soon do you need results?',
+    multi: false,
     options: [
-      { value: 'example_first', zh: '先看例子再抽象总结', en: 'Example first' },
-      { value: 'principle_first', zh: '先讲原理再看例子', en: 'Principle first' },
-      { value: 'visual', zh: '多一点图和可视化提示', en: 'More visual cues' },
-      { value: 'step_by_step', zh: '步骤拆细一点', en: 'Break steps down more' }
+      { value: 'this_week', zh: '这周内', en: 'Within this week' },
+      { value: 'two_weeks', zh: '两周左右', en: 'About two weeks' },
+      { value: 'one_month', zh: '一个多月', en: 'About a month or more' },
+      { value: 'early_stage', zh: '还比较早，先打基础', en: 'It is still early — build foundations first' }
     ]
   },
   {
-    key: 'outcome',
-    zh: '每节结束时你更想看到什么?（轻量展示偏好）',
-    en: 'What would you like to see at the end of each section? (lightweight preference only)',
+    key: 'preference',
+    zh: '这节开始时，你最想先看到什么?',
+    en: 'LEARNING PREFERENCE · What do you want to see first when this lesson begins?',
     multi: true,
+    maxSelect: 2,
     options: [
-      { value: 'one_liner', zh: '一句话重点', en: 'One-line takeaway' },
-      { value: 'worked_example', zh: '完整例题', en: 'Worked example' },
-      { value: 'exam_cheatsheet', zh: '考点提醒', en: 'Exam cheat-sheet' },
-      { value: 'formula_ref', zh: '公式速查', en: 'Formula reference' }
+      { value: 'exam_first', zh: '先看这节最重要的考点', en: 'Show me the key tested ideas first' },
+      { value: 'example_first', zh: '先看一个例子', en: 'Start with an example' },
+      { value: 'step_by_step', zh: '先把步骤拆开', en: 'Break the steps down first' }
+    ]
+  },
+  {
+    key: 'priority',
+    zh: '你现在最想优先解决哪件事?',
+    en: 'YOUR PRIORITY · What do you want to improve first?',
+    multi: true,
+    maxSelect: 2,
+    options: [
+      { value: 'understand_concepts', zh: '先把概念听懂', en: 'Understand the concepts first' },
+      { value: 'solve_faster', zh: '做题更快一点', en: 'Solve problems faster' },
+      { value: 'avoid_careless', zh: '少犯低级错误', en: 'Make fewer careless mistakes' },
+      { value: 'harder_problems', zh: '搞定更难的题', en: 'Handle harder problems' },
+      { value: 'connect_topics', zh: '把知识点串起来', en: 'Connect the ideas across topics' },
+      { value: 'exam_confidence', zh: '更有把握地上考场', en: 'Feel more confident in the exam' }
     ]
   }
 ];
 
 let quizStep = 0;
 let quizAnswers = {};
+
+function getTrackMeta(track) {
+  switch (track) {
+    case 'cram':
+      return { label: '速通保分', en: 'CRAM MODE' };
+    case 'standard':
+      return { label: '标准提分', en: 'STANDARD MODE' };
+    case 'top_score':
+      return { label: '冲刺高分', en: 'TOP SCORE MODE' };
+    default:
+      return { label: '学习模式', en: 'LEARNING MODE' };
+  }
+}
+
+function updateLearnModeBadge(track) {
+  if (typeof learnModeBadge === 'undefined' || !learnModeBadge) return;
+  const meta = getTrackMeta(track);
+  learnModeBadge.textContent = meta.en;
+  learnModeBadge.title = meta.label;
+}
 
 function showQuiz() {
   quizStep = 0;
@@ -303,9 +588,10 @@ function renderQuizStep() {
   }
 
   container.innerHTML = `
-    <div style="font-size:16px;font-weight:600;color:#0F172A;margin-bottom:20px;line-height:1.5;">
+    <div style="font-size:16px;font-weight:600;color:#0F172A;margin-bottom:8px;line-height:1.5;">
       ${q.en}
     </div>
+    ${q.multi && q.maxSelect ? `<div style="font-size:12px;color:#64748B;margin-bottom:16px;">Choose up to ${q.maxSelect}</div>` : '<div style="margin-bottom:20px;"></div>'}
     <div style="display:flex;flex-direction:column;gap:10px;">
       ${q.options.map(opt => `
         <button class="quiz-option" data-value="${opt.value}"
@@ -326,7 +612,9 @@ function renderQuizStep() {
         const val = btn.dataset.value;
         const arr = quizAnswers[q.key];
         const idx = arr.indexOf(val);
+        const limit = q.maxSelect || Infinity;
         if (idx === -1) {
+          if (arr.length >= limit) return;
           arr.push(val);
           btn.style.borderColor = '#2563EB';
           btn.style.background = 'rgba(37,99,235,0.06)';
@@ -355,6 +643,11 @@ function renderQuizStep() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  try {
+    initIntroLanding();
+  } catch (e) {
+    console.error('Intro landing failed to init:', e);
+  }
   const nextBtn = document.getElementById('quizNextBtn');
   if (nextBtn) {
     nextBtn.addEventListener('click', async () => {
@@ -381,11 +674,12 @@ document.addEventListener('DOMContentLoaded', () => {
           } catch (_) {}
         }
         if (userMemory && userMemory.quiz && !userMemory.quiz.timeline) {
-          userMemory.quiz.timeline = 'few_weeks';
+          userMemory.quiz.timeline = 'two_weeks';
         }
         if (userMemory && userMemory.quiz && !userMemory.quiz.goal && userMemory.quiz.track) {
           userMemory.quiz.goal = userMemory.quiz.track;
         }
+        updateLearnModeBadge(userMemory && userMemory.quiz ? userMemory.quiz.track : null);
         renderUserBadge();
       }
     });
@@ -416,12 +710,16 @@ function fallbackLocalUid() {
         localStorage.setItem('tutorQuiz', JSON.stringify(userMemory.quiz));
       }
       if (userMemory && userMemory.quiz && !userMemory.quiz.timeline) {
-        userMemory.quiz.timeline = 'few_weeks';
+        userMemory.quiz.timeline = 'two_weeks';
       }
       if (userMemory && userMemory.quiz && !userMemory.quiz.goal && userMemory.quiz.track) {
         userMemory.quiz.goal = userMemory.quiz.track;
       }
-      const quizDone = userMemory.quiz && ['track', 'math'].every(k => !!userMemory.quiz[k]);
+      updateLearnModeBadge(userMemory && userMemory.quiz ? userMemory.quiz.track : null);
+      const quizDone = userMemory.quiz && ['track', 'math', 'timeline', 'preference', 'priority'].every(k => {
+        const v = userMemory.quiz[k];
+        return Array.isArray(v) ? v.length > 0 : !!v;
+      });
       if (!quizDone) showQuiz(); else renderUserBadge();
     })
     .catch(() => showQuiz());
@@ -2379,7 +2677,11 @@ function renderSyllabus() {
         subs = JSON.parse(rawSubs.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&'));
       } catch(_) {}
 
-      openLearnMode(section, title, subs);
+      if (subs.length > 0) {
+        openChapterOverviewMode(section, title, subs);
+      } else {
+        openLearnMode(section, title, subs);
+      }
     });
   });
 }
@@ -2389,6 +2691,7 @@ function renderSyllabus() {
 // ============================================================
 const learnOverlay    = null; // replaced by learnView inline mode
 const learnTitle      = document.getElementById('learnTitle');
+const learnModeBadge  = document.getElementById('learnModeBadge');
 const learnClose      = document.getElementById('learnClose');
 const learnIntroCard  = document.getElementById('learnIntroCard');
 const learnIntroMeta  = document.getElementById('learnIntroMeta');
@@ -2413,9 +2716,20 @@ const learnExplainScroll  = document.getElementById('learnExplainScroll');
 const learnFollowupInput  = document.getElementById('learnFollowupInput');
 const learnFollowupBtn    = document.getElementById('learnFollowupBtn');
 const learnExplainColEl   = document.getElementById('learnExplainCol');
+const learnExplainToolbarEl = document.getElementById('learnExplainToolbar');
+const learnBookColEl = document.getElementById('learnBookCol');
+const learnChatColPanel = document.getElementById('learnChatCol');
+const learnResizerPanel = document.getElementById('learnResizer');
+const learnExplainOverlayRail = document.getElementById('learnExplainOverlayRail');
+const learnExplainBottomRail = document.getElementById('learnExplainBottomRail');
 const learnKpPrevBtn      = document.getElementById('learnKpPrevBtn');
 const learnKpNextBtn      = document.getElementById('learnKpNextBtn');
 const learnKpTitle        = document.getElementById('learnKpTitle');
+const learnLecturePageIndicator = document.getElementById('learnLecturePageIndicator');
+const learnFocusPageIndicator = document.getElementById('learnFocusPageIndicator');
+const lecturePrevOverlayBtn = document.getElementById('lecturePrevOverlayBtn');
+const lectureNextOverlayBtn = document.getElementById('lectureNextOverlayBtn');
+const lectureFocusOverlayBtn = document.getElementById('lectureFocusOverlayBtn');
 const learnFocusBtn       = document.getElementById('learnFocusBtn');
 const learnFocusModal     = document.getElementById('learnFocusModal');
 const learnFocusBackdrop  = document.getElementById('learnFocusBackdrop');
@@ -2424,6 +2738,23 @@ const learnFocusPrevBtn   = document.getElementById('learnFocusPrevBtn');
 const learnFocusNextBtn   = document.getElementById('learnFocusNextBtn');
 const learnFocusTitle     = document.getElementById('learnFocusTitle');
 const learnFocusContent   = document.getElementById('learnFocusContent');
+const textbookFocusModal    = document.getElementById('textbookFocusModal');
+const textbookFocusBackdrop = document.getElementById('textbookFocusBackdrop');
+const textbookFocusClose    = document.getElementById('textbookFocusClose');
+const textbookFocusZoomOutBtn = document.getElementById('textbookFocusZoomOutBtn');
+const textbookFocusZoomResetBtn = document.getElementById('textbookFocusZoomResetBtn');
+const textbookFocusZoomInBtn = document.getElementById('textbookFocusZoomInBtn');
+const textbookFocusTitle    = document.getElementById('textbookFocusTitle');
+const textbookFocusContent  = document.getElementById('textbookFocusContent');
+const textbookFocusPageIndicator = document.getElementById('textbookFocusPageIndicator');
+let textbookFocusPages = [];
+let textbookFocusScale = 1.5;
+let textbookFocusPanX = 0;
+let textbookFocusPanY = 0;
+let textbookFocusDragging = false;
+let textbookFocusDragStartX = 0;
+let textbookFocusDragStartY = 0;
+let textbookFocusPinchDistance = 0;
 const learnWebToggle  = document.getElementById('learnWebToggle') || { classList: { add() {}, remove() {}, toggle() {} } };
 const learnWebBtn     = document.getElementById('learnWebBtn') || { classList: { add() {}, remove() {}, toggle() {} }, addEventListener() {} };
 const learnWebCount   = document.getElementById('learnWebCount') || { textContent: '' };
@@ -2477,6 +2808,285 @@ function bindExpandableLessonImages(root) {
     img.dataset.zoomBound = '1';
     img.addEventListener('click', () => openLightbox(img.src, img.alt || ''));
   });
+}
+
+function decodeBase64Utf8(raw) {
+  if (!raw) return '';
+  try {
+    const binary = atob(raw);
+    const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+    return new TextDecoder('utf-8').decode(bytes);
+  } catch (_) {
+    try {
+      return atob(raw);
+    } catch (err) {
+      console.warn('[visual-meta] failed to decode b64 text:', err);
+      return '';
+    }
+  }
+}
+
+function parseBase64JsonAttr(raw) {
+  if (!raw) return null;
+  try {
+    return JSON.parse(decodeBase64Utf8(raw));
+  } catch (err) {
+    console.warn('[visual-meta] failed to parse b64 json:', err);
+    return null;
+  }
+}
+
+function getActiveLearnTrack() {
+  return (userMemory && userMemory.quiz && userMemory.quiz.track) || 'standard';
+}
+
+function getPrimaryAnchorLabel(anchor) {
+  switch (anchor) {
+    case 'book_figure': return 'Textbook anchor';
+    case 'matplotlib': return 'Matplotlib visual';
+    case 'both': return 'Textbook + visual';
+    default: return 'Visual plan';
+  }
+}
+
+function getTeachingRoleLabel(role) {
+  switch (role) {
+    case 'concept_anchor': return 'Concept anchor';
+    case 'example_support': return 'Worked example';
+    case 'trap_exposure': return 'Common trap';
+    case 'comparison_anchor': return 'Comparison';
+    case 'exam_pattern_anchor': return 'Exam pattern';
+    default: return compactWhitespace(String(role || '').replace(/_/g, ' '));
+  }
+}
+
+function getVisualKindPriority(kind, plan) {
+  const anchor = plan && plan.primary_anchor;
+  if (anchor === 'book_figure') return kind === 'book_image' ? 2 : 1;
+  if (anchor === 'matplotlib') return kind === 'generate_image' ? 2 : 1;
+  if (anchor === 'both') return kind === 'book_image' ? 2 : (kind === 'generate_image' ? 2 : 1);
+  return 1;
+}
+
+function findNextLessonImage(metaNode) {
+  let el = metaNode ? metaNode.nextElementSibling : null;
+  while (el) {
+    const img = (el.matches && el.matches('img.lesson-img')) ? el : (el.querySelector ? el.querySelector('img.lesson-img') : null);
+    if (img) {
+      // Skip placeholder/unavailable images (src starts with # or contains 'figure-unavailable')
+      const src = img.getAttribute('src') || '';
+      if (src.startsWith('#') || src.includes('figure-unavailable')) {
+        el = el.nextElementSibling;
+        continue;
+      }
+      return img;
+    }
+    if (el.classList && el.classList.contains('kc-visual-meta')) return null;
+    el = el.nextElementSibling;
+  }
+  return null;
+}
+
+function isStandaloneVisualCaption(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return false;
+  if (node.classList.contains('learn-visual-chip-row') || node.classList.contains('kc-visual-meta')) return false;
+  if (node.querySelector && node.querySelector('img.lesson-img, .kc-visual-meta, .lesson-test-banner, .kc-quiz-plan')) return false;
+  const text = compactWhitespace(node.textContent || '');
+  if (!text || text.length > 220) return false;
+  if (node.tagName === 'P') {
+    return !!node.querySelector('em') || /^\*.*\*$/.test(text);
+  }
+  if (node.tagName === 'DIV') {
+    return !!node.querySelector('em');
+  }
+  return false;
+}
+
+function getVisualBlockNodes(entry) {
+  const host = entry.img.closest('p, div, figure') || entry.img;
+  const nodes = [];
+  const chipRow = entry.chipRow || (host.previousElementSibling && host.previousElementSibling.classList && host.previousElementSibling.classList.contains('learn-visual-chip-row')
+    ? host.previousElementSibling
+    : null);
+  if (chipRow) nodes.push(chipRow);
+  nodes.push(host);
+  const captionNode = host.nextElementSibling;
+  if (isStandaloneVisualCaption(captionNode)) nodes.push(captionNode);
+  return nodes;
+}
+
+function createVisualChip(text, tone = 'default') {
+  const chip = document.createElement('span');
+  chip.className = `learn-visual-chip learn-visual-chip-${tone}`;
+  chip.textContent = text;
+  return chip;
+}
+
+function getPairedVisualSubtitle(track, bookEntry, genEntry) {
+  const bookRole = getTeachingRoleLabel(bookEntry?.role || '').toLowerCase();
+  const genRole = getTeachingRoleLabel(genEntry?.role || '').toLowerCase();
+
+  switch (track) {
+    case 'cram':
+      return `Start with the textbook figure, then use the generated visual to recognize the exam pattern fast${genRole ? ` through a clearer ${genRole}` : ''}.`;
+    case 'top_score':
+      return `Compare the canonical textbook figure with the generated interpretation to spot subtle distinctions, traps, and higher-precision reasoning${bookRole ? ` around the ${bookRole}` : ''}.`;
+    case 'standard':
+    default:
+      return `Read the textbook figure first, then use the generated visual to make the core idea intuitive${genRole ? ` through a clearer ${genRole}` : ''}.`;
+  }
+}
+
+function getPairedVisualPanelTitle(track, side) {
+  if (side === 'book') {
+    switch (track) {
+      case 'cram': return 'Textbook pattern';
+      case 'top_score': return 'Canonical figure';
+      case 'standard':
+      default: return 'From the textbook';
+    }
+  }
+
+  switch (track) {
+    case 'cram': return 'Fast recognition view';
+    case 'top_score': return 'High-precision interpretation';
+    case 'standard':
+    default: return 'Clarified visual';
+  }
+}
+
+function enhanceVisualMetadataUI(root) {
+  if (!root) return;
+  const track = getActiveLearnTrack();
+  const planNode = root.querySelector('.kc-visual-plan');
+  const plan = planNode
+    ? (parseBase64JsonAttr(planNode.dataset.visualPlanB64 || planNode.getAttribute('data-visual-plan-b64')) || {})
+    : null;
+
+  if (planNode) {
+    // Keep blueprint metadata available for parsing, but do not surface planner-facing
+    // strategy copy to the student UI.
+    planNode.remove();
+  }
+
+  root.querySelectorAll('.learn-visual-chip-row').forEach((node) => node.remove());
+
+  const visualEntries = [];
+  root.querySelectorAll('.kc-visual-meta').forEach((metaNode) => {
+    const img = findNextLessonImage(metaNode);
+    const role = metaNode.dataset.teachingRole || metaNode.getAttribute('data-teaching-role') || '';
+    const kind = metaNode.dataset.visualKind || metaNode.getAttribute('data-visual-kind') || '';
+    if (!img) return;
+    visualEntries.push({ metaNode, img, role, kind });
+  });
+
+  if (plan && plan.primary_anchor && plan.primary_anchor !== 'both' && visualEntries.length >= 2) {
+    const groups = new Map();
+    visualEntries.forEach((entry) => {
+      const key = entry.img.parentNode;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(entry);
+    });
+
+    groups.forEach((entries, parent) => {
+      const ordered = entries.slice().sort((a, b) => getVisualKindPriority(b.kind, plan) - getVisualKindPriority(a.kind, plan));
+      const current = entries.map(e => e.img);
+      const desired = ordered.map(e => e.img);
+      const changed = current.length === desired.length && current.some((img, idx) => img !== desired[idx]);
+      if (!changed) return;
+      const anchorNode = current[0];
+      desired.forEach((img) => {
+        if (img !== anchorNode) parent.insertBefore(img, anchorNode);
+      });
+    });
+  }
+
+  visualEntries.forEach((entry) => {
+    const { metaNode } = entry;
+    if (metaNode.dataset.uiBound === '1') return;
+    metaNode.dataset.uiBound = '1';
+  });
+
+  if (plan && plan.primary_anchor === 'both' && visualEntries.length >= 2 && !root.querySelector('.learn-visual-pair-shell')) {
+    const orderedEntries = visualEntries.slice().sort((a, b) => {
+      if (a.metaNode === b.metaNode) return 0;
+      const pos = a.metaNode.compareDocumentPosition(b.metaNode);
+      return (pos & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
+    });
+    const used = new Set();
+
+    for (let i = 0; i < orderedEntries.length; i += 1) {
+      if (used.has(i)) continue;
+      const leftEntry = orderedEntries[i];
+      let matchIndex = -1;
+      for (let j = i + 1; j < orderedEntries.length; j += 1) {
+        if (used.has(j)) continue;
+        const rightEntry = orderedEntries[j];
+        const sameParent = (leftEntry.img.parentNode === rightEntry.img.parentNode)
+          || ((leftEntry.img.closest('p, div, figure') || leftEntry.img).parentNode === (rightEntry.img.closest('p, div, figure') || rightEntry.img).parentNode);
+        if (sameParent && leftEntry.kind !== rightEntry.kind) {
+          matchIndex = j;
+          break;
+        }
+      }
+      if (matchIndex === -1) continue;
+
+      const rightEntry = orderedEntries[matchIndex];
+      const bookEntry = leftEntry.kind === 'book_image' ? leftEntry : rightEntry;
+      const genEntry = leftEntry.kind === 'generate_image' ? leftEntry : rightEntry;
+      const bookNodes = getVisualBlockNodes(bookEntry);
+      const genNodes = getVisualBlockNodes(genEntry);
+      if (!bookNodes.length || !genNodes.length) continue;
+
+      const shell = document.createElement('section');
+      shell.className = 'learn-visual-pair-shell';
+      const head = document.createElement('div');
+      head.className = 'learn-visual-pair-head';
+      head.textContent = 'Textbook figure + generated visual';
+
+      const subtitle = document.createElement('div');
+      subtitle.className = 'learn-visual-pair-subtitle';
+      subtitle.textContent = getPairedVisualSubtitle(track, bookEntry, genEntry);
+
+      const grid = document.createElement('div');
+      grid.className = 'learn-visual-pair-grid';
+
+      const bookCard = document.createElement('div');
+      bookCard.className = 'learn-visual-pair-card learn-visual-pair-card-book';
+      const genCard = document.createElement('div');
+      genCard.className = 'learn-visual-pair-card learn-visual-pair-card-generated';
+
+      const bookTitle = document.createElement('div');
+      bookTitle.className = 'learn-visual-pair-card-title';
+      bookTitle.textContent = getPairedVisualPanelTitle(track, 'book');
+      const genTitle = document.createElement('div');
+      genTitle.className = 'learn-visual-pair-card-title';
+      genTitle.textContent = getPairedVisualPanelTitle(track, 'generated');
+
+      bookCard.appendChild(bookTitle);
+      genCard.appendChild(genTitle);
+      bookNodes.forEach((node) => bookCard.appendChild(node));
+      genNodes.forEach((node) => genCard.appendChild(node));
+
+      grid.appendChild(bookCard);
+      grid.appendChild(genCard);
+      shell.appendChild(head);
+      shell.appendChild(subtitle);
+      shell.appendChild(grid);
+
+      const anchorNode = bookNodes[0];
+      if (anchorNode && anchorNode.parentNode) {
+        const parent = anchorNode.parentNode;
+        // Verify we aren't accidentally putting the parent inside itself (e.g. DOM overlap issues)
+        if (parent !== shell && !shell.contains(parent)) {
+          parent.insertBefore(shell, anchorNode);
+        }
+      }
+
+      used.add(i);
+      used.add(matchIndex);
+    }
+  }
 }
 
 function resetLearnKnowledgePointState() {
@@ -2566,8 +3176,8 @@ function parseLessonKnowledgePoints(html) {
     if (isPrimaryKnowledgeHeading(node)) {
       pushCurrent();
       current = {
-        type: points.length === 0 ? 'overview' : 'knowledge',
-        label: points.length === 0 ? 'Overview' : 'Knowledge Point',
+        type: 'knowledge',
+        label: 'Knowledge Point',
         title: getNodeText(node) || 'Knowledge Point',
         parts: [toHtml(node)]
       };
@@ -2576,9 +3186,9 @@ function parseLessonKnowledgePoints(html) {
 
     if (!current) {
       current = {
-        type: 'overview',
-        label: 'Overview',
-        title: 'Section Overview',
+        type: 'knowledge',
+        label: 'Knowledge Point',
+        title: 'Knowledge Point',
         parts: []
       };
     }
@@ -2586,6 +3196,10 @@ function parseLessonKnowledgePoints(html) {
   });
 
   pushCurrent();
+
+  while (points.length && !String((points[0].html || '')).replace(/<[^>]+>/g, '').trim()) {
+    points.shift();
+  }
 
   // Add the quiz page at the very end
   const quizHtml = quizParts.join('').trim();
@@ -2604,9 +3218,11 @@ function renderCurrentKnowledgePoint() {
   if (!learnKnowledgePoints.length) {
     learnExplainContent.innerHTML = currentFullLessonHtml || '<p class="ghost">No explanation available.</p>';
     bindExpandableLessonImages(learnExplainContent);
+    enhanceVisualMetadataUI(learnExplainContent);
     if (learnKpTitle) learnKpTitle.textContent = 'Full Lesson';
     if (learnKpPrevBtn) learnKpPrevBtn.disabled = true;
     if (learnKpNextBtn) learnKpNextBtn.disabled = true;
+    if (learnLecturePageIndicator) learnLecturePageIndicator.textContent = '1 / 1';
     return;
   }
 
@@ -2614,11 +3230,15 @@ function renderCurrentKnowledgePoint() {
   const block = learnKnowledgePoints[currentKnowledgePointIndex];
   learnExplainContent.innerHTML = block.html || '<p class="ghost">No explanation available.</p>';
   bindExpandableLessonImages(learnExplainContent);
-  if (learnKpTitle) learnKpTitle.textContent = `${currentKnowledgePointIndex + 1}/${learnKnowledgePoints.length} · ${block.title}`;
+  enhanceVisualMetadataUI(learnExplainContent);
+  if (learnKpTitle) learnKpTitle.textContent = block.title || '';
   const labelEl = document.querySelector('.learn-kp-label');
-  if (labelEl) labelEl.textContent = block.label || 'Knowledge Point';
+  if (labelEl) labelEl.textContent = '';
   if (learnKpPrevBtn) learnKpPrevBtn.disabled = currentKnowledgePointIndex === 0;
   if (learnKpNextBtn) learnKpNextBtn.disabled = currentKnowledgePointIndex === learnKnowledgePoints.length - 1;
+  if (lecturePrevOverlayBtn) lecturePrevOverlayBtn.disabled = currentKnowledgePointIndex === 0;
+  if (lectureNextOverlayBtn) lectureNextOverlayBtn.disabled = currentKnowledgePointIndex === learnKnowledgePoints.length - 1;
+  if (learnLecturePageIndicator) learnLecturePageIndicator.textContent = `${currentKnowledgePointIndex + 1} / ${learnKnowledgePoints.length}`;
   if (learnExplainScroll) learnExplainScroll.scrollTop = 0;
   syncFocusModeContent();
 
@@ -2654,7 +3274,7 @@ function bindStartTestBtnIfPresent() {
           const rawB64 = quizPlanNode.dataset.quizB64 || quizPlanNode.getAttribute('data-quiz-b64');
           let plan = null;
           if (rawB64) {
-            plan = JSON.parse(atob(rawB64));
+            plan = parseBase64JsonAttr(rawB64);
           } else {
             let raw = quizPlanNode.dataset.quiz || quizPlanNode.getAttribute('data-quiz') || '';
             const decode = (s) => { let v=s; for(let i=0;i<4;i++){const p=v;v=v.replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');if(v===p)break;} return v; };
@@ -2706,8 +3326,10 @@ function syncFocusModeContent() {
   learnFocusContent.innerHTML = activeBlock?.html || learnExplainContent?.innerHTML || '';
   if (learnFocusTitle) learnFocusTitle.textContent = activeBlock?.title || learnKpTitle?.textContent || 'Knowledge Point';
   bindExpandableLessonImages(learnFocusContent);
+  enhanceVisualMetadataUI(learnFocusContent);
   if (learnFocusPrevBtn) learnFocusPrevBtn.disabled = currentKnowledgePointIndex === 0;
   if (learnFocusNextBtn) learnFocusNextBtn.disabled = currentKnowledgePointIndex >= learnKnowledgePoints.length - 1;
+  if (learnFocusPageIndicator) learnFocusPageIndicator.textContent = `${currentKnowledgePointIndex + 1} / ${learnKnowledgePoints.length || 1}`;
   setTimeout(() => {
     if (window.MathJax && window.MathJax.typesetPromise) {
       window.MathJax.typesetPromise([learnFocusContent]).catch(() => {});
@@ -2730,6 +3352,246 @@ function closeLearnFocusMode() {
   if (!learnFocusModal) return;
   learnFocusModal.classList.add('hidden');
   document.body.style.overflow = '';
+}
+
+function clampTextbookFocusScale(v) {
+  return Math.max(0.75, Math.min(3, Number(v) || 1.5));
+}
+
+function updateTextbookFocusZoomHud() {
+  if (textbookFocusZoomResetBtn) textbookFocusZoomResetBtn.textContent = `${textbookFocusScale.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1')}×`;
+  if (textbookFocusZoomOutBtn) textbookFocusZoomOutBtn.disabled = textbookFocusScale <= 0.76;
+  if (textbookFocusZoomInBtn) textbookFocusZoomInBtn.disabled = textbookFocusScale >= 2.99;
+}
+
+function getTextbookFocusBasePageHeight(img) {
+  const viewportHeight = Math.max(0, (window.innerHeight || document.documentElement.clientHeight || 0) - 12);
+  const viewportWidth = Math.max(0, (window.innerWidth || document.documentElement.clientWidth || 0) - 24);
+  const naturalWidth = Number(img?.naturalWidth) || viewportWidth || 1;
+  const naturalHeight = Number(img?.naturalHeight) || viewportHeight || 1;
+  if (!viewportHeight || !viewportWidth) return Math.max(img?.offsetHeight || 0, 0);
+  const widthLimitedHeight = viewportWidth * (naturalHeight / naturalWidth);
+  return Math.min(viewportHeight, widthLimitedHeight || viewportHeight);
+}
+
+function syncTextbookFocusPageLayout() {
+  const scrollEl = textbookFocusContent?.querySelector('.textbook-focus-scroll');
+  const pages = scrollEl ? Array.from(scrollEl.querySelectorAll('.textbook-focus-scroll-page')) : [];
+  if (!scrollEl || !pages.length) return;
+  pages.forEach(page => {
+    const img = page.querySelector('.textbook-focus-single-page');
+    if (!img) return;
+    const baseHeight = getTextbookFocusBasePageHeight(img);
+    const scaledHeight = Math.max(
+      Math.ceil(baseHeight * textbookFocusScale) + 28,
+      Math.ceil(baseHeight) + 16,
+      Math.ceil(scrollEl.clientHeight || 0)
+    );
+    page.style.minHeight = `${scaledHeight}px`;
+  });
+}
+
+function applyTextbookFocusTransform() {
+  const scrollEl = textbookFocusContent?.querySelector('.textbook-focus-scroll');
+  const imgs = scrollEl ? Array.from(scrollEl.querySelectorAll('.textbook-focus-single-page')) : [];
+  if (!scrollEl || !imgs.length) return;
+  syncTextbookFocusPageLayout();
+  imgs.forEach(img => {
+    img.style.transform = `translate(${textbookFocusPanX}px, ${textbookFocusPanY}px) scale(${textbookFocusScale})`;
+    img.classList.toggle('is-zoomed', textbookFocusScale > 1.01);
+  });
+  updateTextbookFocusZoomHud();
+}
+
+function resetTextbookFocusTransform(scale = 1.5) {
+  textbookFocusScale = clampTextbookFocusScale(scale);
+  textbookFocusPanX = 0;
+  textbookFocusPanY = 0;
+  textbookFocusDragging = false;
+  textbookFocusPinchDistance = 0;
+  applyTextbookFocusTransform();
+}
+
+function stepTextbookFocusZoom(delta) {
+  textbookFocusScale = clampTextbookFocusScale(textbookFocusScale + delta);
+  if (textbookFocusScale <= 1.01) {
+    textbookFocusPanX = 0;
+    textbookFocusPanY = 0;
+  }
+  applyTextbookFocusTransform();
+}
+
+function bindTextbookFocusInteractions() {
+  const scrollEl = textbookFocusContent?.querySelector('.textbook-focus-scroll');
+  if (!scrollEl) return;
+  const imgs = Array.from(scrollEl.querySelectorAll('.textbook-focus-single-page'));
+  if (!imgs.length) return;
+
+  const applyToAll = () => {
+    syncTextbookFocusPageLayout();
+    imgs.forEach(img => {
+      img.style.transform = `translate(${textbookFocusPanX}px, ${textbookFocusPanY}px) scale(${textbookFocusScale})`;
+      img.classList.toggle('is-zoomed', textbookFocusScale > 1.01);
+    });
+    updateTextbookFocusZoomHud();
+  };
+
+  imgs.forEach(img => {
+    img.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      if (textbookFocusScale < 1.95) resetTextbookFocusTransform(2.2);
+      else resetTextbookFocusTransform(1.5);
+    });
+
+    img.addEventListener('mousedown', (e) => {
+      if (textbookFocusScale <= 1.01) return;
+      e.preventDefault();
+      textbookFocusDragging = true;
+      textbookFocusDragStartX = e.clientX - textbookFocusPanX;
+      textbookFocusDragStartY = e.clientY - textbookFocusPanY;
+      img.classList.add('is-dragging');
+    });
+  });
+
+  scrollEl.addEventListener('wheel', (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.12 : -0.12;
+      stepTextbookFocusZoom(delta);
+      return;
+    }
+  }, { passive: false });
+
+  scrollEl.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const [a, b] = e.touches;
+      textbookFocusPinchDistance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+      return;
+    }
+    if (e.touches.length === 1 && textbookFocusScale > 1.01) {
+      const t = e.touches[0];
+      textbookFocusDragging = true;
+      textbookFocusDragStartX = t.clientX - textbookFocusPanX;
+      textbookFocusDragStartY = t.clientY - textbookFocusPanY;
+    }
+  }, { passive: false });
+
+  scrollEl.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const [a, b] = e.touches;
+      const dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+      if (textbookFocusPinchDistance) {
+        const delta = (dist - textbookFocusPinchDistance) / 220;
+        textbookFocusScale = clampTextbookFocusScale(textbookFocusScale + delta);
+        applyToAll();
+      }
+      textbookFocusPinchDistance = dist;
+      return;
+    }
+    if (e.touches.length === 1 && textbookFocusDragging && textbookFocusScale > 1.01) {
+      e.preventDefault();
+      const t = e.touches[0];
+      textbookFocusPanX = t.clientX - textbookFocusDragStartX;
+      textbookFocusPanY = t.clientY - textbookFocusDragStartY;
+      applyToAll();
+    }
+  }, { passive: false });
+
+  scrollEl.addEventListener('touchend', () => {
+    textbookFocusDragging = false;
+    textbookFocusPinchDistance = 0;
+    imgs.forEach(img => img.classList.remove('is-dragging'));
+  });
+
+  applyToAll();
+}
+
+function renderTextbookFocusPages(clickedIndex = 0) {
+  if (!textbookFocusContent) return;
+  const total = textbookFocusPages.length || 1;
+  if (!textbookFocusPages.length) {
+    textbookFocusContent.innerHTML = '<div class="textbook-focus-stage"><div class="textbook-focus-empty">No page available.</div></div>';
+    if (textbookFocusPageIndicator) textbookFocusPageIndicator.textContent = '1 / 1';
+    return;
+  }
+  textbookFocusContent.innerHTML = `
+    <div class="textbook-focus-scroll" id="textbookFocusScroll">
+      ${textbookFocusPages.map((page, idx) => `
+        <div class="textbook-focus-scroll-page" data-page-index="${idx}">
+          <img class="textbook-focus-single-page" src="${page.src}" alt="${page.alt || `Textbook page ${idx + 1}`}" draggable="false">
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  const scrollEl = document.getElementById('textbookFocusScroll');
+  const updateIndicator = () => {
+    if (!scrollEl || !textbookFocusPageIndicator) return;
+    const cards = Array.from(scrollEl.querySelectorAll('.textbook-focus-scroll-page'));
+    const mid = scrollEl.scrollTop + scrollEl.clientHeight * 0.45;
+    let bestIndex = 0;
+    let bestDist = Infinity;
+    cards.forEach((card, idx) => {
+      const cardMid = card.offsetTop + card.offsetHeight / 2;
+      const dist = Math.abs(cardMid - mid);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIndex = idx;
+      }
+    });
+    textbookFocusPageIndicator.textContent = `${bestIndex + 1} / ${total}`;
+  };
+
+  if (scrollEl) {
+    scrollEl.addEventListener('scroll', updateIndicator, { passive: true });
+    requestAnimationFrame(() => {
+      const safeIndex = Math.max(0, Math.min(clickedIndex, total - 1));
+      const target = scrollEl.querySelector(`[data-page-index="${safeIndex}"]`);
+      if (target) {
+        scrollEl.scrollTop = Math.max(0, target.offsetTop);
+      } else {
+        scrollEl.scrollTop = 0;
+      }
+      updateIndicator();
+    });
+  }
+
+  bindTextbookFocusInteractions();
+  scrollEl?.querySelectorAll('.textbook-focus-single-page').forEach(img => {
+    if (!img.complete) img.addEventListener('load', () => applyTextbookFocusTransform(), { once: true });
+  });
+  resetTextbookFocusTransform(1.5);
+}
+
+function openTextbookFocusMode(clickedIndex = 0) {
+  if (!textbookFocusModal || !textbookFocusContent || !_bookOverlay) return;
+  const imgs = Array.from(_bookOverlay.querySelectorAll('.textbook-page-card img'));
+  if (!imgs.length) return;
+  textbookFocusPages = imgs.map((img, idx) => ({
+    src: img.getAttribute('src') || '',
+    alt: img.getAttribute('alt') || `Textbook page ${idx + 1}`
+  })).filter(p => p.src);
+  if (textbookFocusTitle) {
+    textbookFocusTitle.textContent = learnSectionTitle || tutorState.learnSectionTitle || 'Original Pages';
+  }
+  textbookFocusModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  renderTextbookFocusPages(clickedIndex);
+}
+
+function closeTextbookFocusMode() {
+  if (!textbookFocusModal) return;
+  textbookFocusModal.classList.add('hidden');
+  document.body.style.overflow = '';
+  textbookFocusContent.innerHTML = '';
+  textbookFocusPages = [];
+  textbookFocusScale = 1.5;
+  textbookFocusPanX = 0;
+  textbookFocusPanY = 0;
+  textbookFocusDragging = false;
+  textbookFocusPinchDistance = 0;
 }
 
 let learnPages = [];
@@ -2956,6 +3818,111 @@ async function openLearnModeKeepToc(sectionId, sectionTitle) {
   return openLearnMode(sectionId, sectionTitle, null /* null = keep existing TOC */);
 }
 
+function getSectionPreview(sectionId, sectionTitle) {
+  const previewsSource = currentBook === 'new'
+    ? (typeof SECTION_PREVIEWS_NEW !== 'undefined' ? SECTION_PREVIEWS_NEW : SECTION_PREVIEWS)
+    : SECTION_PREVIEWS;
+  const codeMatch = (sectionId || sectionTitle || '').match(/^([A-Za-z]?\.?\d+(?:[.\-]\d+)*)/);
+  const sectionCode = codeMatch ? codeMatch[1] : null;
+  return previewsSource[sectionTitle] || previewsSource[sectionId]
+    || (sectionCode ? previewsSource[sectionCode] : null)
+    || SECTION_PREVIEWS[sectionTitle] || SECTION_PREVIEWS[sectionId]
+    || (sectionCode ? SECTION_PREVIEWS[sectionCode] : null)
+    || null;
+}
+
+function getOverviewSummaryHtml(sectionId, sectionTitle, subsections = []) {
+  const preview = getSectionPreview(sectionId, sectionTitle) || {};
+  const summary = preview.en || preview.zh || 'This chapter gives you the key ideas first, then breaks them into smaller pieces below.';
+  const emoji = preview.emoji || '📘';
+  const refs = Number.isFinite(preview.refs) ? preview.refs : null;
+  const cardsHtml = subsections.map((subTitle, idx) => {
+    const subPreview = getSectionPreview(subTitle, subTitle) || {};
+    const subSummary = subPreview.en || subPreview.zh || 'Open this subsection to view the full explanation and textbook pages.';
+    const subEmoji = subPreview.emoji || '•';
+    return `
+      <button class="chapter-overview-subcard" data-sublesson-title="${escapeHtml(subTitle)}">
+        <div class="chapter-overview-subcard-top">
+          <div class="chapter-overview-subcard-title-wrap">
+            <span class="chapter-overview-subcard-emoji">${escapeHtml(subEmoji)}</span>
+            <div class="chapter-overview-subcard-title">${escapeHtml(subTitle)}</div>
+          </div>
+          <div class="chapter-overview-subcard-index">${idx + 1}</div>
+        </div>
+        <div class="chapter-overview-subcard-summary">${escapeHtml(subSummary)}</div>
+      </button>
+    `;
+  }).join('');
+
+  return `
+    <section class="chapter-overview-shell">
+      <div class="chapter-overview-hero">
+        <div class="chapter-overview-eyebrow">Chapter Overview</div>
+        <div class="chapter-overview-title-row">
+          <div class="chapter-overview-emoji">${escapeHtml(emoji)}</div>
+          <h1 class="chapter-overview-title">${escapeHtml(sectionTitle)}</h1>
+        </div>
+        <div class="chapter-overview-badges">
+          ${refs ? `<span class="chapter-overview-badge">${refs} references</span>` : ''}
+          <span class="chapter-overview-badge">${subsections.length} subsections</span>
+        </div>
+        <p class="chapter-overview-summary">${escapeHtml(summary)}</p>
+      </div>
+
+      <section class="chapter-overview-list-block">
+        <div class="chapter-overview-list-head">
+          <div class="chapter-overview-list-eyebrow">Subsections</div>
+          <h2 class="chapter-overview-list-title">Start from the piece you need</h2>
+        </div>
+        <div class="chapter-overview-grid">
+          ${cardsHtml}
+        </div>
+      </section>
+    </section>
+  `;
+}
+
+function bindOverviewSubsectionCards() {
+  if (!learnExplainContent) return;
+  learnExplainContent.querySelectorAll('.chapter-overview-subcard').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const subTitle = btn.getAttribute('data-sublesson-title');
+      if (!subTitle) return;
+      openLearnModeKeepToc(subTitle, subTitle);
+    });
+  });
+}
+
+function openChapterOverviewMode(sectionId, sectionTitle, subsections = []) {
+  console.log('[openChapterOverviewMode]', { sectionId, sectionTitle, subsectionCount: subsections.length, currentBook });
+  learnSectionId = sectionId;
+  learnSectionTitle = sectionTitle;
+  learnPages = [];
+  learnPageIndex = 0;
+  learnWebData = [];
+  currentBookPageIndex = 0;
+  _learnLayoutMode = 'overview';
+
+  learnTitle.textContent = sectionTitle;
+  updateLearnModeBadge(userMemory && userMemory.quiz ? userMemory.quiz.track : null);
+  resetLearnKnowledgePointState();
+  showLearnView();
+  if (learnIntroCard) learnIntroCard.classList.add('hidden');
+  if (learnBody) learnBody.classList.remove('hidden');
+  hideSplash();
+  setLearnLoading(false);
+  if (learnChatContent) learnChatContent.innerHTML = '';
+  if (learnWebSection) learnWebSection.classList.add('hidden');
+
+  const tocItems = [{ title: sectionTitle, depth: 1, anchor: '' }];
+  subsections.forEach(sub => tocItems.push({ title: sub, depth: 2, anchor: '' }));
+  buildToc(tocItems);
+
+  setLearnLessonContent(getOverviewSummaryHtml(sectionId, sectionTitle, subsections));
+  bindOverviewSubsectionCards();
+  if (learnExplainScroll) learnExplainScroll.scrollTop = 0;
+}
+
 async function openLearnMode(sectionId, sectionTitle, subsections = []) {
   console.log('[openLearnMode]', { sectionId, sectionTitle, currentBook });
   learnSectionId = sectionId;
@@ -2964,25 +3931,18 @@ async function openLearnMode(sectionId, sectionTitle, subsections = []) {
   learnPageIndex = 0;
   learnWebData = [];
   currentBookPageIndex = 0; // Fixed pagination resets to 0
+  _learnLayoutMode = 'lesson';
 
   learnTitle.textContent = sectionTitle;
-  learnIntroCard.classList.remove('hidden');
-  learnBody.classList.add('hidden');
+  updateLearnModeBadge(userMemory && userMemory.quiz ? userMemory.quiz.track : null);
+  if(learnIntroCard) learnIntroCard.classList.add('hidden');
   resetLearnKnowledgePointState();
   showLearnView();
+  // Bypass intro card: auto-start lesson immediately
+  setTimeout(() => { if (typeof startLesson === 'function') startLesson(); }, 80);
 
   // ── Use pre-generated preview if available (instant, no API call) ──
-  const previewsSource = currentBook === 'new'
-    ? (typeof SECTION_PREVIEWS_NEW !== 'undefined' ? SECTION_PREVIEWS_NEW : SECTION_PREVIEWS)
-    : SECTION_PREVIEWS;
-  // Extract section code (e.g. "B.5-4" from "B.5-4 A Combination of...") for fallback lookup
-  const _codeMatch = (sectionId || sectionTitle || '').match(/^([A-Za-z]?\.?\d+(?:[.\-]\d+)*)/);
-  const _sectionCode = _codeMatch ? _codeMatch[1] : null;
-  console.log('[preview lookup]', { sectionTitle, sectionId, _sectionCode, hasNew: typeof SECTION_PREVIEWS_NEW !== 'undefined', keys: typeof SECTION_PREVIEWS_NEW !== 'undefined' ? Object.keys(SECTION_PREVIEWS_NEW).filter(k => k.startsWith('B.5-4')) : [] });
-  const preview = previewsSource[sectionTitle] || previewsSource[sectionId]
-    || (_sectionCode ? previewsSource[_sectionCode] : null)
-    || SECTION_PREVIEWS[sectionTitle] || SECTION_PREVIEWS[sectionId]
-    || (_sectionCode ? SECTION_PREVIEWS[_sectionCode] : null);
+  const preview = getSectionPreview(sectionId, sectionTitle);
   console.log('[preview result]', preview ? 'FOUND' : 'NOT FOUND');
   const imgWrap = document.getElementById('learnIntroImgWrap');
   if (preview) {
@@ -3132,7 +4092,11 @@ function closeLearnMode() {
   if (learnAbort) learnAbort.abort();
   hideSplash();
   closeLearnFocusMode();
+  closeTextbookFocusMode();
   resetLearnKnowledgePointState();
+  _learnLayoutMode = 'lesson';
+  _setLearnMode('lecture');
+  _textbookZoomed = false;
   showWelcome();
   clearToc();
 }
@@ -3140,6 +4104,166 @@ function closeLearnMode() {
 // Learn mode events
 learnClose.addEventListener('click', closeLearnMode);
 learnStartBtn.addEventListener('click', startLesson);
+
+// ── LECTURE vs TEXTBOOK SWITCH ──
+const _btnLecture = document.getElementById('btnLectureView');
+const _btnTextbook = document.getElementById('btnTextbookView');
+const _bookOverlay = document.getElementById('learnBookOverlay');
+const _explainContent = document.getElementById('learnExplainContent');
+const _tocSidebar = document.getElementById('tocSidebar');
+let _learnViewMode = 'lecture';
+let _learnLayoutMode = 'lesson';
+let _textbookZoomed = false;
+
+// Pre-load section page map for instant textbook lookup (no waiting for API)
+let _sectionPageMap = {};
+fetch(API_BASE + '/section-page-map-new.json').then(r => r.json()).then(d => { _sectionPageMap = d; }).catch(() => {});
+
+function _setTabActive(activeBtn, inactiveBtn) {
+  activeBtn.style.cssText = 'padding:4px 10px;border:none;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:#111;box-shadow:0 1px 2px rgba(0,0,0,0.05);';
+  inactiveBtn.style.cssText = 'padding:4px 10px;border:none;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:#64748B;';
+}
+
+function syncInlineTextbookViewportToStart(options = {}) {
+  if (!_bookOverlay) return;
+  const alignFirstPage = options.alignFirstPage !== false;
+  const reset = () => {
+    if (learnExplainScroll) {
+      learnExplainScroll.scrollTop = 0;
+      learnExplainScroll.scrollLeft = 0;
+    }
+    _bookOverlay.scrollTop = 0;
+    _bookOverlay.scrollLeft = 0;
+    if (!alignFirstPage || !learnExplainScroll) return;
+    const firstCard = _bookOverlay.querySelector('.textbook-page-card');
+    if (firstCard && typeof firstCard.offsetTop === 'number') {
+      learnExplainScroll.scrollTop = Math.max(0, firstCard.offsetTop);
+    }
+  };
+  reset();
+  requestAnimationFrame(reset);
+  setTimeout(reset, 80);
+}
+
+function _setLearnMode(mode) {
+  _learnViewMode = mode;
+  if (learnExplainScroll) learnExplainScroll.classList.toggle('textbook-mode', mode === 'textbook');
+  if (_bookOverlay) {
+    _bookOverlay.classList.toggle('hidden', mode !== 'textbook' || _learnLayoutMode !== 'lesson');
+    _bookOverlay.style.display = mode === 'textbook' && _learnLayoutMode === 'lesson' ? 'block' : 'none';
+  }
+  if (mode === 'textbook' && _learnLayoutMode === 'lesson') {
+    syncInlineTextbookViewportToStart();
+  }
+  if (_explainContent) {
+    const hideExplainForTextbook = mode === 'textbook' && _learnLayoutMode === 'lesson';
+    _explainContent.style.opacity = hideExplainForTextbook ? '0' : '1';
+    _explainContent.style.pointerEvents = hideExplainForTextbook ? 'none' : 'auto';
+    _explainContent.style.display = hideExplainForTextbook ? 'none' : '';
+  }
+  if (_tocSidebar) {
+    _tocSidebar.style.display = _learnLayoutMode === 'overview' ? 'none' : 'flex';
+    _tocSidebar.classList.toggle('textbook-mode', mode === 'textbook');
+  }
+  if (learnExplainToolbarEl) learnExplainToolbarEl.style.display = _learnLayoutMode === 'overview' ? 'none' : 'flex';
+  if (learnBookColEl) learnBookColEl.style.display = _learnLayoutMode === 'overview' ? 'none' : '';
+  if (learnChatColPanel) learnChatColPanel.style.display = _learnLayoutMode === 'overview' ? 'none' : '';
+  if (learnResizerPanel) learnResizerPanel.style.display = _learnLayoutMode === 'overview' ? 'none' : '';
+  if (learnExplainColEl) {
+    learnExplainColEl.style.flex = _learnLayoutMode === 'overview' ? '1' : '1.5';
+    if (_learnLayoutMode === 'overview') {
+      learnExplainColEl.style.width = '100%';
+      learnExplainColEl.style.borderRight = 'none';
+    } else {
+      learnExplainColEl.style.width = '';
+      learnExplainColEl.style.borderRight = '1px solid var(--border)';
+    }
+  }
+  if (learnExplainOverlayRail) learnExplainOverlayRail.style.display = (_learnLayoutMode === 'lesson' && mode === 'lecture') ? '' : 'none';
+  if (learnExplainBottomRail) learnExplainBottomRail.style.display = (_learnLayoutMode === 'lesson' && mode === 'lecture') ? '' : 'none';
+  if (lecturePrevOverlayBtn) lecturePrevOverlayBtn.classList.toggle('hidden', mode !== 'lecture' || _learnLayoutMode !== 'lesson');
+  if (lectureNextOverlayBtn) lectureNextOverlayBtn.classList.toggle('hidden', mode !== 'lecture' || _learnLayoutMode !== 'lesson');
+  if (lectureFocusOverlayBtn) lectureFocusOverlayBtn.classList.toggle('hidden', mode !== 'lecture' || _learnLayoutMode !== 'lesson');
+}
+
+if (_btnLecture && _btnTextbook) {
+  _btnLecture.addEventListener('click', () => {
+    _setTabActive(_btnLecture, _btnTextbook);
+    _setLearnMode('lecture');
+  });
+
+  _btnTextbook.addEventListener('click', () => {
+    _setTabActive(_btnTextbook, _btnLecture);
+    _setLearnMode('textbook');
+    loadTextbookPages();
+  });
+}
+
+function loadTextbookPages() {
+  if (!_bookOverlay) return;
+
+  // Get current section ID from learnSectionId (global) or tutorState
+  const rawId = (typeof learnSectionId !== 'undefined' ? learnSectionId : '') ||
+                (typeof tutorState !== 'undefined' ? tutorState.learnSectionId : '') || '';
+
+  // Normalize: e.g. 'B.1-2 Algebra of Complex Numbers' -> 'b.1-2'
+  const codeMatch = rawId.match(/^([A-Za-z]?\.?\d+(?:[.\-]\d+)*)/);
+  const code = codeMatch ? codeMatch[1].toLowerCase() : rawId.toLowerCase().trim();
+
+  // Lookup pages in pre-loaded map
+  const pageNames = _sectionPageMap[code] || _sectionPageMap[rawId.toLowerCase()] || [];
+
+  if (!pageNames.length) {
+    // Fallback to tutorState.learnBookPages if map has no entry
+    const apiFallback = (typeof tutorState !== 'undefined') ? (tutorState.learnBookPages || []) : [];
+    if (apiFallback.length) {
+      _renderTextbookPages(apiFallback.map(p => p.image || p.url || p));
+    } else {
+      _bookOverlay.innerHTML = '<div style="padding:40px;text-align:center;color:#64748B;font-size:14px;">No textbook pages found for this section.</div>';
+    }
+    return;
+  }
+
+  const urls = pageNames.map(pn => API_BASE + '/pages/' + pn + '.png');
+  _renderTextbookPages(urls);
+}
+
+function _renderTextbookPages(urls) {
+  if (!_bookOverlay) return;
+  const pagesHtml = urls.map((url, idx) => `
+    <div class="textbook-page-card">
+      <img src="${url}" alt="Textbook page ${idx + 1}" loading="eager" decoding="sync" data-textbook-page="${idx + 1}">
+    </div>
+  `).join('');
+  _bookOverlay.classList.toggle('zoomed', _textbookZoomed);
+  _bookOverlay.innerHTML = `<div class="textbook-pages-flow">${pagesHtml}</div>`;
+  syncInlineTextbookViewportToStart();
+
+  const imgs = Array.from(_bookOverlay.querySelectorAll('.textbook-page-card img'));
+  const scheduleRealign = () => {
+    requestAnimationFrame(() => {
+      syncInlineTextbookViewportToStart();
+      requestAnimationFrame(() => syncInlineTextbookViewportToStart());
+    });
+  };
+  setTimeout(scheduleRealign, 120);
+  setTimeout(scheduleRealign, 360);
+
+  imgs.forEach((img, idx) => {
+    if (idx < 4) {
+      if (img.complete) {
+        scheduleRealign();
+      } else {
+        img.addEventListener('load', scheduleRealign, { once: true });
+        img.addEventListener('error', scheduleRealign, { once: true });
+      }
+    }
+    img.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openTextbookFocusMode(idx);
+    });
+  });
+}
 learnWebBtn.addEventListener('click', () => {
   const open = !learnWebSources.classList.contains('hidden');
   learnWebSources.classList.toggle('hidden', open);
@@ -3163,9 +4287,17 @@ if (learnKpNextBtn) {
     }
   });
 }
+if (lecturePrevOverlayBtn) lecturePrevOverlayBtn.addEventListener('click', () => learnKpPrevBtn?.click());
+if (lectureNextOverlayBtn) lectureNextOverlayBtn.addEventListener('click', () => learnKpNextBtn?.click());
+if (lectureFocusOverlayBtn) lectureFocusOverlayBtn.addEventListener('click', openLearnFocusMode);
 if (learnFocusBtn) learnFocusBtn.addEventListener('click', openLearnFocusMode);
 if (learnFocusClose) learnFocusClose.addEventListener('click', closeLearnFocusMode);
 if (learnFocusBackdrop) learnFocusBackdrop.addEventListener('click', closeLearnFocusMode);
+if (textbookFocusClose) textbookFocusClose.addEventListener('click', closeTextbookFocusMode);
+if (textbookFocusBackdrop) textbookFocusBackdrop.addEventListener('click', closeTextbookFocusMode);
+if (textbookFocusZoomOutBtn) textbookFocusZoomOutBtn.addEventListener('click', () => stepTextbookFocusZoom(-0.15));
+if (textbookFocusZoomInBtn) textbookFocusZoomInBtn.addEventListener('click', () => stepTextbookFocusZoom(0.15));
+if (textbookFocusZoomResetBtn) textbookFocusZoomResetBtn.addEventListener('click', () => resetTextbookFocusTransform(1.5));
 if (learnFocusPrevBtn) {
   learnFocusPrevBtn.addEventListener('click', () => {
     if (currentKnowledgePointIndex > 0) {
@@ -3199,6 +4331,27 @@ document.addEventListener('keydown', (e) => {
       return;
     }
   }
+  if (textbookFocusModal && !textbookFocusModal.classList.contains('hidden')) {
+    if (e.key === 'Escape') {
+      closeTextbookFocusMode();
+      return;
+    }
+    if ((e.key === '=' || e.key === '+') && !e.metaKey) {
+      e.preventDefault();
+      stepTextbookFocusZoom(0.15);
+      return;
+    }
+    if ((e.key === '-' || e.key === '_') && !e.metaKey) {
+      e.preventDefault();
+      stepTextbookFocusZoom(-0.15);
+      return;
+    }
+    if (e.key === '0' && !e.metaKey) {
+      e.preventDefault();
+      resetTextbookFocusTransform(1.5);
+      return;
+    }
+  }
   if (e.key === 'Escape' && lightbox && !lightbox.classList.contains('hidden')) closeLightbox();
 });
 lightboxImg.addEventListener('wheel', (e) => {
@@ -3219,14 +4372,24 @@ lightboxImg.addEventListener('mousedown', (e) => {
   lightboxImg.classList.add('is-dragging');
 });
 document.addEventListener('mousemove', (e) => {
-  if (!lightboxDragging || lightboxScale <= 1) return;
-  lightboxPanX = e.clientX - lightboxDragStartX;
-  lightboxPanY = e.clientY - lightboxDragStartY;
-  applyLightboxTransform();
+  if (lightboxDragging && lightboxScale > 1) {
+    lightboxPanX = e.clientX - lightboxDragStartX;
+    lightboxPanY = e.clientY - lightboxDragStartY;
+    applyLightboxTransform();
+  }
+  const textbookImg = textbookFocusContent?.querySelector('.textbook-focus-single-page');
+  if (textbookFocusDragging && textbookImg && textbookFocusScale > 1.01) {
+    textbookFocusPanX = e.clientX - textbookFocusDragStartX;
+    textbookFocusPanY = e.clientY - textbookFocusDragStartY;
+    applyTextbookFocusTransform();
+  }
 });
 document.addEventListener('mouseup', () => {
   lightboxDragging = false;
   if (lightboxImg) lightboxImg.classList.remove('is-dragging');
+  textbookFocusDragging = false;
+  const textbookImg = textbookFocusContent?.querySelector('.textbook-focus-single-page');
+  if (textbookImg) textbookImg.classList.remove('is-dragging');
 });
 
 learnFollowupInput.addEventListener('input', () => {
@@ -3753,6 +4916,19 @@ function inlineFormat(text) {
       .replace(/>/g, '&gt;');
   }
 
+  function renderQuizInlineText(value) {
+    const raw = decodeHtmlEntities(value == null ? '' : String(value));
+    const normalized = window.preprocessMath ? window.preprocessMath(raw) : raw;
+    return inlineFormat(normalized).replace(/\n/g, '<br>');
+  }
+
+  function typesetQuizNodes(nodes) {
+    if (!window.MathJax || !window.MathJax.typesetPromise) return;
+    const targets = (Array.isArray(nodes) ? nodes : [nodes]).filter(Boolean);
+    if (!targets.length) return;
+    window.MathJax.typesetPromise(targets).catch(() => {});
+  }
+
   function resetQuizState(options = {}) {
     const { preserveStoredProgress = false } = options;
     kcHistory = [];
@@ -3894,25 +5070,26 @@ function inlineFormat(text) {
     if(askInput) askInput.value = '';
 
     if (!kcCurrentQuestion) {
-      questionEl.textContent = kcQuestion;
-      answerEl.textContent = kcAnswer;
-      hintEl.textContent = kcHint ? '💡 Hint: ' + kcHint : '';
+      questionEl.innerHTML = renderQuizInlineText(kcQuestion);
+      answerEl.innerHTML = renderQuizInlineText(kcAnswer);
+      hintEl.innerHTML = kcHint ? `💡 Hint: ${renderQuizInlineText(kcHint)}` : '';
       revealBtn.style.display = 'inline-block';
       optionsEl.style.display = 'none';
       renderProgress();
+      typesetQuizNodes([questionEl, answerEl, hintEl]);
       return;
     }
 
     const q = kcCurrentQuestion.question || {};
-    questionEl.innerHTML = `<div style="font-size:12px;font-weight:700;color:#2563EB;margin-bottom:8px;letter-spacing:0.04em;">${escapeHtml(kcCurrentPointLabel.toUpperCase())}</div>${escapeHtml(q.stem || q.question || '(No question)')}`;
-    answerEl.textContent = q.type === 'multiple_choice'
-      ? `${q.correct_option || ''} - ${(q.explanation || '').trim()}`
-      : (q.ideal_answer || q.answer || q.explanation || '');
-    hintEl.textContent = q.hint ? '💡 Hint: ' + q.hint : '';
+    questionEl.innerHTML = `<div style="font-size:12px;font-weight:700;color:#2563EB;margin-bottom:8px;letter-spacing:0.04em;">${escapeHtml(kcCurrentPointLabel.toUpperCase())}</div><div>${renderQuizInlineText(q.stem || q.question || '(No question)')}</div>`;
+    answerEl.innerHTML = q.type === 'multiple_choice'
+      ? `<div><strong>Right answer:</strong> ${renderQuizInlineText(q.correct_option || '')}</div><div style="margin-top:8px;"><strong>Why:</strong> ${renderQuizInlineText((q.explanation || '').trim())}</div>`
+      : renderQuizInlineText(q.ideal_answer || q.answer || q.explanation || '');
+    hintEl.innerHTML = q.hint ? `💡 Hint: ${renderQuizInlineText(q.hint)}` : '';
 
     if (q.type === 'multiple_choice' && Array.isArray(q.options) && q.options.length) {
       optionsEl.innerHTML = q.options.map((opt, idx) => `
-        <button class="kc-option-btn" data-option-index="${idx}" style="text-align:left;background:#fff;border:1px solid #CBD5E1;border-radius:10px;padding:10px 12px;font-size:14px;color:#1E293B;cursor:pointer;transition:all 0.15s;">${escapeHtml(opt)}</button>
+        <button class="kc-option-btn" data-option-index="${idx}" data-option-value="${escapeAttr(opt)}" style="text-align:left;background:#fff;border:1px solid #CBD5E1;border-radius:10px;padding:10px 12px;font-size:14px;color:#1E293B;cursor:pointer;transition:all 0.15s;">${renderQuizInlineText(opt)}</button>
       `).join('');
       optionsEl.style.display = 'flex';
       inputEl.style.display = 'none';
@@ -3920,7 +5097,7 @@ function inlineFormat(text) {
         btn.addEventListener('click', () => {
           optionsEl.querySelectorAll('.kc-option-btn').forEach(x => x.style.borderColor = '#CBD5E1');
           btn.style.borderColor = '#2563EB';
-          inputEl.value = btn.textContent.trim();
+          inputEl.value = btn.dataset.optionValue || btn.textContent.trim();
         });
       });
     } else {
@@ -3932,6 +5109,7 @@ function inlineFormat(text) {
     }
 
     renderProgress();
+    typesetQuizNodes([questionEl, answerEl, hintEl, optionsEl]);
   }
 
   function advanceToNextPoint() {
@@ -4174,9 +5352,9 @@ function inlineFormat(text) {
         answerHtml: `
           <div style="padding:12px;background:${correct ? '#ECFDF5' : '#FEF2F2'};border:1px solid ${correct ? '#A7F3D0' : '#FECACA'};border-radius:10px;">
             <div style="font-weight:700;color:${correct ? '#047857' : '#B91C1C'};margin-bottom:6px;">${correct ? 'Correct' : 'Not yet'}</div>
-            <div style="margin-bottom:8px;"><strong>Right answer:</strong> ${escapeHtml(q.correct_option || '')}</div>
-            <div style="margin-bottom:8px;"><strong>Why:</strong> ${escapeHtml(q.explanation || '')}</div>
-            ${!correct ? `<div><strong>Why your choice is wrong:</strong> ${escapeHtml(optionExplanation)}</div>` : ''}
+            <div style="margin-bottom:8px;"><strong>Right answer:</strong> ${renderQuizInlineText(q.correct_option || '')}</div>
+            <div style="margin-bottom:8px;"><strong>Why:</strong> ${renderQuizInlineText(q.explanation || '')}</div>
+            ${!correct ? `<div><strong>Why your choice is wrong:</strong> ${renderQuizInlineText(optionExplanation)}</div>` : ''}
           </div>
         `
       };
@@ -4195,9 +5373,9 @@ function inlineFormat(text) {
       answerHtml: `
         <div style="padding:12px;background:${correct ? '#ECFDF5' : '#FEF2F2'};border:1px solid ${correct ? '#A7F3D0' : '#FECACA'};border-radius:10px;">
           <div style="font-weight:700;color:${correct ? '#047857' : '#B91C1C'};margin-bottom:6px;">${correct ? 'Good enough to pass this step' : 'Your explanation is still missing key logic'}</div>
-          <div style="margin-bottom:8px;"><strong>Ideal answer:</strong> ${escapeHtml(q.ideal_answer || q.answer || '')}</div>
-          <div style="margin-bottom:8px;"><strong>Why:</strong> ${escapeHtml(q.explanation || '')}</div>
-          ${rubric.length ? `<div><strong>What the grader looks for:</strong><ul style="margin:6px 0 0 18px;">${rubric.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>` : ''}
+          <div style="margin-bottom:8px;"><strong>Ideal answer:</strong> ${renderQuizInlineText(q.ideal_answer || q.answer || '')}</div>
+          <div style="margin-bottom:8px;"><strong>Why:</strong> ${renderQuizInlineText(q.explanation || '')}</div>
+          ${rubric.length ? `<div><strong>What the grader looks for:</strong><ul style="margin:6px 0 0 18px;">${rubric.map(item => `<li>${renderQuizInlineText(item)}</li>`).join('')}</ul></div>` : ''}
         </div>
       `
     };
@@ -4504,6 +5682,7 @@ function inlineFormat(text) {
     feedbackEl.innerHTML = result.answerHtml;
     feedbackEl.style.display = 'block';
     answerBox.style.display = 'block';
+    typesetQuizNodes([feedbackEl]);
     if(document.getElementById('kcAskWrap')) document.getElementById('kcAskWrap').style.display = 'flex';
     const nextBtn = document.getElementById('kcNextBtn');
     if (result.correct && state.passed) {
@@ -4561,6 +5740,7 @@ function showLearnView() {
   welcomeScreen.classList.add('hidden');
   answerScreen.classList.add('hidden');
   learnView.classList.remove('hidden');
+  _setLearnMode(_learnViewMode || 'lecture');
   if (topbar) topbar.classList.add('hidden');
 }
 
@@ -4631,7 +5811,6 @@ function getTocContextForCurrentLesson() {
 function buildTocFromContent(containerEl) {
   if (!containerEl || !tocNav) return;
   const headings = containerEl.querySelectorAll('h1, h2, h3, h4');
-  if (!headings.length) return;
 
   const sectionId = String(tutorState.learnSectionId || '').trim();
   const sectionTitle = String(tutorState.learnSectionTitle || '').trim();
@@ -4669,30 +5848,37 @@ function buildTocFromContent(containerEl) {
 
   if (existingSubItems.length) {
     existingSubItems.forEach(btn => tocNav.appendChild(btn));
-    const divider = document.createElement('div');
-    divider.className = 'toc-divider';
-    divider.textContent = 'Index';
-    divider.style.color = '#000';
-    divider.style.fontWeight = 'bold';
-    tocNav.appendChild(divider);
   }
 
-  items.forEach(item => {
-    const btn = document.createElement('button');
-    btn.className = `toc-item depth-${item.depth || 1} content-anchor`;
-    btn.dataset.anchor = item.anchor || '';
-    btn.textContent = item.title;
-    btn.addEventListener('click', () => {
-      const el = document.getElementById(item.anchor);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      tocNav.querySelectorAll('.toc-item.content-anchor').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+  if (_learnViewMode !== 'textbook' && items.length) {
+    if (existingSubItems.length) {
+      const divider = document.createElement('div');
+      divider.className = 'toc-divider';
+      divider.textContent = 'Index';
+      divider.style.color = '#000';
+      divider.style.fontWeight = 'bold';
+      tocNav.appendChild(divider);
+    }
+
+    items.forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = `toc-item depth-${item.depth || 1} content-anchor`;
+      btn.dataset.anchor = item.anchor || '';
+      btn.textContent = item.title;
+      btn.addEventListener('click', () => {
+        const el = document.getElementById(item.anchor);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        tocNav.querySelectorAll('.toc-item.content-anchor').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+      tocNav.appendChild(btn);
     });
-    tocNav.appendChild(btn);
-  });
+  }
 
   if (existingSubItems.length) {
     tocNav.querySelectorAll('.toc-item.depth-2:not(.content-anchor)').forEach((btn) => {
+      if (btn._learnBound) return;
+      btn._learnBound = true;
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const subTitle = btn.dataset.lessonTitle || btn.textContent.trim();
@@ -4703,17 +5889,19 @@ function buildTocFromContent(containerEl) {
     });
   }
 
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const id = entry.target.id;
-        tocNav.querySelectorAll('.toc-item.content-anchor').forEach(b => {
-          b.classList.toggle('active', b.dataset.anchor === id);
-        });
-      }
-    });
-  }, { threshold: 0.3 });
-  headings.forEach(h => observer.observe(h));
+  if (_learnViewMode !== 'textbook' && items.length) {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          tocNav.querySelectorAll('.toc-item.content-anchor').forEach(b => {
+            b.classList.toggle('active', b.dataset.anchor === id);
+          });
+        }
+      });
+    }, { threshold: 0.3 });
+    headings.forEach(h => observer.observe(h));
+  }
 }
 
 function setStatus(text, type = 'idle') {
@@ -5600,10 +6788,10 @@ function updateRecentConversationsUI() {
       'gap:4px'
     ].join(';');
     card.addEventListener('mouseenter', () => {
-      card.style.background = '#EFF6FF';
+      card.style.background = '#F8FAFC';
     });
     card.addEventListener('mouseleave', () => {
-      card.style.background = '#FFFFFF';
+      card.style.background = '#ffffff';
       card.style.transform = 'scale(1)';
     });
     card.addEventListener('mousedown', () => {

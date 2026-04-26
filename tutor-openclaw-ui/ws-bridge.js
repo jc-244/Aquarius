@@ -25,6 +25,8 @@ const OCR_DIR_OLD = '/Users/chenghaoxiang/.openclaw/workspace/tutor-materials/ba
 const PAGE_IMAGE_DIR_OLD = '/Users/chenghaoxiang/.openclaw/workspace/tutor-materials/background-pages-split';
 const OCR_DIR_NEW = '/Users/chenghaoxiang/.openclaw/workspace/tutor-materials/new-book-ocr';
 const PAGE_IMAGE_DIR_NEW = '/Users/chenghaoxiang/.openclaw/workspace/tutor-materials/new-book-pages';
+const FIGURE_IMAGE_DIR_NEW = '/Users/chenghaoxiang/.openclaw/workspace/tutor-materials/new-book-figures';
+const PYTHON_BIN = process.env.TUTOR_PYTHON_BIN || '/Library/Frameworks/Python.framework/Versions/3.12/bin/python3';
 
 // Helper: resolve dirs based on bookSource param
 function getBookDirs(bookSource) {
@@ -54,7 +56,7 @@ const MATPLOTLIB_GEN = path.join(__dirname, 'matplotlib_gen.py');
 const GENERATED_DIR = path.join(__dirname, 'generated');
 try { if (!fs.existsSync(GENERATED_DIR)) fs.mkdirSync(GENERATED_DIR, { recursive: true }); } catch (_) {}
 
-const { processEmbeddedPython } = require('./process-python.js');
+const { processEmbeddedPython, normalizePythonCode } = require('./process-python.js');
 
 const MIME_TYPES = {
     '.html': 'text/html; charset=utf-8',
@@ -107,6 +109,77 @@ function escapeHtmlAttr(value) {
         .replace(/>/g, '&gt;');
 }
 
+function persistDataImageUrl(dataUrl) {
+    const match = String(dataUrl || '').match(/^data:image\/([a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=\r\n]+)$/);
+    if (!match) return null;
+
+    const rawType = match[1].toLowerCase();
+    const base64 = match[2].replace(/\s+/g, '');
+    const extMap = {
+        'jpeg': 'jpg',
+        'jpg': 'jpg',
+        'png': 'png',
+        'webp': 'webp',
+        'gif': 'gif',
+        'svg+xml': 'svg'
+    };
+    const ext = extMap[rawType] || 'png';
+    const filename = `gptimage2-${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+    const targetPath = path.join(GENERATED_DIR, filename);
+    fs.writeFileSync(targetPath, Buffer.from(base64, 'base64'));
+    return `/generated/${filename}`;
+}
+
+function extractRenderableImageUrls(output) {
+    const text = String(output || '');
+    const candidates = [];
+
+    const markdownImageRegex = /!\[[^\]]*\]\((data:image\/[^)]+|https?:\/\/[^)\s]+|\/generated\/[^)\s]+)\)/gi;
+    let match;
+    while ((match = markdownImageRegex.exec(text)) !== null) {
+        candidates.push(match[1]);
+    }
+
+    const rawHttpRegex = /https?:\/\/[^\s)"']+/gi;
+    while ((match = rawHttpRegex.exec(text)) !== null) {
+        candidates.push(match[0]);
+    }
+
+    const rawDataUrlRegex = /data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=\r\n]+/gi;
+    while ((match = rawDataUrlRegex.exec(text)) !== null) {
+        candidates.push(match[0]);
+    }
+
+    const resolved = [];
+    for (const src of candidates) {
+        let finalSrc = String(src || '').trim();
+        if (!finalSrc) continue;
+        if (finalSrc.startsWith('data:image/')) {
+            try {
+                finalSrc = persistDataImageUrl(finalSrc) || '';
+            } catch (err) {
+                console.warn('[ImageExtract] Failed to persist data URL image:', err.message);
+                finalSrc = '';
+            }
+        }
+        if (!finalSrc) continue;
+        if (!resolved.includes(finalSrc)) resolved.push(finalSrc);
+    }
+
+    return resolved;
+}
+
+function stripDiagramFallbackBlocks(markdown) {
+    let text = String(markdown || '');
+    if (!text) return text;
+
+    text = text.replace(/```[\s\S]*?[┌┐└┘│─►←↓↑][\s\S]*?```/g, '');
+    text = text.replace(/(?:^|\n)##*\s*(?:Teaching|Pipeline|Visual) Diagram[\s\S]*?(?=\n##\s|\n---\n|$)/gi, '\n');
+    text = text.replace(/(?:^|\n)\|[^\n]*\|\n\|(?:\s*:?-+:?\s*\|)+\n(?:\|[^\n]*\|\n){1,12}/g, '\n');
+    text = text.replace(/\n{3,}/g, '\n\n').trim();
+    return text;
+}
+
 function convertLegacyQuickCheckToKcBlocks(markdown) {
     const src = String(markdown || '');
     const quickCheckRegex = /(?:^|\n)---\s*\n\*\*✏️ Quick Check\*\*\s*\n\s*([\s\S]*?)\n\s*<details><summary>Show answer<\/summary>\s*\n\s*\*\*Answer:\*\*\s*([\s\S]*?)\n\s*(?:\*Hint:\s*([\s\S]*?)\*)?\s*\n\s*<\/details>/g;
@@ -118,6 +191,156 @@ function convertLegacyQuickCheckToKcBlocks(markdown) {
         const kcHtml = `<div class="kc-container" data-question="${escapeHtmlAttr(q)}" data-answer="${escapeHtmlAttr(a)}" data-hint="${escapeHtmlAttr(h)}" style="display:none;"></div>`;
         return `\n---\n%%KC_BLOCK%%${kcHtml}%%KC_END%%\n`;
     });
+}
+
+function hasVisualMetadataMarkup(markdown) {
+    const src = String(markdown || '');
+    return src.includes('kc-visual-plan') || src.includes('kc-visual-meta');
+}
+
+function normalizeFigureId(value) {
+    return compactWhitespace(value || '')
+        .toLowerCase()
+        .replace(/[（）()\[\]{}]/g, ' ')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+}
+
+function normalizeMathMarkdown(markdown) {
+    let src = String(markdown || '');
+    if (!src) return src;
+
+    src = src
+        .replace(/\\\\\(/g, '\\(')
+        .replace(/\\\\\)/g, '\\)')
+        .replace(/\\\\\[/g, '\\[')
+        .replace(/\\\\\]/g, '\\]')
+        .replace(/\\\s+\(/g, '\\(')
+        .replace(/\\\s+\)/g, '\\)')
+        .replace(/\\\s+\[/g, '\\[')
+        .replace(/\\\s+\]/g, '\\]');
+
+    src = src.replace(/(?<!\$)\$(?!\$)([^\n$]+?)(?<!\$)\$(?!\$)/g, (_m, expr) => {
+        const inner = String(expr || '').trim();
+        if (!inner) return _m;
+        return `\\(${inner}\\)`;
+    });
+
+    return src;
+}
+
+function loadNewBookFigureIndex() {
+    try {
+        if (!fs.existsSync(FIGURE_IMAGE_DIR_NEW)) return {};
+        const index = {};
+        const files = fs.readdirSync(FIGURE_IMAGE_DIR_NEW)
+            .filter(name => /^page-\d{3}-.+\.(png|jpg|jpeg|webp)$/i.test(name));
+        for (const fileName of files) {
+            const m = fileName.match(/^(page-\d{3})-/i);
+            if (!m) continue;
+            const page = m[1].toLowerCase();
+            if (!index[page]) index[page] = [];
+            index[page].push(fileName);
+        }
+        Object.values(index).forEach(arr => arr.sort());
+        return index;
+    } catch (err) {
+        console.warn(`[Index] Failed to load new-book figure index: ${err.message}`);
+        return {};
+    }
+}
+
+function getAllowedNewBookFigures(sectionId = '', bookPages = [], bookSource = 'old') {
+    if (bookSource !== 'new') return new Set();
+
+    const code = extractSectionCode(sectionId);
+    if (!code) return new Set();
+
+    const mapKey = Object.keys(SECTION_FIGURE_MAP_NEW).find(k => k.toLowerCase() === code.toLowerCase());
+    if (!mapKey) return new Set();
+
+    return new Set((SECTION_FIGURE_MAP_NEW[mapKey] || []).map(file => path.basename(String(file || ''))).filter(Boolean));
+}
+
+function findAllowedFigureForBlock(figures, block, allowedFigureFiles) {
+    const allowed = allowedFigureFiles instanceof Set ? allowedFigureFiles : new Set();
+    const list = Array.isArray(figures) ? figures : [];
+    if (!list.length) return null;
+
+    const requestedFigId = normalizeFigureId(block && block.fig_id);
+    if (requestedFigId) {
+        const matchedById = list.find(fig => {
+            const crop = path.basename(String((fig && fig.crop_file) || ''));
+            if (!crop || !allowed.has(crop)) return false;
+            const normalized = normalizeFigureId(fig && fig.fig_id);
+            return normalized === requestedFigId || normalized.includes(requestedFigId) || requestedFigId.includes(normalized);
+        });
+        if (matchedById) return matchedById;
+    }
+
+    const explicitFile = path.basename(String((block && block.file_path) || ''));
+    if (explicitFile && allowed.has(explicitFile)) {
+        const matchedByFile = list.find(fig => path.basename(String((fig && fig.crop_file) || '')) === explicitFile);
+        if (matchedByFile) return matchedByFile;
+    }
+
+    return list.find(fig => {
+        const crop = path.basename(String((fig && fig.crop_file) || ''));
+        return crop && allowed.has(crop);
+    }) || null;
+}
+
+function hasDisallowedNewBookPageFallback(markdown, sectionId = '', bookPages = [], bookSource = 'old') {
+    if (bookSource !== 'new') return false;
+    const src = String(markdown || '');
+    return /\]\(\/pages\/page-\d+\.png\)/.test(src);
+}
+
+function hasDisallowedNewBookFigureRefs(markdown, sectionId = '', bookPages = [], bookSource = 'old') {
+    if (bookSource !== 'new') return false;
+    const src = String(markdown || '');
+    const allowed = getAllowedNewBookFigures(sectionId, bookPages, bookSource);
+    const refs = [...src.matchAll(/\]\(\/figures\/([^\)]+)\)/g)].map(m => decodeURIComponent(m[1] || ''));
+    return refs.some(file => !allowed.has(path.basename(file)));
+}
+
+function hasNewBookFigureUnavailablePlaceholder(markdown, bookSource = 'old') {
+    if (bookSource !== 'new') return false;
+    return /\*\(Figure unavailable:/i.test(String(markdown || ''));
+}
+
+function hasIllustrationUnavailablePlaceholder(markdown) {
+    return /Illustration unavailable:/i.test(String(markdown || ''));
+}
+
+function extractEmbeddedVisualPlan(markdown) {
+    const src = String(markdown || '');
+    const match = src.match(/data-visual-plan-b64="([^"]+)"/i);
+    if (!match) return null;
+    try {
+        return JSON.parse(Buffer.from(match[1], 'base64').toString('utf8'));
+    } catch (_) {
+        return null;
+    }
+}
+
+function hasLegacyGeneratedVisualArtifacts(markdown) {
+    const src = String(markdown || '');
+    if (/\/generated\/(?:fig|chart)-[^)\s"']+/i.test(src)) return true;
+    if (/python_matplotlib/i.test(src)) return true;
+
+    const visualPlan = extractEmbeddedVisualPlan(src);
+    if (!visualPlan) return false;
+
+    const primaryAnchor = compactWhitespace(visualPlan.primary_anchor || '').toLowerCase();
+    if (primaryAnchor === 'matplotlib') return true;
+
+    try {
+        const serialized = JSON.stringify(visualPlan).toLowerCase();
+        return serialized.includes('matplotlib');
+    } catch (_) {
+        return false;
+    }
 }
 
 function inferPageTitle(meta, page) {
@@ -181,7 +404,11 @@ function loadSectionPageMap(filename = 'section-page-map.json') {
 }
 const SECTION_PAGE_MAP = loadSectionPageMap('section-page-map.json');
 const SECTION_PAGE_MAP_NEW = loadSectionPageMap('section-page-map-new.json');
+const SECTION_FIGURE_MAP_NEW = loadSectionPageMap('section-figure-map-new.json');
+const NEW_BOOK_FIGURE_INDEX = loadNewBookFigureIndex();
 console.log(`[Index] Section maps loaded: old=${Object.keys(SECTION_PAGE_MAP).length}, new=${Object.keys(SECTION_PAGE_MAP_NEW).length}`);
+console.log(`[Index] Section figure map loaded: new=${Object.keys(SECTION_FIGURE_MAP_NEW).length}`);
+console.log(`[Index] New-book figure index loaded: pages=${Object.keys(NEW_BOOK_FIGURE_INDEX).length}`);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // USER MEMORY
@@ -190,7 +417,7 @@ const USERS_DIR = path.join(__dirname, 'users');
 try { if (!fs.existsSync(USERS_DIR)) fs.mkdirSync(USERS_DIR, { recursive: true }); } catch (_) {}
 
 const LESSON_CACHE_DIR = path.join(__dirname, '../tutor-materials/lesson-cache');
-const LESSON_CACHE_VERSION = 'v9'; // 3-track lesson cache: only content track + math + book source affect cache identity
+const LESSON_CACHE_VERSION = 'v20'; // bump cache after math-normalization + hidden image-timeout fallback changes
 try { if (!fs.existsSync(LESSON_CACHE_DIR)) fs.mkdirSync(LESSON_CACHE_DIR, { recursive: true }); } catch (_) {}
 
 /**
@@ -222,7 +449,7 @@ function normalizeQuizProfile(quiz = {}) {
     if (!next.track) {
         if (track) next.track = track;
         else if (legacyGoal === 'just_pass') next.track = 'cram';
-        else if (legacyGoal === 'going_for_a' || legacyGoal === 'getting_ahead') next.track = 'foundation';
+        else if (legacyGoal === 'going_for_a' || legacyGoal === 'getting_ahead') next.track = 'top_score';
         else if (legacyGoal === 'solid_b') next.track = 'standard';
     }
 
@@ -290,7 +517,7 @@ function scoreLegacyLessonCacheFile(fileName, memory, bookSource = 'old') {
         if (fileName.includes('o:one_liner')) score += 35;
         if (fileName.includes('o:exam_cheatsheet')) score += 20;
         if (!fileName.includes('s:step_by_step')) score += 5;
-    } else if (track === 'foundation') {
+    } else if (track === 'top_score') {
         if (fileName.includes('__going_for_a|')) score += 60;
         if (fileName.includes('s:step_by_step')) score += 35;
         if (fileName.includes('o:worked_example')) score += 25;
@@ -303,8 +530,8 @@ function scoreLegacyLessonCacheFile(fileName, memory, bookSource = 'old') {
         if (fileName.includes('o:one_liner')) score += 5;
     }
 
-    if (fileName.includes('__going_for_a|') && track !== 'foundation') score -= 10;
-    if (fileName.includes('__solid_b|') && track === 'foundation') score -= 5;
+    if (fileName.includes('__going_for_a|') && track !== 'top_score') score -= 10;
+    if (fileName.includes('__solid_b|') && track === 'top_score') score -= 5;
     return score;
 }
 
@@ -430,13 +657,12 @@ function buildUserProfilePrompt(memory) {
             'Explain enough to understand, but do not over-teach edge cases.',
             'Keep the pace moderate and the structure clean.'
         ].join(' '),
-        foundation: [
-            'TRACK = FOUNDATION.',
-            'This lesson must feel noticeably slower, safer, and more beginner-protective than standard.',
-            'Assume the student may be shaky on prerequisites and notation.',
-            'Before using a prerequisite idea (phase shift, complex-number angle, trig relation, etc.), briefly patch it first.',
-            'Use smaller steps, more explicit intermediate wording, and simpler sentences.',
-            'Do not sound like an advanced student should already know the setup.'
+        top_score: [
+            'TRACK = TOP SCORE.',
+            'This lesson should aim for strong exam performance and clearer high-score differentiation.',
+            'Highlight tricky variants, easy-to-miss distinctions, and what separates a safe answer from a high-scoring one.',
+            'Keep the explanation efficient, but add sharper precision around common traps and better answer framing.',
+            'Do not bloat the lesson; make it feel smarter, not just longer.'
         ].join(' ')
     };
     const TRACK_RULES = {
@@ -454,13 +680,12 @@ function buildUserProfilePrompt(memory) {
             '- Keep explanation and exam utility balanced.',
             '- This is the baseline version; neither rushed nor overly remedial.'
         ].join('\n'),
-        foundation: [
-            'STRICT DIFFERENTIATION RULES FOR FOUNDATION:',
-            '- Add prerequisite patching before the main explanation when needed.',
-            '- Use more step-by-step unpacking than standard.',
-            '- Explicitly name what each symbol means before manipulating formulas.',
-            '- Prefer one tiny win at a time over dense compression.',
-            '- If standard would assume a leap, foundation must spell it out.'
+        top_score: [
+            'STRICT DIFFERENTIATION RULES FOR TOP SCORE:',
+            '- Surface high-yield distinctions, harder variants, and where strong students separate themselves.',
+            '- Explicitly call out easy point-loss traps and how to avoid them.',
+            '- Add at least one deeper exam-facing insight beyond the baseline explanation.',
+            '- Keep the tone high-precision and exam-smart, not bloated or textbook-like.'
         ].join('\n')
     };
     const MATH_MAP = {
@@ -468,29 +693,47 @@ function buildUserProfilePrompt(memory) {
         calculus_ok: 'Math background: mixed. Re-explain ODEs or complex-number steps briefly before relying on them.',
         math_weak: 'Math background: weak. Prefer intuition first, lighter algebra, and explicit intermediate steps.'
     };
-    const STYLE_MAP = {
-        example_first: 'Presentation preference only: if possible, lead with a concrete example before abstraction.',
-        principle_first: 'Presentation preference only: state the clean rule first, then illustrate it.',
-        visual: 'Presentation preference only: add visual cues, diagrams, or plotting suggestions when useful.',
-        step_by_step: 'Presentation preference only: visibly show intermediate steps instead of skipping them.'
+    const TIMELINE_MAP = {
+        this_week: 'Time pressure: very high. Compress aggressively and prioritize exam payoff first.',
+        two_weeks: 'Time pressure: moderate. Stay exam-oriented, but still leave room for one layer of explanation.',
+        one_month: 'Time pressure: moderate-low. Balance exam readiness with cleaner understanding.',
+        early_stage: 'Time pressure: low. Build foundations well before compressing for exam speed.'
     };
-    const OUTCOME_MAP = {
-        one_liner: 'Lightweight ending preference only: include a one-line takeaway when natural.',
-        worked_example: 'Lightweight ending preference only: surface a worked example if one already fits the planned lesson.',
-        exam_cheatsheet: 'Lightweight ending preference only: end with a short exam-oriented reminder list when useful.',
-        formula_ref: 'Lightweight ending preference only: include a concise formula reference box when relevant.'
+    const PREFERENCE_MAP = {
+        exam_first: 'Lesson opening preference: begin with the most important tested ideas and exam relevance.',
+        example_first: 'Lesson opening preference: start with a concrete example before abstraction when possible.',
+        step_by_step: 'Lesson opening preference: break the setup and steps down clearly before moving fast.'
+    };
+    const PRIORITY_MAP = {
+        understand_concepts: 'Current priority: help the student truly understand the core concept before optimizing speed.',
+        solve_faster: 'Current priority: improve solving speed and pattern recognition.',
+        avoid_careless: 'Current priority: reduce careless mistakes, notation slips, sign errors, and easy point loss.',
+        harder_problems: 'Current priority: prepare for harder variants and higher-difficulty exam questions.',
+        connect_topics: 'Current priority: connect this topic to nearby ideas so the course feels less fragmented.',
+        exam_confidence: 'Current priority: improve exam confidence, answer framing, and readiness under test conditions.'
     };
 
     if (TRACK_MAP[quiz.track]) lines.push(TRACK_MAP[quiz.track]);
     if (TRACK_RULES[quiz.track]) lines.push(TRACK_RULES[quiz.track]);
+    lines.push([
+        'VISUAL POLICY = DEFAULT ON.',
+        'Visualization is not optional decoration in this product.',
+        'If a concept is easier to see than to read, plan a visual block for it.',
+        'Prefer a textbook figure first when the book already has a high-value explanatory diagram.',
+        'When the textbook figure is missing, too dense, or not enough to make the idea intuitive, add a gptimage2-generated teaching visual.',
+        'Prefer openai/gpt-5.4-image-2 for planes, waveforms, signal transforms, comparisons, system sketches, parameter changes, and other STEM diagrams.',
+        'Use clean lecture-note style visuals: pure white background, one knowledge point only, one clear reading path, restrained low-saturation color accents, and colored teaching boxes only when they sharpen understanding.',
+        'Use visuals to make the lesson feel clearer and more direct, not just prettier.'
+    ].join(' '));
     if (MATH_MAP[quiz.math]) lines.push(MATH_MAP[quiz.math]);
+    if (TIMELINE_MAP[quiz.timeline]) lines.push(TIMELINE_MAP[quiz.timeline]);
 
-    const styles = Array.isArray(quiz.style) ? quiz.style : (quiz.style ? [quiz.style] : []);
-    const allStyles = [...new Set([...styles, ...(Array.isArray(memory.inferredStyle) ? memory.inferredStyle : [])])];
-    allStyles.forEach(s => { if (STYLE_MAP[s]) lines.push(STYLE_MAP[s]); });
+    const prefs = Array.isArray(quiz.preference) ? quiz.preference : (quiz.preference ? [quiz.preference] : []);
+    const allPrefs = [...new Set([...prefs, ...(Array.isArray(memory.inferredStyle) ? memory.inferredStyle : [])])];
+    allPrefs.forEach(s => { if (PREFERENCE_MAP[s]) lines.push(PREFERENCE_MAP[s]); });
 
-    const outcomes = Array.isArray(quiz.outcome) ? quiz.outcome : (quiz.outcome ? [quiz.outcome] : []);
-    outcomes.forEach(o => { if (OUTCOME_MAP[o]) lines.push(OUTCOME_MAP[o]); });
+    const priorities = Array.isArray(quiz.priority) ? quiz.priority : (quiz.priority ? [quiz.priority] : []);
+    priorities.forEach(p => { if (PRIORITY_MAP[p]) lines.push(PRIORITY_MAP[p]); });
 
     if (Array.isArray(memory.knownConcepts) && memory.knownConcepts.length) {
         lines.push(`Already mastered: ${memory.knownConcepts.join(', ')}. Do not over-explain these.`);
@@ -763,6 +1006,12 @@ function tryParseJsonLoose(text) {
 
     const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
     if (fenced) candidates.push(fenced[1].trim());
+
+    const strippedOpenFence = trimmed
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/\s*```\s*$/i, '')
+        .trim();
+    if (strippedOpenFence && strippedOpenFence !== trimmed) candidates.push(strippedOpenFence);
 
     const firstObj = trimmed.indexOf('{');
     const lastObj = trimmed.lastIndexOf('}');
@@ -1291,7 +1540,7 @@ async function generateExplanation(question, bookPages, webSources, options = {}
         language === 'zh' ? '2. 用 Markdown 输出。' : '2. Use Markdown formatting.',
         language === 'zh' ? '3. 如果这是继续追问，必须优先承接上文，不要把它当成全新的陌生问题。' : '3. Prioritize context if this is a follow-up question.',
         language === 'zh' ? '4. 引用时只使用 [书页N] / [来源N] 这样的标注，自然嵌入正文中，**千万不要在结尾专门罗列来源列表**。' : '4. Cite sources naturally inline as [PageN] or [SourceN]. **Do not list sources at the end.**',
-        language === 'zh' ? '5. 如果需要图示，请在正文自然解释，但不要自己输出 Python 代码块。图代码将由单独的代码模型生成。' : '5. If a diagram would help, explain it naturally in the answer, but do NOT generate Python code blocks yourself. Diagram code will be generated by a separate coding model.',
+        language === 'zh' ? '5. 如果需要图示，请在正文自然解释，但不要自己输出 Python 代码块。实际图片会由后置的 gptimage2 绘图模型生成。' : '5. If a diagram would help, explain it naturally in the answer, but do NOT generate Python code blocks yourself. The actual image will be rendered later by gptimage2.',
         language === 'zh' ? '6. 如果出现数学公式，使用 LaTeX，块级公式写成 $$...$$，行内公式写成 $...$。' : '6. Use LaTeX for math. $$...$$ for block, $...$ for inline.',
         language === 'zh' ? '7. 优先结合教材，再补充联网资料。' : '7. Prioritize textbook content, then web sources.',
         language === 'zh' ? '8. 如果联网资料为空，也照常基于书页完成讲解。' : '8. Answer using book context if web sources are empty.',
@@ -1359,8 +1608,8 @@ async function generateExplanation(question, bookPages, webSources, options = {}
             {
                 role: 'system',
                 content: language === 'zh'
-                    ? '你是一位耐心、准确、会讲人话的理工科导师，但**你绝对不要做无痛喂饭的复读机**。请基于给定教材 OCR、网页摘要和已有对话上下文生成结构化讲解。\n【追问处理必须遵循的核心法则】：\n当学生答错测验题、或者对概念理解有偏差（哪怕只有一点点）时，**绝对不要直接给出正确答案或马上把定义贴给他**。你必须：\n1. 指出他结论中哪个环节的逻辑断链了；\n2. 抛出一个基于他当前错误逻辑的**反例或极其刁钻的反问**，逼他自己发现矛盾；\n3. 像苏格拉底一样，一层一层用提问扒光他的盲点，直到他自己说出正确的推演逻辑，你再帮他总结。\n（对于 follow-up 问题，必须延续上下文。绝对不要输出 ```python 代码块...）\n绝对不要输出 ASCII 图、纯文本示意图、字符画坐标轴，**严禁**自己伪造 `![Generated Visualization](/generated/...)` 这类的图片链接；如果需要图示，只能在正文里用文字说明，后置的绘图模型会自动接管画图。' + userProfilePrompt
-                    : 'You are a STEM tutor with a strict Socratic method. Generate structured explanations based on the given textbook OCR, web summaries, and conversation history.\n**Crucial rule for follow-ups/wrong answers:**\nIf the student is wrong or misunderstands a concept, DO NOT give away the answer immediately or copy-paste definitions. Instead:\n1. Identify the exact flaw in their logic.\n2. Present a "gotcha" counter-example or probing question based on their own flawed reasoning to expose the contradiction.\n3. Make them realize their own mistake and guide them to the correct conclusion via questions step-by-step.\nNever output ```python code blocks, ASCII diagrams, plain-text sketches, or character-drawn axes, and **NEVER** hallucinate or output markdown image links like `![Generated Visualization](/generated/...)` yourself; if a figure is needed, mention it in prose only and leave the actual image rendering to the subsequent drawing model.' + userProfilePrompt
+                    ? '你是一位耐心、准确、会讲人话的理工科导师，但**你绝对不要做无痛喂饭的复读机**。请基于给定教材 OCR、网页摘要和已有对话上下文生成结构化讲解。\n【追问处理必须遵循的核心法则】：\n当学生答错测验题、或者对概念理解有偏差（哪怕只有一点点）时，**绝对不要直接给出正确答案或马上把定义贴给他**。你必须：\n1. 指出他结论中哪个环节的逻辑断链了；\n2. 抛出一个基于他当前错误逻辑的**反例或极其刁钻的反问**，逼他自己发现矛盾；\n3. 像苏格拉底一样，一层一层用提问扒光他的盲点，直到他自己说出正确的推演逻辑，你再帮他总结。\n（对于 follow-up 问题，必须延续上下文。绝对不要输出 ```python 代码块...）\n绝对不要输出 ASCII 图、纯文本示意图、字符画坐标轴，**严禁**自己伪造 `![Generated Visualization](/generated/...)` 这类的图片链接；如果需要图示，只能在正文里用文字说明，后置的 gptimage2 绘图模型会自动接管画图。' + userProfilePrompt
+                    : 'You are a STEM tutor with a strict Socratic method. Generate structured explanations based on the given textbook OCR, web summaries, and conversation history.\n**Crucial rule for follow-ups/wrong answers:**\nIf the student is wrong or misunderstands a concept, DO NOT give away the answer immediately or copy-paste definitions. Instead:\n1. Identify the exact flaw in their logic.\n2. Present a "gotcha" counter-example or probing question based on their own flawed reasoning to expose the contradiction.\n3. Make them realize their own mistake and guide them to the correct conclusion via questions step-by-step.\nNever output ```python code blocks, ASCII diagrams, plain-text sketches, or character-drawn axes, and **NEVER** hallucinate or output markdown image links like `![Generated Visualization](/generated/...)` yourself; if a figure is needed, mention it in prose only and leave the actual image rendering to the subsequent gptimage2 drawing model.' + userProfilePrompt
             },
             {
                 role: 'user',
@@ -1371,53 +1620,65 @@ async function generateExplanation(question, bookPages, webSources, options = {}
 
     // Remove any hallucinated static image tags if the first agent incorrectly fabricated them
     explanation = explanation.replace(/!\[[^\]]*\]\(\/generated\/[^)]+\)/g, '');
+    explanation = stripDiagramFallbackBlocks(explanation);
 
-    const wantsDiagram = /complex plane|phasor|plot|graph|diagram|visual|sketch|draw|坐标|图示|画图|复平面|波形|图像/i.test(question + '\n' + explanation);
-    if (!wantsDiagram) return explanation;
+    const explicitDiagramRequest = /配图讲解|配图|画图讲解|请画图|给我画图|给我一张图|画个图|出图|示意图|帮我画|配一张图|附图|图解|带图讲解|用图讲解|illustrate|illustration|with diagram|with a diagram|with figure|with a figure|show me a diagram|show me a figure|give me a diagram|give me a figure|add a diagram|add a figure|include a diagram|include a figure|draw (?:me )?(?:a )?diagram|draw (?:me )?(?:a )?figure|visual aid|visual explanation/i.test(question);
+    if (!explicitDiagramRequest) return explanation;
 
-    console.log('[ASK] Pipeline Step 3/3: Generating diagram code with a second Sonnet...');
+    console.log('[ASK] Pipeline Step 3/3: Generating gptimage2 visual brief...');
     try {
-        const codePrompt = [
+        const imagePromptRequest = [
             language === 'zh'
-                ? '你是一位只负责教学图绘制的理工科导师兼 Python 绘图工程师。现在不要讲解正文，只负责输出图。必须仅输出一个合法的 ```python ... ``` 代码块，没有任何额外多余的废话。'
-                : 'You are a STEM tutor and Python plotting engineer dedicated only to educational diagrams. Do not explain the lesson text here; only produce the figure code. You MUST return exactly one valid ```python ... ``` code block and nothing else.',
+                ? '你是一位只负责教学图设计的学术可视化导演。不要写正文讲解，只输出一段可以直接交给 gptimage2 的英文图片 prompt。'
+                : 'You are an academic visualization director. Do not write lesson prose. Output only one English image prompt that can be sent directly to gptimage2.',
             language === 'zh'
-                ? '硬性要求：只输出一个 ```python 代码块；不要输出任何解释文字；代码开头必须且只能安全导入 matplotlib.pyplot (如 import matplotlib.pyplot as plt) 和 numpy (如 import numpy as np)，不要直接使用 import matplotlib 避免路径或缺少属性的错误；必须包含 plt.savefig("/tmp/tutor-plot-auto.png", dpi=150)；不要使用 plt.show()；字符串和括号必须闭合；图必须简洁，只保留必要标签；严禁在图里放大段说明文字、顶部大文本框、长标题、规则列表；默认优先使用更小的 figsize（如 4.2x3.2、4.4x3.4、4.6x3.6，最多不超过 4.8x3.8，除非绝对必要），让图在聊天中自然嵌入，不要占满整块区域；坐标轴范围只包住必要内容；所有标签必须避开线条、轴和点，不能重叠，轴名称放边缘；使用 tight_layout(pad=0.25)。'
-                : 'Hard requirements: output exactly one ```python code block; no explanatory text; at the top, safely import matplotlib.pyplot as plt and numpy as np (do not simply use "import matplotlib" to avoid attribute/path errors); include plt.savefig("/tmp/tutor-plot-auto.png", dpi=150); do not use plt.show(); all strings and parentheses must be closed; keep the figure compact with only essential labels; do NOT put long explanatory text, top text boxes, rule lists, or oversized titles inside the figure; strongly prefer a smaller figsize (like 4.2x3.2, 4.4x3.4, or 4.6x3.6, and do not exceed 4.8x3.8 unless absolutely necessary); keep axis limits tight; all labels must avoid lines, axes, and points, and must not overlap; put axis names near the edges; use tight_layout(pad=0.25).',
+                ? '硬性要求：纯白干净背景；lecture notes 风格；只讲一个知识点；必须有唯一阅读路径；使用少量低饱和彩色框框和标注；颜色仅限 navy / muted teal / soft gray，warning 可用 muted red；无卡通、无海报感、无花哨装饰、无 dense text blocks、无 full derivation、无 extra examples。'
+                : 'Hard requirements: pure white clean background; lecture-notes style; teach exactly one knowledge point; enforce a single clear reading path; use a small amount of low-saturation colored boxes and callouts; colors limited to navy, muted teal, soft gray, with muted red only for warnings; no cartoon feel, no poster feel, no decorative clutter, no dense text blocks, no full derivation, no extra examples.',
             language === 'zh'
-                ? '图像排版与 API 强制要求：1. 严禁用 ax.text 去标记坐标轴名称，必须且只能用 ax.set_xlabel 和 ax.set_ylabel，把它们安分地放在图的边缘。 2. 避免在图中央（特别是原点附近）挤一堆字，必须要给数据点加注释时强制且必须使用 ax.annotate 并配合 xytext=(x_offset, y_offset) 和 textcoords="offset points" 来进行推离防止压盖数据点。3. 使用 `ax.spines["bottom"].set_position(("data", 0))` 和 `ax.spines["left"].set_position(("data", 0))` 让轴过原点，同时必须隐藏 top 和 right 边框 `ax.spines["top"].set_color("none")`。4. 取消或者极度缩短整体图表大主标题（ax.set_title），不得写超长说明句。5. 图内绝不允许写框型或者长句文本，只允许保留符号本身和值（例如 z=3+4j），多余解释必须丢掉。'
-                : 'Figure layout and mandatory API rules: 1. NEVER use `ax.text` to label the axes "Real" or "Imag"; you MUST strictly use `ax.set_xlabel()` and `ax.set_ylabel()` to place them safely at the edges. 2. When labeling points, strictly use `ax.annotate` with `xytext=(offset_x, offset_y)` and `textcoords="offset points"` to push the text away from the data point to avoid overlap. Do not use absolute `ax.text`. 3. Set the axes to cross at the origin via `ax.spines["bottom"].set_position(("data", 0))` and `ax.spines["left"].set_position(("data", 0))`, and MUST explicitly hide the top and right spines using `.set_color("none")`. 4. Do not use long `ax.set_title` sentences; remove the title or keep it extremely short. 5. NO explanation boxes, formula boxes, or long text sentences inside the figure area; keep only math symbols (e.g. z=3+4j).',
+                ? '输出必须是英文图片 prompt，不要加引号，不要解释，不要编号。'
+                : 'Output must be a plain English image prompt only. No quotes, no explanations, no numbering.',
             '',
             `Question: ${question}`,
             '',
             'Textbook context:',
             buildBookContext(bookPages),
             '',
-            'Explanation plan to align with:',
+            'Explanation to support:',
             explanation
         ].join('\n');
 
-        const diagramCode = await callOpenRouterChat({
+        const imagePrompt = await callOpenRouterChat({
             model: 'anthropic/claude-haiku-4.5',
             timeoutMs: 90000,
-            temperature: 0.1,
-            maxTokens: 1400,
+            temperature: 0.2,
+            maxTokens: 700,
             messages: [
                 {
                     role: 'system',
                     content: language === 'zh'
-                        ? '你现在是第二个 Sonnet 实例，专门负责绘图代码，不负责文字讲解。你的职责是生成干净、紧凑、标签不冲突的 matplotlib 教学图。'
-                        : 'You are the second Sonnet instance, dedicated only to plotting code, not lesson prose. Your job is to generate clean, compact matplotlib educational figures with non-overlapping labels.'
+                        ? '你专门把教学内容改写成适合 gptimage2 的图片提示词。输出必须短、准、可渲染。'
+                        : 'You rewrite teaching intent into concise, renderable prompts for gptimage2. Output must be short, precise, and directly usable.'
                 },
-                { role: 'user', content: codePrompt }
+                { role: 'user', content: imagePromptRequest }
             ]
         });
 
-        if (/```python[\s\S]*?```/i.test(diagramCode)) {
-            explanation += `\n\n${diagramCode.trim()}\n`;
+        const finalImagePrompt = String(imagePrompt || '').trim();
+        if (finalImagePrompt) {
+            console.log('[ASK] gptimage2 final image prompt:', finalImagePrompt.slice(0, 400));
+            const imgResult = await callTutorSkillRaw(finalImagePrompt);
+            const urls = extractRenderableImageUrls(imgResult);
+            console.log('[ASK] gptimage2 extracted image count:', urls.length);
+            if (urls.length > 0) {
+                explanation += `\n\n![Generated Visualization](${urls[0]})\n`;
+            } else {
+                console.warn('[ASK] gptimage2 returned no renderable image URLs. Raw prefix:', String(imgResult || '').slice(0, 500));
+                explanation = stripDiagramFallbackBlocks(explanation);
+            }
         }
     } catch (err) {
-        console.warn('[ASK] Sonnet diagram generation failed:', err.message);
+        console.warn('[ASK] gptimage2 diagram generation failed:', err.message);
+        explanation = stripDiagramFallbackBlocks(explanation);
     }
 
     return explanation;
@@ -1449,7 +1710,7 @@ function getPagesForSection(sectionId, ocrDir = OCR_DIR_OLD) {
         );
         if (mapKey) {
             const pageNames = activeMap[mapKey];
-            return pageNames.slice(0, 6).map(pn => ({
+            return pageNames.map(pn => ({
                 page: pn,
                 pageImage: pn + '.png',
                 image: `/pages/${pn}.png`,
@@ -1465,7 +1726,7 @@ function getPagesForSection(sectionId, ocrDir = OCR_DIR_OLD) {
         if (parentCode !== code) {
             const parentKey = Object.keys(activeMap).find(k => k.toLowerCase() === parentCode.toLowerCase());
             if (parentKey) {
-                return activeMap[parentKey].slice(0, 6).map(pn => ({
+                return activeMap[parentKey].map(pn => ({
                     page: pn,
                     pageImage: pn + '.png',
                     image: `/pages/${pn}.png`,
@@ -1596,20 +1857,36 @@ const PREGEN_OUTCOME_COMBOS = [
  * Agent A — Lesson Architect (Gemini 3.1 Pro Preview)
  * Reads OCR + existing page images, outputs a Rendering Blueprint JSON.
  */
-async function agentA_plan(sectionId, sectionTitle, bookPages, webSources, language = 'en', userProfilePrompt = '') {
+async function agentA_plan(sectionId, sectionTitle, bookPages, webSources, language = 'en', userProfilePrompt = '', bookSource = 'old') {
     const ocrPages = bookPages.map(p => ({
         pageId: p.page,
         text: readOCRText(p.textPath, 3000)
     }));
     const existingPageImages = bookPages.map(p => p.page);
+    const allowedNewBookFigures = getAllowedNewBookFigures(sectionId, bookPages, bookSource);
     const availableFigures = {};
+    // pageInfo: page -> { page_type, has_math, has_figures, summary_excerpt }
+    // Gives Agent A full context even for math-heavy pages with no extracted figure crops.
+    const pageInfo = {};
     for (const p of bookPages) {
         const metaPath = path.join((p.textPath ? path.dirname(p.textPath) : OCR_DIR), `${p.page}.meta.json`);
         if (fs.existsSync(metaPath)) {
             const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
             if (meta.figures && meta.figures.length) {
-                availableFigures[p.page] = meta.figures.map(f => ({ fig_id: f.fig_id, caption: f.caption }));
+                const filteredFigures = meta.figures.filter(f => {
+                    const crop = path.basename(String((f && f.crop_file) || ''));
+                    return !crop || bookSource !== 'new' || allowedNewBookFigures.has(crop);
+                });
+                if (filteredFigures.length) {
+                    availableFigures[p.page] = filteredFigures.map(f => ({ fig_id: f.fig_id, caption: f.caption }));
+                }
             }
+            pageInfo[p.page] = {
+                page_type: meta.page_type || 'unknown',
+                has_math: !!meta.has_math,
+                has_figures: !!(meta.figures && meta.figures.length),
+                summary_excerpt: (meta.summary || '').slice(0, 180)
+            };
         }
     }
 
@@ -1629,6 +1906,9 @@ async function agentA_plan(sectionId, sectionTitle, bookPages, webSources, langu
         '',
         'available_figures:',
         JSON.stringify(availableFigures, null, 2),
+        '',
+        'page_info (page_type / has_math / has_figures / summary_excerpt):',
+        JSON.stringify(pageInfo, null, 2),
         '',
         'web_sources_available:',
         webSources.slice(0, 6).map((w, i) => `[${i+1}] ${w.title} — ${w.url}`).join('\n') || 'none',
@@ -1660,6 +1940,7 @@ async function agentA_plan(sectionId, sectionTitle, bookPages, webSources, langu
     const hasBookImage = blueprint.blocks.some(b => b && b.type === 'book_image');
     if (!hasBookImage) {
         const candidatePages = Object.keys(availableFigures);
+        let injected = false;
         for (const page of candidatePages) {
             const figs = availableFigures[page] || [];
             const canonical = figs.find(f => /complex plane|real axis|imaginary axis|signal|system|block diagram|unit step|impulse|phasor|polar/i.test(`${f.fig_id || ''} ${f.caption || ''}`)) || figs[0];
@@ -1672,12 +1953,44 @@ async function agentA_plan(sectionId, sectionTitle, bookPages, webSources, langu
                     caption_instruction: 'Add a one-sentence caption explaining what this textbook figure shows and why it matters for the core concept of this section.'
                 });
                 console.log(`[Agent A] Injected canonical book_image for ${sectionId}: ${page} / ${canonical.fig_id}`);
+                injected = true;
                 break;
             }
         }
     }
 
-    console.log(`[Agent A] Blueprint ready — ${blueprint.blocks.length} blocks.`);
+    if (!blueprint.visual_plan) {
+        const hasBookImage = blueprint.blocks.some(b => b && b.type === 'book_image');
+        const hasGeneratedImage = blueprint.blocks.some(b => b && b.type === 'generate_image');
+        blueprint.visual_plan = {
+            primary_anchor: hasBookImage && hasGeneratedImage ? 'both' : (hasBookImage ? 'book_figure' : 'generated_image'),
+            rationale: hasBookImage && hasGeneratedImage
+                ? 'Use the textbook figure as the factual anchor and a generated gptimage2 visual to clarify the relationship visually.'
+                : (hasBookImage
+                    ? 'Use the textbook figure as the main visual anchor because the book already contains a strong explanatory diagram.'
+                    : 'Use a generated gptimage2 lecture-note visual because the key relationship is easier to understand through a clean custom visual.'),
+            cram: 'Use visuals to make the pattern or exam move recognizable fast.',
+            standard: 'Use visuals to clarify the core idea and support one representative example.',
+            top_score: 'Use visuals to expose subtle distinctions, traps, or higher-precision comparisons.'
+        };
+    }
+
+    blueprint.blocks = blueprint.blocks.map(block => {
+        if (!block || (block.type !== 'book_image' && block.type !== 'generate_image')) return block;
+        if (!block.teaching_role) {
+            block.teaching_role = block.type === 'book_image' ? 'concept_anchor' : 'comparison_anchor';
+        }
+        if (!block.mode_specific_visual_use) {
+            block.mode_specific_visual_use = {
+                cram: 'Use this visual for fast recognition of the key pattern.',
+                standard: 'Use this visual to clarify the main concept.',
+                top_score: 'Use this visual to surface a subtle distinction, trap, or variant.'
+            };
+        }
+        return block;
+    });
+
+    console.log(`[Agent A] Blueprint ready — ${blueprint.blocks.length} blocks. visual_plan=${blueprint.visual_plan?.primary_anchor || 'none'}`);
     return { raw, blueprint };
 }
 
@@ -1686,13 +1999,79 @@ async function agentA_plan(sectionId, sectionTitle, bookPages, webSources, langu
  * Takes the Blueprint and executes each block into final Markdown.
  * Returns a Markdown string ready for the frontend.
  */
-async function agentB_execute(blueprint, bookPages, webSources, language = 'en') {
+function isMajorKnowledgePointRenderedBlock(block) {
+    if (!block || block.type !== 'text_explanation') return false;
+    const content = String(block.content || '');
+    return /^\s*##\s+/.test(content);
+}
+
+function normalizePairedVisualPlacement(renderedBlocks, visualPlan = null) {
+    if (!Array.isArray(renderedBlocks) || renderedBlocks.length < 3) return renderedBlocks;
+    if (!visualPlan || visualPlan.primary_anchor !== 'both') return renderedBlocks;
+
+    const blocks = renderedBlocks.slice();
+    const sections = [];
+    let current = {
+        startIndex: 0,
+        indices: [],
+        visualIndices: [],
+        visualKinds: new Set(),
+        isOverview: true
+    };
+    sections.push(current);
+
+    blocks.forEach((block, index) => {
+        if (isMajorKnowledgePointRenderedBlock(block)) {
+            current = {
+                startIndex: index,
+                indices: [index],
+                visualIndices: [],
+                visualKinds: new Set(),
+                isOverview: false
+            };
+            sections.push(current);
+            return;
+        }
+
+        current.indices.push(index);
+        if (block && (block.type === 'book_image' || block.type === 'generate_image')) {
+            current.visualIndices.push(index);
+            current.visualKinds.add(block.type);
+        }
+    });
+
+    if (sections.length < 2) return blocks;
+
+    for (let s = 0; s < sections.length - 1; s += 1) {
+        const left = sections[s];
+        const right = sections[s + 1];
+        if (left.visualIndices.length !== 1 || right.visualIndices.length !== 1) continue;
+
+        const leftKind = Array.from(left.visualKinds)[0] || '';
+        const rightKind = Array.from(right.visualKinds)[0] || '';
+        if (!leftKind || !rightKind || leftKind === rightKind) continue;
+
+        const fromIndex = left.visualIndices[0];
+        const headingIndex = right.startIndex;
+        const [moved] = blocks.splice(fromIndex, 1);
+        let insertAt = headingIndex + 1;
+        if (fromIndex < insertAt) insertAt -= 1;
+        blocks.splice(insertAt, 0, moved);
+        console.log(`[Agent B] Co-located paired visuals by moving ${moved.type} from block ${fromIndex} to ${insertAt}. overviewSource=${left.isOverview}`);
+        return blocks;
+    }
+
+    return blocks;
+}
+
+async function agentB_execute(sectionId, blueprint, bookPages, webSources, language = 'en', bookSource = 'old') {
     const systemPrompt = fs.readFileSync(
         path.join(__dirname, '../tutor-materials/prompts/agent-b-tutor.md'),
         'utf8'
     );
 
     const existingPageImages = {};
+    const allowedNewBookFigures = getAllowedNewBookFigures(sectionId, bookPages, bookSource);
     const availableFigures = {};   // page -> [{fig_id, caption}]
     for (const p of bookPages) {
         existingPageImages[p.page] = `/pages/${p.pageImage}`;
@@ -1701,12 +2080,18 @@ async function agentB_execute(blueprint, bookPages, webSources, language = 'en')
         if (fs.existsSync(metaPath)) {
             const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
             if (meta.figures && meta.figures.length) {
-                availableFigures[p.page] = meta.figures.map(f => ({ fig_id: f.fig_id, caption: f.caption }));
+                const filteredFigures = meta.figures.filter(f => {
+                    const crop = path.basename(String((f && f.crop_file) || ''));
+                    return !crop || bookSource !== 'new' || allowedNewBookFigures.has(crop);
+                });
+                if (filteredFigures.length) {
+                    availableFigures[p.page] = filteredFigures.map(f => ({ fig_id: f.fig_id, caption: f.caption }));
+                }
             }
         }
     }
 
-    const userMsg = JSON.stringify({
+    const payload = {
         blueprint,
         existing_page_images: existingPageImages,
         available_figures: availableFigures,
@@ -1715,16 +2100,24 @@ async function agentB_execute(blueprint, bookPages, webSources, language = 'en')
             title: w.title,
             url: w.url,
             snippet: w.snippet || ''
-        }))
-    }, null, 2);
+        })),
+        output_contract: {
+            format: 'single_json_object',
+            no_markdown_fences: true,
+            no_prose: true,
+            compact_json_preferred: true
+        }
+    };
+
+    const userMsg = JSON.stringify(payload, null, 2);
 
     console.log(`[Agent B] Executing ${blueprint.blocks.length} blocks…`);
 
-    const raw = await callOpenRouterChat({
+    let raw = await callOpenRouterChat({
         model: AGENT_B_MODEL,
-        timeoutMs: 150000,
-        temperature: 0.3,
-        maxTokens: 6000,
+        timeoutMs: 180000,
+        temperature: 0.2,
+        maxTokens: 12000,
         messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userMsg }
@@ -1732,11 +2125,39 @@ async function agentB_execute(blueprint, bookPages, webSources, language = 'en')
     });
 
     // Try to parse Agent B's JSON output and convert to Markdown
-    const rendered = tryParseJsonLoose(raw);
+    let rendered = tryParseJsonLoose(raw);
+    if (!rendered || !Array.isArray(rendered.rendered_blocks)) {
+        console.warn('[Agent B] First pass was not valid JSON. Retrying with strict compact-output instruction.');
+        raw = await callOpenRouterChat({
+            model: AGENT_B_MODEL,
+            timeoutMs: 180000,
+            temperature: 0,
+            maxTokens: 14000,
+            messages: [
+                {
+                    role: 'system',
+                    content: `${systemPrompt}\n\nCRITICAL OUTPUT CONTRACT: Return exactly one complete JSON object. Do not wrap in markdown fences. Do not add commentary. Keep JSON compact.`
+                },
+                {
+                    role: 'user',
+                    content: `${userMsg}\n\nYour previous attempt was invalid or truncated. Re-output the full result as one complete JSON object only.`
+                }
+            ]
+        });
+        rendered = tryParseJsonLoose(raw);
+    }
+
     if (rendered && Array.isArray(rendered.rendered_blocks)) {
         console.log(`[Agent B] JSON OK — ${rendered.rendered_blocks.length} blocks`);
+        if (blueprint.visual_plan && !rendered.visual_plan) rendered.visual_plan = blueprint.visual_plan;
+        rendered.rendered_blocks = normalizePairedVisualPlacement(rendered.rendered_blocks, rendered.visual_plan || blueprint.visual_plan || null);
         // Auto-fill missing fig_id for book_image blocks using metadata
         rendered.rendered_blocks.forEach((b, i) => {
+            const planned = (blueprint.blocks || [])[i] || null;
+            if (planned && !b.teaching_role && planned.teaching_role) b.teaching_role = planned.teaching_role;
+            if (planned && !b.mode_specific_visual_use && planned.mode_specific_visual_use) {
+                b.mode_specific_visual_use = planned.mode_specific_visual_use;
+            }
             if (b.type === 'book_image' && b.source_page && !b.fig_id) {
                 const metaPath = fs.existsSync(path.join(OCR_DIR_NEW, `${b.source_page}.meta.json`))
                     ? path.join(OCR_DIR_NEW, `${b.source_page}.meta.json`)
@@ -1754,7 +2175,7 @@ async function agentB_execute(blueprint, bookPages, webSources, language = 'en')
             if (b.type === 'book_image')
                 console.log(`[Agent B] block[${i}] book_image: page=${b.source_page} fig_id=${b.fig_id} file_path=${b.file_path}`);
         });
-        return await blueprintToMarkdown(rendered.rendered_blocks, existingPageImages);
+        return await blueprintToMarkdown(rendered.rendered_blocks, existingPageImages, rendered.visual_plan || blueprint.visual_plan || null, bookPages, sectionId, bookSource);
     }
 
     // Raw fallback — strip whole-page book image refs
@@ -1765,8 +2186,15 @@ async function agentB_execute(blueprint, bookPages, webSources, language = 'en')
 /**
  * Convert Agent B's rendered_blocks JSON → Markdown string for the frontend.
  */
-async function blueprintToMarkdown(blocks, pageImages) {
+async function blueprintToMarkdown(blocks, pageImages, visualPlan = null, bookPages = [], sectionId = '', bookSource = 'old') {
     const parts = [];
+    const allowedSourcePages = new Set((Array.isArray(bookPages) ? bookPages : []).map(p => compactWhitespace((p && p.page) || '')));
+    const allowedNewBookFigures = getAllowedNewBookFigures(sectionId, bookPages, bookSource);
+
+    if (visualPlan) {
+        const b64 = Buffer.from(JSON.stringify(visualPlan || {})).toString('base64');
+        parts.push(`%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="${b64}" style="display:none;"></div>%%KC_END%%`);
+    }
 
     for (const block of blocks) {
         switch (block.type) {
@@ -1781,40 +2209,61 @@ async function blueprintToMarkdown(blocks, pageImages) {
                 break;
 
             case 'book_image': {
-                const sourcePage = block.source_page || '';
-                const figId = block.fig_id || block.caption || '';
+                const sourcePage = compactWhitespace(block.source_page || '');
+                const figId = block.fig_id || '';
+                const cropHint = block.crop_hint || 'full'; // left_half | right_half | full | top_third
 
-                // Try to find the figure in metadata for a precision crop
+                if (sourcePage && allowedSourcePages.size && !allowedSourcePages.has(sourcePage)) {
+                    parts.push(`*(Figure unavailable: source page ${sourcePage} is outside this section's allowed pages)*`);
+                    break;
+                }
+
                 const metaPath = sourcePage
                     ? (fs.existsSync(path.join(OCR_DIR_NEW, `${sourcePage}.meta.json`))
                         ? path.join(OCR_DIR_NEW, `${sourcePage}.meta.json`)
                         : path.join(OCR_DIR_OLD, `${sourcePage}.meta.json`))
                     : null;
                 let cropUrl = null;
+
+                // --- Tier 1: extracted figure crop (fig_id match within allowlist) ---
                 if (metaPath && fs.existsSync(metaPath)) {
                     const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
                     const figures = meta.figures || [];
-                    let fig = figId ? figures.find(f => f.fig_id === figId) : null;
-                    if (!fig && figId) {
-                        const needle = figId.toLowerCase().replace(/\s+/g, '');
-                        fig = figures.find(f => f.fig_id.toLowerCase().replace(/\s+/g, '').includes(needle));
-                    }
-                    if (!fig && figures.length === 1) fig = figures[0];
+                    const fig = findAllowedFigureForBlock(figures, block, allowedNewBookFigures);
                     if (fig) {
-                        cropUrl = fig.crop_file
-                            ? `/figures/${encodeURIComponent(fig.crop_file)}`
-                            : `/api/crop?page=${encodeURIComponent(sourcePage)}&fig=${encodeURIComponent(fig.fig_id)}`;
+                        block.fig_id = block.fig_id || fig.fig_id || '';
+                        block.caption = block.caption || fig.caption || '';
+                        block.file_path = block.file_path || fig.crop_file || '';
+                        if (fig.crop_file && allowedNewBookFigures.has(path.basename(fig.crop_file)) && fs.existsSync(path.join(FIGURE_IMAGE_DIR_NEW, fig.crop_file))) {
+                            cropUrl = `/figures/${encodeURIComponent(fig.crop_file)}`;
+                        } else if (fig.crop_file) {
+                            const generatedCropPath = path.join(GENERATED_DIR, 'crops', fig.crop_file);
+                            if (fs.existsSync(generatedCropPath)) {
+                                cropUrl = `/generated/crops/${encodeURIComponent(fig.crop_file)}`;
+                            }
+                        }
                     }
                 }
 
-                // Fallback to full page if no crop available
-                const finalUrl = cropUrl || block.file_path || (pageImages && pageImages[sourcePage]) || null;
-                if (finalUrl && !block.warning) {
-                    const altText = figId || block.caption || 'Figure';
-                    parts.push(`![${altText}](${finalUrl})`);
-                    if (block.caption && block.caption !== figId) parts.push(`*${block.caption}*`);
-                } else if (block.warning) {
-                    parts.push(`*(Figure: ${sourcePage} — ${block.warning})*`);
+                // --- Tier 1b: explicit file_path (figure from new-book-figures dir) ---
+                if (!cropUrl && block.file_path) {
+                    const fileName = path.basename(String(block.file_path || ''));
+                    if (fileName && allowedNewBookFigures.has(fileName) && fs.existsSync(path.join(FIGURE_IMAGE_DIR_NEW, fileName))) {
+                        cropUrl = `/figures/${encodeURIComponent(fileName)}`;
+                    }
+                }
+
+                if (cropUrl && !block.warning) {
+                    const altText = block.fig_id || figId || block.caption || 'Textbook page';
+                    const metaHtml = (block.teaching_role || block.mode_specific_visual_use)
+                        ? `<div class="kc-visual-meta" data-visual-kind="book_image" data-teaching-role="${escapeHtmlAttr(block.teaching_role || '')}" data-visual-use-b64="${Buffer.from(JSON.stringify(block.mode_specific_visual_use || {})).toString('base64')}" style="display:none;"></div>`
+                        : '';
+                    if (metaHtml) parts.push(`%%KC_BLOCK%%${metaHtml}%%KC_END%%`);
+                    parts.push(`![${altText}](${cropUrl})`);
+                    if (block.caption && block.caption !== (block.fig_id || figId)) parts.push(`*${block.caption}*`);
+                } else if (bookSource !== 'new') {
+                    const reason = block.warning || `no allowed figure or page image found for ${sourcePage}${figId ? ` (${figId})` : ''}`;
+                    parts.push(`*(Figure unavailable: ${reason})*`);
                 }
                 break;
             }
@@ -1829,39 +2278,28 @@ async function blueprintToMarkdown(blocks, pageImages) {
                 }
                 break;
 
-            case 'generate_image':
-                if (block.tool === 'python_matplotlib') {
-                    const chartFile = `chart-${Date.now()}-${Math.random().toString(36).slice(2,7)}.png`;
-                    const chartPath = path.join(GENERATED_DIR, chartFile);
-                    const spec = Object.assign({}, block.python_spec || {}, { output_path: chartPath });
-                    try {
-                        const result = await runPython3(MATPLOTLIB_GEN, JSON.stringify(spec));
-                        const parsed = JSON.parse(result);
-                        if (parsed.ok) {
-                            if (block.caption) parts.push(`*📊 ${block.caption}*`);
-                            parts.push(`![Chart](/generated/${chartFile})`);
-                        } else {
-                            parts.push(`> ⚠️ Chart render failed: ${parsed.error || 'unknown'}`);
-                        }
-                    } catch (e) {
-                        parts.push(`> ⚠️ Chart render error: ${e.message}`);
+            case 'generate_image': {
+                const metaHtml = (block.teaching_role || block.mode_specific_visual_use)
+                    ? `<div class="kc-visual-meta" data-visual-kind="generate_image" data-teaching-role="${escapeHtmlAttr(block.teaching_role || '')}" data-visual-use-b64="${Buffer.from(JSON.stringify(block.mode_specific_visual_use || {})).toString('base64')}" style="display:none;"></div>`
+                    : '';
+                const rawPrompt = block.prompt || block.spec || (block.python_spec && (block.python_spec.description || block.python_spec.title)) || block.reason || 'educational illustration';
+                const stylePrefix = 'Pure white clean background, minimalist lecture-notes educational diagram, centered academic layout, exactly one knowledge point, single clear reading path, low-saturation academic palette, navy / muted teal / soft gray with muted red only for warnings, clean linework, restrained colored teaching boxes, no poster styling, no cartoon elements, no dense text blocks, no full derivation, no extra examples, exam-oriented concept clarity. ';
+                const prompt = `${stylePrefix}${rawPrompt}`.trim();
+                try {
+                    const imgResult = await callTutorSkillRaw(prompt);
+                    const urls = extractRenderableImageUrls(imgResult);
+                    if (urls.length > 0) {
+                        if (metaHtml) parts.push(`%%KC_BLOCK%%${metaHtml}%%KC_END%%`);
+                        if (block.caption) parts.push(`*🎨 ${block.caption}*`);
+                        parts.push(`![Illustration](${urls[0]})`);
+                    } else {
+                        console.warn('[LessonImage] generate_image returned no renderable URL; omitting student-facing placeholder.');
                     }
-                } else if (block.tool === 'openai/gpt-5.4-image-2') {
-                    const prompt = block.prompt || block.spec || (block.python_spec && block.python_spec.description) || block.reason || 'educational illustration';
-                    try {
-                        const imgResult = await callTutorSkillRaw(prompt);
-                        const urls = (imgResult.match(/https?:\/\/[^\s)"']+\.(?:png|jpg|jpeg|webp|gif)[^\s)"']*/gi) || []);
-                        if (urls.length > 0) {
-                            if (block.caption) parts.push(`*🎨 ${block.caption}*`);
-                            parts.push(`![Illustration](${urls[0]})`);
-                        } else {
-                            parts.push(`> *(Illustration generation attempted — no image returned)*`);
-                        }
-                    } catch (e) {
-                        parts.push(`> *(Illustration unavailable: ${e.message})*`);
-                    }
+                } catch (e) {
+                    console.warn('[LessonImage] generate_image failed; omitting student-facing placeholder:', e.message);
                 }
                 break;
+            }
 
             case 'knowledge_check': {
                 // Legacy single-question support
@@ -1909,7 +2347,7 @@ async function prewarmLessonVariants(sectionId, sectionTitle, bookPages, baseMem
     if (!baseMemory || !baseMemory.quiz) return { scheduled: 0, generated: 0 };
 
     const math = normalizeQuizProfile(baseMemory.quiz).math;
-    const candidates = ['cram', 'standard', 'foundation'].map(track =>
+    const candidates = ['cram', 'standard', 'top_score'].map(track =>
         buildSyntheticProfileMemory(baseMemory, { track, goal: track, math })
     );
 
@@ -1921,7 +2359,7 @@ async function prewarmLessonVariants(sectionId, sectionTitle, bookPages, baseMem
             if (readLessonCache(sectionId, memory, bookSource)) continue;
             try {
                 const profilePrompt = buildUserProfilePrompt(memory);
-                const lesson = await generateSectionLesson(sectionId, sectionTitle, bookPages, [], language, profilePrompt);
+                const lesson = await generateSectionLesson(sectionId, sectionTitle, bookPages, [], language, profilePrompt, bookSource);
                 if (lesson) {
                     writeLessonCache(sectionId, memory, lesson, bookSource);
                     generated += 1;
@@ -1936,19 +2374,244 @@ async function prewarmLessonVariants(sectionId, sectionTitle, bookPages, baseMem
     return { scheduled: candidates.length, generated: 0 };
 }
 
-async function generateSectionLesson(sectionId, sectionTitle, bookPages, webSources, language = 'en', userProfilePrompt = '') {
+function findFallbackBookImageBlock(sectionId, bookPages, language = 'en', bookSource = 'old') {
+    const allowedNewBookFigures = getAllowedNewBookFigures(sectionId, bookPages, bookSource);
+
+    for (const page of bookPages || []) {
+        const metaPath = path.join((page && page.textPath ? path.dirname(page.textPath) : OCR_DIR), `${page.page}.meta.json`);
+        if (!fs.existsSync(metaPath)) continue;
+        try {
+            const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+            const figures = Array.isArray(meta.figures) ? meta.figures.filter((fig) => {
+                const crop = path.basename(String((fig && fig.crop_file) || ''));
+                return !crop || bookSource !== 'new' || allowedNewBookFigures.has(crop);
+            }) : [];
+            if (!figures.length) continue;
+            const canonical = figures.find(f => /complex plane|real axis|imaginary axis|signal|system|block diagram|unit step|impulse|phasor|polar|fraction|pole|zero|response|waveform/i.test(`${f.fig_id || ''} ${f.caption || ''}`)) || figures[0];
+            return {
+                type: 'book_image',
+                source_page: page.page,
+                fig_id: canonical.fig_id || null,
+                crop_hint: 'full',
+                teaching_role: 'concept_anchor',
+                mode_specific_visual_use: {
+                    cram: 'Use this textbook figure for fast pattern recognition.',
+                    standard: 'Use this textbook figure to anchor the core concept before the generated teaching visual refines it.',
+                    top_score: 'Use this textbook figure to compare notation details, traps, and edge cases.'
+                },
+                caption_instruction: language === 'zh'
+                    ? '写一句中文 caption，说明这张教材图展示了什么，以及它为什么能锚定本节的核心概念。'
+                    : 'Write a one-sentence caption explaining what this textbook figure shows and why it anchors the core idea of this section.'
+            };
+        } catch (err) {
+            console.warn(`[Pipeline] Failed to inspect figure metadata for ${sectionId} / ${page.page}: ${err.message}`);
+        }
+    }
+
+    return null;
+}
+
+function buildFallbackQuizPlan(sectionId, sectionTitle, language = 'en') {
+    const label = compactWhitespace(sectionTitle || sectionId || 'this section');
+    const isZh = language === 'zh';
+    return {
+        type: 'quiz_plan',
+        target_questions: 4,
+        question_range: { min: 4, max: 5 },
+        knowledge_points: [
+            {
+                id: `${String(sectionId || 'section').replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase()}_core`,
+                label,
+                importance: 'high',
+                exam_weight: 'high',
+                mastery_rule: { correct_streak_required: 2 },
+                questions: isZh ? [
+                    {
+                        id: 'core_q1',
+                        type: 'multiple_choice',
+                        stem: `关于 ${label}，下面哪种说法最准确？`,
+                        options: [
+                            'A. 只要记结论，不需要理解图像和公式之间的关系',
+                            'B. 要同时看懂定义、图像/结构含义，以及题目里怎么考',
+                            'C. 这节内容只能靠死记硬背，无法用结构理解',
+                            'D. 这节重点只是符号变形，和实际题型无关'
+                        ],
+                        correct_option: 'B',
+                        explanation: '本节应把定义、结构/图像以及考试中的识别方式连起来理解。',
+                        wrong_option_explanations: {
+                            A: '只背结论很容易在变式题里出错。',
+                            C: '这节通常存在可理解的结构关系，不只是死记。',
+                            D: '考试会直接考你是否理解这些结构含义。'
+                        },
+                        hint: '想想这节真正想让学生“看懂什么、会判断什么”。',
+                        needs_visual: false,
+                        same_point_variant: false
+                    },
+                    {
+                        id: 'core_q2',
+                        type: 'short_answer',
+                        stem: `用 1-2 句话说明：学习 ${label} 时，最应该先抓住的核心关系是什么？`,
+                        ideal_answer: '应先抓住本节的核心定义或结构关系，再把它和图像/公式表示对应起来，最后知道考试会怎么变形来考。',
+                        grading_rubric: [
+                            '提到核心定义或结构关系',
+                            '提到图像/公式表示的对应',
+                            '提到考试或题型中的应用判断'
+                        ],
+                        explanation: '这题检查学生是否真的抓住了本节主线，而不是只抄局部结论。',
+                        hint: '不要背细节，先说“这节最核心的关系”是什么。',
+                        needs_visual: false,
+                        same_point_variant: false
+                    }
+                ] : [
+                    {
+                        id: 'core_q1',
+                        type: 'multiple_choice',
+                        stem: `Which statement best captures the main learning goal of ${label}?`,
+                        options: [
+                            'A. Memorize the final result without connecting it to the visual or structural meaning',
+                            'B. Understand the core definition, the visual/structural meaning, and how the idea appears in exam questions',
+                            'C. Treat the topic as pure symbol manipulation with no conceptual structure',
+                            'D. Focus only on terminology because the exam never tests interpretation'
+                        ],
+                        correct_option: 'B',
+                        explanation: 'Strong understanding in this section means connecting the definition, the structure/visual meaning, and the exam-facing interpretation.',
+                        wrong_option_explanations: {
+                            A: 'Memorization alone usually breaks on variants and trap questions.',
+                            C: 'The section is meant to be understood structurally, not as empty symbol pushing.',
+                            D: 'Interpretation is exactly what many exam questions probe.'
+                        },
+                        hint: 'Pick the option that combines meaning, representation, and exam use.',
+                        needs_visual: false,
+                        same_point_variant: false
+                    },
+                    {
+                        id: 'core_q2',
+                        type: 'short_answer',
+                        stem: `In 1-2 sentences, explain the core relationship a student should notice first when learning ${label}.`,
+                        ideal_answer: 'The student should first identify the section\'s central definition or structural relationship, then connect it to the visual or symbolic representation and to the typical exam interpretation.',
+                        grading_rubric: [
+                            'Must mention the core definition or structural relationship',
+                            'Must connect it to a visual or symbolic representation',
+                            'Must mention exam interpretation or problem-solving use'
+                        ],
+                        explanation: 'This checks whether the student sees the main thread of the section instead of isolated facts.',
+                        hint: 'Start with “the main relationship is...” rather than listing details.',
+                        needs_visual: false,
+                        same_point_variant: false
+                    }
+                ]
+            }
+        ]
+    };
+}
+
+function buildFallbackBlueprint(sectionId, sectionTitle, bookPages, language = 'en', rawAgentAOutput = '', bookSource = 'old') {
+    const isZh = language === 'zh';
+    const title = compactWhitespace(sectionTitle || sectionId || 'Untitled section');
+    const ocrSnippets = (bookPages || []).slice(0, 3).map((page) => readOCRText(page.textPath, 900)).filter(Boolean);
+    const summaryBits = uniqueStrings([
+        title,
+        ...((bookPages || []).map(page => page && page.summary).filter(Boolean)),
+        ...((bookPages || []).flatMap(page => Array.isArray(page && page.keywords) ? page.keywords : [])),
+        compactWhitespace(String(rawAgentAOutput || '').replace(/[{}\[\]`*_>#]/g, ' ')).slice(0, 240)
+    ], 8);
+    const conceptHints = summaryBits.filter(Boolean).slice(0, 4).join('; ');
+    const bookImageBlock = findFallbackBookImageBlock(sectionId, bookPages, language, bookSource);
+    const visualPromptTail = isZh
+        ? `围绕知识点“${title}”制作一张讲义风格教学图。优先表达核心关系、结构变化或做题时最容易混淆的对比。可参考这些线索：${conceptHints || title}。`
+        : `Create a lecture-notes teaching visual for the knowledge point "${title}". Focus on the core relationship, structural change, or most exam-relevant contrast. Helpful context: ${conceptHints || title}.`;
+
+    const blocks = [
+        {
+            type: 'text_explanation',
+            instruction: isZh
+                ? `以“## Overview”开头，用中文写 90-130 字的小节总览，面向零基础学生。说明这节在讲什么、为什么重要、学完后会什么。尽量贴近教材原文，不要空泛。可以参考这些 OCR 线索：${ocrSnippets.join(' / ') || title}`
+                : `Start with "## Overview" and write a 90-130 word beginner-friendly overview in English. Explain what this section is about, why it matters, and what the student will be able to do after it. Stay grounded in the textbook wording. OCR hints: ${ocrSnippets.join(' / ') || title}`
+        }
+    ];
+
+    if (bookImageBlock) blocks.push(bookImageBlock);
+
+    blocks.push(
+        {
+            type: 'generate_image',
+            tool: 'openai/gpt-5.4-image-2',
+            reason: bookImageBlock
+                ? 'Agent A failed to return valid JSON, so generate a clean teaching visual while preserving textbook anchoring.'
+                : 'Agent A failed to return valid JSON, so synthesize the missing visual anchor with gptimage2 instead of returning a text-only lesson.',
+            teaching_role: bookImageBlock ? 'comparison_anchor' : 'concept_anchor',
+            mode_specific_visual_use: {
+                cram: 'Use this generated visual to recognize the pattern or move within seconds.',
+                standard: 'Use this generated visual to make the core idea intuitive with one clear reading path.',
+                top_score: 'Use this generated visual to expose subtle distinctions, traps, or parameter changes.'
+            },
+            prompt: `${visualPromptTail}`,
+            style_hint: 'lecture notes, academic, clean, restrained color boxes, exam-oriented, one concept only'
+        },
+        {
+            type: 'text_explanation',
+            instruction: isZh
+                ? `以“## Core idea”开头，用中文写 120-180 字，抓住 ${title} 的一个核心关系来讲清楚。要把定义/结构、图像直觉、以及考试里最容易出错的点连起来，最多举一个最小例子。`
+                : `Start with "## Core idea" and write 120-180 words that teach one central relationship in ${title}. Connect the definition or structure, the visual intuition, and the most likely exam trap. Use at most one minimal example.`
+        },
+        {
+            type: 'section_summary',
+            instruction: isZh
+                ? '总结本节最关键的 3 个 takeaway，每条尽量不超过 20 个字，并补一句过渡到下一节的话。'
+                : 'Summarize the 3 most critical takeaways from this section in bullets of at most 20 words each, then add one transition sentence to the next section.'
+        },
+        buildFallbackQuizPlan(sectionId, title, language)
+    );
+
+    const visualPlan = {
+        primary_anchor: bookImageBlock ? 'both' : 'generated_image',
+        rationale: bookImageBlock
+            ? 'Agent A JSON failed, so keep one textbook figure as the factual anchor and add one generated gptimage2 teaching visual to preserve clarity.'
+            : 'Agent A JSON failed, so rely on one generated gptimage2 teaching visual instead of returning a text-only lesson.',
+        cram: 'Use the visual to recognize the exam pattern quickly.',
+        standard: 'Use the visual to clarify the core concept with a single clear path.',
+        top_score: 'Use the visual to highlight subtle distinctions, traps, or variants.'
+    };
+
+    return {
+        section_id: sectionId,
+        section_title: title,
+        difficulty: 'beginner',
+        estimated_read_minutes: 5,
+        learning_objectives: isZh
+            ? [`理解 ${title} 的核心关系`, '能把图像/结构和公式意义对上', '知道题目里最容易怎么考']
+            : [`Understand the core relationship in ${title}`, 'Connect the visual or structural meaning to the formula or notation', 'Recognize the most exam-relevant interpretation or trap'],
+        visual_plan: visualPlan,
+        blocks
+    };
+}
+
+async function generateSectionLesson(sectionId, sectionTitle, bookPages, webSources, language = 'en', userProfilePrompt = '', bookSource = 'old') {
     // ── Agent A: Plan ──────────────────────────────────────────────────────────
     let blueprint = null;
+    let agentARaw = '';
+    const finalizeLesson = (markdown) => normalizeMathMarkdown(markdown);
     try {
-        const result = await agentA_plan(sectionId, sectionTitle, bookPages, webSources, language, userProfilePrompt);
+        const result = await agentA_plan(sectionId, sectionTitle, bookPages, webSources, language, userProfilePrompt, bookSource);
         blueprint = result.blueprint;
+        agentARaw = String(result.raw || '');
     } catch (err) {
         console.error('[Agent A] Error:', err.message);
     }
 
-    // ── Fallback: if Agent A failed, generate directly with Agent B ────────────
+    // ── Fallback: synthesize a minimal blueprint so the lesson still goes through the visual pipeline ──
     if (!blueprint) {
-        console.warn('[Pipeline] Agent A blueprint failed — running Agent B in direct mode.');
+        try {
+            blueprint = buildFallbackBlueprint(sectionId, sectionTitle, bookPages, language, agentARaw, bookSource);
+            console.warn(`[Pipeline] Agent A blueprint failed — synthesized fallback blueprint with ${Array.isArray(blueprint && blueprint.blocks) ? blueprint.blocks.length : 0} blocks.`);
+        } catch (err) {
+            console.error('[Pipeline] Failed to synthesize fallback blueprint:', err.message);
+        }
+    }
+
+    // ── Last-resort fallback: keep old direct markdown path only if blueprint synthesis also failed ───────
+    if (!blueprint) {
+        console.warn('[Pipeline] Fallback blueprint synthesis failed — running Agent B in direct mode as last resort.');
         const bookContext = buildBookContext(bookPages.map(p => ({
             ...p,
             ocrText: readOCRText(p.textPath, 4000)
@@ -1965,17 +2628,19 @@ async function generateSectionLesson(sectionId, sectionTitle, bookPages, webSour
             'This lesson is page-based. Page 1 must be a section overview. Middle pages should be one major knowledge point per page. The second-to-last page must be a recap/summary. The final page must be a dedicated exam-oriented quiz_plan page only.',
             'Use Markdown. LaTeX for math ($$...$$). Also include one exam-oriented quiz_plan that covers the section\'s important knowledge points, uses mostly multiple-choice questions, and adds short-answer only when needed.'
         ].join('\n');
-        return callOpenRouterChat({
+        const fallbackLesson = await callOpenRouterChat({
             model: AGENT_B_MODEL, timeoutMs: 120000, temperature: 0.3, maxTokens: 5000,
             messages: [
                 { role: 'system', content: 'You are a patient, precise tutor for Signal Processing and Linear Systems. Explain everything from scratch.' },
                 { role: 'user', content: prompt }
             ]
         });
+        return finalizeLesson(fallbackLesson);
     }
 
     // ── Agent B: Execute ───────────────────────────────────────────────────────
-    return agentB_execute(blueprint, bookPages, webSources, language);
+    const lesson = await agentB_execute(sectionId, blueprint, bookPages, webSources, language, bookSource);
+    return finalizeLesson(lesson);
 }
 
 /** Legacy single-agent lesson (kept for reference, not used) */
@@ -2022,13 +2687,13 @@ async function _legacyGenerateSectionLesson(sectionId, sectionTitle, bookPages, 
  */
 function runPython3(scriptPath, arg, timeoutMs = 30000) {
     return new Promise((resolve, reject) => {
-        const child = spawn('python3', [scriptPath, arg], {
-            env: process.env,
+        const child = spawn(PYTHON_BIN, [scriptPath, arg], {
+            env: { ...process.env, MPLBACKEND: 'Agg' },
             stdio: ['ignore', 'pipe', 'pipe']
         });
         let stdout = '';
         let stderr = '';
-        const timer = setTimeout(() => { child.kill('SIGKILL'); reject(new Error('python3 timeout')); }, timeoutMs);
+        const timer = setTimeout(() => { child.kill('SIGKILL'); reject(new Error(`${PYTHON_BIN} timeout`)); }, timeoutMs);
         child.stdout.on('data', d => { stdout += d.toString('utf8'); });
         child.stderr.on('data', d => { stderr += d.toString('utf8'); });
         child.on('error', e => { clearTimeout(timer); reject(e); });
@@ -2045,11 +2710,11 @@ function runPython3(scriptPath, arg, timeoutMs = 30000) {
  */
 async function callTutorSkillRaw(prompt) {
     return new Promise((resolve, reject) => {
-        const timeoutMs = 90000;
+        const timeoutMs = Number(process.env.TUTOR_SKILL_TIMEOUT_MS || 240000);
         const maxOutputBytes = 12 * 1024 * 1024;
 
-        const child = spawn('/usr/local/bin/python3', [SKILL_SCRIPT, prompt], {
-            env: process.env,
+        const child = spawn(PYTHON_BIN, [SKILL_SCRIPT, prompt], {
+            env: { ...process.env, MPLBACKEND: 'Agg', TUTOR_GENERATED_DIR: GENERATED_DIR, TUTOR_IMAGE_ONLY: '1' },
             stdio: ['ignore', 'pipe', 'pipe']
         });
 
@@ -2083,7 +2748,7 @@ async function callTutorSkillRaw(prompt) {
         child.on('close', (code) => {
             clearTimeout(timer);
 
-            if (timedOut) return reject(new Error('Request timeout (90s)'));
+            if (timedOut) return reject(new Error(`Request timeout (${Math.round(timeoutMs / 1000)}s)`));
             if (outputTooLarge) return reject(new Error('Skill output too large (>12MB)'));
             if (code !== 0) return reject(new Error((stderr || `Skill exited with code ${code}`).trim()));
 
@@ -2245,50 +2910,66 @@ const server = http.createServer(async (req, res) => {
                 const cachedLesson = readLessonCache(sectionId, profileMemory, data.bookSource);
                 if (cachedLesson) {
                     console.log(`[SECTION] Cache hit for ${sectionId}, skipping pipeline.`);
-                    const normalizedCachedLesson = convertLegacyQuickCheckToKcBlocks(cachedLesson);
+                    const normalizedCachedLesson = normalizeMathMarkdown(convertLegacyQuickCheckToKcBlocks(cachedLesson));
                     if (normalizedCachedLesson !== cachedLesson && profileMemory) {
                         writeLessonCache(sectionId, profileMemory, normalizedCachedLesson, data.bookSource);
                     }
-                    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                    res.end(JSON.stringify({
-                        sectionId, sectionTitle,
-                        lesson: normalizedCachedLesson,
-                        cached: true,
-                        bookPages: bookPages.map(p => ({
-                            page: p.page, image: p.image,
-                            subsection: p.subsection, title: p.title, summary: p.summary
-                        })),
-                        webSources: []
-                    }));
-                    return;
+                    if (hasVisualMetadataMarkup(normalizedCachedLesson)
+                        && !hasDisallowedNewBookPageFallback(normalizedCachedLesson, sectionId, rawPages, data.bookSource)
+                        && !hasDisallowedNewBookFigureRefs(normalizedCachedLesson, sectionId, rawPages, data.bookSource)
+                        && !hasNewBookFigureUnavailablePlaceholder(normalizedCachedLesson, data.bookSource)
+                        && !hasIllustrationUnavailablePlaceholder(normalizedCachedLesson)
+                        && !hasLegacyGeneratedVisualArtifacts(normalizedCachedLesson)) {
+                        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                        res.end(JSON.stringify({
+                            sectionId, sectionTitle,
+                            lesson: normalizedCachedLesson,
+                            cached: true,
+                            bookPages: bookPages.map(p => ({
+                                page: p.page, image: p.image,
+                                subsection: p.subsection, title: p.title, summary: p.summary
+                            })),
+                            webSources: []
+                        }));
+                        return;
+                    }
+                    console.warn(`[SECTION] Cache for ${sectionId} is stale, legacy-generated, or lacks valid visual metadata; regenerating through pipeline.`);
                 }
 
                 const legacyFallbackLesson = readLegacyLessonCacheFallback(sectionId, profileMemory, data.bookSource);
                 if (legacyFallbackLesson) {
-                    const normalizedLegacyLesson = convertLegacyQuickCheckToKcBlocks(legacyFallbackLesson);
-                    if (profileMemory) {
-                        writeLessonCache(sectionId, profileMemory, normalizedLegacyLesson, data.bookSource);
+                    const normalizedLegacyLesson = normalizeMathMarkdown(convertLegacyQuickCheckToKcBlocks(legacyFallbackLesson));
+                    if (hasVisualMetadataMarkup(normalizedLegacyLesson)
+                        && !hasDisallowedNewBookPageFallback(normalizedLegacyLesson, sectionId, rawPages, data.bookSource)
+                        && !hasDisallowedNewBookFigureRefs(normalizedLegacyLesson, sectionId, rawPages, data.bookSource)
+                        && !hasNewBookFigureUnavailablePlaceholder(normalizedLegacyLesson, data.bookSource)
+                        && !hasIllustrationUnavailablePlaceholder(normalizedLegacyLesson)
+                        && !hasLegacyGeneratedVisualArtifacts(normalizedLegacyLesson)) {
+                        if (profileMemory) {
+                            writeLessonCache(sectionId, profileMemory, normalizedLegacyLesson, data.bookSource);
+                        }
+                        console.log(`[SECTION] Legacy fallback cache used for ${sectionId}.`);
+                        const prewarm = await prewarmLessonVariants(sectionId, sectionTitle, rawPages, profileMemory, data.bookSource === 'new' ? 'new' : 'old', language);
+                        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                        res.end(JSON.stringify({
+                            sectionId,
+                            sectionTitle,
+                            lesson: normalizedLegacyLesson,
+                            cached: true,
+                            fallback: 'legacy-cache',
+                            bookPages: bookPages.map(p => ({
+                                page: p.page,
+                                image: p.image,
+                                subsection: p.subsection,
+                                title: p.title,
+                                summary: p.summary
+                            })),
+                            webSources: [],
+                            prewarm
+                        }));
+                        return;
                     }
-                    console.log(`[SECTION] Legacy fallback cache used for ${sectionId}.`);
-                    const prewarm = await prewarmLessonVariants(sectionId, sectionTitle, rawPages, profileMemory, data.bookSource === 'new' ? 'new' : 'old', language);
-                    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                    res.end(JSON.stringify({
-                        sectionId,
-                        sectionTitle,
-                        lesson: normalizedLegacyLesson,
-                        cached: true,
-                        fallback: 'legacy-cache',
-                        bookPages: bookPages.map(p => ({
-                            page: p.page,
-                            image: p.image,
-                            subsection: p.subsection,
-                            title: p.title,
-                            summary: p.summary
-                        })),
-                        webSources: [],
-                        prewarm
-                    }));
-                    return;
+                    console.warn(`[SECTION] Legacy fallback for ${sectionId} is stale, legacy-generated, or lacks valid visual metadata; regenerating.`);
                 }
 
                 // Lesson generation should be textbook-first. Passing [] means: do NOT search the web.
@@ -2299,8 +2980,8 @@ const server = http.createServer(async (req, res) => {
                     webSources = [];
                 }
                 console.log(`[SECTION] Starting dual-agent pipeline for ${sectionId} (lang=${language}, uid=${uid}, book=${data.bookSource || 'old'}, web=${webSources.length ? 'on' : 'off'})…`);
-                let lesson = await generateSectionLesson(sectionId, sectionTitle, rawPages, webSources, language, userProfilePrompt);
-                lesson = convertLegacyQuickCheckToKcBlocks(lesson);
+                let lesson = await generateSectionLesson(sectionId, sectionTitle, rawPages, webSources, language, userProfilePrompt, data.bookSource === 'new' ? 'new' : 'old');
+                lesson = normalizeMathMarkdown(convertLegacyQuickCheckToKcBlocks(lesson));
                 // ── Auto-save to lesson cache ───────────────────────────────
                 if (lesson && profileMemory) {
                     writeLessonCache(sectionId, profileMemory, lesson, data.bookSource);
