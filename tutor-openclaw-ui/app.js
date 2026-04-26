@@ -1,4 +1,4 @@
-const API_BASE = window.location.hostname === 'localhost' ? 'http://127.0.0.1:9000' : '';
+const API_BASE = window.location.hostname === 'localhost' ? 'http://127.0.0.1:9000' : 'https://aquarius-5ss0.onrender.com';
 
 const INTRO_LANDING_SEEN_KEY = 'aquarius-intro-seen';
 let introScene = null;
