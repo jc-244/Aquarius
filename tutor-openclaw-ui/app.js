@@ -3812,17 +3812,28 @@ function renderLearnWebSection(webSources) {
   }).join('');
 
   if (webSources.length > 3) {
-    cardsHtml += `<button class="web-expand-btn" id="expandWebCardsBtn">Show all ${webSources.length} sources</button>`;
+    cardsHtml += `<button class="web-expand-btn" id="expandWebCardsBtn" data-expanded="false">Show ${webSources.length - 3} more sources ⌄</button>`;
   }
   learnWebCards.innerHTML = cardsHtml;
 
   const expandBtn = document.getElementById('expandWebCardsBtn');
   if (expandBtn) {
     expandBtn.addEventListener('click', () => {
-      document.querySelectorAll('.learn-web-card-hidden').forEach(el => {
-        el.classList.remove('learn-web-card-hidden');
-      });
-      expandBtn.remove();
+      const isExpanded = expandBtn.getAttribute('data-expanded') === 'true';
+      const allCards = document.querySelectorAll('#learnWebCards .learn-web-card');
+      if (!isExpanded) {
+        allCards.forEach((el, idx) => {
+          if (idx >= 3) el.classList.remove('learn-web-card-hidden');
+        });
+        expandBtn.setAttribute('data-expanded', 'true');
+        expandBtn.textContent = 'Show less ⌃';
+      } else {
+        allCards.forEach((el, idx) => {
+          if (idx >= 3) el.classList.add('learn-web-card-hidden');
+        });
+        expandBtn.setAttribute('data-expanded', 'false');
+        expandBtn.textContent = `Show ${webSources.length - 3} more sources ⌄`;
+      }
     });
   }
   learnWebSection.classList.remove('hidden');
