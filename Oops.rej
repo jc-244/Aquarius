@@ -1,0 +1,9 @@
+@@ -205,7 +214,7 @@
+ 
+             <!-- Left: Explanation (The Lesson) -->
+-            <div class="learn-explain-col" id="learnExplainCol" style="border-right: 1px solid var(--border);">
++            <div class="learn-explain-col" id="learnExplainCol">
+               <div class="learn-explain-toolbar" id="learnExplainToolbar">
+                 <div class="learn-kp-nav">
+ 
+ 

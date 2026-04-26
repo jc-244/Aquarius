@@ -24,12 +24,15 @@ This applies to EVERY field: `content`, `caption`, `explanation`, `question`, `a
 - `blueprint`: The full JSON Rendering Blueprint from Agent A
 - `ocr_pages`: Original OCR text (for reference when writing explanations or extracting formulas)
 - `existing_page_images`: Map of `book-XXX` → actual file path in `background-pages-split/`
+- The blueprint may also include `visual_plan`, `teaching_role`, and `mode_specific_visual_use`. These fields explain why a visual exists and how each learning mode should use it.
 
 ---
 
 ## Your Output: A Rendered Lesson (JSON)
 
-Output a JSON array of executed blocks. Each block maps 1:1 to a Blueprint block, in the same order.
+Return exactly ONE complete JSON object. No markdown fences. No explanation before or after. Each rendered block maps 1:1 to a Blueprint block, in the same order.
+
+Required shape:
 
 ```json
 {
@@ -40,6 +43,8 @@ Output a JSON array of executed blocks. Each block maps 1:1 to a Blueprint block
   ]
 }
 ```
+
+If you wrap the JSON in ```json fences, add commentary, or truncate the object, the result is invalid.
 
 ---
 
@@ -65,12 +70,20 @@ Use a figure from the textbook. The input JSON now includes `available_figures` 
 
 **Default policy**: when the Blueprint includes a `book_image` block for a concept-defining textbook figure, treat that figure as mandatory, not optional. Prefer the most explanatory textbook figure available (axes, geometry, signal sketch, system diagram, canonical representation) and return the exact `fig_id` whenever possible.
 
+**Textbook-first policy**: the rendered lesson should feel tied to this exact textbook section. Do not replace a strong textbook figure with a generic explanation. If both a textbook figure and a generated gptimage2 teaching visual appear, preserve both and let them do different teaching jobs.
+
 **Output (preferred — precision crop):**
 ```json
 {
   "type": "book_image",
   "source_page": "book-016",
   "fig_id": "Fig. B.6",
+  "teaching_role": "concept_anchor",
+  "mode_specific_visual_use": {
+    "cram": "Use it to recognize the pattern fast.",
+    "standard": "Use it to explain the core concept.",
+    "top_score": "Use it to highlight subtle distinctions or traps."
+  },
   "caption": "Sketching a sinusoid: the amplitude, period, and phase are all visible."
 }
 ```
@@ -116,35 +129,30 @@ Search the web using the provided `search_query`. Pick the most visually clear, 
 
 ### 4. `generate_image`
 
-#### If `tool` is `python_matplotlib`:
-Write a complete, runnable Python script using matplotlib that produces the described chart. The script must:
-- Save the output to a file path: `generated/[section_id]-[block_index].png`
-- Use `plt.savefig(path, dpi=150, bbox_inches='tight')`, NOT `plt.show()`
-- Use clean, educational styling (white background, clear labels, readable font sizes)
-- Include gridlines where helpful
-
-**Output:**
-```json
-{
-  "type": "generate_image",
-  "tool": "python_matplotlib",
-  "script": "import matplotlib.pyplot as plt\nimport numpy as np\n\nfig, ax = plt.subplots(figsize=(6,6))\n# ... full script ...\nplt.savefig('generated/B.1.1-3.png', dpi=150, bbox_inches='tight')",
-  "output_path": "generated/B.1.1-3.png",
-  "caption": "As shown, z = 3+4j plotted on the complex plane."
-}
-```
-
 #### If `tool` is `openai/gpt-5.4-image-2`:
-Produce a refined, detailed image generation prompt based on the Blueprint's `prompt` field. Enhance it for clarity and visual quality, but don't change the core concept.
+Produce a refined, detailed image generation prompt based on the Blueprint's `prompt` field. Enhance it for clarity and pedagogical structure, but don't change the core concept.
+
+Hard constraints for every generated prompt:
+- pure white clean background
+- lecture-notes style, not poster style
+- exactly one knowledge point only
+- a single clear reading path
+- minimal text, no dense text blocks
+- no full derivation, no extra examples, no side topics
+- low-saturation academic palette only
+- use navy / muted teal / soft gray, with muted red only for warnings or traps
+- use colored boxes / bracketed callouts only when they improve comprehension
+- no cute/cartoon style, no glossy marketing aesthetic, no dramatic lighting, no decorative clutter
+- the visual should be understandable in about 20 seconds
 
 **Output:**
 ```json
 {
   "type": "generate_image",
   "tool": "openai/gpt-5.4-image-2",
-  "prompt": "A top-down illustrated city grid map, streets labeled 'Real Axis (East-West)' and 'Imaginary Axis (North-South)', a glowing star marking a destination point labeled 'z = 3+4j', soft warm colors, educational poster style, clean white background",
+  "prompt": "Pure white clean background, minimalist lecture-notes educational diagram, exactly one knowledge point, single clear reading path from top to bottom, centered academic layout, navy / muted teal / soft gray palette with muted red only for warning callouts, clean linework, no shadows, no poster styling, no cartoon elements, sparse text, one highlighted colored teaching box, one comparison arrow, exam-oriented concept clarity.",
   "output_path": "generated/B.1.1-4.png",
-  "caption": "Picture the complex plane as a city grid: 3 steps East, 4 steps North — that's z = 3+4j."
+  "caption": "The visual isolates one core relationship and makes the reading order obvious."
 }
 ```
 
@@ -264,6 +272,32 @@ Write the summary exactly as instructed: 3 bullets, ≤20 chars each, plus a tra
 
 ---
 
+## ⛔ MATH FORMATTING — HARD RULE
+
+**ALL mathematical expressions — without exception — must use LaTeX syntax:**
+
+- **Inline math:** `\(expression\)` — use for any variable, fraction, exponent, operator, or formula appearing in a sentence.
+  - ✅ `\(F(x)/x\)` not `F(x)/x`
+  - ✅ `\(kx/(x-\lambda)^r\)` not `kx/(x-λ)^r`
+  - ✅ `\(1/(x+2)\)` not `1/(x+2)`
+  - ✅ `\(a_1, a_2, a_3\)` not `a₁, a₂, a₃`
+  - ✅ `\(x^2\)` not `x²`
+  - ✅ `\(\lambda_i\)` not `λᵢ`
+- **Display math:** `$$\n...\n$$` — use for standalone equations, worked steps, and final answers.
+
+**NEVER write math as plain text.** This includes:
+- Fractions: ❌ `kx/(x-λ)^r` → ✅ `\(kx/(x-\lambda)^r\)`
+- Superscripts: ❌ `(x+3)²` → ✅ `\((x+3)^2\)`
+- Function notation: ❌ `F(x)/x` → ✅ `\(F(x)/x\)`
+- Greek letters: ❌ `λ`, `λᵢ` → ✅ `\(\lambda\)`, `\(\lambda_i\)`
+- Subscripts: ❌ `a₁` → ✅ `\(a_1\)`
+
+This rule applies to **every field**: `content`, `explanation`, `caption`, `question`, `answer`, `hint`, `bullets`, heading text, transition text — everywhere.
+
+**Inline descriptive prose is NOT exempt.** Even when you mention a math expression inside a sentence (e.g. "the factor (x+3)^2" or "divide by x"), you MUST write it as \\((x+3)^2\\) and \\(x\\). Never use backtick code spans for mathematical expressions.
+
+---
+
 ## Markdown Formatting Requirements
 
 When outputting `text_explanation` and `analogy` content blocks, you must format the Markdown EXACTLY according to these visual style rules. The frontend relies on these specific Markdown elements to render the correct CSS.
@@ -332,6 +366,8 @@ Different frequencies cannot be combined into a single sinusoid.
 6. **Web search fallback:** If web search yields nothing usable, always trigger the fallback as specified.
 7. **Language:** All student-facing content (explanations, captions, analogies, questions, summaries) must be written in **English** by default. If the Blueprint includes `"language": "zh"` at the top level, switch all student-facing content to **Chinese**. Never mix languages.
 8. **Do not explain your reasoning.** Output only the JSON. No preamble, no commentary.
+9. **Honor the planner's visual intent.** If a block was planned as textbook evidence, keep it textbook-grounded. If it was planned as a matplotlib explanation, make it clean, concept-first, and genuinely clarifying rather than ornamental.
+10. **Preserve visual metadata.** If the Blueprint includes `visual_plan`, `teaching_role`, or `mode_specific_visual_use`, carry those fields through faithfully in the corresponding rendered blocks unless the field is impossible to satisfy.
 
 ---
 
