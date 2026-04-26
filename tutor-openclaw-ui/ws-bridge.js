@@ -21,11 +21,11 @@ const HTTP_PORT = process.env.PORT || 9000;
 const APP_NAME = 'Tutor Agent';
 const APP_URL = `http://localhost:${HTTP_PORT}`;
 
-const OCR_DIR_OLD = '/Users/chenghaoxiang/.openclaw/workspace/tutor-materials/background-ocr-v3';
-const PAGE_IMAGE_DIR_OLD = '/Users/chenghaoxiang/.openclaw/workspace/tutor-materials/background-pages-split';
-const OCR_DIR_NEW = '/Users/chenghaoxiang/.openclaw/workspace/tutor-materials/new-book-ocr';
-const PAGE_IMAGE_DIR_NEW = '/Users/chenghaoxiang/.openclaw/workspace/tutor-materials/new-book-pages';
-const FIGURE_IMAGE_DIR_NEW = '/Users/chenghaoxiang/.openclaw/workspace/tutor-materials/new-book-figures';
+const OCR_DIR_OLD = path.join(__dirname, '../tutor-materials/background-ocr-v3');
+const PAGE_IMAGE_DIR_OLD = path.join(__dirname, '../tutor-materials/background-pages-split');
+const OCR_DIR_NEW = path.join(__dirname, '../tutor-materials/new-book-ocr');
+const PAGE_IMAGE_DIR_NEW = path.join(__dirname, '../tutor-materials/new-book-pages');
+const FIGURE_IMAGE_DIR_NEW = path.join(__dirname, '../tutor-materials/new-book-figures');
 const PYTHON_BIN = process.env.TUTOR_PYTHON_BIN || '/Library/Frameworks/Python.framework/Versions/3.12/bin/python3';
 
 // Helper: resolve dirs based on bookSource param
