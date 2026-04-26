@@ -4822,7 +4822,13 @@ function inlineFormat(text) {
   });
 
   // Images (must come before links)
-  s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="lesson-img" loading="lazy">');
+  s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => {
+    const rawSrc = String(src || '').trim();
+    const finalSrc = /^https?:\/\//i.test(rawSrc)
+      ? rawSrc
+      : (rawSrc.startsWith('/') ? `${API_BASE}${rawSrc}` : rawSrc);
+    return `<img src="${finalSrc}" alt="${alt}" class="lesson-img" loading="lazy">`;
+  });
   // Links
   s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
 
