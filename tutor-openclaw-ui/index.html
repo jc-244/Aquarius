@@ -476,11 +476,6 @@
                     <div style="padding:40px; text-align:center; color:#64748B;">Textbook page loading...</div>
                 </div>
                 <!-- Web sources section -->
-                <div class="learn-web-section hidden" id="learnWebSection">
-                  <div class="learn-web-section-title">
-                    <span><span style="font-family:'DM Mono'">#</span></span> Web References
-                    <span class="learn-web-section-count" id="learnWebSectionCount"></span>
-                  </div>
                   <div class="learn-web-cards" id="learnWebCards"></div>
                 </div>
               </div>
@@ -491,6 +486,13 @@
 
             <!-- Right: Chat/Follow-up Panel -->
             <div class="learn-chat-col" id="learnChatCol">
+              <!-- Web sources section (moved to right column) -->
+              <div class="learn-web-section hidden" id="learnWebSection">
+                <div class="learn-web-section-title">
+                  <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span> Web References <span class="learn-web-section-count" id="learnWebSectionCount"></span>
+                </div>
+                <div class="learn-web-cards" id="learnWebCards"></div>
+              </div>
               <div class="learn-chat-scroll" id="learnChatScroll">
                 <div class="learn-chat-history" id="learnChatContent">
                   <!-- Follow-up chat bubbles will show here -->
