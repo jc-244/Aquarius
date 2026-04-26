@@ -40,7 +40,7 @@ function getBookDirs(bookSource) {
 const OCR_DIR = OCR_DIR_OLD;
 const PAGE_IMAGE_DIR = PAGE_IMAGE_DIR_OLD;
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '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';
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 function resolveHomePath(p) {
     if (!p || typeof p !== 'string') return p;
