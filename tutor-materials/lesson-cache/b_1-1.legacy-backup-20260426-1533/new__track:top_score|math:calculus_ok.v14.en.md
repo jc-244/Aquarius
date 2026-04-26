@@ -1,0 +1,94 @@
+%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6ImJvdGgiLCJyYXRpb25hbGUiOiJUaGlzIHNlY3Rpb24gaGFzIG9uZSBoaWdoLXZhbHVlIHRleHRib29rIGZpZ3VyZSB0aGF0IGFuY2hvcnMgdGhlIGZ1bGwgZ2VvbWV0cnkgb2YgYSBjb21wbGV4IG51bWJlciwgYW5kIGEgY2xlYW4gbWF0cGxvdGxpYiBkaWFncmFtIGNhbiBzaGFycGVuIHRoZSBleGFjdCBwb2ludC10by1jb29yZGluYXRlIGludGVycHJldGF0aW9uIGFuZCBjb25qdWdhdGUgc3ltbWV0cnkgZm9yIGV4YW0gdXNlLiIsImNyYW0iOiJVc2UgdGhlIHRleHRib29rIGZpZ3VyZSBmb3IgaW5zdGFudCByZWNvZ25pdGlvbiBvZiBheGVzLCBtYWduaXR1ZGUsIGFuZ2xlLCBhbmQgY29uanVnYXRlOyB1c2UgdGhlIGdlbmVyYXRlZCBwbG90IHRvIGxvY2sgaW4gY29vcmRpbmF0ZSByZWFkaW5nIGZhc3QuIiwic3RhbmRhcmQiOiJVc2UgdGhlIHRleHRib29rIGZpZ3VyZSB0byBleHBsYWluIHRoZSBmdWxsIHBpY3R1cmUsIHRoZW4gdXNlIHRoZSBnZW5lcmF0ZWQgcGxvdCBmb3Igb25lIGNsZWFuIHdvcmtlZCB2aXN1YWwgZXhhbXBsZS4iLCJ0b3Bfc2NvcmUiOiJVc2UgdGhlIHRleHRib29rIGZpZ3VyZSB0byBjb21wYXJlIHJlY3Rhbmd1bGFyLCBwb2xhciwgYW5kIGNvbmp1Z2F0ZSB2aWV3cyBpbiBvbmUgZnJhbWU7IHVzZSB0aGUgZ2VuZXJhdGVkIHBsb3QgdG8gZXhwb3NlIGNvbW1vbiB0cmFwcyBzdWNoIGFzIGNvbmZ1c2luZyBJbSh6KSB3aXRoIGpiLCBvciBtaXNzaW5nIHRoZSByZWZsZWN0aW9uIHJ1bGUgZm9yIHoqLiJ9" style="display:none;"></div>%%KC_END%%
+# B.1 Complex Numbers
+
+> **Section Objective:** Understand what complex numbers are, how to read them geometrically, and why engineers reach for them even when the final answer is purely real.
+
+This section introduces complex numbers — not as mysterious or "fake" quantities, but as a practical extension of the number system that engineers use to make hard problems easier. One immediate note: engineers write \(j = \sqrt{-1}\) instead of \(i\), reserving \(i\) for electrical current. The textbook's core message is that complex numbers earn their place through computational payoff, not philosophical meaning.
+
+By the end of this section you will know three things: how to read \(z = a + jb\) as a point on the complex plane, how to identify the real part, imaginary part, magnitude, angle, and conjugate of any complex number, and how rectangular form and polar form are simply two descriptions of the same point.
+
+## 1. Why Complex Numbers Matter
+
+> **Exam Mindset:** If a method using complex numbers looks indirect, it may still be the fastest safe route to the answer.
+
+Many engineering problems start with real numbers and end with real answers. Complex numbers enter in the middle — as a computational shortcut. The textbook uses a country-route analogy: sometimes the most direct path between two points crosses into a neighboring territory. Using complex numbers is like taking that cross-border route. The final destination is still real, but the journey is shorter.
+
+### KEY INSIGHT
+
+Usefulness does not depend on giving \(j\) a physical meaning. It depends on consistent algebraic rules and computational payoff. A method that looks roundabout may still be the most efficient path.
+
+#### Exam Note
+
+Do not dismiss complex-number methods as "indirect." In signal processing and circuit analysis, they are almost always the cleaner approach.
+
+## 2. Reading \(z = a + jb\) Correctly
+
+The expression \(z = a + jb\) places a point at horizontal coordinate \(a\) and vertical coordinate \(b\) on the complex plane. The definitions are direct:
+
+$$
+\mathrm{Re}(z) = a \qquad \mathrm{Im}(z) = b
+$$
+
+### COMMON TRAP
+
+The imaginary part is \(b\), not \(jb\). The term \(jb\) is the imaginary **term** in the expression; the imaginary **part** is the real coefficient \(b\) alone. This distinction appears on exams.
+
+All real numbers (where \(b = 0\)) lie on the horizontal axis. All pure imaginary numbers (where \(a = 0\)) lie on the vertical axis.
+
+### TOP SCORE DISTINCTION
+
+A complex number is not just a pair of symbols. It can be read simultaneously as an ordered point \((a, b)\), as an algebraic expression \(a + jb\), and — as we will see next — as a magnitude-angle object \(r\angle\theta\). These are three views of one number.
+
+%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="book_image" data-teaching-role="concept_anchor" data-visual-use-b64="eyJjcmFtIjoiVXNlIHRoaXMgZmlndXJlIHRvIHJlY29nbml6ZSB0aGUgYXhlcywgcG9pbnQsIG1hZ25pdHVkZSwgYW5nbGUsIGFuZCBjb25qdWdhdGUgaW4gb25lIGdsYW5jZS4iLCJzdGFuZGFyZCI6IlVzZSB0aGlzIGZpZ3VyZSB0byBleHBsYWluIGhvdyBvbmUgY29tcGxleCBudW1iZXIgaXMgcmVhZCBhcyBib3RoIGNvb3JkaW5hdGVzIGFuZCBnZW9tZXRyeS4iLCJ0b3Bfc2NvcmUiOiJVc2UgdGhpcyBmaWd1cmUgdG8gaGlnaGxpZ2h0IHRoZSBleGFjdCBkaWZmZXJlbmNlcyBiZXR3ZWVuIHBvaW50LCBjb21wb25lbnRzLCBtb2R1bHVzLCBhbmdsZSwgYW5kIGNvbmp1Z2F0ZSByZWZsZWN0aW9uLiJ9" style="display:none;"></div>%%KC_END%%
+![Fig. B.2](/figures/page-005-fig__b_2-1.png)
+*This figure is the core map of the section: \(z = a + jb\) is the point \((a, b)\) on the complex plane, with modulus \(r\), angle \(\theta\), and conjugate \(z^* = a - jb\) mirrored symmetrically across the real axis.*
+
+$$z = a + jb \qquad \mathrm{Re}\,z = a \qquad \mathrm{Im}\,z = b$$
+*Rectangular form names the horizontal and vertical components directly: \(\mathrm{Re}(z) = a\) is the real part, and \(\mathrm{Im}(z) = b\) is the imaginary part — the coefficient \(b\) alone, never the full term \(jb\).*
+
+> ⚠️ Chart render error: Traceback (most recent call last):
+  File "/Users/chenghaoxiang/.openclaw/workspace/tutor-openclaw-ui/generated/script-1777185200788-va8l.py", line 1, in <module>
+    import matplotlib
+ModuleNotFoundError: No module named 'matplotlib'
+
+
+## 3. Rectangular Form and Polar Form Describe the Same Number
+
+If a complex number \(z\) sits at polar coordinates \((r, \theta)\), then its Cartesian components are:
+
+$$
+a = r\cos\theta \qquad b = r\sin\theta
+$$
+
+Substituting back into \(z = a + jb\) gives the polar-trigonometric form:
+
+$$
+z = r(\cos\theta + j\sin\theta)
+$$
+
+This is a **coordinate conversion**, not a new kind of number. The point on the complex plane is identical; only the description changes.
+
+### TOP SCORE INSIGHT
+
+Track what each symbol measures. \(a\) and \(b\) are Cartesian components — horizontal and vertical distances. \(r\) and \(\theta\) are geometric descriptors — distance from the origin and direction. Stronger students never confuse these roles.
+
+### COMMON TRAP
+
+Do not write \(a = r\) and \(b = \theta\). These are not direct substitutions. The conversion always goes through \(\cos\theta\) and \(\sin\theta\).
+
+#### Looking Ahead
+
+Euler's formula, \(e^{j\theta} = \cos\theta + j\sin\theta\), compresses the polar form into \(z = re^{j\theta}\). We will develop this in the next section.
+
+$$a = r\cos\theta \qquad b = r\sin\theta \qquad z = a + jb = r(\cos\theta + j\sin\theta) \qquad e^{j\theta} = \cos\theta + j\sin\theta$$
+*These formulas show three equivalent views of the same complex number: rectangular components \((a, b)\) give the Cartesian description, \(r(\cos\theta + j\sin\theta)\) gives the magnitude-angle description, and \(re^{j\theta}\) via Euler's formula gives the compact exponential form — all three locate the identical point on the complex plane.*
+
+---
+**📌 Key Takeaways**
+- \(z = a + jb\) is a point \((a, b)\) on the complex plane; \(\mathrm{Im}(z) = b\), never \(jb\).
+- Conjugate \(z^* = a - jb\) reflects the point across the real axis, changing only the sign of \(b\).
+- Rectangular and polar forms are two descriptions of one point: \(a = r\cos\theta\), \(b = r\sin\theta\).
+
+*In the next section we will use these forms more actively in complex-number operations and representation.*
+
+%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NywicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo2LCJtYXgiOjh9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6InB1cnBvc2Vfb2ZfY29tcGxleF9udW1iZXJzIiwibGFiZWwiOiJXaHkgY29tcGxleCBudW1iZXJzIGFyZSBpbnRyb2R1Y2VkIiwiaW1wb3J0YW5jZSI6Im1lZGl1bSIsImV4YW1fd2VpZ2h0IjoibWVkaXVtIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoxfSwicXVlc3Rpb25zIjpbeyJpZCI6ImtwMV9xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiV2hpY2ggc3RhdGVtZW50IGJlc3QgbWF0Y2hlcyB0aGUgdGV4dGJvb2sncyByZWFzb24gZm9yIHVzaW5nIGNvbXBsZXggbnVtYmVycz8iLCJvcHRpb25zIjpbIkEuIFRoZXkgYXJlIG1haW5seSBhIHBoaWxvc29waGljYWwgd2F5IHRvIGFzc2lnbiBwaHlzaWNhbCBtZWFuaW5nIHRvIGltcG9zc2libGUgcXVhbnRpdGllcyIsIkIuIFRoZXkgbGV0IHVzIHJlcGxhY2UgYWxsIHJlYWwtbnVtYmVyIG1ldGhvZHMgcGVybWFuZW50bHkiLCJDLiBUaGV5IG9mdGVuIHNpbXBsaWZ5IHRoZSBkZXJpdmF0aW9uIG9mIHJlc3VsdHMsIGV2ZW4gd2hlbiB0aGUgcHJvYmxlbSBzdGFydHMgYW5kIGVuZHMgd2l0aCByZWFsIG51bWJlcnMiLCJELiBUaGV5IGFyZSB1c2VkIG9ubHkgd2hlbiBhbiBhbnN3ZXIgbXVzdCBpdHNlbGYgYmUgaW1hZ2luYXJ5Il0sImNvcnJlY3Rfb3B0aW9uIjoiQyIsImV4cGxhbmF0aW9uIjoiVGhlIHRleHRib29rIGVtcGhhc2l6ZXMgY29tcGxleCBudW1iZXJzIGFzIGFuIGVmZmljaWVudCBpbnRlcm1lZGlhcnk6IG1hbnkgcmVhbCBwcm9ibGVtcyBhcmUgc29sdmVkIG1vcmUgY2xlYW5seSBieSBwYXNzaW5nIHRocm91Z2ggY29tcGxleC1udW1iZXIgbWV0aG9kcy4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJUaGUgdGV4dCBleHBsaWNpdGx5IHB1c2hlcyBiYWNrIGFnYWluc3QgdGhlIGlkZWEgdGhhdCB1c2VmdWxuZXNzIGRlcGVuZHMgb24gYXNzaWduaW5nIGEgcGh5c2ljYWwgbWVhbmluZy4iLCJCIjoiUmVhbC1udW1iZXIgbWV0aG9kcyBzdGlsbCBleGlzdDsgY29tcGxleCBtZXRob2RzIGFyZSBvZnRlbiBqdXN0IHNob3J0ZXIgYW5kIGNsZWFuZXIuIiwiRCI6IlRoZSBmaW5hbCBhbnN3ZXIgY2FuIHN0aWxsIGJlIHJlYWwuIn0sImhpbnQiOiJUaGluayAnc2hvcnRlciByb3V0ZSB0aHJvdWdoIGEgYnJvYWRlciBudW1iZXIgc3lzdGVtLiciLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOmZhbHNlfV19LHsiaWQiOiJyZWN0YW5ndWxhcl9mb3JtX3JlYWRpbmciLCJsYWJlbCI6IlJlYWRpbmcgcmVjdGFuZ3VsYXIgZm9ybSBhbmQgaWRlbnRpZnlpbmcgcGFydHMiLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJrcDJfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IkZvciBcXCh6ID0gNSAtIDJqXFwpLCB3aGljaCBvcHRpb24gaXMgY29ycmVjdD8iLCJvcHRpb25zIjpbIkEuIFxcKFxcbWF0aHJte1JlfSh6KSA9IDVcXCkgYW5kIFxcKFxcbWF0aHJte0ltfSh6KSA9IC0yXFwpIiwiQi4gXFwoXFxtYXRocm17UmV9KHopID0gNVxcKSBhbmQgXFwoXFxtYXRocm17SW19KHopID0gLTJqXFwpIiwiQy4gXFwoXFxtYXRocm17UmV9KHopID0gLTJcXCkgYW5kIFxcKFxcbWF0aHJte0ltfSh6KSA9IDVcXCkiLCJELiBcXChcXG1hdGhybXtSZX0oeikgPSA1alxcKSBhbmQgXFwoXFxtYXRocm17SW19KHopID0gLTJcXCkiXSwiY29ycmVjdF9vcHRpb24iOiJBIiwiZXhwbGFuYXRpb24iOiJJbiBcXCh6ID0gYSArIGpiXFwpLCB0aGUgcmVhbCBwYXJ0IGlzIFxcKGFcXCkgYW5kIHRoZSBpbWFnaW5hcnkgcGFydCBpcyB0aGUgY29lZmZpY2llbnQgXFwoYlxcKS4gSGVyZSBcXChhID0gNVxcKSBhbmQgXFwoYiA9IC0yXFwpLCBzbyBcXChcXG1hdGhybXtSZX0oeikgPSA1XFwpIGFuZCBcXChcXG1hdGhybXtJbX0oeikgPSAtMlxcKS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkIiOiJUaGlzIGNvbmZ1c2VzIHRoZSBpbWFnaW5hcnkgcGFydCB3aXRoIHRoZSBmdWxsIGltYWdpbmFyeSB0ZXJtIFxcKC0yalxcKS4gVGhlIGltYWdpbmFyeSBwYXJ0IGlzIHRoZSByZWFsIGNvZWZmaWNpZW50IFxcKC0yXFwpIGFsb25lLiIsIkMiOiJUaGlzIHN3YXBzIHRoZSBob3Jpem9udGFsIGFuZCB2ZXJ0aWNhbCBjb21wb25lbnRzLiIsIkQiOiJUaGUgcmVhbCBwYXJ0IGlzIGFsd2F5cyBhIHJlYWwgbnVtYmVyLCBuZXZlciBhIFxcKGpcXCktdGVybS4ifSwiaGludCI6IlNlcGFyYXRlIHRoZSBjb2VmZmljaWVudCBmcm9tIHRoZSBzeW1ib2wgXFwoalxcKS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9LHsiaWQiOiJrcDJfcTIiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IldoaWNoIHBvaW50IG9uIHRoZSBjb21wbGV4IHBsYW5lIHJlcHJlc2VudHMgXFwoeiA9IC0zICsgNGpcXCk/Iiwib3B0aW9ucyI6WyJBLiBcXCgoNCwgLTMpXFwpIiwiQi4gXFwoKC0zLCA0KVxcKSIsIkMuIFxcKCgtMywgLTQpXFwpIiwiRC4gXFwoKDMsIDQpXFwpIl0sImNvcnJlY3Rfb3B0aW9uIjoiQiIsImV4cGxhbmF0aW9uIjoiVGhlIHJlYWwgcGFydCBnaXZlcyB0aGUgaG9yaXpvbnRhbCBjb29yZGluYXRlIGFuZCB0aGUgaW1hZ2luYXJ5IHBhcnQgZ2l2ZXMgdGhlIHZlcnRpY2FsIGNvb3JkaW5hdGUsIHNvIFxcKHogPSAtMyArIDRqXFwpIG1hcHMgdG8gdGhlIHBvaW50IFxcKCgtMywgNClcXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhpcyBzd2FwcyB0aGUgdHdvIGNvb3JkaW5hdGVzLiIsIkMiOiJUaGlzIGNoYW5nZXMgdGhlIHNpZ24gb2YgdGhlIGltYWdpbmFyeSBwYXJ0IGluY29ycmVjdGx5LiIsIkQiOiJUaGlzIGNoYW5nZXMgdGhlIHNpZ24gb2YgdGhlIHJlYWwgcGFydCBpbmNvcnJlY3RseS4ifSwiaGludCI6IlJlYWQgXFwoYSArIGpiXFwpIGFzIHRoZSBvcmRlcmVkIHBhaXIgXFwoKGEsIGIpXFwpLiIsIm5lZWRzX3Zpc3VhbCI6dHJ1ZSwidmlzdWFsX3R5cGUiOiJweXRob25fbWF0cGxvdGxpYl9jb21wbGV4X3BsYW5lX3BvaW50Iiwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfV19LHsiaWQiOiJjb25qdWdhdGVfZ2VvbWV0cnkiLCJsYWJlbCI6IkNvbXBsZXggY29uanVnYXRlIGFzIHJlZmxlY3Rpb24gYWNyb3NzIHRoZSByZWFsIGF4aXMiLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJrcDNfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IklmIFxcKHogPSBhICsgamJcXCksIHdoaWNoIGV4cHJlc3Npb24gZ2l2ZXMgaXRzIGNvbXBsZXggY29uanVnYXRlPyIsIm9wdGlvbnMiOlsiQS4gXFwoel4qID0gLWEgKyBqYlxcKSIsIkIuIFxcKHpeKiA9IGEgLSBqYlxcKSIsIkMuIFxcKHpeKiA9IC1hIC0gamJcXCkiLCJELiBcXCh6XiogPSBiICsgamFcXCkiXSwiY29ycmVjdF9vcHRpb24iOiJCIiwiZXhwbGFuYXRpb24iOiJUaGUgY29uanVnYXRlIGtlZXBzIHRoZSByZWFsIHBhcnQgdGhlIHNhbWUgYW5kIGNoYW5nZXMgb25seSB0aGUgc2lnbiBvZiB0aGUgaW1hZ2luYXJ5IHRlcm0sIGdpdmluZyBcXCh6XiogPSBhIC0gamJcXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhpcyBmbGlwcyB0aGUgcmVhbCBwYXJ0LCB3aGljaCBjb25qdWdhdGlvbiBkb2VzIG5vdCBkby4iLCJDIjoiVGhpcyBmbGlwcyBib3RoIHBhcnRzLCB3aGljaCBpcyBub3QgY29uanVnYXRpb24uIiwiRCI6IlRoaXMgc3dhcHMgdGhlIGNvbXBvbmVudHMgZW50aXJlbHkuIn0sImhpbnQiOiJDb25qdWdhdGlvbiByZWZsZWN0cyBhY3Jvc3MgdGhlIHJlYWwgYXhpcyDigJQgb25seSB0aGUgdmVydGljYWwgY29vcmRpbmF0ZSBjaGFuZ2VzIHNpZ24uIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfSx7ImlkIjoia3AzX3EyIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJPbiB0aGUgY29tcGxleCBwbGFuZSwgd2hhdCBnZW9tZXRyaWMgY2hhbmdlIHR1cm5zIFxcKHogPSAyICsgM2pcXCkgaW50byBcXCh6XipcXCk/Iiwib3B0aW9ucyI6WyJBLiBSZWZsZWN0aW9uIGFjcm9zcyB0aGUgaW1hZ2luYXJ5IGF4aXMiLCJCLiBSZWZsZWN0aW9uIGFjcm9zcyB0aGUgb3JpZ2luIiwiQy4gUmVmbGVjdGlvbiBhY3Jvc3MgdGhlIHJlYWwgYXhpcyIsIkQuIFJvdGF0aW9uIGJ5IDkwIGRlZ3JlZXMiXSwiY29ycmVjdF9vcHRpb24iOiJDIiwiZXhwbGFuYXRpb24iOiJUaGUgcG9pbnQgXFwoKDIsIDMpXFwpIGJlY29tZXMgXFwoKDIsIC0zKVxcKSwgd2hpY2ggaXMgYSByZWZsZWN0aW9uIGFjcm9zcyB0aGUgcmVhbCBheGlzLiBPbmx5IHRoZSB2ZXJ0aWNhbCBjb29yZGluYXRlIGNoYW5nZXMgc2lnbi4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJSZWZsZWN0aW9uIGFjcm9zcyB0aGUgaW1hZ2luYXJ5IGF4aXMgd291bGQgY2hhbmdlIFxcKCgyLCAzKVxcKSB0byBcXCgoLTIsIDMpXFwpLiIsIkIiOiJSZWZsZWN0aW9uIGFjcm9zcyB0aGUgb3JpZ2luIHdvdWxkIGNoYW5nZSBcXCgoMiwgMylcXCkgdG8gXFwoKC0yLCAtMylcXCkuIiwiRCI6IkEgOTAtZGVncmVlIHJvdGF0aW9uIGdpdmVzIGEgY29tcGxldGVseSBkaWZmZXJlbnQgcG9pbnQuIn0sImhpbnQiOiJPbmx5IHRoZSB2ZXJ0aWNhbCBjb29yZGluYXRlIGNoYW5nZXMgc2lnbi4iLCJuZWVkc192aXN1YWwiOnRydWUsInZpc3VhbF90eXBlIjoicHl0aG9uX21hdHBsb3RsaWJfY29uanVnYXRlX3JlZmxlY3Rpb24iLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9XX0seyJpZCI6InJlY3Rhbmd1bGFyX3BvbGFyX2VxdWl2YWxlbmNlIiwibGFiZWwiOiJDb25uZWN0aW5nIHJlY3Rhbmd1bGFyIGFuZCBwb2xhciBmb3JtIiwiaW1wb3J0YW5jZSI6ImhpZ2giLCJleGFtX3dlaWdodCI6ImhpZ2giLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjF9LCJxdWVzdGlvbnMiOlt7ImlkIjoia3A0X3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJXaGljaCBmb3JtdWxhIGNvcnJlY3RseSByZXdyaXRlcyBcXCh6XFwpIGluIHBvbGFyLXRyaWdvbm9tZXRyaWMgZm9ybT8iLCJvcHRpb25zIjpbIkEuIFxcKHogPSByICsgalxcdGhldGFcXCkiLCJCLiBcXCh6ID0gYShcXGNvc1xcdGhldGEgKyBqXFxzaW5cXHRoZXRhKVxcKSIsIkMuIFxcKHogPSByKFxcY29zXFx0aGV0YSArIGpcXHNpblxcdGhldGEpXFwpIiwiRC4gXFwoeiA9IFxcdGhldGEoXFxjb3MgciArIGpcXHNpbiByKVxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkMiLCJleHBsYW5hdGlvbiI6IkluIHBvbGFyIGZvcm0sIFxcKHJcXCkgaXMgdGhlIG1hZ25pdHVkZSBhbmQgXFwoXFx0aGV0YVxcKSBpcyB0aGUgYW5nbGUsIHNvIFxcKHogPSByKFxcY29zXFx0aGV0YSArIGpcXHNpblxcdGhldGEpXFwpLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6IlRoaXMgdHJlYXRzIG1hZ25pdHVkZSBhbmQgYW5nbGUgbGlrZSByZWN0YW5ndWxhciBjb21wb25lbnRzLCB3aGljaCBpcyBpbmNvcnJlY3QuIiwiQiI6IlRoZSBzY2FsaW5nIGZhY3RvciBpcyBcXChyXFwpICh0aGUgbWFnbml0dWRlKSwgbm90IFxcKGFcXCkgKHRoZSByZWFsIHBhcnQpLiIsIkQiOiJUaGlzIHN3YXBzIHRoZSByb2xlcyBvZiBcXChyXFwpIGFuZCBcXChcXHRoZXRhXFwpIGVudGlyZWx5LiJ9LCJoaW50IjoiUG9sYXIgZm9ybSB1c2VzIG1hZ25pdHVkZSB0aW1lcyBhIGRpcmVjdGlvbiBleHByZXNzaW9uLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9LHsiaWQiOiJrcDRfcTIiLCJ0eXBlIjoic2hvcnRfYW5zd2VyIiwic3RlbSI6IkEgc3R1ZGVudCB3cml0ZXM6ICdTaW5jZSBcXCh6ID0gYSArIGpiXFwpIGFuZCBhbHNvIFxcKHogPSByKFxcY29zXFx0aGV0YSArIGpcXHNpblxcdGhldGEpXFwpLCB3ZSBoYXZlIFxcKGEgPSByXFwpIGFuZCBcXChiID0gXFx0aGV0YVxcKS4nIEV4cGxhaW4gd2h5IHRoaXMgaXMgd3JvbmcuIiwiaWRlYWxfYW5zd2VyIjoiSXQgaXMgd3JvbmcgYmVjYXVzZSBcXChhXFwpIGFuZCBcXChiXFwpIGFyZSBDYXJ0ZXNpYW4gY29tcG9uZW50cywgd2hpbGUgXFwoclxcKSBhbmQgXFwoXFx0aGV0YVxcKSBhcmUgcG9sYXIgZGVzY3JpcHRvcnMgb2YgdGhlIHNhbWUgcG9pbnQuIFRoZSBjb3JyZWN0IHJlbGF0aW9uc2hpcHMgYXJlIFxcKGEgPSByXFxjb3NcXHRoZXRhXFwpIGFuZCBcXChiID0gclxcc2luXFx0aGV0YVxcKSwgbm90IFxcKGEgPSByXFwpIGFuZCBcXChiID0gXFx0aGV0YVxcKS4iLCJncmFkaW5nX3J1YnJpYyI6WyJNdXN0IHN0YXRlIHRoYXQgXFwoYVxcKSBhbmQgXFwoYlxcKSBhcmUgcmVjdGFuZ3VsYXIgKENhcnRlc2lhbikgY29tcG9uZW50cyIsIk11c3Qgc3RhdGUgdGhhdCBcXChyXFwpIGFuZCBcXChcXHRoZXRhXFwpIGFyZSBtYWduaXR1ZGUgYW5kIGFuZ2xlLCBub3QgZGlyZWN0IHJlcGxhY2VtZW50cyBmb3IgXFwoYVxcKSBhbmQgXFwoYlxcKSIsIk11c3QgZ2l2ZSBhdCBsZWFzdCBvbmUgY29ycmVjdCBjb252ZXJzaW9uIGZvcm11bGEgc3VjaCBhcyBcXChhID0gclxcY29zXFx0aGV0YVxcKSBvciBcXChiID0gclxcc2luXFx0aGV0YVxcKSJdLCJleHBsYW5hdGlvbiI6IlRoaXMgdGVzdHMgd2hldGhlciB0aGUgc3R1ZGVudCB1bmRlcnN0YW5kcyB0aGF0IHJlY3Rhbmd1bGFyIGFuZCBwb2xhciBmb3JtcyBhcmUgZXF1aXZhbGVudCBkZXNjcmlwdGlvbnMgb2Ygb25lIHBvaW50LCBub3Qgc3ltYm9sLWJ5LXN5bWJvbCBzdWJzdGl0dXRpb25zLiIsImhpbnQiOiJBc2sgd2hhdCBlYWNoIHN5bWJvbCBtZWFzdXJlcyBnZW9tZXRyaWNhbGx5IOKAlCBkaXN0YW5jZSBhbG9uZyBhbiBheGlzIHZlcnN1cyBkaXN0YW5jZSBmcm9tIHRoZSBvcmlnaW4gb3IgYW5nbGUgb2Ygcm90YXRpb24uIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50IjpmYWxzZX1dfV19" style="display:none;"></div>%%KC_END%%

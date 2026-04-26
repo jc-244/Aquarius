@@ -1,0 +1,69 @@
+%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6ImdlbmVyYXRlZF9pbWFnZSIsInJhdGlvbmFsZSI6IlRoaXMgc2VjdGlvbiBpcyBmb3JtdWxhLWNlbnRlcmVkIGFuZCB0aGUgcHJvdmlkZWQgcGFnZSBoYXMgbm8gZXh0cmFjdGVkIGZpZ3VyZXMsIHNvIHRoZSBjbGVhcmVzdCB0ZWFjaGluZyBwYXRoIGlzIGEgY2xlYW4gZ2VuZXJhdGVkIGRpYWdyYW0gdGhhdCB2aXN1YWxseSBsaW5rcyBFdWxlcidzIGZvcm11bGEgdG8gY29zaW5lIGFuZCBzaW5lIGlkZW50aXRpZXMuIiwiY3JhbSI6IlVzZSBvbmUgY29tcGFjdCB2aXN1YWwgdG8gaGVscCBzdHVkZW50cyBpbnN0YW50bHkgcmVjb2duaXplIHRoZSB0d28gaWRlbnRpdGllcyB0aGV5IG5lZWQgdG8gcmVjYWxsIG9uIGV4YW1zLiIsInN0YW5kYXJkIjoiVXNlIHRoZSB2aXN1YWwgdG8gc2hvdyBob3cgYWRkaW5nIHRoZSB0d28gZXhwb25lbnRpYWxzIGdpdmVzIGNvc2luZSBhbmQgc3VidHJhY3RpbmcgZ2l2ZXMgc2luZSwgdGhlbiBzdXBwb3J0IG9uZSByZXByZXNlbnRhdGl2ZSBjb252ZXJzaW9uIGV4YW1wbGUuIiwidG9wX3Njb3JlIjoiVXNlIHRoZSB2aXN1YWwgdG8gZW1waGFzaXplIHRoZSBzaWduIGFuZCAxIG92ZXIgMmogc3RydWN0dXJlLCBzaW5jZSB0aGVzZSBhcmUgdGhlIG1vc3QgY29tbW9uIHBsYWNlcyBzdHVkZW50cyBtYWtlIG1pc3Rha2VzLiJ9" style="display:none;"></div>%%KC_END%%
+# Sinusoids as Complex Exponentials
+
+> **Section Objective:** Learn how to rewrite cosine and sine using complex exponentials, and understand why this form is more powerful for signal analysis.
+
+In the previous section, phasors gave us a compact way to represent sinusoids. This section takes that idea one step further: using Euler's formula, we can express ordinary cosine and sine functions as combinations of complex exponentials. The payoff is significant — exponential form turns trigonometric algebra into straightforward arithmetic, making it far easier to work with signals, phasors, and differential equations later.
+
+By the end of this section, you will know two key identities and be able to apply one basic conversion example.
+
+%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="generate_image" data-teaching-role="concept_anchor" data-visual-use-b64="eyJjcmFtIjoiVXNlIHRoaXMgdmlzdWFsIHRvIG1lbW9yaXplIHRoZSB0d28gZXhhbSBpZGVudGl0aWVzIGZhc3QuIiwic3RhbmRhcmQiOiJVc2UgdGhpcyB2aXN1YWwgdG8gc2hvdyB0aGUgYWRkLWZvci1jb3NpbmUgYW5kIHN1YnRyYWN0LWZvci1zaW5lIHBhdHRlcm4gY2xlYXJseS4iLCJ0b3Bfc2NvcmUiOiJVc2UgdGhpcyB2aXN1YWwgdG8gc3BvdGxpZ2h0IHNpZ24gZXJyb3JzIGFuZCB0aGUgMSBvdmVyIDJqIGZhY3Rvci4ifQ==" style="display:none;"></div>%%KC_END%%
+*🎨 Euler's formula pair and the two identities derived from adding and subtracting them. The warning box highlights the most common exam mistake.*
+![Illustration](/generated/gptimage2-1777216750613-1915.png)
+
+$$\cos \phi = \frac{1}{2}\left(e^{j\phi}+e^{-j\phi}\right), \qquad \sin \phi = \frac{1}{2j}\left(e^{j\phi}-e^{-j\phi}\right)$$
+*These two identities come directly from adding and subtracting the Euler expressions \(e^{j\phi} = \cos\phi + j\sin\phi\) and \(e^{-j\phi} = \cos\phi - j\sin\phi\): adding them cancels the sine terms and gives cosine, while subtracting them cancels the cosine terms and isolates sine — but because the sine terms carry a factor of \(j\), the difference must be divided by \(2j\) to recover sine alone.*
+
+## 1. Converting Sinusoids into Exponentials
+
+Euler's formula gives us two companion expressions:
+
+- \(e^{j\phi} = \cos\phi + j\sin\phi\)
+- \(e^{-j\phi} = \cos\phi - j\sin\phi\)
+
+In words: the positive-exponent form has \(+j\sin\phi\), and the negative-exponent form has \(-j\sin\phi\). The cosine parts are identical in both.
+
+**Converting cosine:** Adding the two expressions cancels the sine terms, leaving \(2\cos\phi\). Dividing by 2 gives:
+
+$$\cos(\omega_0 t) = \frac{1}{2}\left(e^{j\omega_0 t}+e^{-j\omega_0 t}\right)$$
+
+**Converting sine:** Subtracting the two expressions cancels the cosine terms, leaving \(2j\sin\phi\). Dividing by \(2j\) gives:
+
+$$\sin(\omega_0 t) = \frac{1}{2j}\left(e^{j\omega_0 t}-e^{-j\omega_0 t}\right)$$
+
+### EXAM TIP
+
+Students almost always remember the cosine identity correctly. The most common mistake is writing \(\frac{1}{2}\) instead of \(\frac{1}{2j}\) for sine. The \(j\) in the denominator is not optional — it is what makes the result real.
+
+$$\cos(\omega_0 t)=\frac{1}{2}\left(e^{j\omega_0 t}+e^{-j\omega_0 t}\right), \qquad \sin(\omega_0 t)=\frac{1}{2j}\left(e^{j\omega_0 t}-e^{-j\omega_0 t}\right)$$
+*These are the same identities as before with \(\phi\) replaced by \(\omega_0 t\), so they are immediately ready to use in any signals problem where the argument is a time-varying frequency term.*
+
+## 2. One Representative Example and How to Use It
+
+Once a sinusoid is in exponential form, later operations — combining terms, solving linear systems, comparing phase shifts — become straightforward algebra instead of trigonometric manipulation.
+
+**Example:** Rewrite \(3\cos(\omega_0 t)\) in exponential form.
+
+Start from the cosine identity and multiply both sides by 3:
+
+$$3\cos(\omega_0 t) = \frac{3}{2}\,e^{j\omega_0 t} + \frac{3}{2}\,e^{-j\omega_0 t}$$
+
+Each exponential term picks up the same coefficient \(\frac{3}{2}\).
+
+The same approach works for a phase-shifted cosine such as \(C\cos(\omega_0 t + \theta)\) — you would substitute \(\omega_0 t + \theta\) for \(\phi\) — but we will not fully derive that here.
+
+### QUICK CHECK
+
+What coefficient appears in front of each exponential term when you expand \(8\cos(\omega_0 t)\)?
+
+Answer: **4** — because \(8 \times \frac{1}{2} = 4\).
+
+---
+**📌 Key Takeaways**
+- Euler's formula is the source: \(e^{\pm j\phi} = \cos\phi \pm j\sin\phi\) gives both identities directly.
+- Cosine is a symmetric sum: \(\cos\phi = \frac{1}{2}(e^{j\phi}+e^{-j\phi})\).
+- Sine is a difference over \(2j\): \(\sin\phi = \frac{1}{2j}(e^{j\phi}-e^{-j\phi})\) — never forget the \(j\).
+
+*In the next section we will sketch useful signal shapes and read their key features quickly.*
+
+%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NiwicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo1LCJtYXgiOjd9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6ImV1bGVyX3RvX3RyaWdfaWRlbnRpdGllcyIsImxhYmVsIjoiQ29zaW5lIGFuZCBzaW5lIGluIGV4cG9uZW50aWFsIGZvcm0iLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJrcDFfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IldoaWNoIGV4cHJlc3Npb24gaXMgZXF1YWwgdG8gXFwoXFxjb3NcXHBoaVxcKT8iLCJvcHRpb25zIjpbIkEuIFxcKFxcZnJhY3sxfXsyfVxcbGVmdChlXntqXFxwaGl9IC0gZV57LWpcXHBoaX1cXHJpZ2h0KVxcKSIsIkIuIFxcKFxcZnJhY3sxfXsyan1cXGxlZnQoZV57alxccGhpfSArIGVeey1qXFxwaGl9XFxyaWdodClcXCkiLCJDLiBcXChcXGZyYWN7MX17Mn1cXGxlZnQoZV57alxccGhpfSArIGVeey1qXFxwaGl9XFxyaWdodClcXCkiLCJELiBcXChcXGZyYWN7MX17Mmp9XFxsZWZ0KGVee2pcXHBoaX0gLSBlXnstalxccGhpfVxccmlnaHQpXFwpIl0sImNvcnJlY3Rfb3B0aW9uIjoiQyIsImV4cGxhbmF0aW9uIjoiQ29zaW5lIGlzIG9idGFpbmVkIGJ5IGFkZGluZyB0aGUgdHdvIEV1bGVyIGV4cHJlc3Npb25zIGFuZCBkaXZpZGluZyBieSAyLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6IlRoaXMgdXNlcyBhIGRpZmZlcmVuY2UsIHdoaWNoIGlzIGFzc29jaWF0ZWQgd2l0aCBzaW5lLCBub3QgY29zaW5lLiIsIkIiOiJDb3NpbmUgZG9lcyBub3QgdXNlIGRpdmlzaW9uIGJ5IFxcKDJqXFwpLiIsIkQiOiJUaGlzIGlzIHRoZSBmb3JtdWxhIGZvciBzaW5lLCBub3QgY29zaW5lLiJ9LCJoaW50IjoiVGhpbms6IGNvc2luZSBjb21lcyBmcm9tIHRoZSBzeW1tZXRyaWMgc3VtLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX0seyJpZCI6ImtwMV9xMiIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiV2hpY2ggZXhwcmVzc2lvbiBpcyBlcXVhbCB0byBcXChcXHNpblxccGhpXFwpPyIsIm9wdGlvbnMiOlsiQS4gXFwoXFxmcmFjezF9ezJ9XFxsZWZ0KGVee2pcXHBoaX0gKyBlXnstalxccGhpfVxccmlnaHQpXFwpIiwiQi4gXFwoXFxmcmFjezF9ezJqfVxcbGVmdChlXntqXFxwaGl9IC0gZV57LWpcXHBoaX1cXHJpZ2h0KVxcKSIsIkMuIFxcKFxcZnJhY3sxfXsyfVxcbGVmdChlXntqXFxwaGl9IC0gZV57LWpcXHBoaX1cXHJpZ2h0KVxcKSIsIkQuIFxcKFxcZnJhY3sxfXsyan1cXGxlZnQoZV57alxccGhpfSArIGVeey1qXFxwaGl9XFxyaWdodClcXCkiXSwiY29ycmVjdF9vcHRpb24iOiJCIiwiZXhwbGFuYXRpb24iOiJTaW5lIGlzIG9idGFpbmVkIGJ5IHN1YnRyYWN0aW5nIHRoZSB0d28gRXVsZXIgZXhwcmVzc2lvbnMgYW5kIGRpdmlkaW5nIGJ5IFxcKDJqXFwpLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6IlRoYXQgaXMgdGhlIGNvc2luZSBpZGVudGl0eS4iLCJDIjoiVGhlIGRpZmZlcmVuY2UgaXMgcmlnaHQsIGJ1dCB0aGUgcmVxdWlyZWQgZmFjdG9yIFxcKFxcZnJhY3sxfXsyan1cXCkgaXMgbWlzc2luZy4iLCJEIjoiU2luZSB1c2VzIGEgZGlmZmVyZW5jZSwgbm90IGEgc3VtLiJ9LCJoaW50IjoiVGhlIGNvbW1vbiB0cmFwIGlzIGZvcmdldHRpbmcgdGhlIFxcKDJqXFwpIGluIHRoZSBkZW5vbWluYXRvci4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9XX0seyJpZCI6InN1YnN0aXR1dGlvbl9pbnRvX3NpZ25hbCIsImxhYmVsIjoiUmVwbGFjaW5nIHBoaSB3aXRoIG9tZWdhXzAgdCBpbiBzaWduYWwgZXhwcmVzc2lvbnMiLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6MX0sInF1ZXN0aW9ucyI6W3siaWQiOiJrcDJfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IldoYXQgaXMgdGhlIGNvcnJlY3QgZXhwb25lbnRpYWwgZm9ybSBvZiBcXChcXGNvcyhcXG9tZWdhXzAgdClcXCk/Iiwib3B0aW9ucyI6WyJBLiBcXChcXGZyYWN7MX17Mn1cXGxlZnQoZV57alxcb21lZ2FfMCB0fStlXnstalxcb21lZ2FfMCB0fVxccmlnaHQpXFwpIiwiQi4gXFwoXFxmcmFjezF9ezJqfVxcbGVmdChlXntqXFxvbWVnYV8wIHR9LWVeey1qXFxvbWVnYV8wIHR9XFxyaWdodClcXCkiLCJDLiBcXChlXntqXFxvbWVnYV8wIHR9K2Veey1qXFxvbWVnYV8wIHR9XFwpIiwiRC4gXFwoXFxmcmFjezF9ezJ9XFxsZWZ0KGVee2pcXG9tZWdhXzAgdH0tZV57LWpcXG9tZWdhXzAgdH1cXHJpZ2h0KVxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkEiLCJleHBsYW5hdGlvbiI6IlRoaXMgaXMgdGhlIGNvc2luZSBpZGVudGl0eSB3aXRoIFxcKFxccGhpXFwpIHJlcGxhY2VkIGJ5IFxcKFxcb21lZ2FfMCB0XFwpLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQiI6IlRoYXQgaXMgdGhlIHNpbmUgaWRlbnRpdHkuIiwiQyI6IlRoZSBmYWN0b3IgXFwoXFxmcmFjezF9ezJ9XFwpIGlzIG1pc3NpbmcuIiwiRCI6IkNvc2luZSB1c2VzIGEgc3VtLCBub3QgYSBkaWZmZXJlbmNlLiJ9LCJoaW50IjoiU3Vic3RpdHV0ZSBcXChcXG9tZWdhXzAgdFxcKSB3aGVyZXZlciBcXChcXHBoaVxcKSBhcHBlYXJzLCBhbmQga2VlcCB0aGUgb3JpZ2luYWwgc3RydWN0dXJlLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9LHsiaWQiOiJrcDJfcTIiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IldoaWNoIGV4cHJlc3Npb24gbWF0Y2hlcyBcXCgzXFxjb3MoXFxvbWVnYV8wIHQpXFwpPyIsIm9wdGlvbnMiOlsiQS4gXFwoXFxmcmFjezN9ezJ9ZV57alxcb21lZ2FfMCB0fSArIFxcZnJhY3szfXsyfWVeey1qXFxvbWVnYV8wIHR9XFwpIiwiQi4gXFwoM2Vee2pcXG9tZWdhXzAgdH0gKyAzZV57LWpcXG9tZWdhXzAgdH1cXCkiLCJDLiBcXChcXGZyYWN7M317Mmp9ZV57alxcb21lZ2FfMCB0fSAtIFxcZnJhY3szfXsyan1lXnstalxcb21lZ2FfMCB0fVxcKSIsIkQuIFxcKFxcZnJhY3sxfXsyfWVee2pcXG9tZWdhXzAgdH0gKyBcXGZyYWN7MX17Mn1lXnstalxcb21lZ2FfMCB0fVxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkEiLCJleHBsYW5hdGlvbiI6Ik11bHRpcGx5IHRoZSBjb3NpbmUgaWRlbnRpdHkgYnkgMywgc28gZWFjaCBleHBvbmVudGlhbCB0ZXJtIGdldHMgY29lZmZpY2llbnQgXFwoXFxmcmFjezN9ezJ9XFwpLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQiI6IlRoaXMgaXMgdG9vIGxhcmdlIGJ5IGEgZmFjdG9yIG9mIDIuIiwiQyI6IlRoaXMgaGFzIHRoZSBzaW5lLWZvcm0gc3RydWN0dXJlLCBub3QgY29zaW5lLiIsIkQiOiJUaGlzIGNvcnJlc3BvbmRzIHRvIFxcKFxcY29zKFxcb21lZ2FfMCB0KVxcKSwgbm90IFxcKDNcXGNvcyhcXG9tZWdhXzAgdClcXCkuIn0sImhpbnQiOiJTY2FsZSBib3RoIGV4cG9uZW50aWFsIHRlcm1zIGVxdWFsbHkuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfV19LHsiaWQiOiJjb21tb25fZXhhbV90cmFwcyIsImxhYmVsIjoiUmVjb2duaXppbmcgY29tbW9uIHNpZ24gYW5kIGZhY3RvciBtaXN0YWtlcyIsImltcG9ydGFuY2UiOiJtZWRpdW0iLCJleGFtX3dlaWdodCI6ImhpZ2giLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjJ9LCJxdWVzdGlvbnMiOlt7ImlkIjoia3AzX3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJBIHN0dWRlbnQgd3JpdGVzIFxcKFxcc2luXFxwaGkgPSBcXGZyYWN7MX17Mn1cXGxlZnQoZV57alxccGhpfSAtIGVeey1qXFxwaGl9XFxyaWdodClcXCkuIFdoYXQgaXMgdGhlIGJlc3QgZGlhZ25vc2lzPyIsIm9wdGlvbnMiOlsiQS4gQ29tcGxldGVseSBjb3JyZWN0IiwiQi4gVGhlIHNpZ24gc2hvdWxkIGJlIGEgcGx1cyIsIkMuIFRoZSBkZW5vbWluYXRvciBzaG91bGQgYmUgXFwoMmpcXCksIG5vdCBcXCgyXFwpIiwiRC4gVGhlIGV4cG9uZW50cyBzaG91bGQgYm90aCBiZSBwb3NpdGl2ZSJdLCJjb3JyZWN0X29wdGlvbiI6IkMiLCJleHBsYW5hdGlvbiI6IlRoZSBkaWZmZXJlbmNlIHBhdHRlcm4gaXMgY29ycmVjdCwgYnV0IHNpbmUgcmVxdWlyZXMgZGl2aXNpb24gYnkgXFwoMmpcXCksIG5vdCBcXCgyXFwpLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6Ikl0IGlzIGNsb3NlLCBidXQgbm90IGNvcnJlY3QgYmVjYXVzZSB0aGUgZmFjdG9yIGlzIHdyb25nLiIsIkIiOiJTaW5lIGRvZXMgdXNlIGEgZGlmZmVyZW5jZSwgc28gdGhlIHNpZ24gcGF0dGVybiBpcyBub3QgdGhlIG1haW4gcHJvYmxlbS4iLCJEIjoiT25lIGV4cG9uZW50IG11c3QgYmUgcG9zaXRpdmUgYW5kIHRoZSBvdGhlciBuZWdhdGl2ZS4ifSwiaGludCI6Ikxvb2sgZm9yIHRoZSBtb3N0IGNvbW1vbiBtaXNzaW5nIGZhY3Rvci4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9LHsiaWQiOiJrcDNfcTIiLCJ0eXBlIjoic2hvcnRfYW5zd2VyIiwic3RlbSI6IkV4cGxhaW4gaW4gb25lIG9yIHR3byBzZW50ZW5jZXMgd2h5IGNvc2luZSBlbmRzIHVwIHdpdGggYSBzdW0gb2YgZXhwb25lbnRpYWxzIHdoaWxlIHNpbmUgZW5kcyB1cCB3aXRoIGEgZGlmZmVyZW5jZS4iLCJpZGVhbF9hbnN3ZXIiOiJGcm9tIEV1bGVyJ3MgZm9ybXVsYXMsIHRoZSBjb3NpbmUgdGVybXMgYXJlIGlkZW50aWNhbCBpbiBcXChlXntqXFxwaGl9XFwpIGFuZCBcXChlXnstalxccGhpfVxcKSwgc28gYWRkaW5nIHRoZW0gcmVpbmZvcmNlcyBjb3NpbmUgYW5kIGNhbmNlbHMgc2luZS4gVGhlIFxcKGpcXHNpblxccGhpXFwpIHRlcm1zIGhhdmUgb3Bwb3NpdGUgc2lnbnMsIHNvIHN1YnRyYWN0aW5nIGlzb2xhdGVzIHNpbmUg4oCUIGJ1dCB0aGUgcmVzdWx0IG11c3QgYmUgZGl2aWRlZCBieSBcXCgyalxcKSB0byByZW1vdmUgdGhlIFxcKGpcXCkgZmFjdG9yIGFuZCByZWNvdmVyIHRoZSByZWFsIHNpbmUgdmFsdWUuIiwiZ3JhZGluZ19ydWJyaWMiOlsiTXVzdCBtZW50aW9uIHRoYXQgYWRkaW5nIGtlZXBzIGNvc2luZSBiZWNhdXNlIHRoZSBjb3NpbmUgcGFydHMgbWF0Y2ggaW4gYm90aCBFdWxlciBleHByZXNzaW9ucyIsIk11c3QgbWVudGlvbiB0aGF0IHN1YnRyYWN0aW5nIGlzb2xhdGVzIHNpbmUgYmVjYXVzZSB0aGUgc2luZSB0ZXJtcyBoYXZlIG9wcG9zaXRlIHNpZ25zIiwiTXVzdCBtZW50aW9uIG9yIGltcGx5IHRoZSBcXChcXGZyYWN7MX17Mmp9XFwpIGZhY3RvciBmb3Igc2luZSJdLCJleHBsYW5hdGlvbiI6IlRoaXMgY2hlY2tzIHdoZXRoZXIgdGhlIHN0dWRlbnQgdW5kZXJzdGFuZHMgdGhlIHN0cnVjdHVyZSByYXRoZXIgdGhhbiBvbmx5IG1lbW9yaXppbmcgZm9ybXVsYXMuIiwiaGludCI6IkNvbXBhcmUgdGhlIHNpZ25zIG9mIHRoZSBzaW5lIHRlcm0gaW4gdGhlIHR3byBFdWxlciBleHByZXNzaW9ucyBcXChlXntqXFxwaGl9XFwpIGFuZCBcXChlXnstalxccGhpfVxcKS4iLCJuZWVkc192aXN1YWwiOnRydWUsInZpc3VhbF90eXBlIjoib3BlbmFpL2dwdC01LjQtaW1hZ2UtMiIsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9XX1dfQ==" style="display:none;"></div>%%KC_END%%

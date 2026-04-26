@@ -1,0 +1,92 @@
+%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6ImdlbmVyYXRlZF9pbWFnZSIsInJhdGlvbmFsZSI6IlRoaXMgc2VjdGlvbiBoYXMgbm8gYXZhaWxhYmxlIHRleHRib29rIGZpZ3VyZXMsIGJ1dCBpdCBpcyBoaWdobHkgaW50ZXJmYWNlLSBhbmQgY29tbWFuZC1wYXR0ZXJuLWRyaXZlbiwgc28gY2xlYW4gZ2VuZXJhdGVkIHZpc3VhbHMgd2lsbCBpbXByb3ZlIHJlY29nbml0aW9uIHNwZWVkIGFuZCByZWR1Y2UgY29tbWFuZCBjb25mdXNpb24uIiwiY3JhbSI6IlVzZSB2aXN1YWxzIGFzIGNvbW1hbmQgbWFwczogcHJvbXB0LCB3b3Jrc3BhY2UsIGhpc3RvcnkgcmVjYWxsLCBhbmQgaGVscCBmbG93LiBQcmlvcml0aXplIHF1aWNrIHBhdHRlcm4gcmVjb2duaXRpb24gb3ZlciBpbnRlcmZhY2UgZGV0YWlsLiIsInN0YW5kYXJkIjoiVXNlIHZpc3VhbHMgdG8gc2hvdyBob3cgdGhlIGNvbW1hbmQgd2luZG93LCB3b3Jrc3BhY2UsIGFuZCBjb3JlIGNvbW1hbmRzIGNvbm5lY3QgaW4gYSBub3JtYWwgc2Vzc2lvbi4iLCJ0b3Bfc2NvcmUiOiJVc2UgdmlzdWFscyB0byBzZXBhcmF0ZSBzaW1pbGFyIGNvbW1hbmRzLCBleHBvc2UgY29tbWFuZC1wdXJwb3NlIHRyYXBzLCBhbmQgcmVpbmZvcmNlIGV4YWN0IGNvbW1hbmQgc2VsZWN0aW9uIHVuZGVyIHByZXNzdXJlLiJ9" style="display:none;"></div>%%KC_END%%
+# B.7-1 MATLAB Overview
+
+> **Section Objective:** Recognize the MATLAB environment quickly and select the right command for any basic task — no deep programming required yet.
+
+This section is about fast environment navigation and command recognition. If an exam question asks how to inspect variables, clear data, or find a command, you need to know these names cold: the command prompt `>>`, workspace, `who`, `whos`, `clear`, `clc`, `clf`, `save`, `load`, `help`, `lookfor`, arrow-key command recall, `print`, `format`, and `exit`.
+
+This is not about writing programs. It is about knowing which window or command handles which job. If a question asks how to inspect variables, clear data, or find a command, these are the names you need.
+
+%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="generate_image" data-teaching-role="exam_pattern_anchor" data-visual-use-b64="eyJjcmFtIjoiVXNlIHRoaXMgYXMgYSBmYXN0IGNvbW1hbmQgbWFwOiB0YXNrIC0+IGNvbW1hbmQuIiwic3RhbmRhcmQiOiJVc2UgdGhpcyB0byBjb25uZWN0IHRoZSBjb21tYW5kIHdpbmRvdywgd29ya3NwYWNlLCBhbmQgY29tbW9uIGFjdGlvbnMgaW4gb25lIHNlc3Npb24uIiwidG9wX3Njb3JlIjoiVXNlIHRoaXMgdG8gc2VwYXJhdGUgbmVhcmJ5IGJ1dCBkaWZmZXJlbnQgY29tbWFuZHMgYW5kIHJlZHVjZSBzZWxlY3Rpb24gbWlzdGFrZXMuIn0=" style="display:none;"></div>%%KC_END%%
+*🎨 MATLAB session overview: every major command group mapped to its job. Use this as a quick-reference before attempting any MATLAB task question.*
+![Illustration](/generated/gptimage2-1777215416250-3801.png)
+
+## 1. Command Prompt and Workspace
+
+Nearly all MATLAB activity starts at the **command prompt** `>>`, which appears in the command window whenever MATLAB is ready for input. When you type a command and press Enter, MATLAB executes it immediately.
+
+The **workspace** is where MATLAB stores all current variables and data objects created during your session. Think of it as MATLAB's short-term memory: everything you compute or load lives there until you clear it or close MATLAB.
+
+### INSPECT COMMANDS
+
+| Command | What it shows |
+|---|---|
+| `workspace` | Opens the workspace window (GUI panel) |
+| `whos` | Prints names, sizes, and classes of all variables |
+| `who` | Prints variable names only |
+
+### EXAM SPEED RULE
+
+> If the question asks for **more detail** (size, class, bytes), choose `whos`. If it asks for **names only**, choose `who`.
+
+## 2. Clear, Save, Load, and Command-History Shortcuts
+
+### HOUSEKEEPING COMMANDS
+
+| Command | What it clears or affects |
+|---|---|
+| `clear var1 var2` | Removes named variables from the workspace |
+| `clear` | Removes **all** workspace variables |
+| `clc` | Clears the **command window** text only |
+| `clf` | Clears the **current figure** window only |
+
+### SAVE AND LOAD
+
+- `save filename` — saves the entire workspace to a `.mat` file
+- `save filename var1 var2` — saves only the listed variables to a `.mat` file
+- `load filename` — restores all data from a `.mat` file back into the workspace
+
+### COMMAND-HISTORY SHORTCUTS
+
+Press the **up arrow** or **down arrow** keys to scroll through previously entered commands. Type a few starting characters first, then press the up arrow to recall only commands that begin with those characters — a fast way to reuse long commands.
+
+#### Warning
+
+> **Clearing the command window (`clc`) does NOT delete variables.** Your workspace data is completely unaffected.
+
+%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="generate_image" data-teaching-role="trap_exposure" data-visual-use-b64="eyJjcmFtIjoiVXNlIHRoaXMgdG8gbWVtb3JpemUgd2hpY2ggdGhpbmcgZWFjaCBjb21tYW5kIGFmZmVjdHMgaW4gc2Vjb25kcy4iLCJzdGFuZGFyZCI6IlVzZSB0aGlzIHRvIGNsYXJpZnkgdGhlIGRpZmZlcmVuY2UgYmV0d2VlbiB3b3Jrc3BhY2UgZGF0YSwgY29tbWFuZCB0ZXh0LCBhbmQgZmlndXJlcy4iLCJ0b3Bfc2NvcmUiOiJVc2UgdGhpcyB0byBwcmV2ZW50IG5lYXItbWlzcyBlcnJvcnMgd2hlbiBzaW1pbGFyIGNvbW1hbmRzIGFwcGVhciBpbiBvcHRpb25zLiJ9" style="display:none;"></div>%%KC_END%%
+*🎨 Three commands, three different targets. Confusing these is one of the most common MATLAB command-selection mistakes.*
+![Illustration](/generated/gptimage2-1777215569628-7877.png)
+
+## 3. Help Commands and Ending a Session
+
+### FINDING COMMANDS
+
+When you are stuck, MATLAB gives you two built-in search tools:
+
+- **`help function_name`** — shows command-line documentation for a function you already know by name. Fast and direct.
+- **`lookfor keyword`** — searches all MATLAB function descriptions for a single keyword. Use this when you know the task but not the function name.
+
+HTML-based help (the Help browser) is broader and easier for browsing because it supports indexes, full-text search, and richer formatting — useful for exploring unfamiliar toolboxes.
+
+### SESSION CONTROL COMMANDS
+
+| Command | Purpose |
+|---|---|
+| `print` | Saves the current figure in common graphics formats |
+| `format` | Changes how numbers are displayed (e.g., short, long, scientific) |
+| `exit` | Terminates the MATLAB session |
+
+### EXAM RECOGNITION RULE
+
+> If the problem says **"I know the task but not the function name,"** the correct answer is `lookfor`, not `help`.
+
+---
+**📌 Key Takeaways**
+- The command prompt `>>` starts all activity; use `whos` for detail, `who` for names only.
+- `clear` removes variables, `clc` clears the command window, `clf` clears figures; `save`/`load` handle `.mat` files.
+- Use `lookfor keyword` when you do not know the function name; arrow keys recall previous commands.
+
+*In the next section we will use MATLAB as a calculator for real and complex-number operations.*
+
+%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NiwicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo1LCJtYXgiOjd9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6IndvcmtzcGFjZV9hbmRfcHJvbXB0IiwibGFiZWwiOiJDb21tYW5kIHByb21wdCBhbmQgd29ya3NwYWNlIGluc3BlY3Rpb24iLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJrcDFfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6Ik5lYXJseSBhbGwgTUFUTEFCIGFjdGl2aXR5IGluIHRoaXMgc2VjdGlvbiBiZWdpbnMgYXQgd2hpY2ggcGxhY2U/Iiwib3B0aW9ucyI6WyJBLiBUaGUgZmlndXJlIHdpbmRvdyIsIkIuIFRoZSBjb21tYW5kIHByb21wdCA+PiBpbiB0aGUgY29tbWFuZCB3aW5kb3ciLCJDLiBUaGUgSFRNTCBoZWxwIGJyb3dzZXIgb25seSIsIkQuIFRoZSB3b3Jrc3BhY2Ugd2luZG93Il0sImNvcnJlY3Rfb3B0aW9uIjoiQiIsImV4cGxhbmF0aW9uIjoiV2hlbiBNQVRMQUIgaXMgcmVhZHkgZm9yIGlucHV0LCB0aGUgY29tbWFuZCBwcm9tcHQgPj4gYXBwZWFycyBpbiB0aGUgY29tbWFuZCB3aW5kb3csIGFuZCBuZWFybHkgYWxsIE1BVExBQiBhY3Rpdml0eSBpcyBpbml0aWF0ZWQgdGhlcmUuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhlIGZpZ3VyZSB3aW5kb3cgaXMgZm9yIGdyYXBoaWNzIG91dHB1dCwgbm90IHRoZSBtYWluIHBsYWNlIHdoZXJlIGNvbW1hbmRzIGJlZ2luLiIsIkMiOiJIVE1MIGhlbHAgaXMgZm9yIGZpbmRpbmcgaW5mb3JtYXRpb24sIG5vdCBmb3Igc3RhcnRpbmcgbW9zdCBNQVRMQUIgYWN0aXZpdHkuIiwiRCI6IlRoZSB3b3Jrc3BhY2UgZGlzcGxheXMgc3RvcmVkIG9iamVjdHMsIGJ1dCBjb21tYW5kcyBhcmUgdHlwaWNhbGx5IGVudGVyZWQgYXQgdGhlIHByb21wdC4ifSwiaGludCI6IlRoaW5rOiB3aGVyZSBkbyB5b3UgdHlwZSBpbnN0cnVjdGlvbnM/IiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50IjpmYWxzZX0seyJpZCI6ImtwMV9xMiIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiWW91IG5lZWQgYSBjb21tYW5kIHRoYXQgcHJpbnRzIHZhcmlhYmxlIG5hbWVzLCBzaXplcywgYW5kIGNsYXNzZXMuIFdoaWNoIGNvbW1hbmQgc2hvdWxkIHlvdSBjaG9vc2U/Iiwib3B0aW9ucyI6WyJBLiB3aG8iLCJCLiB3aG9zIiwiQy4gd29ya3NwYWNlIiwiRC4gY2xlYXIiXSwiY29ycmVjdF9vcHRpb24iOiJCIiwiZXhwbGFuYXRpb24iOiJgd2hvc2AgcHJpbnRzIGEgc3VtbWFyeSBvZiB0aGUgd29ya3NwYWNlIGluY2x1ZGluZyBuYW1lLCBzaXplLCBhbmQgY2xhc3MuIGB3aG9gIGlzIHRoZSBzaG9ydGVyIHZlcnNpb24gdGhhdCByZXBvcnRzIG5hbWVzIG9ubHkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiYHdob2AgZ2l2ZXMgb25seSBuYW1lcywgc28gaXQgaXMgdG9vIGxpbWl0ZWQgZm9yIHRoaXMgcmVxdWVzdC4iLCJDIjoiYHdvcmtzcGFjZWAgaXMgdXNlZCB0byB2aWV3IHRoZSB3b3Jrc3BhY2Ugd2luZG93LCBub3QgdG8gcHJpbnQgdGhlIGZ1bGwgc3VtbWFyeSBpbiB0aGUgY29tbWFuZCB3aW5kb3cuIiwiRCI6ImBjbGVhcmAgcmVtb3ZlcyB2YXJpYWJsZXM7IGl0IGRvZXMgbm90IGluc3BlY3QgdGhlbS4ifSwiaGludCI6IlRoZSBleHRyYSAncycgbWVhbnMgdGhlIG1vcmUgZGV0YWlsZWQgc3VtbWFyeS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9XX0seyJpZCI6ImNsZWFyX3NhdmVfbG9hZCIsImxhYmVsIjoiSG91c2VrZWVwaW5nIGNvbW1hbmRzOiBjbGVhciwgY2xjLCBjbGYsIHNhdmUsIGxvYWQiLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJrcDJfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IkEgc3R1ZGVudCB3YW50cyB0byBlcmFzZSB0ZXh0IGZyb20gdGhlIGNvbW1hbmQgd2luZG93IGJ1dCBrZWVwIGFsbCB2YXJpYWJsZXMgaW4gbWVtb3J5LiBXaGljaCBjb21tYW5kIGlzIGNvcnJlY3Q/Iiwib3B0aW9ucyI6WyJBLiBjbGVhciIsIkIuIGNsZiIsIkMuIGNsYyIsIkQuIHdobyJdLCJjb3JyZWN0X29wdGlvbiI6IkMiLCJleHBsYW5hdGlvbiI6ImBjbGNgIGNsZWFycyB0aGUgY29tbWFuZCB3aW5kb3cgb25seS4gSXQgZG9lcyBub3QgcmVtb3ZlIHdvcmtzcGFjZSB2YXJpYWJsZXMuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiYGNsZWFyYCByZW1vdmVzIHZhcmlhYmxlcyBmcm9tIHRoZSB3b3Jrc3BhY2UuIiwiQiI6ImBjbGZgIGNsZWFycyB0aGUgY3VycmVudCBmaWd1cmUgd2luZG93LCBub3QgdGhlIGNvbW1hbmQgd2luZG93LiIsIkQiOiJgd2hvYCBsaXN0cyB2YXJpYWJsZSBuYW1lczsgaXQgZG9lcyBub3QgY2xlYXIgYW55dGhpbmcuIn0sImhpbnQiOiJUaGUgbWlkZGxlIGxldHRlciB0ZWxscyB5b3UgdGhpcyBjb21tYW5kIGlzIGFib3V0IHRoZSBjb21tYW5kIHdpbmRvdy4iLCJuZWVkc192aXN1YWwiOnRydWUsInZpc3VhbF90eXBlIjoib3BlbmFpL2dwdC01LjQtaW1hZ2UtMiIsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX0seyJpZCI6ImtwMl9xMiIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiV2hpY2ggY29tbWFuZCBzZXF1ZW5jZSBiZXN0IG1hdGNoZXMgdGhpcyB0YXNrOiBzYXZlIG9ubHkgdmFyaWFibGVzIHggYW5kIHkgaW50byBhIE1BVExBQiBkYXRhIGZpbGUgbmFtZWQgZXhhbWRhdGE/Iiwib3B0aW9ucyI6WyJBLiBzYXZlIGV4YW1kYXRhIiwiQi4gc2F2ZSBleGFtZGF0YSB4IHkiLCJDLiBsb2FkIGV4YW1kYXRhIHggeSIsIkQuIGNsZWFyIGV4YW1kYXRhIHggeSJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6ImBzYXZlYCBmb2xsb3dlZCBieSB0aGUgZmlsZW5hbWUgYW5kIHRoZW4gdmFyaWFibGUgbmFtZXMgc2VsZWN0aXZlbHkgc2F2ZXMgdGhvc2UgdmFyaWFibGVzIHRvIGEgYC5tYXRgIGZpbGUuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhpcyBzYXZlcyB0aGUgZW50aXJlIHdvcmtzcGFjZSwgbm90IG9ubHkgeCBhbmQgeS4iLCJDIjoiYGxvYWRgIHJldHJpZXZlcyBkYXRhOyBpdCBkb2VzIG5vdCBzYXZlIGl0LiIsIkQiOiJgY2xlYXJgIHJlbW92ZXMgdmFyaWFibGVzIGFuZCBoYXMgbm90aGluZyB0byBkbyB3aXRoIGNyZWF0aW5nIGEgZGF0YSBmaWxlLiJ9LCJoaW50IjoiU2VsZWN0aXZlIHNhdmluZyByZXF1aXJlcyB0aGUgZmlsZW5hbWUsIHRoZW4gdGhlIHZhcmlhYmxlIG5hbWVzLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9XX0seyJpZCI6ImhlbHBfYW5kX2hpc3RvcnkiLCJsYWJlbCI6IkZpbmRpbmcgY29tbWFuZHMgYW5kIHJldXNpbmcgcHJldmlvdXMgY29tbWFuZHMiLCJpbXBvcnRhbmNlIjoibWVkaXVtIiwiZXhhbV93ZWlnaHQiOiJoaWdoIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoxfSwicXVlc3Rpb25zIjpbeyJpZCI6ImtwM19xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiWW91IGtub3cgdGhlIHRhc2sgeW91IHdhbnQgdG8gZG8gaW4gTUFUTEFCLCBidXQgeW91IGRvIG5vdCBrbm93IHRoZSBmdW5jdGlvbiBuYW1lLiBXaGljaCBjb21tYW5kIGlzIHRoZSBiZXN0IGZpcnN0IGNob2ljZT8iLCJvcHRpb25zIjpbIkEuIGhlbHAiLCJCLiBsb29rZm9yIiwiQy4gZm9ybWF0IiwiRC4gZXhpdCJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6ImBsb29rZm9yYCBzZWFyY2hlcyBNQVRMQUIgZnVuY3Rpb25zIGJ5IGEga2V5d29yZC4gYGhlbHBgIGlzIG1vcmUgdXNlZnVsIHdoZW4geW91IGFscmVhZHkga25vdyB0aGUgZnVuY3Rpb24gbmFtZS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJgaGVscGAgbmVlZHMgYSBmdW5jdGlvbiBuYW1lIHRvIGJlIG1vc3QgZWZmZWN0aXZlLiIsIkMiOiJgZm9ybWF0YCBjaGFuZ2VzIGRpc3BsYXllZCBudW1lcmljIGZvcm1hdCwgbm90IGNvbW1hbmQgZGlzY292ZXJ5LiIsIkQiOiJgZXhpdGAgdGVybWluYXRlcyBNQVRMQUIuIn0sImhpbnQiOiJTZWFyY2ggYnkga2V5d29yZCwgbm90IGJ5IGV4YWN0IGZ1bmN0aW9uIG5hbWUuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfSx7ImlkIjoia3AzX3EyIiwidHlwZSI6InNob3J0X2Fuc3dlciIsInN0ZW0iOiJXcml0ZSBvbmUgb3IgdHdvIHNlbnRlbmNlcyBkaXN0aW5ndWlzaGluZyBgaGVscGAgZnJvbSBgbG9va2ZvcmAsIGFuZCBpbmNsdWRlIG9uZSBjb21tYW5kLWhpc3Rvcnkgc2hvcnRjdXQgZnJvbSB0aGlzIHNlY3Rpb24uIiwiaWRlYWxfYW5zd2VyIjoiYGhlbHBgIHNob3dzIGluZm9ybWF0aW9uIGFib3V0IGEgZnVuY3Rpb24gd2hlbiB5b3UgYWxyZWFkeSBrbm93IGl0cyBuYW1lLCB3aGlsZSBgbG9va2ZvcmAgc2VhcmNoZXMgZm9yIGZ1bmN0aW9ucyB1c2luZyBhIGtleXdvcmQuIFRoZSB1cCBhbmQgZG93biBhcnJvdyBrZXlzIGNhbiBzY3JvbGwgdGhyb3VnaCBwcmV2aW91cyBjb21tYW5kcywgYW5kIHR5cGluZyBhIGZldyBzdGFydGluZyBjaGFyYWN0ZXJzIGhlbHBzIHJlY2FsbCBtYXRjaGluZyBlYXJsaWVyIGNvbW1hbmRzLiIsImdyYWRpbmdfcnVicmljIjpbIk11c3QgY29ycmVjdGx5IGRpc3Rpbmd1aXNoIGtub3duLWZ1bmN0aW9uLW5hbWUgdXNlIG9mIGhlbHAgZnJvbSBrZXl3b3JkLXNlYXJjaCB1c2Ugb2YgbG9va2ZvciIsIk11c3QgaW5jbHVkZSBhdCBsZWFzdCBvbmUgYXJyb3cta2V5IGNvbW1hbmQtaGlzdG9yeSBzaG9ydGN1dCIsIkFuc3dlciBtYXkgYmUgYnJpZWYgYnV0IG11c3QgYmUgcHJlY2lzZSJdLCJleHBsYW5hdGlvbiI6IlRoaXMgdmVyaWZpZXMgdGhhdCB0aGUgc3R1ZGVudCBjYW4gZXhwbGFpbiB0aGUgY29tbWFuZC1zZWxlY3Rpb24gcnVsZSBpbnN0ZWFkIG9mIGp1c3QgZ3Vlc3NpbmcgZnJvbSBvcHRpb25zLiIsImhpbnQiOiJPbmUgY29tbWFuZCBleHBsYWlucyBhIGtub3duIGZ1bmN0aW9uOyB0aGUgb3RoZXIgaGVscHMgZGlzY292ZXIgYSBmdW5jdGlvbi4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOmZhbHNlfV19XX0=" style="display:none;"></div>%%KC_END%%
