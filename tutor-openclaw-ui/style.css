@@ -4282,6 +4282,11 @@ body,
   margin-bottom: 0;
   border-bottom: 1px solid rgba(0,0,0,0.06);
   flex-shrink: 0;
+  overflow-y: auto;
+  max-height: max(220px, 20%);
+}
+#learnWebSection.expanded {
+  max-height: max(400px, 40%);
 }
 .learn-web-section-title {
   font-size: 11px;

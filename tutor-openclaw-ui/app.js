@@ -16,6 +16,9 @@ function hideIntroLanding(persist = true) {
 }
 
 function shouldShowIntroLanding() {
+  try {
+    if (localStorage.getItem(INTRO_LANDING_SEEN_KEY) === '1') return false;
+  } catch (e) {}
   return true;
 }
 
@@ -3827,12 +3830,14 @@ function renderLearnWebSection(webSources) {
         });
         expandBtn.setAttribute('data-expanded', 'true');
         expandBtn.textContent = 'Show less ⌃';
+        learnWebSection.classList.add('expanded');
       } else {
         allCards.forEach((el, idx) => {
           if (idx >= 3) el.classList.add('learn-web-card-hidden');
         });
         expandBtn.setAttribute('data-expanded', 'false');
         expandBtn.textContent = `Show ${webSources.length - 3} more sources ⌄`;
+        learnWebSection.classList.remove('expanded');
       }
     });
   }
