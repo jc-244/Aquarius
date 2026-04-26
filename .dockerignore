@@ -4,6 +4,6 @@ node_modules
 .env
 *.log
 
-tutor-openclaw-ui/generated
+
 users
 __pycache__
