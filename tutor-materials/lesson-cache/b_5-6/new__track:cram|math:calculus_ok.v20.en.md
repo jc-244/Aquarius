@@ -1,68 +1,374 @@
-%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6ImdlbmVyYXRlZF9pbWFnZSIsInJhdGlvbmFsZSI6Ik5vIHRleHRib29rIGZpZ3VyZXMgYXJlIGF2YWlsYWJsZSwgYW5kIHRoaXMgc2VjdGlvbiBpcyBtb3N0bHkgYSBtZXRob2QgcGF0dGVybi4gQSBjbGVhbiBnZW5lcmF0ZWQgY29tcGFyaXNvbiB2aXN1YWwgd2lsbCBtYWtlIHRoZSBleGFtIHdvcmtmbG93IGltbWVkaWF0ZWx5IHJlY29nbml6YWJsZTogdXN1YWwgcGFydGlhbCBmcmFjdGlvbnMgdmVyc3VzIG1vZGlmaWVkIHBhcnRpYWwgZnJhY3Rpb25zLCBhbmQgdGhlIHR3by1zdGVwIHNvbHZlIHBhdHRlcm4gRih4KS94IHRoZW4gbXVsdGlwbHkgYnkgeC4iLCJjcmFtIjoiVXNlIG9uZSBjb21wYXJpc29uIHZpc3VhbCB0byBtYWtlIHRoZSByZWNvZ25pdGlvbiBydWxlIGFuZCBmaW5hbC1hbnN3ZXIgZm9ybWF0IG9idmlvdXMgaW4gc2Vjb25kcy4iLCJzdGFuZGFyZCI6IlVzZSB0aGUgdmlzdWFsIHRvIGV4cGxhaW4gd2h5IGRpdmlkaW5nIGJ5IHggY3JlYXRlcyBzdGFuZGFyZCBwYXJ0aWFsIGZyYWN0aW9ucyB0aGF0IGNhbiBiZSBzb2x2ZWQgbm9ybWFsbHkuIiwidG9wX3Njb3JlIjoiVXNlIHRoZSB2aXN1YWwgdG8gaGlnaGxpZ2h0IHJlcGVhdGVkLWZhY3RvciBzdHJ1Y3R1cmUsIHRhcmdldC1mb3JtIG1hdGNoaW5nLCBhbmQgdGhlIGZpbmFsLXN0ZXAgdHJhcCBvZiByZXN0b3JpbmcgeCBjb3JyZWN0bHkuIn0=" style="display:none;"></div>%%KC_END%%
-# Modified Partial Fractions
-
-> **Section Objective:** Learn the fast exam method for decomposing rational functions into the modified form \(kx/(x-\lambda)^r\) required by inverse z-transform problems.
+# B.5-6 Modified Partial Fractions
 
 ---
 
-When an inverse z-transform problem demands terms shaped like \(kx/(x-\lambda)^r\), do not force the ordinary partial-fraction form directly — the algebra becomes tangled and error-prone.
+## Page 1: Section Overview — What Is This About and Why Do We Care?
 
-The tested exam pattern is a clean two-step trick: **divide \(F(x)\) by \(x\)** to get \(F(x)/x\), perform ordinary partial fractions on that simpler expression, then **multiply the entire result by \(x\)** to restore the required form.
+Welcome! In this section, we're going to learn a clever little trick called **Modified Partial Fractions**.
 
-This matters because the final term shape \(kx/(x-\lambda)^r\) is exactly what inverse z-transform tables expect.
+### The Big Picture
 
-### TWO TRAPS TO AVOID
+You already know how to do regular partial fraction expansion — breaking a complicated fraction into simpler pieces. That's great for many problems.
 
-- **Trap 1:** Forgetting to divide by \(x\) at the start — you end up solving the wrong problem.
-- **Trap 2:** Forgetting to multiply by \(x\) at the end — your answer is off by a factor of \(x\) throughout.
+But here's the thing: when we work with **z-transforms** (a major tool in digital signal processing, covered in Chapter 5), we need our partial fractions to look like this:
 
-%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="generate_image" data-teaching-role="exam_pattern_anchor" data-visual-use-b64="eyJjcmFtIjoiVXNlIHRoaXMgdG8gbWVtb3JpemUgdGhlIDMtc3RlcCBwYXR0ZXJuIGluc3RhbnRseTogZGl2aWRlLCBkZWNvbXBvc2UsIG11bHRpcGx5IGJhY2suIiwic3RhbmRhcmQiOiJVc2UgdGhpcyB0byBzaG93IGhvdyBtb2RpZmllZCBwYXJ0aWFsIGZyYWN0aW9ucyBhcmUganVzdCBvcmRpbmFyeSBwYXJ0aWFsIGZyYWN0aW9ucyBhcHBsaWVkIHRvIEYoeCkveC4iLCJ0b3Bfc2NvcmUiOiJVc2UgdGhpcyB0byBlbXBoYXNpemUgcmVwZWF0ZWQgZmFjdG9ycyBhbmQgbWF0Y2hpbmcgdGhlIGV4YWN0IHRhcmdldCBmb3JtIGt4Lyh4LWxhbWJkYSleci4ifQ==" style="display:none;"></div>%%KC_END%%
-*🎨 Left: usual partial fractions use \(k/(x-\lambda)^r\). Right: modified partial fractions require \(kx/(x-\lambda)^r\). The 3-step workflow — divide, decompose, multiply back — converts one into the other.*
-![Illustration](/generated/gptimage2-1777215505256-1107.png)
+$$\frac{kx}{(x - \lambda_i)^r}$$
 
-## 1. Fast Recognition Rule
+Notice the **x on top** in the numerator! This is *different* from the standard form, which looks like:
 
-Use the modified method whenever the required final decomposition must contain numerators with \(x\), specifically terms of the form \(kx/(x-\lambda_i)^r\). This arises most often in inverse z-transform problems, where the table entries are written in exactly that shape.
+$$\frac{k}{(x - \lambda_i)^r}$$
 
-You do not need to invent a new coefficient-solving method. The ordinary cover-up and coefficient-matching techniques still work perfectly — but only after you divide by \(x\) first.
+So the question is: **How do we get that x into the numerator?**
 
-**Memorize this one sentence:**
+### The Answer: A Simple Divide-Then-Multiply Trick
 
-> If the target numerator is \(x\), first move \(x\) to the other side by dividing \(F(x)\) by \(x\).
+The method is beautifully simple:
 
-The repeated factor structure and the number of terms in the setup are then determined by the denominator of \(F(x)/x\) in the usual way.
+1. **Divide** \(F(x)\) by \(x\) to get \(\frac{F(x)}{x}\)
+2. **Expand** \(\frac{F(x)}{x}\) using regular partial fractions (the kind you already know)
+3. **Multiply** everything back by \(x\) to recover \(F(x)\) in the form we want
 
-#### Exam Rule
+That's it! Three steps. Let's dig into each piece carefully.
 
-**Target form decides the setup.**
+### What You'll Learn on Each Page
 
-$$F(x)=\frac{5x^2+20x+18}{(x+2)(x+3)^2},\qquad \frac{F(x)}{x}=\frac{5x^2+20x+18}{x(x+2)(x+3)^2}$$
-*Dividing by \(x\) introduces \(x\) as an additional factor in the denominator, converting the problem into an ordinary partial-fraction setup with three distinct denominator factors: \(x\), \((x+2)\), and \((x+3)^2\). From here, standard coefficient methods apply without modification.*
+| Page | Topic |
+|------|-------|
+| Page 2 | Why we need the modified form (motivation) |
+| Page 3 | Step-by-step walkthrough of the method |
+| Page 4 | Computing the coefficients in detail |
+| Page 5 | Recap & Summary |
+| Page 6 | Quiz |
 
-## 2. Solve the Textbook Example in the Shortest Exam Way
+---
 
-With \(F(x)/x\) in hand, write the standard ordinary partial-fraction decomposition. The denominator \(x(x+2)(x+3)^2\) has four factors when counted with multiplicity, so four terms are needed:
+## Page 2: Why Do We Need This Modified Form?
+
+### A Quick Reminder: Standard Partial Fractions
+
+In standard partial fraction expansion, we write something like:
+
+$$F(x) = \frac{3x^2 + 9x - 20}{(x-2)(x+3)} = 3 + \frac{2}{x-2} + \frac{4}{x+3}$$
+
+Each piece has the form \(\frac{k}{x - \lambda_i}\) — a **constant on top**, a linear factor on the bottom.
+
+This works perfectly for **Laplace transforms** and many other applications.
+
+### The Problem with Z-Transforms
+
+When we compute **inverse z-transforms**, we use a table of known transform pairs. The entries in that table look like:
+
+$$\frac{x}{x - \lambda} \longleftrightarrow \lambda^n \, u[n]$$
+
+See how the table entry has **x in the numerator**? That's the key. If our partial fractions have the form \(\frac{k}{x - \lambda}\) (no x on top), they **don't match** the table entries directly.
+
+We need our answer to look like:
+
+$$F(x) = k_1 \cdot \frac{x}{x - \lambda_1} + k_2 \cdot \frac{x}{x - \lambda_2} + \cdots$$
+
+### The Goal, Stated Clearly
+
+> **Goal:** Express \(F(x)\) as a sum of terms of the form \(\dfrac{kx}{(x - \lambda_i)^r}\)
+
+This is what we call the **modified partial fraction** form.
+
+### Why Not Just Multiply the Standard Result by x?
+
+Good question! You might think: "Can't I just do regular partial fractions and then multiply by x?"
+
+The problem is that multiplying by x **changes the function** — it doesn't just rearrange the pieces. We need a systematic method that gives us the right coefficients. That's exactly what the divide-then-multiply trick does.
+
+---
+
+## Page 3: The Method — Step by Step
+
+Let's work through the full example from the textbook. We have:
+
+$$F(x) = \frac{5x^2 + 20x + 18}{(x+2)(x+3)^2}$$
+
+### Step 1: Divide Both Sides by x
+
+$$\frac{F(x)}{x} = \frac{5x^2 + 20x + 18}{x(x+2)(x+3)^2}$$
+
+We've introduced \(x\) into the denominator. Now the denominator has **four factors**: \(x\), \((x+2)\), \((x+3)\), and \((x+3)^2\).
+
+### Step 2: Set Up the Partial Fraction Expansion
+
+For the right-hand side, we write the standard partial fraction form. Remember the rules:
+
+- Each **distinct linear factor** \((x - a)\) gets one term: \(\dfrac{a_i}{x - a}\)
+- Each **repeated linear factor** \((x - a)^r\) gets \(r\) terms: \(\dfrac{a_i}{x-a} + \dfrac{a_j}{(x-a)^2} + \cdots\)
+
+So we write:
+
+$$\frac{F(x)}{x} = \frac{5x^2 + 20x + 18}{x(x+2)(x+3)^2} = \frac{a_1}{x} + \frac{a_2}{x+2} + \frac{a_3}{x+3} + \frac{a_4}{(x+3)^2}$$
+
+Four factors → four terms. ✓
+
+### Step 3: Find the Coefficients (Next Page!)
+
+We use the **cover-up method** (and a little algebra for the repeated root). We'll do this carefully on the next page.
+
+### Step 4: Multiply Both Sides by x
+
+Once we have all the \(a_i\) values, we multiply both sides by \(x\):
+
+$$F(x) = a_1 + \frac{a_2 \, x}{x+2} + \frac{a_3 \, x}{x+3} + \frac{a_4 \, x}{(x+3)^2}$$
+
+Now every term (except possibly a constant) has the form \(\dfrac{k \, x}{(x - \lambda)^r}\). 
+
+---
+
+## Page 4: Computing the Coefficients — In Full Detail
+
+We need to find \(a_1, a_2, a_3, a_4\) in:
+
+$$\frac{5x^2 + 20x + 18}{x(x+2)(x+3)^2} = \frac{a_1}{x} + \frac{a_2}{x+2} + \frac{a_3}{x+3} + \frac{a_4}{(x+3)^2}$$
+
+### Finding \(a_1\): Cover Up the Factor \(x\), Set \(x = 0\)
+
+Multiply both sides by \(x\) and set \(x = 0\):
+
+$$a_1 = \left. \frac{5x^2 + 20x + 18}{(x+2)(x+3)^2} \right|_{x=0} = \frac{0 + 0 + 18}{(2)(3)^2} = \frac{18}{18} = 1$$
+
+$$\boxed{a_1 = 1}$$
+
+### Finding \(a_2\): Cover Up \((x+2)\), Set \(x = -2\)
+
+Multiply both sides by \((x+2)\) and set \(x = -2\):
+
+$$a_2 = \left. \frac{5x^2 + 20x + 18}{x(x+3)^2} \right|_{x=-2} = \frac{5(4) + 20(-2) + 18}{(-2)(1)^2} = \frac{20 - 40 + 18}{-2} = \frac{-2}{-2} = 1$$
+
+$$\boxed{a_2 = 1}$$
+
+### Finding \(a_4\): Cover Up \((x+3)^2\), Set \(x = -3\)
+
+For the **highest power** of the repeated factor, we cover up \((x+3)^2\) and set \(x = -3\):
+
+$$a_4 = \left. \frac{5x^2 + 20x + 18}{x(x+2)} \right|_{x=-3} = \frac{5(9) + 20(-3) + 18}{(-3)(-1)} = \frac{45 - 60 + 18}{3} = \frac{3}{3} = 1$$
+
+$$\boxed{a_4 = 1}$$
+
+### Finding \(a_3\): Use Any Convenient Value of \(x\)
+
+For the **lower-power** repeated term, the cover-up method doesn't work directly. Instead, substitute a convenient value of \(x\) (now that we know \(a_1, a_2, a_4\)).
+
+Let's use \(x = 1\). Plug into the original equation:
+
+$$\frac{5(1) + 20(1) + 18}{(1)(3)(4)^2} = \frac{43}{48}$$
+
+And the right-hand side becomes:
+
+$$\frac{1}{1} + \frac{1}{3} + \frac{a_3}{4} + \frac{1}{16}$$
+
+Setting them equal:
+
+$$\frac{43}{48} = 1 + \frac{1}{3} + \frac{a_3}{4} + \frac{1}{16}$$
+
+$$\frac{43}{48} = \frac{48}{48} + \frac{16}{48} + \frac{12 a_3}{48} + \frac{3}{48}$$
+
+$$43 = 48 + 16 + 12a_3 + 3 = 67 + 12a_3$$
+
+$$12a_3 = 43 - 67 = -24 \implies a_3 = -2$$
+
+$$\boxed{a_3 = -2}$$
+
+### Putting It All Together
+
+$$\frac{F(x)}{x} = \frac{1}{x} + \frac{1}{x+2} - \frac{2}{x+3} + \frac{1}{(x+3)^2}$$
+
+Now **multiply both sides by \(x\)**:
+
+$$\boxed{F(x) = 1 + \frac{x}{x+2} - \frac{2x}{x+3} + \frac{x}{(x+3)^2}}$$
+
+Every fraction now has \(x\) in the numerator — exactly the modified form we wanted! ✓
+
+> **Note on the constant term:** The \(a_1\) term becomes just the constant \(1\) after multiplying by \(x\). This is fine — a constant is a valid part of the expansion.
+
+---
+
+## Page 5: Recap & Summary
+
+Great work! Let's pull everything together into a clean summary.
+
+### What Is Modified Partial Fractions?
+
+It's a technique to express \(F(x)\) as a sum of terms of the form:
+
+$$\frac{k \, x}{(x - \lambda_i)^r}$$
+
+instead of the standard \(\dfrac{k}{(x - \lambda_i)^r}\).
+
+### Why Do We Need It?
+
+Because **inverse z-transform tables** use entries like \(\dfrac{x}{x - \lambda}\), not \(\dfrac{1}{x - \lambda}\). The modified form matches the table directly.
+
+### The Three-Step Method
+
+| Step | Action |
+|------|--------|
+| **1. Divide** | Compute \(\dfrac{F(x)}{x}\) — this puts \(x\) in the denominator |
+| **2. Expand** | Do a regular partial fraction expansion of \(\dfrac{F(x)}{x}\) |
+| **3. Multiply** | Multiply both sides by \(x\) to get \(F(x)\) in modified form |
+
+### Finding the Coefficients
+
+Use the same tools as regular partial fractions:
+
+- **Cover-up method** for simple (non-repeated) factors and the highest-power repeated factor
+- **Substitute a convenient value of \(x\)** for lower-power repeated factors
+
+### The Worked Example
+
+$$F(x) = \frac{5x^2 + 20x + 18}{(x+2)(x+3)^2}$$
+
+$$\frac{F(x)}{x} = \frac{1}{x} + \frac{1}{x+2} - \frac{2}{x+3} + \frac{1}{(x+3)^2}$$
+
+$$F(x) = 1 + \frac{x}{x+2} - \frac{2x}{x+3} + \frac{x}{(x+3)^2}$$
+
+### Key Things to Remember
+
+> ✅ Always divide by \(x\) **first**, then expand, then multiply back.
+>
+> ✅ The number of partial fraction terms equals the **degree of the denominator** of \(\dfrac{F(x)}{x}\).
+>
+> ✅ A constant term in the result (from the \(a_1/x\) piece) is perfectly normal.
+>
+> ✅ This method is specifically designed for **z-transform** work.
+
+---
+
+## Page 6: Quiz — Exam-Oriented Practice
+
+### quiz_plan
+
+**Section:** B.5-6 Modified Partial Fractions
+**Format:** Mostly multiple-choice; short-answer where calculation is needed
+**Difficulty:** Beginner to intermediate
+
+---
+
+**Q1. (Multiple Choice)**
+Why do we use *modified* partial fractions instead of standard partial fractions when working with z-transforms?
+
+- A) Standard partial fractions don't work for polynomials
+- B) Z-transform tables require terms of the form \(\dfrac{kx}{x - \lambda}\), not \(\dfrac{k}{x - \lambda}\)
+- C) Modified partial fractions are always simpler to compute
+- D) The denominator of \(F(x)\) must always contain \(x\) as a factor
+
+> **Answer: B** — The z-transform table entries have \(x\) in the numerator, so we need our partial fractions in that form to match.
+
+---
+
+**Q2. (Multiple Choice)**
+What is the **first step** in the modified partial fraction method applied to \(F(x)\)?
+
+- A) Multiply \(F(x)\) by \(x\)
+- B) Factor the numerator of \(F(x)\)
+- C) Divide \(F(x)\) by \(x\) to form \(\dfrac{F(x)}{x}\)
+- D) Set \(x = 0\) in \(F(x)\)
+
+> **Answer: C** — We divide by \(x\) first, expand, then multiply back.
+
+---
+
+**Q3. (Multiple Choice)**
+Given:
+
+$$\frac{F(x)}{x} = \frac{G(x)}{x(x+1)(x+2)}$$
+
+How many partial fraction terms will the expansion have?
+
+- A) 2
+- B) 3
+- C) 4
+- D) 5
+
+> **Answer: B** — Three distinct linear factors → three terms: \(\dfrac{a_1}{x} + \dfrac{a_2}{x+1} + \dfrac{a_3}{x+2}\)
+
+---
+
+**Q4. (Multiple Choice)**
+After expanding \(\dfrac{F(x)}{x}\) into partial fractions, what do you do next?
+
+- A) Differentiate both sides with respect to \(x\)
+- B) Multiply both sides by \(x\)
+- C) Substitute \(x = 1\) into both sides
+- D) Take the inverse Laplace transform
+
+> **Answer: B** — Multiplying by \(x\) converts each \(\dfrac{a_i}{x - \lambda_i}\) into \(\dfrac{a_i \, x}{x - \lambda_i}\).
+
+---
+
+**Q5. (Multiple Choice)**
+In the textbook example, after expanding \(\dfrac{F(x)}{x}\) and multiplying by \(x\), the term \(\dfrac{a_1}{x}\) becomes:
+
+- A) \(\dfrac{a_1}{x^2}\)
+- B) \(a_1 \cdot x\)
+- C) \(a_1\) (a constant)
+- D) \(\dfrac{a_1}{x-1}\)
+
+> **Answer: C** — \(x \cdot \dfrac{a_1}{x} = a_1\). The \(x\) cancels, leaving just a constant.
+
+---
+
+**Q6. (Multiple Choice)**
+For the expansion:
 
 $$\frac{F(x)}{x} = \frac{a_1}{x} + \frac{a_2}{x+2} + \frac{a_3}{x+3} + \frac{a_4}{(x+3)^2}$$
 
-Note that the repeated factor \((x+3)^2\) creates **two** separate terms — one for the first power \((x+3)\) and one for the second power \((x+3)^2\). This is the standard repeated-factor rule applied unchanged.
+Which coefficient **cannot** be found directly by the cover-up method?
 
-Using the textbook coefficients: \(a_1 = 1\), \(a_2 = 1\), \(a_3 = -2\), \(a_4 = 1\).
+- A) \(a_1\)
+- B) \(a_2\)
+- C) \(a_3\)
+- D) \(a_4\)
 
-Substitute these values to get the ordinary decomposition of \(F(x)/x\), then multiply every single term by \(x\) to recover \(F(x)\) in the required modified form. Every fraction \(a_i/(\cdot)\) becomes \(a_i x/(\cdot)\), and the \(a_1/x\) term collapses to the constant \(a_1\).
-
-$$\frac{F(x)}{x}=\frac{1}{x}+\frac{1}{x+2}-\frac{2}{x+3}+\frac{1}{(x+3)^2}$$
-*This is the completed ordinary partial-fraction expansion of \(F(x)/x\); because every term has the standard form \(k/(x-\lambda)^r\), all familiar coefficient-finding techniques — cover-up, substitution, or matching — apply without any modification.*
-
-$$F(x)=1+\frac{x}{x+2}-\frac{2x}{x+3}+\frac{x}{(x+3)^2}$$
-*Multiplying every term of the decomposition by \(x\) restores the modified form, placing \(x\) in the numerator of each fractional term as required. The standalone constant \(1\) comes from the first term: \(x \cdot (1/x) = 1\) — this is the most common arithmetic slip, so verify it explicitly.*
+> **Answer: C** — \(a_3\) corresponds to the *lower-power* term of the repeated factor \((x+3)^2\). The cover-up method works for \(a_4\) (highest power) but not \(a_3\). We must substitute a convenient \(x\) value instead.
 
 ---
-**📌 Key Takeaways**
-- If the target numerator is \(x\), divide \(F(x)\) by \(x\) first to set up ordinary partial fractions.
-- Repeated factor \((x+3)^2\) always requires two separate terms: one for each power.
-- Final step trap: multiply every term by \(x\), and remember \(x \cdot (1/x) = 1\), not \(x\).
 
-*In the next section we will move to vectors and matrices.*
+**Q7. (Short Answer)**
+Find \(a_1\) in the expansion below using the cover-up method:
 
-%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NiwicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo1LCJtYXgiOjd9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6InJlY29nbml6ZV9tb2RpZmllZF9zZXR1cCIsImxhYmVsIjoiUmVjb2duaXplIHdoZW4gbW9kaWZpZWQgcGFydGlhbCBmcmFjdGlvbnMgYXJlIHJlcXVpcmVkIiwiaW1wb3J0YW5jZSI6ImhpZ2giLCJleGFtX3dlaWdodCI6ImhpZ2giLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjJ9LCJxdWVzdGlvbnMiOlt7ImlkIjoia3AxX3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJBIHByb2JsZW0gYXNrcyB5b3UgdG8gZXhwcmVzcyBhIHJhdGlvbmFsIGZ1bmN0aW9uIGluIHRlcm1zIG9mIHBpZWNlcyBzaGFwZWQgbGlrZSBcXChreC8oeC1cXGxhbWJkYSleclxcKS4gV2hhdCBpcyB0aGUgZmFzdGVzdCBjb3JyZWN0IHNldHVwPyIsIm9wdGlvbnMiOlsiQS4gRXhwYW5kIFxcKEYoeClcXCkgZGlyZWN0bHkgaW50byBcXChBLyh4LVxcbGFtYmRhKV5yXFwpIHRlcm1zIGFuZCBhdHRhY2ggXFwoeFxcKSBsYXRlciBvbmx5IHRvIHNlbGVjdGVkIHRlcm1zIiwiQi4gRGlmZmVyZW50aWF0ZSB0aGUgZGVub21pbmF0b3IgZmlyc3QsIHRoZW4gbWF0Y2ggY29lZmZpY2llbnRzIiwiQy4gRGl2aWRlIFxcKEYoeClcXCkgYnkgXFwoeFxcKSwgcGVyZm9ybSBvcmRpbmFyeSBwYXJ0aWFsIGZyYWN0aW9ucyBvbiBcXChGKHgpL3hcXCksIHRoZW4gbXVsdGlwbHkgdGhlIGZpbmFsIGV4cGFuc2lvbiBieSBcXCh4XFwpIiwiRC4gTXVsdGlwbHkgdGhlIGRlbm9taW5hdG9yIGJ5IFxcKHhcXCkgYW5kIHNvbHZlIGEgbGFyZ2VyIHN5c3RlbSJdLCJjb3JyZWN0X29wdGlvbiI6IkMiLCJleHBsYW5hdGlvbiI6IlRoZSBzZWN0aW9uJ3MgY29yZSBtZXRob2QgaXMgdG8gZGl2aWRlIGJ5IFxcKHhcXCkgZmlyc3Qgc28gdGhlIGRlY29tcG9zaXRpb24gYmVjb21lcyBvcmRpbmFyeSBwYXJ0aWFsIGZyYWN0aW9ucywgdGhlbiBtdWx0aXBseSB0aGUgd2hvbGUgcmVzdWx0IGJ5IFxcKHhcXCkgdG8gcmVzdG9yZSB0aGUgcmVxdWlyZWQgbnVtZXJhdG9yIGZvcm0uIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiQXR0YWNoaW5nIFxcKHhcXCkgbGF0ZXIgdGVybS1ieS10ZXJtIHdpdGhvdXQgYSB2YWxpZCBzZXR1cCBpcyBub3QgdGhlIG1ldGhvZCBhbmQgb2Z0ZW4gcHJvZHVjZXMgYW4gaW5jb3JyZWN0IGZvcm0uIiwiQiI6IkRpZmZlcmVudGlhdGluZyB0aGUgZGVub21pbmF0b3IgaXMgdW5yZWxhdGVkIHRvIHRoZSB0ZXh0Ym9vayBtZXRob2QgaGVyZS4iLCJEIjoiTXVsdGlwbHlpbmcgdGhlIGRlbm9taW5hdG9yIGJ5IFxcKHhcXCkgY2hhbmdlcyB0aGUgcHJvYmxlbSBpbiB0aGUgd3JvbmcgZGlyZWN0aW9uLiJ9LCJoaW50IjoiTGV0IHRoZSB0YXJnZXQgbnVtZXJhdG9yIFxcKHhcXCkgZ3VpZGUgdGhlIHNldHVwLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX0seyJpZCI6ImtwMV9xMiIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiV2hpY2ggc2VudGVuY2UgaXMgdGhlIGJlc3QgZXhhbSBydWxlIGZvciB0aGlzIHNlY3Rpb24/Iiwib3B0aW9ucyI6WyJBLiBBbHdheXMgZXhwYW5kIFxcKEYoeClcXCkgZGlyZWN0bHksIG5vIG1hdHRlciB3aGF0IHRhcmdldCBmb3JtIGlzIHJlcXVlc3RlZCIsIkIuIFRhcmdldCBmb3JtIGRlY2lkZXMgdGhlIHNldHVwOyBpZiB0aGUgbnVtZXJhdG9yIG11c3QgYmUgXFwoeFxcKSwgc3RhcnQgd2l0aCBcXChGKHgpL3hcXCkiLCJDLiBSZXBlYXRlZCByb290cyBtZWFuIG1vZGlmaWVkIHBhcnRpYWwgZnJhY3Rpb25zIGFyZSBpbXBvc3NpYmxlIiwiRC4gTW9kaWZpZWQgcGFydGlhbCBmcmFjdGlvbnMgYXJlIG9ubHkgdXNlZCB3aGVuIHRoZSBudW1lcmF0b3IgZGVncmVlIGV4Y2VlZHMgdGhlIGRlbm9taW5hdG9yIGRlZ3JlZSJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6IlRoZSByZXF1ZXN0ZWQgZmluYWwgZm9ybSBkZXRlcm1pbmVzIHRoZSBtb3N0IGVmZmljaWVudCBzZXR1cC4gSGVyZSB0aGUgXFwoeFxcKSBpbiB0aGUgbnVtZXJhdG9yIHNpZ25hbHMgdGhhdCBkaXZpZGluZyBieSBcXCh4XFwpIGZpcnN0IGlzIHRoZSBpbnRlbmRlZCBtb3ZlLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6IlRoaXMgaWdub3JlcyB0aGUgd2hvbGUgcG9pbnQgb2YgdGhlIG1vZGlmaWVkIG1ldGhvZC4iLCJDIjoiUmVwZWF0ZWQgcm9vdHMgYXJlIGFsbG93ZWQgYW5kIGFwcGVhciBpbiB0aGUgdGV4dGJvb2sgZXhhbXBsZS4iLCJEIjoiRGVncmVlIGNvbXBhcmlzb24gaXMgbm90IHRoZSB0cmlnZ2VyIGZvciB0aGlzIG1ldGhvZC4ifSwiaGludCI6IkZvY3VzIG9uIHRoZSByZXF1aXJlZCBmaW5hbCB0ZXJtIHNoYXBlLCBub3Qgb24gYSBtZW1vcml6ZWQgZGVub21pbmF0b3IgcGF0dGVybiBhbG9uZS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9XX0seyJpZCI6InNldF91cF9kZWNvbXBvc2l0aW9uX2NvcnJlY3RseSIsImxhYmVsIjoiU2V0IHVwIEYoeCkveCB3aXRoIHRoZSBjb3JyZWN0IG9yZGluYXJ5IHBhcnRpYWwtZnJhY3Rpb24gdGVybXMiLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJrcDJfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IkZvciBcXChGKHgpID0gKDV4XjIrMjB4KzE4KS8oKHgrMikoeCszKV4yKVxcKSwgd2hpY2ggaXMgdGhlIGNvcnJlY3Qgb3JkaW5hcnkgcGFydGlhbC1mcmFjdGlvbiBmb3JtIGZvciBcXChGKHgpL3hcXCk/Iiwib3B0aW9ucyI6WyJBLiBcXChhXzEveCArIGFfMi8oeCsyKSArIGFfMy8oeCszKV4yXFwpIiwiQi4gXFwoYV8xL3ggKyBhXzIvKHgrMikgKyBhXzMvKHgrMykgKyBhXzQvKHgrMyleMlxcKSIsIkMuIFxcKGFfMS94ICsgYV8yIHgvKHgrMikgKyBhXzMgeC8oeCszKSArIGFfNCB4Lyh4KzMpXjJcXCkiLCJELiBcXChhXzEveF4yICsgYV8yLyh4KzIpICsgYV8zLyh4KzMpICsgYV80Lyh4KzMpXjJcXCkiXSwiY29ycmVjdF9vcHRpb24iOiJCIiwiZXhwbGFuYXRpb24iOiJBZnRlciBkaXZpZGluZyBieSBcXCh4XFwpLCB0aGUgZGVub21pbmF0b3IgaXMgXFwoeCh4KzIpKHgrMyleMlxcKS4gQSByZXBlYXRlZCBsaW5lYXIgZmFjdG9yIFxcKCh4KzMpXjJcXCkgcmVxdWlyZXMgYm90aCBhIGZpcnN0LXBvd2VyIGFuZCBzZWNvbmQtcG93ZXIgdGVybTogXFwoYV8zLyh4KzMpXFwpIGFuZCBcXChhXzQvKHgrMyleMlxcKS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJJdCBpcyBtaXNzaW5nIHRoZSBzZXBhcmF0ZSB0ZXJtIGZvciBcXCgxLyh4KzMpXFwpLiIsIkMiOiJUaG9zZSBcXCh4XFwpIG51bWVyYXRvcnMgYmVsb25nIHRvIHRoZSBmaW5hbCBtb2RpZmllZCBmb3JtIGFmdGVyIG11bHRpcGx5aW5nIGJhY2ssIG5vdCB0byB0aGUgc2V0dXAgZm9yIFxcKEYoeCkveFxcKS4iLCJEIjoiVGhlcmUgaXMgb25seSBvbmUgZmFjdG9yIFxcKHhcXCkgaW4gdGhlIGRlbm9taW5hdG9yLCBub3QgXFwoeF4yXFwpLiJ9LCJoaW50IjoiUmVwZWF0ZWQgbGluZWFyIGZhY3RvcnMgbmVlZCBhIGxhZGRlciBvZiBwb3dlcnMuIiwibmVlZHNfdmlzdWFsIjp0cnVlLCJ2aXN1YWxfdHlwZSI6Im9wZW5haS9ncHQtNS40LWltYWdlLTIiLCJzYW1lX3BvaW50X3ZhcmlhbnQiOmZhbHNlfSx7ImlkIjoia3AyX3EyIiwidHlwZSI6InNob3J0X2Fuc3dlciIsInN0ZW0iOiJXaHkgZG9lcyB0aGUgZmFjdG9yIFxcKCh4KzMpXjJcXCkgaW4gdGhlIGRlbm9taW5hdG9yIG9mIFxcKEYoeCkveFxcKSByZXF1aXJlIHR3byBzZXBhcmF0ZSB0ZXJtcyBpbiB0aGUgZGVjb21wb3NpdGlvbj8iLCJpZGVhbF9hbnN3ZXIiOiJCZWNhdXNlIGEgcmVwZWF0ZWQgbGluZWFyIGZhY3RvciBvZiBwb3dlciAyIHJlcXVpcmVzIG9uZSB0ZXJtIGZvciBlYWNoIHBvd2VyOiBvbmUgb3ZlciBcXCgoeCszKVxcKSBhbmQgb25lIG92ZXIgXFwoKHgrMyleMlxcKS4iLCJncmFkaW5nX3J1YnJpYyI6WyJNdXN0IG1lbnRpb24gdGhhdCB0aGUgZmFjdG9yIGlzIHJlcGVhdGVkIiwiTXVzdCBzdGF0ZSBib3RoIHJlcXVpcmVkIHBvd2VyczogXFwoKHgrMylcXCkgYW5kIFxcKCh4KzMpXjJcXCkiLCJNdXN0IGNvbm5lY3QgdGhpcyB0byB0aGUgc3RhbmRhcmQgb3JkaW5hcnkgcGFydGlhbC1mcmFjdGlvbiBydWxlIl0sImV4cGxhbmF0aW9uIjoiVGhpcyBjaGVja3Mgd2hldGhlciB0aGUgc3R1ZGVudCBrbm93cyB0aGUgc2V0dXAgcnVsZSwgbm90IGp1c3QgdGhlIGZpbmFsIGFuc3dlci4iLCJoaW50IjoiVGhpbms6IG9uZSB0ZXJtIGZvciBlYWNoIHBvd2VyIHVwIHRvIHRoZSByZXBlYXRlZCBwb3dlci4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9XX0seyJpZCI6InJlc3RvcmVfbW9kaWZpZWRfZm9ybV9hbmRfYXZvaWRfdHJhcHMiLCJsYWJlbCI6Ik11bHRpcGx5IGJhY2sgYnkgeCBhbmQgYXZvaWQgdGhlIGZpbmFsLXN0ZXAgdHJhcCIsImltcG9ydGFuY2UiOiJoaWdoIiwiZXhhbV93ZWlnaHQiOiJoaWdoIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoyfSwicXVlc3Rpb25zIjpbeyJpZCI6ImtwM19xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiR2l2ZW4gXFwoRih4KS94ID0gMS94ICsgMS8oeCsyKSAtIDIvKHgrMykgKyAxLyh4KzMpXjJcXCksIHdoaWNoIGV4cHJlc3Npb24gaXMgXFwoRih4KVxcKT8iLCJvcHRpb25zIjpbIkEuIFxcKDEgKyB4Lyh4KzIpIC0gMngvKHgrMykgKyB4Lyh4KzMpXjJcXCkiLCJCLiBcXCh4ICsgeC8oeCsyKSAtIDJ4Lyh4KzMpICsgeC8oeCszKV4yXFwpIiwiQy4gXFwoMS94ICsgeC8oeCsyKSAtIDJ4Lyh4KzMpICsgeC8oeCszKV4yXFwpIiwiRC4gXFwoMSArIDEvKHgrMikgLSAyLyh4KzMpICsgMS8oeCszKV4yXFwpIl0sImNvcnJlY3Rfb3B0aW9uIjoiQSIsImV4cGxhbmF0aW9uIjoiTXVsdGlwbHkgZXZlcnkgdGVybSBieSBcXCh4XFwpLiBUaGUgZmlyc3QgdGVybSBiZWNvbWVzIFxcKHggXFxjZG90ICgxL3gpID0gMVxcKSwgd2hpY2ggaXMgdGhlIGVhc3kgdHJhcC4gQWxsIG90aGVyIHRlcm1zIGdhaW4gXFwoeFxcKSBpbiB0aGUgbnVtZXJhdG9yLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQiI6IlxcKHggXFxjZG90ICgxL3gpXFwpIGVxdWFscyBcXCgxXFwpLCBub3QgXFwoeFxcKS4iLCJDIjoiVGhlIGZpcnN0IHRlcm0gXFwoMS94XFwpIHdhcyBub3QgbXVsdGlwbGllZCBieSBcXCh4XFwpIGNvcnJlY3RseSDigJQgaXQgc2hvdWxkIGJlY29tZSBcXCgxXFwpLCBub3QgcmVtYWluIFxcKDEveFxcKS4iLCJEIjoiVGhlIG90aGVyIHRlcm1zIHdlcmUgbGVmdCB1bmNoYW5nZWQgaW5zdGVhZCBvZiBiZWluZyBtdWx0aXBsaWVkIGJ5IFxcKHhcXCkuIn0sImhpbnQiOiJNdWx0aXBseSB0aGUgZW50aXJlIGRlY29tcG9zaXRpb24gYnkgXFwoeFxcKSwgaW5jbHVkaW5nIHRoZSBmaXJzdCB0ZXJtLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX0seyJpZCI6ImtwM19xMiIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiV2hpY2ggaXMgdGhlIG1vc3QgY29tbW9uIGZpbmFsLXN0ZXAgbWlzdGFrZSBpbiBtb2RpZmllZCBwYXJ0aWFsIGZyYWN0aW9ucz8iLCJvcHRpb25zIjpbIkEuIEZvcmdldHRpbmcgdGhhdCBcXCh4IFxcY2RvdCAoMS94KSA9IDFcXCkiLCJCLiBSZXBsYWNpbmcgZXZlcnkgZGVub21pbmF0b3Igd2l0aCBhIHNxdWFyZSIsIkMuIENvbWJpbmluZyB1bmxpa2UgdGVybXMgYmVmb3JlIHNvbHZpbmcgY29lZmZpY2llbnRzIiwiRC4gQ2hhbmdpbmcgcmVwZWF0ZWQgcm9vdHMgaW50byBkaXN0aW5jdCByb290cyJdLCJjb3JyZWN0X29wdGlvbiI6IkEiLCJleHBsYW5hdGlvbiI6IlN0dWRlbnRzIG9mdGVuIHJlbWVtYmVyIHRvIG11bHRpcGx5IGJ5IFxcKHhcXCkgYnV0IG1pc2hhbmRsZSB0aGUgZmlyc3QgdGVybSwgd3JpdGluZyBcXCh4XFwpIGluc3RlYWQgb2YgXFwoMVxcKSBvciBsZWF2aW5nIFxcKDEveFxcKSB1bmNoYW5nZWQuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJCIjoiVGhhdCBpcyBub3QgcGFydCBvZiB0aGlzIG1ldGhvZC4iLCJDIjoiVGhhdCBpcyBub3QgdGhlIHRleHRib29rJ3MgaGlnaGxpZ2h0ZWQgdHJhcCBoZXJlLiIsIkQiOiJSb290cyBhcmUgcHJvcGVydGllcyBvZiB0aGUgZGVub21pbmF0b3IgYW5kIGFyZSBub3QgYWx0ZXJlZCBieSB0aGlzIHByb2NlZHVyZS4ifSwiaGludCI6IldhdGNoIHRoZSB0ZXJtIHRoYXQgbG9va3Mgc2ltcGxlc3QuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfV19XX0=" style="display:none;"></div>%%KC_END%%
+$$\frac{F(x)}{x} = \frac{3x + 6}{x(x+3)} = \frac{a_1}{x} + \frac{a_2}{x+3}$$
+
+> **Answer:**
+> Cover up \(x\) and set \(x = 0\):
+> $$a_1 = \left.\frac{3x+6}{x+3}\right|_{x=0} = \frac{6}{3} = 2$$
+> So \(a_1 = 2\).
+
+---
+
+**Q8. (Short Answer)**
+Using your answer from Q7, write \(F(x)\) in modified partial fraction form (you may assume \(a_2 = 1\)).
+
+> **Answer:**
+> $$\frac{F(x)}{x} = \frac{2}{x} + \frac{1}{x+3}$$
+> Multiply both sides by \(x\):
+> $$F(x) = 2 + \frac{x}{x+3}$$
+> This is the modified partial fraction form.
+
+---
+
+**Q9. (Multiple Choice)**
+Which of the following correctly describes the modified partial fraction form?
+
+- A) \(\dfrac{k}{x - \lambda}\)
+- B) \(\dfrac{kx}{x - \lambda}\)
+- C) \(\dfrac{k}{x^2 - \lambda}\)
+- D) \(\dfrac{k \lambda}{x - \lambda}\)
+
+> **Answer: B** — The defining feature is \(x\) in the numerator alongside the constant \(k\).
+
+---
+
+**Q10. (Multiple Choice)**
+The modified partial fraction method works because dividing \(F(x)\) by \(x\) introduces \(x\) into the denominator, and then after expanding and multiplying by \(x\):
+
+- A) The \(x\) disappears from all terms
+- B) Each term gains an \(x\) in the numerator, giving the desired form
+- C) The poles of \(F(x)\) change location
+- D) The degree of the numerator increases by 2
+
+> **Answer: B** — Multiplying each \(\dfrac{a_i}{x - \lambda_i}\) by \(x\) gives \(\dfrac{a_i \, x}{x - \lambda_i}\), which is exactly the modified form needed for z-transform work.

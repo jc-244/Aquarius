@@ -1,86 +1,98 @@
-%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6ImdlbmVyYXRlZF9pbWFnZSIsInJhdGlvbmFsZSI6IlRoaXMgc2VjdGlvbiBoYXMgbm8gdXNhYmxlIHRleHRib29rIGZpZ3VyZXMsIGJ1dCB0aGUgbWFpbiBpZGVhIGlzIGhpZ2hseSB2aXN1YWw6IHN0dWRlbnRzIG5lZWQgdG8gc2VlIHRoYXQgdGhlIGVxdWFsLWRlZ3JlZSBpbXByb3BlciBjYXNlIGlzIGFsbW9zdCB0aGUgc2FtZSBhcyB0aGUgcHJvcGVyIGNhc2UsIGV4Y2VwdCBmb3Igb25lIGFkZGVkIGNvbnN0YW50IHRlcm0uIEEgY2xlYW4gZ2VuZXJhdGVkIGNvbXBhcmlzb24gZGlhZ3JhbSB3aWxsIG1ha2UgdGhlIHBhdHRlcm4gZmFzdGVyIHRvIHJlY29nbml6ZSB0aGFuIHRleHQgYWxvbmUuIiwiY3JhbSI6IlVzZSB0aGUgdmlzdWFsIHRvIGltcHJpbnQgdGhlIGV4YW0gcGF0dGVybjogZXF1YWwgZGVncmVlcyBtZWFucyB3cml0ZSBjb25zdGFudCBwbHVzIG9yZGluYXJ5IHBhcnRpYWwgZnJhY3Rpb25zLiIsInN0YW5kYXJkIjoiVXNlIHRoZSB2aXN1YWwgdG8gY29tcGFyZSBwcm9wZXIgdnMgbT1uIHNldHVwIGFuZCBzdXBwb3J0IG9uZSB3b3JrZWQgZXhhbXBsZSB3aXRob3V0IG92ZXJsb2FkaW5nIGRldGFpbHMuIiwidG9wX3Njb3JlIjoiVXNlIHRoZSB2aXN1YWwgdG8gc3RyZXNzIHRoYXQgb25seSB0aGUgZXh0cmEgY29uc3RhbnQgY2hhbmdlczsgY29lZmZpY2llbnQgZXh0cmFjdGlvbiBmb3IgdGhlIGZyYWN0aW9uIHRlcm1zIHN0YXlzIHRoZSBzYW1lLiJ9" style="display:none;"></div>%%KC_END%%
-# B.5-5 Improper Fractions — The Special Case m = n
+%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6ImdlbmVyYXRlZF9pbWFnZSIsInJhdGlvbmFsZSI6IlRoaXMgc2VjdGlvbiBoYXMgbm8gZXh0cmFjdGVkIHRleHRib29rIGZpZ3VyZXMsIGJ1dCB0aGUgbWFpbiBpZGVhIGlzIGhpZ2hseSB2aXN1YWw6IHN0dWRlbnRzIG5lZWQgdG8gc2VlIHRoZSBzdHJ1Y3R1cmUgJ2NvbnN0YW50IHBsdXMgb3JkaW5hcnkgcGFydGlhbCBmcmFjdGlvbnMnIGFuZCB0aGUgc3RlcCBvcmRlciBmb3IgdGhlIHdvcmtlZCBleGFtcGxlLiBDbGVhbiBnZW5lcmF0ZWQgbGVjdHVyZS1ub3RlIHZpc3VhbHMgd2lsbCBtYWtlIHRoZSBtID0gbiBjYXNlIGVhc2llciB0byBkaXN0aW5ndWlzaCBmcm9tIHRoZSB1c3VhbCBwcm9wZXIgY2FzZSBhbmQgd2lsbCBzdXBwb3J0IHRoZSBzdHVkZW50J3Mgd2VhayBhcmVhIGluIGludmVyc2Ugei10cmFuc2Zvcm0gYXBwbGljYXRpb24uIiwiY3JhbSI6IlVzZSB2aXN1YWxzIHRvIG1ha2UgdGhlIHJlY29nbml0aW9uIHBhdHRlcm4gaW1tZWRpYXRlOiBzYW1lIGRlZ3JlZSBtZWFucyBwdWxsIG91dCBvbmUgY29uc3RhbnQgZmlyc3QsIHRoZW4gc29sdmUgdGhlIHJlbWFpbmluZyBmcmFjdGlvbnMgbm9ybWFsbHkuIiwic3RhbmRhcmQiOiJVc2UgdmlzdWFscyB0byBzaG93IHRoZSBjb25jZXB0IHN0cnVjdHVyZSBhbmQgb25lIHJlcHJlc2VudGF0aXZlIHdvcmtlZCBleGFtcGxlIHdpdGggYSBjbGVhbiBsZWZ0LXRvLXJpZ2h0IHJlYWRpbmcgcGF0aC4iLCJ0b3Bfc2NvcmUiOiJVc2UgdmlzdWFscyB0byBleHBvc2UgdGhlIGRpc3RpbmN0aW9uIGJldHdlZW4gb3JkaW5hcnkgaW1wcm9wZXIgaGFuZGxpbmcgYW5kIHRoZSBzcGVjaWFsIG0gPSBuIHNob3J0Y3V0LCBwbHVzIHRoZSBsaW5rIHRvIG1vZGlmaWVkIHBhcnRpYWwgZnJhY3Rpb25zLiJ9" style="display:none;"></div>%%KC_END%%
+# Partial Fractions — The Special Case \(m = n\)
 
-> **Section Objective:** Learn to handle the one improper rational case that barely differs from the proper case: when numerator and denominator have exactly the same degree.
+> **Section Objective:** Handle the improper rational function case where the numerator and denominator share the same degree, using a compact shortcut that avoids full polynomial long division.
 
 ---
 
-Consider the fraction \(F(x) = \frac{3x^2 + 9x - 20}{x^2 + x - 6}\). Both numerator and denominator are degree 2. This makes \(F(x)\) improper — but only just barely. What changes?
+Sometimes a rational function \(F(x)\) is improper — the numerator degree equals the denominator degree. This is the **special case \(m = n\)**. Rather than performing a full long division, this section shows a direct shortcut: the expansion looks almost identical to the proper-function case, with exactly one extra constant term added at the front.
 
-This section covers the special case \(m = n\): the numerator and denominator share the same degree. The good news is that this case is simpler than general improper fractions. You do **not** need a full long-division workflow. Instead, you write **one extra constant term** in front of the usual partial fractions — and that is the only structural change.
+Mastering this case speeds up partial-fraction work and directly supports inverse z-transform techniques covered later.
 
-By the end of this section you will be able to:
-- Recognize the \(m = n\) pattern on sight
-- Write the correct decomposition form immediately
-- Solve for all coefficients quickly using the same cover-up method you already know
+First, identify the extra constant; then find the remaining coefficients in the usual way.
 
-%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="generate_image" data-teaching-role="comparison_anchor" data-visual-use-b64="eyJjcmFtIjoiTWVtb3JpemUgdGhlIHBhdHRlcm46IGVxdWFsIGRlZ3JlZSBtZWFucyBhZGQgb25lIGNvbnN0YW50IGZpcnN0LiIsInN0YW5kYXJkIjoiVXNlIHRoZSBzaWRlLWJ5LXNpZGUgbGF5b3V0IHRvIHVuZGVyc3RhbmQgd2hhdCBjaGFuZ2VzIGFuZCB3aGF0IHN0YXlzIHRoZSBzYW1lLiIsInRvcF9zY29yZSI6IkZvY3VzIG9uIHRoZSBzdHJ1Y3R1cmFsIHJ1bGUgdGhhdCBjb2VmZmljaWVudCBleHRyYWN0aW9uIGZvciB0aGUgZnJhY3Rpb25hbCB0ZXJtcyBpcyB1bmNoYW5nZWQuIn0=" style="display:none;"></div>%%KC_END%%
-*🎨 The only structural difference between the proper case and the m = n improper case is the single extra constant term \(b_n\). Everything else — the fractional terms and how you find their coefficients — stays the same.*
-![Illustration](/generated/gptimage2-1777216964450-2383.png)
-
-## 1. The m = n Pattern
-
-When the numerator and denominator have the **same degree**, the partial fraction setup is almost identical to the proper case. There is exactly one new feature: a constant term out front.
-
-### THE RULE IN PLAIN LANGUAGE
-
-Write a constant equal to the **leading coefficient of the numerator**, then add the ordinary partial fractions behind it.
-
-If the denominator factors into \(n\) distinct linear factors, the full setup is:
-
-$$F(x) = b_n + \frac{k_1}{x - \lambda_1} + \frac{k_2}{x - \lambda_2} + \cdots + \frac{k_n}{x - \lambda_n}$$
-
-### EXAM NOTE
-
-The coefficient formula is **unchanged**:
-
-$$k_r = \left.(x - \lambda_r)\,F(x)\right|_{x = \lambda_r}$$
-
-Cover up the factor \((x - \lambda_r)\) in the denominator, substitute \(x = \lambda_r\), and read off the value — exactly as you did for proper fractions.
-
-#### Note on repeated and quadratic factors
-
-If the denominator contains repeated or quadratic factors, those terms follow the same procedures already learned for the proper case. The only change is still just the leading constant \(b_n\) out front.
+%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="generate_image" data-teaching-role="concept_anchor" data-visual-use-b64="eyJjcmFtIjoiU2hvdyB0aGUgcmVjb2duaXRpb24gcnVsZSBpbiBvbmUgZ2xhbmNlOiBzYW1lIGRlZ3JlZSBsZWFkcyB0byBjb25zdGFudCBwbHVzIGZyYWN0aW9ucy4iLCJzdGFuZGFyZCI6IkNsYXJpZnkgdGhlIGNvbmNlcHQgYnkgY29udHJhc3RpbmcgdGhlIG0gPSBuIGNhc2Ugd2l0aCB0aGUgdXN1YWwgcHJvcGVyLWZvcm0gdGVtcGxhdGUuIiwidG9wX3Njb3JlIjoiSGlnaGxpZ2h0IGV4YWN0bHkgd2hhdCBjaGFuZ2VzIGFuZCB3aGF0IHN0YXlzIHVuY2hhbmdlZCBpbiB0aGUgY29lZmZpY2llbnQtZmluZGluZyBwcm9jZXNzLiJ9" style="display:none;"></div>%%KC_END%%
+*🎨 Left: the proper case leads directly to partial fractions. Right: when \(m = n\), one extra constant \(b_n\) appears before the same partial-fraction terms.*
+![Illustration](/generated/gptimage2-1777212134245-7877.png)
 
 $$F(x)=\frac{b_n x^n+b_{n-1}x^{n-1}+\cdots+b_1x+b_0}{x^n+a_{n-1}x^{n-1}+\cdots+a_1x+a_0}=b_n+\frac{k_1}{x-\lambda_1}+\frac{k_2}{x-\lambda_2}+\cdots+\frac{k_n}{x-\lambda_n}$$
-*When the numerator and denominator have equal degree, the partial fraction expansion gains exactly one extra constant term \(b_n\) — the leading coefficient of the numerator — while all remaining fractional terms look exactly like the proper-fraction case.*
+*When the numerator and denominator have equal degree \(n\), the expansion gains exactly one extra constant term \(b_n\) — the leading coefficient of the numerator. Everything to the right of \(b_n\) is an ordinary partial-fraction decomposition, handled exactly as in the proper case.*
 
 $$k_r=\left.(x-\lambda_r)F(x)\right|_{x=\lambda_r}$$
-*Each coefficient \(k_r\) is found by the same cover-up substitution method used for proper fractions: multiply through by \((x - \lambda_r)\), then evaluate at \(x = \lambda_r\).*
+*This cover-up formula for each coefficient \(k_r\) is unchanged. After the extra constant \(b_n\) has been identified and separated, you apply this substitution rule to the remaining partial-fraction terms exactly as you would for a proper rational function.*
 
-## 2. Worked Example
+## 1. How the \(m = n\) Case Works
 
-Let \(F(x) = \dfrac{3x^2 + 9x - 20}{x^2 + x - 6} = \dfrac{3x^2 + 9x - 20}{(x-2)(x+3)}\).
+Follow three clear steps whenever you encounter a rational function whose numerator and denominator share the same degree.
 
-**Step 1 — Check degrees.** Numerator degree = 2, denominator degree = 2, so \(m = n = 2\). This is the special improper case.
+**Step 1 — Check degrees.** Confirm that the numerator degree equals the denominator degree. If \(m < n\), you are in the ordinary proper case and no extra constant is needed.
 
-**Step 2 — Write the form.** The leading numerator coefficient is 3, so the constant term is 3:
+**Step 2 — Write the expanded template.** Place the leading numerator coefficient \(b_n\) as a standalone constant, then append the usual partial-fraction terms for each factor of the denominator.
 
-$$F(x) = 3 + \frac{k_1}{x-2} + \frac{k_2}{x+3}$$
-
-**Step 3 — Find \(k_1\).** Cover \((x-2)\) and substitute \(x = 2\):
-
-$$k_1 = \frac{3(2)^2 + 9(2) - 20}{2 + 3} = \frac{12 + 18 - 20}{5} = \frac{10}{5} = 2$$
-
-**Step 4 — Find \(k_2\).** Cover \((x+3)\) and substitute \(x = -3\):
-
-$$k_2 = \frac{3(-3)^2 + 9(-3) - 20}{-3 - 2} = \frac{27 - 27 - 20}{-5} = \frac{-20}{-5} = 4$$
-
-**Final answer:**
-
-$$F(x) = 3 + \frac{2}{x-2} + \frac{4}{x+3}$$
+**Step 3 — Compute coefficients normally.** Use the cover-up substitution \(k_r = (x - \lambda_r)F(x)\big|_{x=\lambda_r}\) for each root. Repeated or quadratic factors follow their usual procedures — nothing changes there.
 
 ### EXAM TIP
 
-The most common mistake in this section is writing \(\dfrac{2}{x-2} + \dfrac{4}{x+3}\) and stopping — forgetting the constant term 3 entirely. Always check degrees first, and always write the constant before the fractions.
+Students often overcomplicate this case by performing full polynomial long division. For this textbook form, the only visible change is the single extra constant \(b_n\) at the front. Recognize it, write it down, and proceed.
 
+## 2. Representative Example
+
+Work through the textbook example:
+
+$$
+F(x) = \frac{3x^2 + 9x - 20}{(x-2)(x+3)}
+$$
+
+**Identify degrees.** The numerator is degree 2; the denominator expands to degree 2. So \(m = n = 2\), and the extra constant equals the leading numerator coefficient: \(b_2 = 3\).
+
+**Write the template.**
+
+$$
+F(x) = 3 + \frac{k_1}{x-2} + \frac{k_2}{x+3}
+$$
+
+**Find \(k_1\).** Substitute \(x = 2\):
+
+$$
+k_1 = (x-2)F(x)\big|_{x=2} = \frac{3x^2+9x-20}{x+3}\bigg|_{x=2} = \frac{12+18-20}{5} = \frac{10}{5} = 2
+$$
+
+**Find \(k_2\).** Substitute \(x = -3\):
+
+$$
+k_2 = (x+3)F(x)\big|_{x=-3} = \frac{3x^2+9x-20}{x-2}\bigg|_{x=-3} = \frac{27-27-20}{-5} = \frac{-20}{-5} = 4
+$$
+
+**Final expansion.**
+
+$$
+F(x) = 3 + \frac{2}{x-2} + \frac{4}{x+3}
+$$
+
+### KEY INSIGHT
+
+Both \(k_1\) and \(k_2\) were found using the same cover-up idea the student already knows — the extra constant \(3\) did not interfere with the coefficient calculation at all.
+
+%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="generate_image" data-teaching-role="example_support" data-visual-use-b64="eyJjcmFtIjoiVHVybiB0aGUgZXhhbXBsZSBpbnRvIGEgZmFzdCByZXVzYWJsZSB0ZW1wbGF0ZSBmb3Igc2ltaWxhciBleGFtIHF1ZXN0aW9ucy4iLCJzdGFuZGFyZCI6IlNob3cgdGhlIGV4YWN0IG9yZGVyOiBpZGVudGlmeSBjb25zdGFudCwgd3JpdGUgdGVtcGxhdGUsIHBsdWcgcm9vdHMsIGZpbmlzaCBleHBhbnNpb24uIiwidG9wX3Njb3JlIjoiRW1waGFzaXplIHdoaWNoIHF1YW50aXRpZXMgY29tZSBmcm9tIGRlZ3JlZSBjb21wYXJpc29uIHZlcnN1cyB3aGljaCBjb21lIGZyb20gZmFjdG9yIHN1YnN0aXR1dGlvbi4ifQ==" style="display:none;"></div>%%KC_END%%
+*🎨 Step-flow for \(F(x) = (3x^2+9x-20)/((x-2)(x+3))\): the constant \(3\) comes from degree comparison; \(k_1 = 2\) and \(k_2 = 4\) come from root substitution.*
+![Illustration](/generated/gptimage2-1777212323987-9203.png)
+
+## 3. Why This Matters for Modified Partial Fractions
+
+> **Preview:** The next topic uses a variation called *modified partial fractions*, where the desired term shape is \(kx/(x-\lambda)^r\) rather than \(k/(x-\lambda)^r\).
+
+The standard move is to expand \(F(x)/x\) first using ordinary partial fractions, then multiply every term back by \(x\). This converts each \(k/(x-\lambda)\) into \(kx/(x-\lambda)\), which is the modified form needed for inverse z-transform tables.
+
+For example, after expanding \(F(x)/x\) and multiplying back, you obtain terms like \(x/(x+2)\), \(2x/(x+3)\), and \(x/(x+3)^2\). The \(m = n\) shortcut from this section appears naturally in that process whenever the degrees match before or after the division by \(x\).
+
+This page is a preview only — the full method is developed in the next section.
 
 ---
 **📌 Key Takeaways**
-- When numerator and denominator degrees are equal, add one extra constant term \(b_n\) to the partial fraction setup.
-- The coefficients \(k_r\) of the fractional terms are still found using the same cover-up substitution method.
-- Forgetting the constant term is the main exam trap — always check degrees before writing the decomposition.
+- When numerator and denominator degrees are equal (\(m = n\)), add one extra constant \(b_n\) to the expansion.
+- The extra constant equals the leading numerator coefficient; no long division is required.
+- All remaining partial-fraction coefficients \(k_r\) are found by the same cover-up substitution as in the proper case.
 
-*In the next section we will see a modified partial fraction form used for later transform work.*
+*In the next section, we extend this idea to modified partial fractions — expanding \(F(x)/x\) and multiplying back by \(x\) — which is the key technique for computing inverse z-transforms from tables.*
 
-%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NiwicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo1LCJtYXgiOjd9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6InJlY29nbml6ZV9tX2VxdWFsc19uX3N0cnVjdHVyZSIsImxhYmVsIjoiUmVjb2duaXplIHRoZSBzcGVjaWFsIGltcHJvcGVyIGNhc2UgbSA9IG4iLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJrcDFfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IldoaWNoIHNpdHVhdGlvbiBtYXRjaGVzIHRoZSBtZXRob2QgZnJvbSB0aGlzIHNlY3Rpb24/Iiwib3B0aW9ucyI6WyJBLiBUaGUgbnVtZXJhdG9yIGRlZ3JlZSBpcyBsZXNzIHRoYW4gdGhlIGRlbm9taW5hdG9yIGRlZ3JlZSIsIkIuIFRoZSBudW1lcmF0b3IgZGVncmVlIGlzIGdyZWF0ZXIgdGhhbiB0aGUgZGVub21pbmF0b3IgZGVncmVlIGJ5IDIgb3IgbW9yZSIsIkMuIFRoZSBudW1lcmF0b3IgZGVncmVlIGVxdWFscyB0aGUgZGVub21pbmF0b3IgZGVncmVlIiwiRC4gVGhlIGRlbm9taW5hdG9yIGlzIG5vdCBmYWN0b3JhYmxlIl0sImNvcnJlY3Rfb3B0aW9uIjoiQyIsImV4cGxhbmF0aW9uIjoiVGhpcyBzZWN0aW9uIGhhbmRsZXMgdGhlIHNwZWNpYWwgaW1wcm9wZXIgY2FzZSB3aGVyZSB0aGUgbnVtZXJhdG9yIGFuZCBkZW5vbWluYXRvciBoYXZlIHRoZSBzYW1lIGRlZ3JlZSwgXFwobSA9IG5cXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhhdCBpcyB0aGUgcHJvcGVyLWZyYWN0aW9uIGNhc2UsIG5vdCB0aGUgc3BlY2lhbCBpbXByb3BlciBjYXNlIGRpc2N1c3NlZCBoZXJlLiIsIkIiOiJUaGF0IHdvdWxkIHJlcXVpcmUgYSBtb3JlIGdlbmVyYWwgaW1wcm9wZXItZnJhY3Rpb24gdHJlYXRtZW50LCBub3QganVzdCB0aGUgZXh0cmEgY29uc3RhbnQgcGF0dGVybiBoZXJlLiIsIkQiOiJGYWN0b3JhYmlsaXR5IGlzIGEgc2VwYXJhdGUgaXNzdWU7IHRoZSBkZWZpbmluZyBjb25kaXRpb24gaGVyZSBpcyBlcXVhbGl0eSBvZiBkZWdyZWVzLiJ9LCJoaW50IjoiRm9jdXMgb24gdGhlIG1lYW5pbmcgb2YgXFwobSA9IG5cXCkuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfSx7ImlkIjoia3AxX3EyIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJJZiBcXChGKHgpXFwpIGhhcyBlcXVhbC1kZWdyZWUgbnVtZXJhdG9yIGFuZCBkZW5vbWluYXRvciBhbmQgZGlzdGluY3QgbGluZWFyIGZhY3RvcnMgYmVsb3csIHdoaWNoIHNldHVwIGlzIGNvcnJlY3Q/Iiwib3B0aW9ucyI6WyJBLiBcXChGKHgpPVxcZGZyYWN7a18xfXt4LVxcbGFtYmRhXzF9K1xcZGZyYWN7a18yfXt4LVxcbGFtYmRhXzJ9K1xcY2RvdHNcXCkiLCJCLiBcXChGKHgpPWJfbitcXGRmcmFje2tfMX17eC1cXGxhbWJkYV8xfStcXGRmcmFje2tfMn17eC1cXGxhbWJkYV8yfStcXGNkb3RzXFwpIiwiQy4gXFwoRih4KT1iX24geCtcXGRmcmFje2tfMX17eC1cXGxhbWJkYV8xfStcXGRmcmFje2tfMn17eC1cXGxhbWJkYV8yfStcXGNkb3RzXFwpIiwiRC4gXFwoRih4KT1cXGRmcmFje2tfMSB4fXt4LVxcbGFtYmRhXzF9K1xcZGZyYWN7a18yIHh9e3gtXFxsYW1iZGFfMn0rXFxjZG90c1xcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6IkZvciBcXChtID0gblxcKSwgdGhlIGV4cGFuc2lvbiBpcyB0aGUgdXN1YWwgcGFydGlhbCBmcmFjdGlvbiBmb3JtIHBsdXMgb25lIGV4dHJhIGNvbnN0YW50IHRlcm0gXFwoYl9uXFwpLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6IlRoaXMgbWlzc2VzIHRoZSBleHRyYSBjb25zdGFudCB0ZXJtLCB3aGljaCBpcyB0aGUga2V5IGZlYXR1cmUgb2YgdGhpcyBjYXNlLiIsIkMiOiJUaGUgYWRkZWQgdGVybSBpcyBhIGNvbnN0YW50IFxcKGJfblxcKSwgbm90IFxcKGJfbiB4XFwpLiIsIkQiOiJUaGF0IGlzIGEgZGlmZmVyZW50IG1vZGlmaWVkIGZvcm0sIG5vdCB0aGUgZm9ybSB0YXVnaHQgaW4gdGhpcyBzZWN0aW9uLiJ9LCJoaW50IjoiQXNrIHdoYXQgc2luZ2xlIGV4dHJhIGZlYXR1cmUgYXBwZWFycyB3aGVuIGRlZ3JlZXMgYXJlIGVxdWFsLiIsIm5lZWRzX3Zpc3VhbCI6dHJ1ZSwidmlzdWFsX3R5cGUiOiJnZW5lcmF0ZWRfaW1hZ2UiLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9XX0seyJpZCI6ImZpbmRfY29lZmZpY2llbnRzX3NhbWVfYXNfcHJvcGVyX2Nhc2UiLCJsYWJlbCI6IkZpbmQgY29lZmZpY2llbnRzIHVzaW5nIHRoZSB1c3VhbCBzdWJzdGl0dXRpb24gbWV0aG9kIiwiaW1wb3J0YW5jZSI6ImhpZ2giLCJleGFtX3dlaWdodCI6ImhpZ2giLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjJ9LCJxdWVzdGlvbnMiOlt7ImlkIjoia3AyX3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJGb3IgXFwoRih4KT1cXGRmcmFjezN4XjIrOXgtMjB9eyh4LTIpKHgrMyl9PTMrXFxkZnJhY3trXzF9e3gtMn0rXFxkZnJhY3trXzJ9e3grM31cXCksIHdoYXQgaXMgXFwoa18xXFwpPyIsIm9wdGlvbnMiOlsiQS4gMSIsIkIuIDIiLCJDLiAzIiwiRC4gNCJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6IlVzZSBcXChrXzEgPSBcXGxlZnQuKHgtMilGKHgpXFxyaWdodHxfe3g9Mn1cXCkuIFRoYXQgZ2l2ZXMgXFwoXFxkZnJhY3szKDIpXjIgKyA5KDIpIC0gMjB9ezIrM30gPSBcXGRmcmFjezEwfXs1fSA9IDJcXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhpcyBkb2VzIG5vdCBtYXRjaCB0aGUgc3Vic3RpdHV0aW9uIHJlc3VsdC4iLCJDIjoiMyBpcyB0aGUgY29uc3RhbnQgdGVybSBpbiB0aGUgZGVjb21wb3NpdGlvbiwgbm90IFxcKGtfMVxcKS4iLCJEIjoiNCBpcyB0aGUgdmFsdWUgb2YgXFwoa18yXFwpLCBub3QgXFwoa18xXFwpLiJ9LCJoaW50IjoiQ292ZXIgdGhlIGZhY3RvciBcXCgoeC0yKVxcKSBhbmQgc3Vic3RpdHV0ZSBcXCh4ID0gMlxcKS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9LHsiaWQiOiJrcDJfcTIiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IlVzaW5nIHRoZSBzYW1lIGV4YW1wbGUsIHdoYXQgaXMgXFwoa18yXFwpPyIsIm9wdGlvbnMiOlsiQS4gXFwoLTRcXCkiLCJCLiBcXCgtMlxcKSIsIkMuIDIiLCJELiA0Il0sImNvcnJlY3Rfb3B0aW9uIjoiRCIsImV4cGxhbmF0aW9uIjoiVXNlIFxcKGtfMiA9IFxcbGVmdC4oeCszKUYoeClcXHJpZ2h0fF97eD0tM31cXCkuIFRoYXQgZ2l2ZXMgXFwoXFxkZnJhY3syNyAtIDI3IC0gMjB9ey0zIC0gMn0gPSBcXGRmcmFjey0yMH17LTV9ID0gNFxcKS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJUaGUgc2lnbiBpcyB3cm9uZzsgYm90aCB0aGUgbnVtZXJhdG9yIGFuZCBkZW5vbWluYXRvciBhcmUgbmVnYXRpdmUgaGVyZSwgc28gdGhlIHJlc3VsdCBpcyBwb3NpdGl2ZS4iLCJCIjoiVGhpcyBpcyBub3QgdGhlIGV2YWx1YXRlZCByZXN1bHQuIiwiQyI6IjIgaXMgXFwoa18xXFwpLCBub3QgXFwoa18yXFwpLiJ9LCJoaW50IjoiQ292ZXIgdGhlIGZhY3RvciBcXCgoeCszKVxcKSBhbmQgc3Vic3RpdHV0ZSBcXCh4ID0gLTNcXCkuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfV19LHsiaWQiOiJleGFtX3RyYXBfY29uc3RhbnRfdGVybSIsImxhYmVsIjoiQXZvaWQgdGhlIG1haW4gZXhhbSB0cmFwIiwiaW1wb3J0YW5jZSI6ImhpZ2giLCJleGFtX3dlaWdodCI6Im1lZGl1bSIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJrcDNfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IkEgc3R1ZGVudCB3cml0ZXMgXFwoXFxkZnJhY3szeF4yKzl4LTIwfXsoeC0yKSh4KzMpfT1cXGRmcmFjezJ9e3gtMn0rXFxkZnJhY3s0fXt4KzN9XFwpLiBXaGF0IGlzIHRoZSBtaXN0YWtlPyIsIm9wdGlvbnMiOlsiQS4gVGhlIGZhY3RvcnMgc2hvdWxkIGJlIFxcKCh4KzIpXFwpIGFuZCBcXCgoeC0zKVxcKSIsIkIuIFRoZSBzdHVkZW50IHNob3VsZCBoYXZlIHVzZWQgXFwoeFxcKSBpbiB0aGUgbnVtZXJhdG9ycyIsIkMuIFRoZSBjb25zdGFudCB0ZXJtIDMgaXMgbWlzc2luZyIsIkQuIFRoZSB2YWx1ZXMgb2YgMiBhbmQgNCBzaG91bGQgYmUgc3dhcHBlZCJdLCJjb3JyZWN0X29wdGlvbiI6IkMiLCJleHBsYW5hdGlvbiI6IkJlY2F1c2UgXFwobSA9IG5cXCksIHRoZSBkZWNvbXBvc2l0aW9uIG11c3QgaW5jbHVkZSB0aGUgZXh0cmEgY29uc3RhbnQgdGVybSAzIGluIGZyb250IG9mIHRoZSBmcmFjdGlvbmFsIHRlcm1zLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6IlRoZSBmYWN0b3JpemF0aW9uIFxcKCh4LTIpKHgrMylcXCkgaXMgY29ycmVjdC4iLCJCIjoiVGhpcyBzZWN0aW9uIGRvZXMgbm90IHVzZSBcXCh4XFwpIGluIHRoZSBudW1lcmF0b3JzIG9mIHRoZSBwYXJ0aWFsIGZyYWN0aW9ucy4iLCJEIjoiVGhlIGNvZWZmaWNpZW50cyAyIGFuZCA0IGFyZSBhbHJlYWR5IGluIHRoZSBjb3JyZWN0IHBvc2l0aW9ucy4ifSwiaGludCI6IldoYXQgZXh0cmEgdGVybSBhcHBlYXJzIG9ubHkgYmVjYXVzZSB0aGUgZGVncmVlcyBhcmUgZXF1YWw/IiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfSx7ImlkIjoia3AzX3EyIiwidHlwZSI6InNob3J0X2Fuc3dlciIsInN0ZW0iOiJJbiBvbmUgb3IgdHdvIHNlbnRlbmNlcywgZXhwbGFpbiB0aGUgZGlmZmVyZW5jZSBiZXR3ZWVuIHRoZSBwcm9wZXItZnJhY3Rpb24gc2V0dXAgYW5kIHRoZSBzcGVjaWFsIGltcHJvcGVyIHNldHVwIHdoZW4gXFwobSA9IG5cXCkuIiwiaWRlYWxfYW5zd2VyIjoiVGhlIFxcKG0gPSBuXFwpIGNhc2UgaGFzIG9uZSBleHRyYSBjb25zdGFudCB0ZXJtIFxcKGJfblxcKSBpbiBmcm9udCBvZiB0aGUgdXN1YWwgcGFydGlhbCBmcmFjdGlvbnMuIFRoZSBjb2VmZmljaWVudHMgb2YgdGhlIGZyYWN0aW9uYWwgdGVybXMgYXJlIHRoZW4gZm91bmQgdGhlIHNhbWUgd2F5IGFzIGluIHRoZSBwcm9wZXIgY2FzZS4iLCJncmFkaW5nX3J1YnJpYyI6WyJNdXN0IG1lbnRpb24gdGhlIGV4dHJhIGNvbnN0YW50IHRlcm0gXFwoYl9uXFwpIiwiTXVzdCBzdGF0ZSB0aGF0IHRoZSByZW1haW5pbmcgY29lZmZpY2llbnRzIGFyZSBmb3VuZCBhcyBpbiB0aGUgcHJvcGVyIGNhc2UiLCJBbnN3ZXIgc2hvdWxkIGJlIGNvbmNpc2UgYW5kIG1hdGhlbWF0aWNhbGx5IGNvcnJlY3QiXSwiZXhwbGFuYXRpb24iOiJUaGlzIGNoZWNrcyB3aGV0aGVyIHRoZSBzdHVkZW50IHVuZGVyc3RhbmRzIHRoZSBjb3JlIHJ1bGUsIG5vdCBqdXN0IHRoZSBzYW1wbGUgbnVtYmVycy4iLCJoaW50IjoiU3RhdGUgd2hhdCBjaGFuZ2VzLCB0aGVuIHN0YXRlIHdoYXQgc3RheXMgdGhlIHNhbWUuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50IjpmYWxzZX1dfV19" style="display:none;"></div>%%KC_END%%
+%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NiwicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo1LCJtYXgiOjd9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6InJlY29nbml6ZV9tX2VxdWFsc19uX3N0cnVjdHVyZSIsImxhYmVsIjoiUmVjb2duaXplIHRoZSBzcGVjaWFsIG0gPSBuIHNldHVwIiwiaW1wb3J0YW5jZSI6ImhpZ2giLCJleGFtX3dlaWdodCI6ImhpZ2giLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjJ9LCJxdWVzdGlvbnMiOlt7ImlkIjoia3AxX3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJJZiB0aGUgbnVtZXJhdG9yIGFuZCBkZW5vbWluYXRvciBvZiBcXChGKHgpXFwpIGhhdmUgdGhlIHNhbWUgZGVncmVlLCB3aGljaCBwYXJ0aWFsLWZyYWN0aW9uIGZvcm0gbWF0Y2hlcyB0aGlzIHNlY3Rpb24/Iiwib3B0aW9ucyI6WyJBLiBcXChGKHgpPVxcZGZyYWN7a18xfXt4LVxcbGFtYmRhXzF9K1xcY2RvdHMrXFxkZnJhY3trX259e3gtXFxsYW1iZGFfbn1cXCkgb25seSIsIkIuIFxcKEYoeCk9Yl9uK1xcZGZyYWN7a18xfXt4LVxcbGFtYmRhXzF9K1xcY2RvdHMrXFxkZnJhY3trX259e3gtXFxsYW1iZGFfbn1cXCkiLCJDLiBcXChGKHgpPXgrYl9uK1xcZGZyYWN7a18xfXt4LVxcbGFtYmRhXzF9K1xcY2RvdHNcXCkiLCJELiBcXChGKHgpXFwpIGNhbm5vdCBiZSBleHBhbmRlZCBieSBwYXJ0aWFsIGZyYWN0aW9ucyJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6IkZvciB0aGUgc3BlY2lhbCBpbXByb3BlciBjYXNlIFxcKG0gPSBuXFwpLCB0aGUgZXhwYW5zaW9uIGlzIHRoZSB1c3VhbCBwYXJ0aWFsLWZyYWN0aW9uIGZvcm0gcGx1cyBvbmUgZXh0cmEgY29uc3RhbnQgdGVybSBcXChiX25cXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhpcyBtaXNzZXMgdGhlIGV4dHJhIGNvbnN0YW50IHRlcm0gdGhhdCBhcHBlYXJzIHdoZW4gdGhlIGRlZ3JlZXMgYXJlIGVxdWFsLiIsIkMiOiJUaGUgYWRkZWQgdGVybSBpcyBhIGNvbnN0YW50LCBub3QgYW4gZXh0cmEgXFwoeFxcKSB0ZXJtLiIsIkQiOiJJdCBjYW4gc3RpbGwgYmUgZXhwYW5kZWQ7IHRoaXMgc2VjdGlvbiBnaXZlcyB0aGUgc3BlY2lhbCBmb3JtLiJ9LCJoaW50IjoiQXNrIHdoYXQgY2hhbmdlcyBjb21wYXJlZCB3aXRoIHRoZSBwcm9wZXIgY2FzZS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9LHsiaWQiOiJrcDFfcTIiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IldoYXQgaXMgdGhlIG1haW4gcHJhY3RpY2FsIGRpZmZlcmVuY2UgYmV0d2VlbiB0aGUgcHJvcGVyIGNhc2UgYW5kIHRoZSBzcGVjaWFsIGltcHJvcGVyIGNhc2UgXFwobSA9IG5cXCk/Iiwib3B0aW9ucyI6WyJBLiBZb3UgbXVzdCB1c2UgYSBjb21wbGV0ZWx5IGRpZmZlcmVudCBjb2VmZmljaWVudCBmb3JtdWxhIiwiQi4gWW91IG11c3QgYWx3YXlzIGZhY3RvciB0aGUgbnVtZXJhdG9yIGZpcnN0IiwiQy4gQW4gZXh0cmEgY29uc3RhbnQgYXBwZWFycywgYnV0IHRoZSByZW1haW5pbmcgY29lZmZpY2llbnQgcHJvY2VzcyBzdGF5cyB0aGUgc2FtZSIsIkQuIFJlcGVhdGVkIHJvb3RzIGFyZSBubyBsb25nZXIgYWxsb3dlZCJdLCJjb3JyZWN0X29wdGlvbiI6IkMiLCJleHBsYW5hdGlvbiI6IlRoZSB0ZXh0Ym9vaydzIGtleSBwb2ludCBpcyB0aGF0IHRoZSBvbmx5IGRpZmZlcmVuY2UgaXMgdGhlIGV4dHJhIGNvbnN0YW50IHRlcm0uIFRoZSByZXN0IG9mIHRoZSBjb2VmZmljaWVudC1maW5kaW5nIG1ldGhvZCBpcyB1bmNoYW5nZWQuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhlIGNvZWZmaWNpZW50IGlkZWEgcmVtYWlucyB0aGUgc2FtZS4iLCJCIjoiRmFjdG9yaW5nIHRoZSBudW1lcmF0b3IgaXMgbm90IHRoZSBrZXkgcnVsZSBoZXJlLiIsIkQiOiJSZXBlYXRlZCByb290cyBhcmUgc3RpbGwgaGFuZGxlZCBieSB0aGUgdXN1YWwgcHJvY2VkdXJlcy4ifSwiaGludCI6IkZvY3VzIG9uIHdoYXQgdGhlIHRleHRib29rIHNheXMgaXMgdGhlICdvbmx5IGRpZmZlcmVuY2UuJyIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX1dfSx7ImlkIjoiZmluZF9jb25zdGFudF9hbmRfY29lZmZpY2llbnRzIiwibGFiZWwiOiJGaW5kIHRoZSBjb25zdGFudCB0ZXJtIGFuZCByZW1haW5pbmcgY29lZmZpY2llbnRzIiwiaW1wb3J0YW5jZSI6ImhpZ2giLCJleGFtX3dlaWdodCI6ImhpZ2giLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjJ9LCJxdWVzdGlvbnMiOlt7ImlkIjoia3AyX3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJGb3IgXFwoRih4KT1cXGRmcmFjezN4XjIrOXgtMjB9eyh4LTIpKHgrMyl9XFwpLCB3aGF0IGNvbnN0YW50IGFwcGVhcnMgZmlyc3QgaW4gdGhlIGV4cGFuc2lvbj8iLCJvcHRpb25zIjpbIkEuIDIiLCJCLiAzIiwiQy4gNCIsIkQuIC0zIl0sImNvcnJlY3Rfb3B0aW9uIjoiQiIsImV4cGxhbmF0aW9uIjoiQmVjYXVzZSBcXChtID0gbiA9IDJcXCksIHRoZSBleHRyYSBjb25zdGFudCBpcyB0aGUgbGVhZGluZyBjb2VmZmljaWVudCBvZiB0aGUgbnVtZXJhdG9yLCB3aGljaCBpcyBcXCgzXFwpIGluIHRoaXMgdGV4dGJvb2sgZm9ybS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJcXCgyXFwpIGlzIG9uZSBvZiB0aGUgcGFydGlhbC1mcmFjdGlvbiBjb2VmZmljaWVudHMsIG5vdCB0aGUgY29uc3RhbnQgdGVybS4iLCJDIjoiXFwoNFxcKSBpcyB0aGUgb3RoZXIgcGFydGlhbC1mcmFjdGlvbiBjb2VmZmljaWVudCwgbm90IHRoZSBjb25zdGFudCB0ZXJtLiIsIkQiOiJUaGUgc2lnbiBhbmQgdmFsdWUgZG8gbm90IG1hdGNoIHRoZSBsZWFkaW5nIG51bWVyYXRvciBjb2VmZmljaWVudC4ifSwiaGludCI6Ikxvb2sgYXQgdGhlIGhpZ2hlc3QtZGVncmVlIGNvZWZmaWNpZW50IGluIHRoZSBudW1lcmF0b3IuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50IjpmYWxzZX0seyJpZCI6ImtwMl9xMiIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiVXNpbmcgXFwoRih4KT0zK1xcZGZyYWN7a18xfXt4LTJ9K1xcZGZyYWN7a18yfXt4KzN9XFwpLCB3aGF0IGlzIFxcKGtfMVxcKT8iLCJvcHRpb25zIjpbIkEuIDEiLCJCLiAyIiwiQy4gMyIsIkQuIDQiXSwiY29ycmVjdF9vcHRpb24iOiJCIiwiZXhwbGFuYXRpb24iOiJTdWJzdGl0dXRlIFxcKHg9MlxcKSBpbnRvIFxcKCh4LTIpRih4KVxcKS4gVGhpcyBnaXZlcyBcXChrXzEgPSBcXGRmcmFjezN4XjIrOXgtMjB9e3grM31cXGJpZ2d8X3t4PTJ9ID0gXFxkZnJhY3sxMH17NX0gPSAyXFwpLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6IlRoaXMgZG9lcyBub3QgbWF0Y2ggdGhlIHN1YnN0aXR1dGlvbiByZXN1bHQuIiwiQyI6IlxcKDNcXCkgaXMgdGhlIGNvbnN0YW50IHRlcm0sIG5vdCBcXChrXzFcXCkuIiwiRCI6IlxcKDRcXCkgaXMgXFwoa18yXFwpLCBub3QgXFwoa18xXFwpLiJ9LCJoaW50IjoiVXNlIHRoZSBmYWN0b3IgdGhhdCBjYW5jZWxzIHdoZW4gXFwoeD0yXFwpLiIsIm5lZWRzX3Zpc3VhbCI6dHJ1ZSwidmlzdWFsX3R5cGUiOiJvcGVuYWkvZ3B0LTUuNC1pbWFnZS0yIiwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfSx7ImlkIjoia3AyX3EzIiwidHlwZSI6InNob3J0X2Fuc3dlciIsInN0ZW0iOiJDb21wbGV0ZSB0aGUgZXhwYW5zaW9uOlxuJCRGKHgpPVxcZnJhY3szeF4yKzl4LTIwfXsoeC0yKSh4KzMpfSA9IFxcID8kJCIsImlkZWFsX2Fuc3dlciI6IiQkRih4KT0zK1xcZnJhY3syfXt4LTJ9K1xcZnJhY3s0fXt4KzN9JCQiLCJncmFkaW5nX3J1YnJpYyI6WyJNdXN0IGluY2x1ZGUgdGhlIGNvbnN0YW50IHRlcm0gMyIsIk11c3QgZ2l2ZSBjb2VmZmljaWVudCAyIG9uIFxcKDEvKHgtMilcXCkiLCJNdXN0IGdpdmUgY29lZmZpY2llbnQgNCBvbiBcXCgxLyh4KzMpXFwpIiwiTWlub3IgZm9ybWF0dGluZyBkaWZmZXJlbmNlcyBhcmUgYWNjZXB0YWJsZSBpZiBtYXRoZW1hdGljYWxseSBlcXVpdmFsZW50Il0sImV4cGxhbmF0aW9uIjoiVGhpcyBjaGVja3Mgd2hldGhlciB0aGUgc3R1ZGVudCBjYW4gY2FycnkgdGhlIG1ldGhvZCBhbGwgdGhlIHdheSB0byB0aGUgZmluYWwgZm9ybSBpbnN0ZWFkIG9mIHN0b3BwaW5nIGFmdGVyIG9uZSBjb2VmZmljaWVudC4iLCJoaW50IjoiRG8gbm90IGZvcmdldCB0aGUgY29uc3RhbnQgYmVmb3JlIHRoZSBmcmFjdGlvbnMuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfV19LHsiaWQiOiJtb2RpZmllZF9wYXJ0aWFsX2ZyYWN0aW9uX2JyaWRnZSIsImxhYmVsIjoiQnJpZGdlIHRvIG1vZGlmaWVkIHBhcnRpYWwgZnJhY3Rpb25zIiwiaW1wb3J0YW5jZSI6Im1lZGl1bSIsImV4YW1fd2VpZ2h0IjoibWVkaXVtIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoxfSwicXVlc3Rpb25zIjpbeyJpZCI6ImtwM19xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiV2h5IGRvZXMgdGhlIHRleHRib29rIGRpdmlkZSBieSBcXCh4XFwpIGJlZm9yZSBleHBhbmRpbmcgaW4gdGhlIG1vZGlmaWVkIHBhcnRpYWwtZnJhY3Rpb25zIHNldHVwPyIsIm9wdGlvbnMiOlsiQS4gVG8gZWxpbWluYXRlIHJlcGVhdGVkIGZhY3RvcnMgY29tcGxldGVseSIsIkIuIFRvIGNyZWF0ZSB0ZXJtcyB0aGF0IGNhbiBsYXRlciBiZWNvbWUgXFwoa3gvKHgtXFxsYW1iZGEpXnJcXCkgYWZ0ZXIgbXVsdGlwbHlpbmcgYmFjayBieSBcXCh4XFwpIiwiQy4gVG8gbWFrZSB0aGUgbnVtZXJhdG9yIGRlZ3JlZSBsYXJnZXIiLCJELiBCZWNhdXNlIG9yZGluYXJ5IHBhcnRpYWwgZnJhY3Rpb25zIG5vIGxvbmdlciB3b3JrIl0sImNvcnJlY3Rfb3B0aW9uIjoiQiIsImV4cGxhbmF0aW9uIjoiVGhlIGdvYWwgaXMgdG8gZ2V0IGEgZGVjb21wb3NpdGlvbiBmb3IgXFwoRih4KS94XFwpLCB0aGVuIG11bHRpcGx5IGJ5IFxcKHhcXCkgc28gdGhlIGZpbmFsIHRlcm1zIGhhdmUgdGhlIGRlc2lyZWQgbW9kaWZpZWQgZm9ybSB3aXRoIFxcKHhcXCkgaW4gdGhlIG51bWVyYXRvci4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJSZXBlYXRlZCBmYWN0b3JzIG1heSBzdGlsbCByZW1haW47IGRpdmlzaW9uIGJ5IFxcKHhcXCkgZG9lcyBub3QgZWxpbWluYXRlIHRoZW0uIiwiQyI6IkRpdmlkaW5nIGJ5IFxcKHhcXCkgbG93ZXJzIGRlZ3JlZSByYXRoZXIgdGhhbiByYWlzaW5nIGl0LiIsIkQiOiJPcmRpbmFyeSBwYXJ0aWFsLWZyYWN0aW9uIG1ldGhvZHMgYXJlIHN0aWxsIGJlaW5nIHVzZWQgb24gXFwoRih4KS94XFwpLiJ9LCJoaW50IjoiVGhpbmsgYWJvdXQgd2hhdCBoYXBwZW5zIGFmdGVyIG11bHRpcGx5aW5nIGJvdGggc2lkZXMgYmFjayBieSBcXCh4XFwpLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9XX1dfQ==" style="display:none;"></div>%%KC_END%%

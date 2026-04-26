@@ -1,42 +1,417 @@
-%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6ImdlbmVyYXRlZF9pbWFnZSIsInJhdGlvbmFsZSI6IkFnZW50IEEgSlNPTiBmYWlsZWQsIHNvIHJlbHkgb24gb25lIGdlbmVyYXRlZCBncHRpbWFnZTIgdGVhY2hpbmcgdmlzdWFsIGluc3RlYWQgb2YgcmV0dXJuaW5nIGEgdGV4dC1vbmx5IGxlc3Nvbi4iLCJjcmFtIjoiVXNlIHRoZSB2aXN1YWwgdG8gcmVjb2duaXplIHRoZSBleGFtIHBhdHRlcm4gcXVpY2tseS4iLCJzdGFuZGFyZCI6IlVzZSB0aGUgdmlzdWFsIHRvIGNsYXJpZnkgdGhlIGNvcmUgY29uY2VwdCB3aXRoIGEgc2luZ2xlIGNsZWFyIHBhdGguIiwidG9wX3Njb3JlIjoiVXNlIHRoZSB2aXN1YWwgdG8gaGlnaGxpZ2h0IHN1YnRsZSBkaXN0aW5jdGlvbnMsIHRyYXBzLCBvciB2YXJpYW50cy4ifQ==" style="display:none;"></div>%%KC_END%%
-## Overview
-
-> **Objective:** Learn the Heaviside Cover-Up Method — a fast, elegant shortcut for finding partial fraction coefficients without solving a system of equations.
-
-When expanding a rational function \(F(x) = P(x)/Q(x)\) into partial fractions, the brute-force approach requires solving simultaneous equations. The **Heaviside Cover-Up Method** eliminates that work for distinct (non-repeated) factors. The key idea: to find the coefficient \(k_i\) for a factor \((x - a_i)\), simply **cover up** that factor in the denominator and substitute \(x = a_i\) into what remains. This section shows why the method works, how to apply it to real and complex factors, and where students most commonly make errors.
-
-%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="generate_image" data-teaching-role="concept_anchor" data-visual-use-b64="eyJjcmFtIjoiVXNlIHRoaXMgdmlzdWFsIHRvIHJlY29nbml6ZSB0aGUgY292ZXItdXAgcGF0dGVybiBpbnN0YW50bHk6IGdyYXkgb3V0IHRoZSBmYWN0b3IsIHBsdWcgaW4gaXRzIHJvb3QsIHJlYWQgb2ZmIHRoZSBjb2VmZmljaWVudC4iLCJzdGFuZGFyZCI6IlVzZSB0aGlzIHZpc3VhbCB0byBmb2xsb3cgdGhlIHRocmVlLXN0ZXAgcHJvY2VzcyBhbmQgdW5kZXJzdGFuZCB3aHkgY292ZXJpbmcgdXAgdGhlIGZhY3RvciBpc29sYXRlcyBleGFjdGx5IG9uZSBjb2VmZmljaWVudC4iLCJ0b3Bfc2NvcmUiOiJVc2UgdGhpcyB2aXN1YWwgdG8gbm90aWNlIHRoZSB0cmFwOiB5b3Ugc3Vic3RpdHV0ZSB0aGUgcm9vdCBvZiB0aGUgY292ZXJlZCBmYWN0b3IsIG5vdCBqdXN0IGFueSB2YWx1ZSBvZiB4LiJ9" style="display:none;"></div>%%KC_END%%
-*🎨 The Heaviside Cover-Up Method in three steps: write the partial fraction form, cover the target factor and substitute its root, read off the coefficient directly.*
-![Illustration](/generated/gptimage2-1777217361154-7866.png)
-
-## Core Idea
-
-The Heaviside Cover-Up Method is built on one algebraic fact. If
-
-$$
-F(x) = \frac{P(x)}{(x - a_1)(x - a_2)\cdots(x - a_n)} = \frac{k_1}{x - a_1} + \frac{k_2}{x - a_2} + \cdots + \frac{k_n}{x - a_n}
-$$
-
-then multiplying both sides by \((x - a_i)\) and setting \(x = a_i\) kills every term except \(k_i\). The **cover-up** gesture makes this mechanical: mentally hide the factor \((x - a_i)\) in the denominator of \(F(x)\), then evaluate the rest at \(x = a_i\).
-
-### WORKED EXAMPLE
-
-For \(F(x) = \frac{2x^2 + 9x - 11}{(x+1)(x-2)(x+3)}\), to find \(k_1\) (factor \(x+1\), root \(x = -1\)):
-
-$$
-k_1 = \left.\frac{2x^2 + 9x - 11}{(x-2)(x+3)}\right|_{x=-1} = \frac{2 - 9 - 11}{(-3)(2)} = \frac{-18}{-6} = 3
-$$
-
-### COMMON EXAM TRAP
-
-Always substitute the **root of the factor you covered**, not the root of a different factor. Mixing up which root goes with which factor is the most frequent error.
+# B.5-2: The Heaviside "Cover-Up" Method
 
 ---
-**📌 Key Takeaways**
-- Cover up factor \((x - a_i)\) in the denominator, then substitute \(x = a_i\) to find \(k_i\) directly.
-- The method works for both real and complex distinct factors of \(Q(x)\).
-- Always substitute the root of the factor you covered — not any other root.
 
-*In the next section we will extend partial fraction expansion to handle repeated factors, where the cover-up method must be combined with differentiation to find all coefficients.*
+## Page 1: Section Overview
 
-%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NCwicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo0LCJtYXgiOjV9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6ImJfNV8yX2hlYXZpc2lkZV9jb3Zlcl91cF9tZXRob2RfY29yZSIsImxhYmVsIjoiQi41LTIgSGVhdmlzaWRlIENvdmVyLVVwIE1ldGhvZCIsImltcG9ydGFuY2UiOiJoaWdoIiwiZXhhbV93ZWlnaHQiOiJoaWdoIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoyfSwicXVlc3Rpb25zIjpbeyJpZCI6ImNvcmVfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IldoaWNoIHN0YXRlbWVudCBiZXN0IGNhcHR1cmVzIHRoZSBtYWluIGxlYXJuaW5nIGdvYWwgb2YgdGhlIEhlYXZpc2lkZSBDb3Zlci1VcCBNZXRob2Q/Iiwib3B0aW9ucyI6WyJBLiBNZW1vcml6ZSB0aGUgZmluYWwgcmVzdWx0IHdpdGhvdXQgY29ubmVjdGluZyBpdCB0byB0aGUgdmlzdWFsIG9yIHN0cnVjdHVyYWwgbWVhbmluZyIsIkIuIFVuZGVyc3RhbmQgdGhlIGNvcmUgZGVmaW5pdGlvbiwgdGhlIHZpc3VhbC9zdHJ1Y3R1cmFsIG1lYW5pbmcsIGFuZCBob3cgdGhlIGlkZWEgYXBwZWFycyBpbiBleGFtIHF1ZXN0aW9ucyIsIkMuIFRyZWF0IHRoZSB0b3BpYyBhcyBwdXJlIHN5bWJvbCBtYW5pcHVsYXRpb24gd2l0aCBubyBjb25jZXB0dWFsIHN0cnVjdHVyZSIsIkQuIEZvY3VzIG9ubHkgb24gdGVybWlub2xvZ3kgYmVjYXVzZSB0aGUgZXhhbSBuZXZlciB0ZXN0cyBpbnRlcnByZXRhdGlvbiJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6IlN0cm9uZyB1bmRlcnN0YW5kaW5nIG1lYW5zIGNvbm5lY3RpbmcgdGhlIGRlZmluaXRpb24gKG11bHRpcGx5IGJ5IGEgZmFjdG9yIGFuZCBldmFsdWF0ZSBhdCBpdHMgcm9vdCksIHRoZSBzdHJ1Y3R1cmFsIG1lYW5pbmcgKHRoZSBjb3Zlci11cCBnZXN0dXJlIGlzb2xhdGVzIG9uZSBjb2VmZmljaWVudCksIGFuZCB0aGUgZXhhbS1mYWNpbmcgaW50ZXJwcmV0YXRpb24gKGFwcGx5IGl0IHF1aWNrbHkgYW5kIGNvcnJlY3RseSB0byBkaXN0aW5jdCBmYWN0b3JzKS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJNZW1vcml6YXRpb24gYWxvbmUgYnJlYWtzIG9uIHZhcmlhbnRzIGFuZCB0cmFwIHF1ZXN0aW9ucyB3aGVyZSBmYWN0b3JzIGFyZSBjb21wbGV4IG9yIHRoZSBzdWJzdGl0dXRpb24gdmFsdWUgaXMgbm9uLW9idmlvdXMuIiwiQyI6IlRoZSBtZXRob2QgaGFzIGNsZWFyIHN0cnVjdHVyYWwgbWVhbmluZyDigJQgaXQgaXMgbm90IGVtcHR5IHN5bWJvbCBwdXNoaW5nLiIsIkQiOiJJbnRlcnByZXRhdGlvbiBvZiB3aGljaCByb290IHRvIHN1YnN0aXR1dGUgaXMgZXhhY3RseSB3aGF0IGV4YW0gcXVlc3Rpb25zIHByb2JlLiJ9LCJoaW50IjoiUGljayB0aGUgb3B0aW9uIHRoYXQgY29tYmluZXMgbWVhbmluZywgcmVwcmVzZW50YXRpb24sIGFuZCBleGFtIHVzZS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOmZhbHNlfSx7ImlkIjoiY29yZV9xMiIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiVG8gZmluZCB0aGUgY29lZmZpY2llbnQgXFwoa18yXFwpIGluIFxcKEYoeCkgPSBcXGZyYWN7MnheMiArIDl4IC0gMTF9eyh4KzEpKHgtMikoeCszKX0gPSBcXGZyYWN7a18xfXt4KzF9ICsgXFxmcmFje2tfMn17eC0yfSArIFxcZnJhY3trXzN9e3grM31cXCkgdXNpbmcgdGhlIGNvdmVyLXVwIG1ldGhvZCwgd2hpY2ggZXhwcmVzc2lvbiBkbyB5b3UgZXZhbHVhdGU/Iiwib3B0aW9ucyI6WyJBLiBcXChcXGxlZnQuXFxmcmFjezJ4XjIgKyA5eCAtIDExfXsoeCsxKSh4KzMpfVxccmlnaHR8X3t4PTJ9XFwpIiwiQi4gXFwoXFxsZWZ0LlxcZnJhY3syeF4yICsgOXggLSAxMX17KHgrMSkoeC0yKSh4KzMpfVxccmlnaHR8X3t4PTJ9XFwpIiwiQy4gXFwoXFxsZWZ0LlxcZnJhY3syeF4yICsgOXggLSAxMX17KHgrMSkoeCszKX1cXHJpZ2h0fF97eD0tMn1cXCkiLCJELiBcXChcXGxlZnQuXFxmcmFjezJ4XjIgKyA5eCAtIDExfXsoeC0yKSh4KzMpfVxccmlnaHR8X3t4PS0xfVxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkEiLCJleHBsYW5hdGlvbiI6IkNvdmVyIHVwIHRoZSBmYWN0b3IgXFwoKHgtMilcXCkgaW4gdGhlIGRlbm9taW5hdG9yLCBsZWF2aW5nIFxcKCh4KzEpKHgrMylcXCkgYmVsb3csIHRoZW4gc3Vic3RpdHV0ZSB0aGUgcm9vdCBvZiB0aGUgY292ZXJlZCBmYWN0b3I6IFxcKHggPSAyXFwpLiBUaGlzIGdpdmVzIFxcKGtfMiA9IFxcZnJhY3s4ICsgMTggLSAxMX17KDMpKDUpfSA9IFxcZnJhY3sxNX17MTV9ID0gMVxcKS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkIiOiJUaGlzIGtlZXBzIGFsbCB0aHJlZSBkZW5vbWluYXRvciBmYWN0b3JzIOKAlCBub3RoaW5nIGlzIGNvdmVyZWQgdXAsIHNvIHRoZSBleHByZXNzaW9uIGVxdWFscyBcXChGKDIpXFwpLCBub3QgXFwoa18yXFwpLiIsIkMiOiJUaGUgY29ycmVjdCByb290IGZvciBmYWN0b3IgXFwoKHgtMilcXCkgaXMgXFwoeCA9ICsyXFwpLCBub3QgXFwoeCA9IC0yXFwpLiIsIkQiOiJUaGlzIGNvdmVycyBcXCgoeCsxKVxcKSBhbmQgc3Vic3RpdHV0ZXMgXFwoeCA9IC0xXFwpLCB3aGljaCBmaW5kcyBcXChrXzFcXCksIG5vdCBcXChrXzJcXCkuIn0sImhpbnQiOiJXaGljaCBmYWN0b3IgYXJlIHlvdSBjb3ZlcmluZywgYW5kIHdoYXQgaXMgdGhlIHJvb3Qgb2YgdGhhdCBmYWN0b3I/IiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50IjpmYWxzZX0seyJpZCI6ImNvcmVfcTMiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IlRoZSBIZWF2aXNpZGUgQ292ZXItVXAgTWV0aG9kIHdvcmtzIGRpcmVjdGx5ICh3aXRob3V0IGV4dHJhIHN0ZXBzKSBvbmx5IHdoZW4gYWxsIGZhY3RvcnMgb2YgXFwoUSh4KVxcKSBhcmU6Iiwib3B0aW9ucyI6WyJBLiBSZWFsIGFuZCBwb3NpdGl2ZSIsIkIuIERpc3RpbmN0IChub24tcmVwZWF0ZWQpLCB3aGV0aGVyIHJlYWwgb3IgY29tcGxleCIsIkMuIFJlcGVhdGVkIGF0IGxlYXN0IHR3aWNlIiwiRC4gTGluZWFyIHdpdGggaW50ZWdlciByb290cyBvbmx5Il0sImNvcnJlY3Rfb3B0aW9uIjoiQiIsImV4cGxhbmF0aW9uIjoiVGhlIGNvdmVyLXVwIG1ldGhvZCBhcHBsaWVzIHRvIGFueSBkaXN0aW5jdCBmYWN0b3Ig4oCUIHJlYWwgb3IgY29tcGxleC4gSXQgZmFpbHMgdG8gZ2l2ZSBhbGwgY29lZmZpY2llbnRzIGRpcmVjdGx5IHdoZW4gZmFjdG9ycyBhcmUgcmVwZWF0ZWQsIGJlY2F1c2UgcmVwZWF0ZWQgZmFjdG9ycyBwcm9kdWNlIG11bHRpcGxlIHVua25vd24gY29lZmZpY2llbnRzIHRoYXQgY2Fubm90IGFsbCBiZSBpc29sYXRlZCBieSBhIHNpbmdsZSBzdWJzdGl0dXRpb24uIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiQ29tcGxleCBmYWN0b3JzIGFyZSBhbHNvIGhhbmRsZWQgYnkgdGhlIGNvdmVyLXVwIG1ldGhvZDsgdGhlIGZhY3RvcnMgZG8gbm90IG5lZWQgdG8gYmUgcmVhbC4iLCJDIjoiUmVwZWF0ZWQgZmFjdG9ycyByZXF1aXJlIGFkZGl0aW9uYWwgc3RlcHMgKGRpZmZlcmVudGlhdGlvbiBvciBzeXN0ZW0tc29sdmluZykgYmV5b25kIHRoZSBiYXNpYyBjb3Zlci11cC4iLCJEIjoiVGhlIHJvb3RzIGNhbiBiZSBhbnkgY29tcGxleCBudW1iZXJzLCBub3QganVzdCBpbnRlZ2Vycy4ifSwiaGludCI6IlRoaW5rIGFib3V0IHdoYXQgY29uZGl0aW9uIG9uIFxcKFEoeClcXCkgYWxsb3dzIGVhY2ggY29lZmZpY2llbnQgdG8gYmUgaXNvbGF0ZWQgYnkgYSBzaW5nbGUgc3Vic3RpdHV0aW9uLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9LHsiaWQiOiJjb3JlX3E0IiwidHlwZSI6InNob3J0X2Fuc3dlciIsInN0ZW0iOiJJbiAx4oCTMiBzZW50ZW5jZXMsIGV4cGxhaW4gdGhlIGNvcmUgcmVsYXRpb25zaGlwIGEgc3R1ZGVudCBzaG91bGQgbm90aWNlIGZpcnN0IHdoZW4gbGVhcm5pbmcgdGhlIEhlYXZpc2lkZSBDb3Zlci1VcCBNZXRob2QuIiwiaWRlYWxfYW5zd2VyIjoiVGhlIGNlbnRyYWwgcmVsYXRpb25zaGlwIGlzIHRoYXQgbXVsdGlwbHlpbmcgXFwoRih4KVxcKSBieSBhIGZhY3RvciBcXCgoeCAtIGFfaSlcXCkgYW5kIGV2YWx1YXRpbmcgYXQgXFwoeCA9IGFfaVxcKSBpc29sYXRlcyBleGFjdGx5IG9uZSBjb2VmZmljaWVudCBcXChrX2lcXCksIGJlY2F1c2UgZXZlcnkgb3RoZXIgcGFydGlhbCBmcmFjdGlvbiB0ZXJtIHZhbmlzaGVzLiBUaGUgY292ZXItdXAgZ2VzdHVyZSBtYWtlcyB0aGlzIG1lY2hhbmljYWw6IGhpZGUgdGhlIGZhY3RvciBpbiB0aGUgZGVub21pbmF0b3IgYW5kIHN1YnN0aXR1dGUgaXRzIHJvb3QgaW50byB0aGUgcmVzdCBvZiB0aGUgZXhwcmVzc2lvbi4iLCJncmFkaW5nX3J1YnJpYyI6WyJNdXN0IHN0YXRlIHRoYXQgY292ZXJpbmcgKG9yIG11bHRpcGx5aW5nIGJ5KSB0aGUgZmFjdG9yIFxcKCh4IC0gYV9pKVxcKSBpc29sYXRlcyBvbmUgY29lZmZpY2llbnQiLCJNdXN0IGNvbm5lY3QgdGhlIHN1YnN0aXR1dGlvbiBcXCh4ID0gYV9pXFwpIHRvIHRoZSByb290IG9mIHRoZSBjb3ZlcmVkIGZhY3RvciIsIk11c3QgaW5kaWNhdGUgdGhpcyB3b3JrcyBiZWNhdXNlIGFsbCBvdGhlciB0ZXJtcyB2YW5pc2ggYXQgdGhhdCBzdWJzdGl0dXRpb24gcG9pbnQiXSwiZXhwbGFuYXRpb24iOiJUaGlzIGNoZWNrcyB3aGV0aGVyIHRoZSBzdHVkZW50IHNlZXMgdGhlIGFsZ2VicmFpYyByZWFzb24gYmVoaW5kIHRoZSBtZXRob2QsIG5vdCBqdXN0IHRoZSBtZWNoYW5pY2FsIHN0ZXBzLiIsImhpbnQiOiJTdGFydCB3aXRoICd0aGUgbWFpbiByZWxhdGlvbnNoaXAgaXMuLi4nIGFuZCBleHBsYWluIHdoeSB0aGUgb3RoZXIgY29lZmZpY2llbnRzIGRpc2FwcGVhci4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOmZhbHNlfV19XX0=" style="display:none;"></div>%%KC_END%%
+Welcome! In this section, we're going to learn one of the most **elegant shortcuts** in all of partial fraction expansion — the **Heaviside "Cover-Up" Method**.
+
+### What's the Big Picture?
+
+Remember that partial fraction expansion is all about breaking a complicated rational function like:
+
+$$F(x) = \frac{2x^2 + 9x - 11}{(x+1)(x-2)(x+3)}$$
+
+into simpler pieces like:
+
+$$F(x) = \frac{k_1}{x+1} + \frac{k_2}{x-2} + \frac{k_3}{x+3}$$
+
+The challenge is always: **how do we find those constants** \(k_1, k_2, k_3\)?
+
+The old way (solving simultaneous equations) works, but it's slow and tedious. The Heaviside method gives us those constants **almost instantly** — sometimes in your head!
+
+---
+
+### What We'll Cover in This Section
+
+| Page | Topic |
+|------|-------|
+| 2 | The core idea: the Heaviside formula |
+| 3 | Worked example with distinct real factors |
+| 4 | Handling complex factors of Q(x) |
+| 5 | Combining complex factors into quadratic form |
+| 6 | Shortcuts for finding remaining coefficients |
+| 7 | Recap & Summary |
+| 8 | Quiz Plan |
+
+---
+
+### Prerequisites
+
+Before diving in, make sure you're comfortable with:
+- What a **proper rational function** is (degree of numerator < degree of denominator)
+- Basic **partial fraction** setup (writing out the form with unknown constants)
+- Simple **algebra** — substituting values into expressions
+
+Let's go! 🚀
+
+---
+
+## Page 2: The Core Idea — The Heaviside Formula
+
+### The Setup
+
+We have a proper rational function with **all distinct (non-repeated) factors** in the denominator:
+
+$$F(x) = \frac{P(x)}{(x - \lambda_1)(x - \lambda_2) \cdots (x - \lambda_n)}$$
+
+We want to write it as:
+
+$$F(x) = \frac{k_1}{x - \lambda_1} + \frac{k_2}{x - \lambda_2} + \cdots + \frac{k_n}{x - \lambda_n}$$
+
+### The Key Question: How Do We Find \(k_r\)?
+
+Here's the clever trick. To find \(k_1\), **multiply both sides by** \((x - \lambda_1)\):
+
+$$(x - \lambda_1) F(x) = k_1 + \frac{k_2(x-\lambda_1)}{x-\lambda_2} + \frac{k_3(x-\lambda_1)}{x-\lambda_3} + \cdots$$
+
+Now **let** \(x = \lambda_1\). Every term on the right **except** \(k_1\) contains a factor \((x - \lambda_1)\) which becomes **zero**. So:
+
+$$(x - \lambda_1) F(x)\Big|_{x = \lambda_1} = k_1$$
+
+### The General Formula
+
+This works for any coefficient:
+
+$$\boxed{k_r = (x - \lambda_r)\, F(x)\Big|_{x = \lambda_r}} \quad r = 1, 2, \ldots, n \tag{B.24}$$
+
+> 💡 **This is also called the "method of residues."**
+
+---
+
+### The "Cover-Up" Interpretation
+
+Here's the beautiful physical intuition:
+
+- \((x - \lambda_r) \cdot F(x)\) means you're **canceling** the factor \((x - \lambda_r)\) from the denominator
+- That's the same as **covering up** (hiding) that factor with your finger!
+- Then you just **plug in** \(x = \lambda_r\) to whatever's left
+
+**No algebra. No simultaneous equations. Just cover and substitute.**
+
+---
+
+## Page 3: Worked Example — Distinct Real Factors
+
+### The Problem
+
+Expand into partial fractions:
+
+$$F(x) = \frac{2x^2 + 9x - 11}{(x+1)(x-2)(x+3)} = \frac{k_1}{x+1} + \frac{k_2}{x-2} + \frac{k_3}{x+3}$$
+
+---
+
+### Finding \(k_1\): Cover Up \((x+1)\), Let \(x = -1\)
+
+The factor \((x+1)\) corresponds to the root \(\lambda_1 = -1\).
+
+$$k_1 = \frac{2x^2 + 9x - 11}{\underbrace{(x+1)}_{\text{covered!}}(x-2)(x+3)}\Bigg|_{x=-1} = \frac{2(-1)^2 + 9(-1) - 11}{(-1-2)(-1+3)}$$
+
+$$k_1 = \frac{2 - 9 - 11}{(-3)(2)} = \frac{-18}{-6} = \boxed{3}$$
+
+---
+
+### Finding \(k_2\): Cover Up \((x-2)\), Let \(x = 2\)
+
+$$k_2 = \frac{2x^2 + 9x - 11}{(x+1)\underbrace{(x-2)}_{\text{covered!}}(x+3)}\Bigg|_{x=2} = \frac{2(4) + 9(2) - 11}{(2+1)(2+3)}$$
+
+$$k_2 = \frac{8 + 18 - 11}{(3)(5)} = \frac{15}{15} = \boxed{1}$$
+
+---
+
+### Finding \(k_3\): Cover Up \((x+3)\), Let \(x = -3\)
+
+$$k_3 = \frac{2x^2 + 9x - 11}{(x+1)(x-2)\underbrace{(x+3)}_{\text{covered!}}}\Bigg|_{x=-3} = \frac{2(9) + 9(-3) - 11}{(-3+1)(-3-2)}$$
+
+$$k_3 = \frac{18 - 27 - 11}{(-2)(-5)} = \frac{-20}{10} = \boxed{-2}$$
+
+---
+
+### Final Answer
+
+$$\boxed{F(x) = \frac{3}{x+1} + \frac{1}{x-2} - \frac{2}{x+3}}$$
+
+> ✅ **Tip:** You can always verify by combining the fractions back together and checking you get the original numerator.
+
+---
+
+## Page 4: Complex Factors of Q(x)
+
+### Good News First!
+
+The Heaviside cover-up method works **exactly the same way** even when the denominator has **complex roots**. The only difference is that you'll be doing arithmetic with complex numbers.
+
+---
+
+### Example Setup
+
+$$F(x) = \frac{4x^2 + 2x + 18}{(x+1)(x^2 + 4x + 13)}$$
+
+First, factor the quadratic in the denominator using the quadratic formula:
+
+$$x^2 + 4x + 13 = 0 \implies x = \frac{-4 \pm \sqrt{16 - 52}}{2} = -2 \pm j3$$
+
+So:
+
+$$F(x) = \frac{4x^2 + 2x + 18}{(x+1)(x+2-j3)(x+2+j3)} = \frac{k_1}{x+1} + \frac{k_2}{x+2-j3} + \frac{k_3}{x+2+j3}$$
+
+---
+
+### Finding \(k_1\): Cover Up \((x+1)\), Let \(x = -1\)
+
+$$k_1 = \frac{4x^2 + 2x + 18}{x^2 + 4x + 13}\Bigg|_{x=-1} = \frac{4 - 2 + 18}{1 - 4 + 13} = \frac{20}{10} = \boxed{2}$$
+
+---
+
+### Finding \(k_2\): Cover Up \((x+2-j3)\), Let \(x = -2+j3\)
+
+This is more involved — substitute \(x = -2 + j3\):
+
+$$k_2 = \frac{4x^2 + 2x + 18}{(x+1)(x+2+j3)}\Bigg|_{x=-2+j3}$$
+
+After careful complex arithmetic, this gives:
+
+$$k_2 = 1 + j2 = \sqrt{5}\, e^{j63.43°}$$
+
+---
+
+### Finding \(k_3\): The Conjugate Shortcut!
+
+> 🌟 **Key Insight:** When all coefficients of \(F(x)\) are **real**, the coefficients for complex-conjugate factors are always **complex conjugates of each other**.
+
+So without any calculation:
+
+$$k_3 = k_2^* = 1 - j2 = \sqrt{5}\, e^{-j63.43°}$$
+
+**You only need to compute one of the two complex coefficients!**
+
+---
+
+### Final Answer (Complex Form)
+
+$$F(x) = \frac{2}{x+1} + \frac{\sqrt{5}\,e^{j63.43°}}{x+2-j3} + \frac{\sqrt{5}\,e^{-j63.43°}}{x+2+j3}$$
+
+---
+
+## Page 5: Combining Complex Factors into Quadratic Form
+
+### Why Bother?
+
+Complex coefficients can be messy to work with. Often it's **cleaner and more useful** to combine the two complex-conjugate terms back into a **single fraction with a quadratic denominator**.
+
+---
+
+### The Setup
+
+Instead of splitting into three terms with complex roots, we write:
+
+$$F(x) = \frac{4x^2 + 2x + 18}{(x+1)(x^2+4x+13)} = \frac{k_1}{x+1} + \frac{c_1 x + c_2}{x^2 + 4x + 13}$$
+
+> Notice the numerator of the quadratic term is **linear** (\(c_1 x + c_2\)), not just a constant. This is required because the denominator has degree 2.
+
+---
+
+### Step 1: Find \(k_1\) by Cover-Up (as before)
+
+$$k_1 = 2 \quad \text{(computed on the previous page)}$$
+
+So now:
+
+$$\frac{4x^2 + 2x + 18}{(x+1)(x^2+4x+13)} = \frac{2}{x+1} + \frac{c_1 x + c_2}{x^2 + 4x + 13} \tag{B.26}$$
+
+---
+
+### Step 2: Clear Fractions
+
+Multiply both sides by \((x+1)(x^2+4x+13)\):
+
+$$4x^2 + 2x + 18 = 2(x^2+4x+13) + (c_1 x + c_2)(x+1)$$
+
+Expand the right side:
+
+$$= (2 + c_1)x^2 + (8 + c_1 + c_2)x + (26 + c_2)$$
+
+---
+
+### Step 3: Match Coefficients
+
+| Power | Left Side | Right Side | Equation |
+|-------|-----------|------------|----------|
+| \(x^2\) | \(4\) | \(2 + c_1\) | \(c_1 = 2\) |
+| \(x^1\) | \(2\) | \(8 + c_1 + c_2\) | \(c_2 = -8\) |
+| \(x^0\) | \(18\) | \(26 + c_2\) | ✅ confirms \(c_2 = -8\) |
+
+---
+
+### Final Answer (Quadratic Form)
+
+$$\boxed{F(x) = \frac{2}{x+1} + \frac{2x - 8}{x^2 + 4x + 13}}$$
+
+This form is often **preferred** in signal processing and Laplace transform work!
+
+---
+
+## Page 6: Shortcuts for Finding Remaining Coefficients
+
+### The Problem with Coefficient Matching
+
+Expanding and matching powers of \(x\) always works, but it can get tedious. Here are **two powerful shortcuts** that save time.
+
+---
+
+### Shortcut 1: Let \(x = 0\)
+
+After finding \(k_1\) by cover-up, substitute \(x = 0\) into the equation to get a relationship between the remaining unknowns.
+
+**Example** (continuing from page 5, Eq. B.26):
+
+$$\frac{4x^2 + 2x + 18}{(x+1)(x^2+4x+13)} = \frac{2}{x+1} + \frac{c_1 x + c_2}{x^2+4x+13}$$
+
+Let \(x = 0\):
+
+$$\frac{18}{(1)(13)} = \frac{2}{1} + \frac{c_2}{13}$$
+
+$$\frac{18}{13} = 2 + \frac{c_2}{13} \implies c_2 = 18 - 26 = \boxed{-8}$$
+
+> ⚠️ **Warning:** If \(x = 0\) makes any denominator zero (like when \(F(x)\) has an \(x\) factor), choose a different value like \(x = 1\).
+
+---
+
+### Shortcut 2: Multiply by \(x\), Then Let \(x \to \infty\)
+
+This is a slick trick to isolate \(c_1\). Multiply both sides of the equation by \(x\):
+
+$$\frac{x(4x^2 + 2x + 18)}{(x+1)(x^2+4x+13)} = \frac{2x}{x+1} + \frac{x(c_1 x + c_2)}{x^2+4x+13}$$
+
+As \(x \to \infty\), only the **highest-power terms** survive in each fraction:
+
+$$\frac{4x^3}{x^3} = \frac{2x}{x} + \frac{c_1 x^2}{x^2}$$
+
+$$4 = 2 + c_1 \implies c_1 = \boxed{2}$$
+
+---
+
+### Another Example: When \(x = 0\) Fails
+
+$$F(x) = \frac{2x^2 + 4x + 5}{x(x^2 + 2x + 5)} = \frac{k}{x} + \frac{c_1 x + c_2}{x^2 + 2x + 5}$$
+
+**Cover-up gives:** \(k = \frac{5}{5} = 1\)
+
+**Can't use \(x = 0\)** (denominator blows up). Use \(x = 1\) instead:
+
+$$\frac{11}{8} = 1 + \frac{c_1 + c_2}{8} \implies c_1 + c_2 = 3$$
+
+**Use the \(x \to \infty\) trick:**
+
+$$2 = 1 + c_1 \implies c_1 = 1, \quad c_2 = 2$$
+
+$$\boxed{F(x) = \frac{1}{x} + \frac{x + 2}{x^2 + 2x + 5}}$$
+
+---
+
+### Summary of Shortcuts
+
+| Shortcut | When to Use | What It Gives |
+|----------|-------------|---------------|
+| Let \(x = 0\) | When no denominator vanishes at \(x=0\) | One equation relating unknowns |
+| Let \(x =\) any convenient value | When \(x=0\) fails | Another equation |
+| Multiply by \(x\), let \(x \to \infty\) | Always works | Isolates the highest-degree numerator coefficient |
+
+---
+
+## Page 7: Recap & Summary
+
+### What We Learned in B.5-2
+
+---
+
+### 🔑 The Core Formula
+
+For a proper rational function with **distinct factors**:
+
+$$F(x) = \frac{P(x)}{(x-\lambda_1)(x-\lambda_2)\cdots(x-\lambda_n)} = \sum_{r=1}^{n} \frac{k_r}{x - \lambda_r}$$
+
+Each coefficient is found by:
+
+$$\boxed{k_r = (x - \lambda_r)\,F(x)\Big|_{x=\lambda_r}}$$
+
+**In plain English:** Cover up the factor \((x - \lambda_r)\) in the denominator, then substitute \(x = \lambda_r\) into what's left.
+
+---
+
+### 🔑 Three Cases You Must Know
+
+**Case 1 — Real Distinct Factors:**
+Use cover-up directly. Fast, clean, no algebra needed.
+
+**Case 2 — Complex Conjugate Factors:**
+- Cover-up still works (complex arithmetic required)
+- If coefficients of \(F(x)\) are real: \(k_3 = k_2^*\) (conjugate symmetry — only compute one!)
+
+**Case 3 — Quadratic Denominator Form:**
+Write \(\dfrac{c_1 x + c_2}{x^2 + bx + c}\) instead of splitting into complex fractions. Find \(k_1\) by cover-up, then find \(c_1\) and \(c_2\) using:
+- Clearing fractions + matching coefficients, **or**
+- Substituting convenient values of \(x\) (shortcuts)
+
+---
+
+### 🔑 The Two Key Shortcuts
+
+| Method | Steps |
+|--------|-------|
+| **Substitute \(x = 0\)** | Plug in directly; gives one equation for unknowns |
+| **Multiply by \(x\), let \(x \to \infty\)** | Gives the leading coefficient \(c_1\) instantly |
+
+---
+
+### 🔑 Common Mistakes to Avoid
+
+> ❌ **Forgetting** that the numerator of a quadratic partial fraction must be **linear** (\(c_1 x + c_2\)), not just a constant.
+
+> ❌ **Using \(x = 0\)** when the denominator has an \(x\) factor (it blows up — pick another value).
+
+> ❌ **Not checking** conjugate symmetry — it can save you half the work with complex factors.
+
+> ❌ **Forgetting** to verify: always combine your answer back and check it equals the original.
+
+---
+
+### Quick Reference Flowchart
+
+```
+Start: F(x) = P(x)/Q(x)
+         |
+         ▼
+   Factor Q(x) completely
+         |
+    ┌────┴────┐
+  Real      Complex
+factors    factors
+    |           |
+Cover-up    Cover-up (complex arithmetic)
+gives k_r   gives k_r; use conjugate symmetry
+    |           |
+    └────┬───────┘
+         |
+   Want quadratic form?
+    Yes → write (c₁x + c₂)/(quadratic)
+          use shortcuts to find c₁, c₂
+```
+
+---
+
+## Page 8: Quiz Plan (Exam-Oriented)
+
+### 📝 Quiz Plan: B.5-2 — The Heaviside Cover-Up Method
+
+---
+
+**Instructions for instructor:** This quiz tests understanding of the Heaviside cover-up method for partial fraction expansion, including real factors, complex factors, quadratic form, and coefficient shortcuts. Recommended time: 25–30 minutes.
+
+---
+
+#### Section A: Multiple Choice (2 points each)
+
+---
+
+**Q1.** The Heaviside cover-up method finds the coefficient \(k_r\) in a partial fraction expansion by
