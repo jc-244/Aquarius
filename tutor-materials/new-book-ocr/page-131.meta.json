@@ -1,0 +1,32 @@
+{
+  "chapter": "1",
+  "section": "1.11",
+  "subsection": "1.11-4",
+  "title": "MATLAB: Working with Functions",
+  "summary": "This page demonstrates MATLAB techniques for plotting signal transformations, specifically g(\u2212t+1) and h(t) = g(2t+1) + g(\u2212t+1), illustrating reflection and time-shifting operations. It also introduces the topic of numerical integration in MATLAB for estimating signal energy, noting that many difficult integrals can be accurately approximated using numerical methods.",
+  "keywords": [
+    "MATLAB",
+    "signal transformation",
+    "time reversal",
+    "time shift",
+    "reflection",
+    "numerical integration",
+    "signal energy",
+    "plotting",
+    "waveform"
+  ],
+  "has_math": true,
+  "page_type": "matlab",
+  "book_page": "page-131",
+  "figures": [
+    {
+      "top": 0.0704,
+      "left": 0.264,
+      "bottom": 0.5742,
+      "right": 0.7562,
+      "fig_id": "Figure 1.53",
+      "caption": "Plot of h(t) = g(2t + 1) + g(-t + 1) over the interval -2 \u2264 t \u2264 2, showing the superposition of a time-scaled/shifted and a time-reversed/shifted version of g(t).",
+      "crop_file": "page-131-figure_1_53-1.png"
+    }
+  ]
+}

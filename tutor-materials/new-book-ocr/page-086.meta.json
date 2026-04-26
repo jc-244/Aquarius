@@ -1,0 +1,40 @@
+{
+  "chapter": "1",
+  "section": "1.4",
+  "subsection": "1.4-2",
+  "title": "The Unit Impulse Function \u03b4(t)",
+  "summary": "This page introduces the unit impulse function \u03b4(t), defined by Dirac as zero everywhere except at t=0 with unit area under the curve. It explains the impulse as a limiting case of a tall, narrow rectangular pulse with infinitesimally small width and infinitely large height but unit area. The page also includes Drill 1.8, which demonstrates how a piecewise signal can be expressed using unit step functions.",
+  "keywords": [
+    "unit impulse function",
+    "Dirac delta",
+    "delta function",
+    "unit step function",
+    "piecewise function",
+    "rectangular pulse",
+    "impulse approximation",
+    "signals and systems"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-086",
+  "figures": [
+    {
+      "top": 0.2029,
+      "left": 0.1517,
+      "bottom": 0.4236,
+      "right": 0.5382,
+      "fig_id": "unknown",
+      "caption": "A piecewise signal x(t) that ramps linearly from 0 to 1 between t=1 and t=2, remains at 1 from t=2 to t=4, and is zero elsewhere.",
+      "crop_file": "page-086-unknown-1.png"
+    },
+    {
+      "top": 0.6962,
+      "left": 0.1282,
+      "bottom": 0.9193,
+      "right": 0.6379,
+      "fig_id": "unknown",
+      "caption": "The Dirac delta function \u03b4(t) shown symbolically in (a) and represented in (b) as the limit of a rectangular pulse of width \u03b5 and height 1/\u03b5 as \u03b5\u21920, illustrating one common approximation of the impulse function.",
+      "crop_file": "page-086-unknown-2.png"
+    }
+  ]
+}

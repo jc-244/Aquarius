@@ -1,0 +1,33 @@
+{
+  "chapter": "1",
+  "section": "1.4",
+  "subsection": null,
+  "title": "Signals and Systems - Delta Function Problems",
+  "summary": "This page contains practice problems related to the Dirac delta function, including evaluating integrals involving delta functions, sifting properties, and generalized function definitions. Problems cover delta function composition with various signals, convolution integrals, and a proof involving the derivative of the delta function using integration by parts.",
+  "keywords": [
+    "delta function",
+    "Dirac delta",
+    "sifting property",
+    "impulse function",
+    "convolution",
+    "generalized function",
+    "integration by parts",
+    "L'H\u00f4pital's rule",
+    "complex frequencies",
+    "delta derivative"
+  ],
+  "has_math": true,
+  "page_type": "problems",
+  "book_page": "page-142",
+  "figures": [
+    {
+      "left": 0.1,
+      "right": 0.92,
+      "top": 0.04,
+      "bottom": 0.43,
+      "fig_id": "Figure P1.4-9",
+      "caption": "Signals for problem 1.4-9",
+      "crop_file": "page-142-figure_p14-9-1.png"
+    }
+  ]
+}

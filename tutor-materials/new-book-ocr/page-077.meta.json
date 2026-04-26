@@ -1,0 +1,31 @@
+{
+  "chapter": "1",
+  "section": "1.2",
+  "subsection": "1.2-4",
+  "title": "Some Useful Signal Operations",
+  "summary": "This page presents Example 1.5 demonstrating time reversal of a signal x(t) = e^(t/2), showing how x(-t) = e^(-t/2) is obtained by reflecting the signal about the vertical axis. It then introduces combined signal operations, explaining how the general form x(at - b) can be achieved through two different sequences of time-shifting and time-scaling operations. A concrete example using x(2t - 6) illustrates both approaches.",
+  "keywords": [
+    "time reversal",
+    "time scaling",
+    "time shifting",
+    "combined operations",
+    "signal operations",
+    "x(at-b)",
+    "time compression",
+    "signal transformation"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-077",
+  "figures": [
+    {
+      "top": 0.1762,
+      "left": 0.1752,
+      "bottom": 0.4497,
+      "right": 0.6319,
+      "fig_id": "Fig. 1.9",
+      "caption": "Illustration of time-reversal of a signal: (a) original signal x(t) consisting of a growing exponential e^(t/2) over the interval [-5, -1], and (b) its time-reversed version x(-t) showing a decaying exponential e^(-t/2) over the interval [1, 5].",
+      "crop_file": "page-077-fig__1_9-1.png"
+    }
+  ]
+}

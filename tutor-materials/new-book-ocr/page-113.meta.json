@@ -1,0 +1,32 @@
+{
+  "chapter": "1",
+  "section": "1.8",
+  "subsection": null,
+  "title": "System Model: Input\u2013Output Description",
+  "summary": "This page demonstrates the use of differential operator D notation to express input-output equations for linear systems. It includes Example 1.17, which derives the input-output equation for a series RC circuit (R=15\u03a9, C=1/5 F) using operator notation, showing the loop equation expressed both in integral form and operator form.",
+  "keywords": [
+    "differential operator",
+    "operator notation",
+    "input-output equation",
+    "series RC circuit",
+    "loop equation",
+    "D operator",
+    "differential equation",
+    "capacitor voltage",
+    "loop current"
+  ],
+  "has_math": true,
+  "page_type": "example",
+  "book_page": "page-113",
+  "figures": [
+    {
+      "top": 0.4758,
+      "left": 0.2003,
+      "bottom": 0.7776,
+      "right": 0.5547,
+      "fig_id": "unknown",
+      "caption": "An RC series circuit with a voltage source x(t), resistor R = 15 \u03a9, and capacitor C = 1/5 F, used to find the loop current i(t) and capacitor voltage y(t).",
+      "crop_file": "page-113-unknown-1.png"
+    }
+  ]
+}

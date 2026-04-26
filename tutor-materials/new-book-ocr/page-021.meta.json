@@ -1,0 +1,31 @@
+{
+  "chapter": "B",
+  "section": "B.3",
+  "subsection": null,
+  "title": "Sketching Signals",
+  "summary": "This page explains the concept of the time constant for decaying exponential signals, defining it as the time interval over which the exponential drops to 1/e (approximately 37%) of its value. It demonstrates how to use the time constant to quickly sketch exponential functions, using e^{-2t} as a worked example with a time constant of 0.5 seconds. Figures illustrate both general monotonic exponentials and specific sketches of e^{-at} and e^{-2t}.",
+  "keywords": [
+    "exponential signal",
+    "time constant",
+    "decaying exponential",
+    "sketching signals",
+    "e^{-at}",
+    "1/e",
+    "37%",
+    "monotonic exponential"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-021",
+  "figures": [
+    {
+      "top": 0.0657,
+      "left": 0.2109,
+      "bottom": 0.5615,
+      "right": 0.8323,
+      "fig_id": "Fig. B.10",
+      "caption": "Sketching (a) e^{-at}u(t) and (b) e^{-2t}u(t), illustrating the time constant and key amplitude values at 0.37 and 0.135.",
+      "crop_file": "page-021-fig__b_10-1.png"
+    }
+  ]
+}

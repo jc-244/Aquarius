@@ -1,0 +1,31 @@
+{
+  "chapter": "1",
+  "section": "1.4",
+  "subsection": null,
+  "title": "Some Useful Signal Models",
+  "summary": "This page demonstrates how to describe piecewise signals using unit step functions. Example 1.7 shows how a signal composed of a constant segment and an exponential segment can be expressed as a single mathematical expression using unit step functions. Drill 1.7 introduces reflected unit step functions u(-t) and e^(-at)u(-t) with corresponding figures.",
+  "keywords": [
+    "unit step function",
+    "piecewise signal",
+    "signal representation",
+    "reflected unit step",
+    "exponential signal",
+    "u(t)",
+    "u(-t)",
+    "piecewise function"
+  ],
+  "has_math": true,
+  "page_type": "example",
+  "book_page": "page-085",
+  "figures": [
+    {
+      "top": 0.6574,
+      "left": 0.2213,
+      "bottom": 0.9336,
+      "right": 0.8676,
+      "fig_id": "Fig. 1.17",
+      "caption": "Signals u(\u2212t) and e^(\u2212at)u(\u2212t) illustrated for Drill 1.7, showing a unit step and an exponentially decaying signal both defined for t \u2264 0.",
+      "crop_file": "page-085-fig__1_17-1.png"
+    }
+  ]
+}

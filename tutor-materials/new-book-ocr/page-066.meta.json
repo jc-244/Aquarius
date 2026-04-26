@@ -1,0 +1,34 @@
+{
+  "chapter": "1",
+  "section": "1.1",
+  "subsection": null,
+  "title": "Signals and Systems",
+  "summary": "This page discusses signal energy and power as measures of signal size, clarifying that these are normalized concepts based on a 1-ohm resistor load rather than actual physical energy. It explains the utility of these measures in approximation error analysis and signal-to-noise ratio evaluation in communication systems. The page also addresses the dimensional units of signal energy and power depending on whether the signal is a voltage or current.",
+  "keywords": [
+    "signal energy",
+    "signal power",
+    "finite energy",
+    "finite power",
+    "periodic signal",
+    "normalized load",
+    "signal-to-noise ratio",
+    "approximation error",
+    "voltage signal",
+    "current signal",
+    "signal size"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-066",
+  "figures": [
+    {
+      "top": 0.0656,
+      "left": 0.1662,
+      "bottom": 0.4496,
+      "right": 0.8918,
+      "fig_id": "Figure 1.1",
+      "caption": "Examples of signals: (a) a signal with finite energy and (b) a signal with finite power.",
+      "crop_file": "page-066-figure_1_1-1.png"
+    }
+  ]
+}

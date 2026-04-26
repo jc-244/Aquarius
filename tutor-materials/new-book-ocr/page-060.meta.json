@@ -1,0 +1,32 @@
+{
+  "chapter": "B",
+  "section": "B.1",
+  "subsection": null,
+  "title": "Background",
+  "summary": "This page contains end-of-chapter problems from Chapter B covering Taylor series expansions, integration using series, and complex roots. Problems include expressing functions like e^(-x^2), e^(-x^3), and cos(x^2) as Taylor series and using truncated series to evaluate definite integrals, as well as finding series expansions for specific functions and expressing polynomials as Taylor series about a given expansion point.",
+  "keywords": [
+    "Taylor series",
+    "series expansion",
+    "definite integral",
+    "complex plane",
+    "MATLAB",
+    "e^(-x^2)",
+    "truncated series",
+    "expansion point",
+    "complex roots"
+  ],
+  "has_math": true,
+  "page_type": "problems",
+  "book_page": "page-060",
+  "figures": [
+    {
+      "top": 0.0661,
+      "left": 0.1274,
+      "bottom": 0.405,
+      "right": 0.5002,
+      "fig_id": "Fig. PB.1-13",
+      "caption": "A circle with four marked points connected by two intersecting chords, illustrating the geometric solution set of a system of equations.",
+      "crop_file": "page-060-fig__pb_1-13-1.png"
+    }
+  ]
+}

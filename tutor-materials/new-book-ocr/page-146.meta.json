@@ -1,0 +1,42 @@
+{
+  "chapter": "1",
+  "section": "1.7",
+  "subsection": null,
+  "title": "Signals and Systems",
+  "summary": "This page contains end-of-chapter problems for Chapter 1 on Signals and Systems. Problems cover system properties including homogeneity and additivity, zero-state and zero-input linearity, causality vs. noncausality, and invertibility of systems described by various input-output relationships.",
+  "keywords": [
+    "causality",
+    "noncausal",
+    "invertibility",
+    "homogeneity",
+    "additivity",
+    "zero-state linear",
+    "zero-input linear",
+    "input-output relationship",
+    "system properties",
+    "linearity"
+  ],
+  "has_math": true,
+  "page_type": "problems",
+  "book_page": "page-146",
+  "figures": [
+    {
+      "top": 0.3407,
+      "left": 0.1051,
+      "bottom": 0.6706,
+      "right": 0.7054,
+      "fig_id": "Fig. P1.7-13",
+      "caption": "A circuit with three matched diodes, a capacitor C, and resistors 2R, 2R, and R, driven by input x(t) with output current y(t), used to demonstrate zero-state linearity but not zero-input linearity.",
+      "crop_file": "page-146-fig__p1_7-13-1.png"
+    },
+    {
+      "top": 0.6944,
+      "left": 0.2265,
+      "bottom": 0.9501,
+      "right": 0.7233,
+      "fig_id": "unknown",
+      "caption": "A ladder network circuit with a current source input x(t), a parallel LC tank circuit, a 1 F capacitor, a 0.1 H inductor, and a 2 \u03a9 resistor producing output voltage y(t).",
+      "crop_file": "page-146-unknown-2.png"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "chapter": "1",
+  "section": "1.8",
+  "subsection": "1.8-1",
+  "title": "System Model: Input\u2013Output Description",
+  "summary": "This page introduces the input\u2013output description of systems, explaining that a system model is a mathematical expression approximating the dynamical behavior of a system. It focuses on electrical systems, describing how Kirchhoff's voltage and current laws (KVL and KCL) are used alongside element models like Ohm's law to derive input\u2013output relationships. Example 1.16 begins the derivation of the input\u2013output equation for a series RLC circuit.",
+  "keywords": [
+    "input-output description",
+    "system model",
+    "electrical systems",
+    "Kirchhoff's voltage law",
+    "KVL",
+    "KCL",
+    "RLC circuit",
+    "LTI systems",
+    "continuous-time systems",
+    "loop current"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-111",
+  "figures": [
+    {
+      "top": 0.5857,
+      "left": 0.1717,
+      "bottom": 0.9027,
+      "right": 0.6142,
+      "fig_id": "unknown",
+      "caption": "A series RLC circuit with inductance L = 1 H, resistance R = 3 \u03a9, and capacitance C = 1/2 F driven by voltage source x(t), with output defined as the capacitor voltage v_C(t).",
+      "crop_file": "page-111-unknown-1.png"
+    }
+  ]
+}

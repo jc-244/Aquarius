@@ -1,0 +1,31 @@
+{
+  "chapter": "1",
+  "section": "1.9",
+  "subsection": null,
+  "title": "Signals and Systems",
+  "summary": "This page analyzes a circuit system that is neither controllable nor observable, deriving the state equation and output equation. The state equation q\u0307 = -0.5q is obtained by analyzing branch currents in the circuit. The page demonstrates how all circuit voltages and currents can be expressed in terms of the state variable q and input x.",
+  "keywords": [
+    "state equation",
+    "output equation",
+    "controllability",
+    "observability",
+    "circuit analysis",
+    "state variable",
+    "branch current",
+    "loop equation"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-124",
+  "figures": [
+    {
+      "top": 0.0663,
+      "left": 0.1179,
+      "bottom": 0.4751,
+      "right": 0.8218,
+      "fig_id": "Figure 1.44",
+      "caption": "Analysis of a system that is neither controllable nor observable.",
+      "crop_file": "page-124-figure_1_44-1.png"
+    }
+  ]
+}

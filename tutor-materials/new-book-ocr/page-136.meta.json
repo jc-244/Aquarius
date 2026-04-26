@@ -1,0 +1,33 @@
+{
+  "chapter": "1",
+  "section": "1.1",
+  "subsection": null,
+  "title": "Signals and Systems - Problems",
+  "summary": "This page contains end-of-chapter problems for Chapter 1 (Signals and Systems), focusing on signal energy and power calculations. Problems cover finding energies of various signals, effects of sign change, time shifting, scaling, and periodicity on energy and power. A practical problem involves designing a 'soft-start' pulse with equivalent energy to a square pulse.",
+  "keywords": [
+    "signal energy",
+    "signal power",
+    "rms value",
+    "periodic signal",
+    "time shifting",
+    "sign change",
+    "scaling",
+    "square pulse",
+    "soft-start pulse",
+    "energy calculation"
+  ],
+  "has_math": true,
+  "page_type": "problems",
+  "book_page": "page-136",
+  "figures": [
+    {
+      "top": 0.3693,
+      "left": 0.1374,
+      "bottom": 0.9795,
+      "right": 0.8294,
+      "fig_id": "Fig. P1.1-2",
+      "caption": "Various continuous-time signals including triangular waveforms x(t), x\u2081(t), x\u2082(t), x\u2083(t), and x\u2084(t) used for signal energy and property analysis exercises.",
+      "crop_file": "page-136-fig__p1_1-2-1.png"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "chapter": "1",
+  "section": "1.2",
+  "subsection": "1.2-1",
+  "title": "Time Shifting",
+  "summary": "This page introduces three fundamental signal operations: shifting, scaling, and inversion, focusing specifically on time shifting. It explains that delaying a signal x(t) by T seconds yields x(t-T), with positive T causing a right shift (delay) and negative T causing a left shift (advance). The concept is illustrated with figures showing a signal and its delayed and advanced versions.",
+  "keywords": [
+    "time shifting",
+    "signal operations",
+    "time delay",
+    "time advance",
+    "right shift",
+    "left shift",
+    "signal delay",
+    "independent variable",
+    "time scaling",
+    "time reversal"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-071",
+  "figures": [
+    {
+      "top": 0.4426,
+      "left": 0.1729,
+      "bottom": 0.8854,
+      "right": 0.6048,
+      "fig_id": "unknown",
+      "caption": "Illustration of time-shifting a signal x(t): (a) original signal, (b) delayed signal x(t\u2212T) shifted right by T, and (c) advanced signal x(t+T) shifted left by T.",
+      "crop_file": "page-071-unknown-1.png"
+    }
+  ]
+}

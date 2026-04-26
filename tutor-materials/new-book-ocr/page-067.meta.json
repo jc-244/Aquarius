@@ -1,0 +1,31 @@
+{
+  "chapter": "1",
+  "section": "1.1",
+  "subsection": null,
+  "title": "Size of a Signal",
+  "summary": "This page presents Example 1.1, which classifies two signals as either energy or power signals. The first signal decays to zero as |t| approaches infinity, so its energy is computed as 8 joules. The second signal is periodic and does not decay, so its power is computed by averaging over one period, yielding Px = 1/3 and an rms value of 1/\u221a3.",
+  "keywords": [
+    "energy signal",
+    "power signal",
+    "signal energy",
+    "signal power",
+    "rms value",
+    "periodic signal",
+    "classification",
+    "Example 1.1"
+  ],
+  "has_math": true,
+  "page_type": "example",
+  "book_page": "page-067",
+  "figures": [
+    {
+      "left": 0.1,
+      "right": 0.92,
+      "top": 0.14,
+      "bottom": 0.6,
+      "fig_id": "Fig. 1.2",
+      "caption": "Signals for Ex. 1.1",
+      "crop_file": "page-067-fig_12-1.png"
+    }
+  ]
+}

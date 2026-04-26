@@ -1,0 +1,33 @@
+{
+  "chapter": "B",
+  "section": "B.1",
+  "subsection": "B.1-2",
+  "title": "Algebra of Complex Numbers",
+  "summary": "This page introduces the graphical representation of complex numbers in the complex plane using Cartesian (rectangular) form z = a + jb, where a is the real part and b is the imaginary part. It then transitions to polar coordinate representation, expressing a complex number in terms of r and \u03b8. The page concludes by introducing Euler's formula, e^(j\u03b8) = cos \u03b8 + j sin \u03b8, which connects the polar and rectangular forms.",
+  "keywords": [
+    "complex numbers",
+    "complex plane",
+    "Cartesian form",
+    "rectangular form",
+    "polar coordinates",
+    "Euler's formula",
+    "real part",
+    "imaginary part",
+    "polar form",
+    "graphical representation"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-005",
+  "figures": [
+    {
+      "top": 0.4907,
+      "left": 0.1729,
+      "bottom": 0.7441,
+      "right": 0.5283,
+      "fig_id": "Fig. B.2",
+      "caption": "The complex plane showing a complex number z = a + jb represented by point coordinates (a, b), its magnitude r and angle \u03b8, along with its complex conjugate z* = a \u2212 jb reflected across the real axis.",
+      "crop_file": "page-005-fig__b_2-1.png"
+    }
+  ]
+}

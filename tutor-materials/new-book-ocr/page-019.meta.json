@@ -1,0 +1,31 @@
+{
+  "chapter": "B",
+  "section": "B.2",
+  "subsection": null,
+  "title": "Sinusoids",
+  "summary": "This page presents Example B.6, demonstrating how to express the sum of two sinusoids as a single sinusoid using phasor addition and Eq. (B.17). Two cases are worked out: (a) cos(\u03c90t) \u2212 \u221a3 sin(\u03c90t) = 2cos(\u03c90t + 60\u00b0) and (b) \u22123cos(\u03c90t) + 4sin(\u03c90t) with C=5 and \u03b8=\u2212126.9\u00b0. Phasor diagrams (Fig. B.8) are used to verify the results geometrically.",
+  "keywords": [
+    "sinusoids",
+    "phasor addition",
+    "amplitude",
+    "phase angle",
+    "trigonometric identity",
+    "complex exponential",
+    "principal value",
+    "phasor diagram"
+  ],
+  "has_math": true,
+  "page_type": "example",
+  "book_page": "page-019",
+  "figures": [
+    {
+      "top": 0.4575,
+      "left": 0.1752,
+      "bottom": 0.7485,
+      "right": 0.6824,
+      "fig_id": "Fig. B.8",
+      "caption": "Phasor diagrams illustrating (a) the sum of two sinusoids represented as a phasor of length 2 at 60\u00b0, and (b) a phasor of length 5 at \u2212126.9\u00b0 corresponding to the combination of real part \u22123 and imaginary part \u22124.",
+      "crop_file": "page-019-fig__b_8-1.png"
+    }
+  ]
+}

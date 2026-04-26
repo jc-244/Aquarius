@@ -1,0 +1,31 @@
+{
+  "chapter": "1",
+  "section": "1.3",
+  "subsection": null,
+  "title": "Classification of Signals",
+  "summary": "This page discusses properties of periodic signals, including that the integral over any interval of one period duration is the same regardless of starting point. It also introduces the concepts of everlasting signals, causal signals, noncausal signals, and anti-causal signals, with definitions and examples referencing earlier figures.",
+  "keywords": [
+    "periodic signal",
+    "period",
+    "everlasting signal",
+    "causal signal",
+    "noncausal signal",
+    "anti-causal signal",
+    "periodic extension",
+    "integral over period"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-081",
+  "figures": [
+    {
+      "top": 0.0674,
+      "left": 0.2109,
+      "bottom": 0.3741,
+      "right": 0.8463,
+      "fig_id": "Figure 1.13",
+      "caption": "Generation of a periodic signal by periodic extension of its segment of one-period duration.",
+      "crop_file": "page-081-figure_1_13-1.png"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "chapter": "1",
+  "section": "1.11",
+  "subsection": "1.11-3",
+  "title": "Visualizing Operations on the Independent Variable",
+  "summary": "This page covers MATLAB's short-circuit logical operators (&& and ||) and demonstrates how to visualize shifting and scaling operations on a function's independent variable using anonymous functions. It shows how to plot g(2t+1) where g(t) is a causal exponentially decaying cosine, illustrating time compression and left shifting. A figure confirms the expected waveform behavior, including the turn-on point at t = -0.5.",
+  "keywords": [
+    "short-circuit logical operators",
+    "anonymous functions",
+    "MATLAB",
+    "time shifting",
+    "time scaling",
+    "independent variable",
+    "causal function",
+    "waveform compression",
+    "plotting",
+    "unit step function"
+  ],
+  "has_math": true,
+  "page_type": "matlab",
+  "book_page": "page-130",
+  "figures": [
+    {
+      "top": 0.5751,
+      "left": 0.2193,
+      "bottom": 0.8421,
+      "right": 0.7115,
+      "fig_id": "Fig. 1.51",
+      "caption": "Plot of g(2t+1) over the interval \u22122 \u2264 t \u2264 2, showing the time-scaled and time-shifted version of g(t).",
+      "crop_file": "page-130-fig__1_51-1.png"
+    }
+  ]
+}

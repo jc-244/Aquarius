@@ -1,0 +1,33 @@
+{
+  "chapter": "1",
+  "section": "1.8",
+  "subsection": null,
+  "title": "Internal and External Descriptions of a System",
+  "summary": "This page discusses the distinction between external and internal system descriptions using a balanced bridge circuit example with a capacitor. It demonstrates that for zero initial conditions, the capacitor is undetectable from external measurements, as the circuit behaves equivalently to a simpler resistive network with y(t) = (2/5)x(t). The page concludes that while external and internal descriptions are often equivalent, internal descriptions can reveal signals invisible to external observation.",
+  "keywords": [
+    "external description",
+    "internal description",
+    "black box",
+    "capacitor",
+    "balanced circuit",
+    "system response",
+    "initial conditions",
+    "observable",
+    "current divider",
+    "input-output relationship"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-120",
+  "figures": [
+    {
+      "top": 0.0657,
+      "left": 0.1698,
+      "bottom": 0.4773,
+      "right": 0.8464,
+      "fig_id": "Fig. 1.41",
+      "caption": "A system that cannot be described by external measurements.",
+      "crop_file": "page-120-fig__1_41-1.png"
+    }
+  ]
+}

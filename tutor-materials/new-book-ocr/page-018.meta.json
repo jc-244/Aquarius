@@ -1,0 +1,37 @@
+{
+  "chapter": "B",
+  "section": "B.2",
+  "subsection": "B.2-1",
+  "title": "Addition of Sinusoids",
+  "summary": "This page explains the phase relationship between sine and cosine functions, showing that sin lags cos by 90 degrees. It then derives how two sinusoids of the same frequency but different phases combine into a single sinusoid, expressing the resultant amplitude C and phase \u03b8 in terms of the original coefficients. The phasor representation is introduced to geometrically illustrate this addition.",
+  "keywords": [
+    "sinusoids",
+    "phase",
+    "phasor",
+    "addition of sinusoids",
+    "trigonometric identity",
+    "amplitude",
+    "frequency",
+    "cosine",
+    "sine",
+    "polar form",
+    "complex number",
+    "phase angle",
+    "lag",
+    "lead"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-018",
+  "figures": [
+    {
+      "top": 0.7126,
+      "left": 0.1282,
+      "bottom": 0.9376,
+      "right": 0.4266,
+      "fig_id": "unknown",
+      "caption": "Graphical representation of a complex number C = a - jb in the complex plane, showing its magnitude C and angle \u03b8 below the real axis.",
+      "crop_file": "page-018-unknown-1.png"
+    }
+  ]
+}

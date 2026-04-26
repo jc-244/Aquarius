@@ -1,0 +1,33 @@
+{
+  "chapter": "B",
+  "section": "B.1",
+  "subsection": null,
+  "title": "Complex Numbers",
+  "summary": "This page demonstrates the conversion of complex numbers from Cartesian to polar (exponential) form, with worked examples for numbers in all four quadrants of the complex plane. It explains how to determine the correct angle when a calculator gives an ambiguous result due to quadrant issues with the arctangent function, and introduces the concept of the principal value of an angle. Four diagrams (Fig. B.4) illustrate the geometric interpretation of each example.",
+  "keywords": [
+    "complex numbers",
+    "polar form",
+    "Cartesian form",
+    "principal value",
+    "angle",
+    "quadrant",
+    "arctangent",
+    "exponential form",
+    "magnitude",
+    "phase"
+  ],
+  "has_math": true,
+  "page_type": "example",
+  "book_page": "page-009",
+  "figures": [
+    {
+      "top": 0.4447,
+      "left": 0.1468,
+      "bottom": 0.899,
+      "right": 0.6881,
+      "fig_id": "unknown",
+      "caption": "Argand diagrams illustrating the polar (exponential) form of four complex numbers: 2+j3, \u22122+j1, \u22122\u2212j3, and 1\u2212j3, showing their magnitudes and angles measured from the positive real axis.",
+      "crop_file": "page-009-unknown-1.png"
+    }
+  ]
+}

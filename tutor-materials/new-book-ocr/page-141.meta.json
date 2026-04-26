@@ -1,0 +1,33 @@
+{
+  "chapter": "1",
+  "section": "1.4",
+  "subsection": "1.4-3",
+  "title": "Problems",
+  "summary": "This page contains end-of-chapter problems from Chapter 1 covering signal properties including power calculations, even and odd periodic signals, complex-valued signals, and periodic signal construction. Problems involve sketching signals, determining fundamental periods, computing energy and power, and analyzing transformations of signals such as time scaling and shifting.",
+  "keywords": [
+    "power",
+    "energy",
+    "periodic signals",
+    "even signals",
+    "odd signals",
+    "complex-valued signals",
+    "time scaling",
+    "fundamental period",
+    "unit step function",
+    "signal sketching"
+  ],
+  "has_math": true,
+  "page_type": "problems",
+  "book_page": "page-141",
+  "figures": [
+    {
+      "top": 0.0677,
+      "left": 0.1971,
+      "bottom": 0.4523,
+      "right": 0.9417,
+      "fig_id": "Figure P1.4-2",
+      "caption": "Two signals x1(t) and x2(t): (a) a piecewise-linear triangular signal peaking at 4 between t = -1 and t = 2, and (b) a signal defined by a t\u00b2 curve from 0 to 2 reaching a peak of 4, followed by a linear ramp decreasing to -4 between t = 2 and t = 4.",
+      "crop_file": "page-141-figure_p1_4-2-1.png"
+    }
+  ]
+}

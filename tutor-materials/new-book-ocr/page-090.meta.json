@@ -1,0 +1,33 @@
+{
+  "chapter": "1",
+  "section": "1.5",
+  "subsection": null,
+  "title": "Complex Frequency and the Exponential Function",
+  "summary": "This page introduces the complex exponential function e^(st) where s = \u03c3 + j\u03c9 is the complex frequency, showing it as a generalization of Euler's formula. It demonstrates that e^(st) encompasses constants, monotonic exponentials, sinusoids, and exponentially varying sinusoids as special cases. The complex frequency plane (s-plane) is introduced with real (\u03c3) and imaginary (\u03c9) axes.",
+  "keywords": [
+    "complex frequency",
+    "complex exponential",
+    "s-plane",
+    "Euler's formula",
+    "complex frequency plane",
+    "sinusoid",
+    "exponential",
+    "complex variable",
+    "imaginary axis",
+    "real axis"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-090",
+  "figures": [
+    {
+      "top": 0.4915,
+      "left": 0.1662,
+      "bottom": 0.9253,
+      "right": 0.8114,
+      "fig_id": "Figure 1.21",
+      "caption": "Sinusoids of complex frequency \u03c3 + j\u03c9 showing four cases: (a) pure real exponentials for \u03c3 > 0, \u03c3 = 0, and \u03c3 < 0; (b) undamped sinusoid for \u03c3 = 0; (c) decaying sinusoid for \u03c3 < 0; and (d) growing sinusoid for \u03c3 > 0.",
+      "crop_file": "page-090-figure_1_21-1.png"
+    }
+  ]
+}

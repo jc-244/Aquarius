@@ -1,0 +1,30 @@
+{
+  "chapter": "1",
+  "section": "1.5",
+  "subsection": "1.5-1",
+  "title": "Even and Odd Functions",
+  "summary": "This page introduces even and odd functions, defining them mathematically by their symmetry properties about the vertical axis. It presents the condition xe(t) = xe(-t) for even functions and xo(t) = -xo(-t) for odd functions, and lists properties governing products of even and odd functions. Graphical examples of each function type are also provided.",
+  "keywords": [
+    "even function",
+    "odd function",
+    "symmetry",
+    "antisymmetry",
+    "signal properties",
+    "function multiplication",
+    "even-odd product rules"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-092",
+  "figures": [
+    {
+      "top": 0.522,
+      "left": 0.1282,
+      "bottom": 0.8888,
+      "right": 0.5048,
+      "fig_id": "unknown",
+      "caption": "Even and odd components of a signal, showing (a) the even part x_e(t) symmetric about the vertical axis and (b) the odd part x_o(t) antisymmetric about the vertical axis.",
+      "crop_file": "page-092-unknown-1.png"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "chapter": "1",
+  "section": "1.8",
+  "subsection": null,
+  "title": "Problems",
+  "summary": "This page contains end-of-chapter problems from Chapter 1 covering linear time-invariant systems, causality, memory, and physical system modeling. Problems include analyzing LTI system properties (causality, memorylessness), cascaded system outputs, and deriving differential equations for physical systems such as automobile suspension, field-controlled DC motors, and fluid tanks.",
+  "keywords": [
+    "linear time-invariant system",
+    "causality",
+    "memoryless",
+    "differential equation",
+    "automobile suspension",
+    "DC motor",
+    "field-controlled motor",
+    "unit step function",
+    "cascaded systems",
+    "system modeling"
+  ],
+  "has_math": true,
+  "page_type": "problems",
+  "book_page": "page-147",
+  "figures": [
+    {
+      "top": 0.5303,
+      "left": 0.1276,
+      "bottom": 0.9664,
+      "right": 0.5596,
+      "fig_id": "Fig. P1.8-2",
+      "caption": "A circuit with a current source input x(t), a 1/2 \u03a9 resistor, a 1 F capacitor, and a 1/2 H inductor connected in parallel, where y1(t) is the voltage across the capacitor and y2(t) is the output voltage across the inductor terminals.",
+      "crop_file": "page-147-fig__p1_8-2-1.png"
+    }
+  ]
+}

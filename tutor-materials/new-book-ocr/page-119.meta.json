@@ -1,0 +1,31 @@
+{
+  "chapter": "1",
+  "section": "1.9",
+  "subsection": null,
+  "title": "Internal and External Descriptions of a System",
+  "summary": "This page introduces the distinction between internal and external descriptions of a system. An external description (input-output relationship) can be obtained from measurements at external terminals without knowledge of internal structure, while an internal description provides complete information about all signals within the system. A circuit example with a capacitor and initial charge is used to illustrate how an external description may not capture all internal behavior.",
+  "keywords": [
+    "internal description",
+    "external description",
+    "input-output relationship",
+    "black box",
+    "initial conditions",
+    "capacitor",
+    "armature-controlled dc motor",
+    "system description"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-119",
+  "figures": [
+    {
+      "top": 0.0653,
+      "left": 0.2112,
+      "bottom": 0.3121,
+      "right": 0.8573,
+      "fig_id": "Figure 1.40",
+      "caption": "Armature-controlled dc motor showing (a) the physical setup with field current, armature input x(t), rotor inertia J, damping B, and angular displacement \u03b8(t), and (b) the equivalent mechanical system with applied torque T(t) and viscous damping torque B\u03b8\u0307(t).",
+      "crop_file": "page-119-figure_1_40-1.png"
+    }
+  ]
+}

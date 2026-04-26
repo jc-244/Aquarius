@@ -1,0 +1,34 @@
+{
+  "chapter": "1",
+  "section": "1.7",
+  "subsection": null,
+  "title": "Classification of Systems",
+  "summary": "This page explains the superposition principle for linear systems, showing that if an input is expressed as a sum of simpler functions, the output is the corresponding sum of individual responses. It illustrates how arbitrary inputs can be approximated by sums of impulses or step functions, enabling system analysis through known impulse or step responses. The page also previews frequency-domain methods using sinusoids and exponentials covered in later chapters.",
+  "keywords": [
+    "linearity",
+    "superposition",
+    "zero-state response",
+    "impulse response",
+    "step response",
+    "rectangular pulses",
+    "arbitrary input",
+    "sinusoids",
+    "exponentials",
+    "linear systems",
+    "time-domain analysis"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-101",
+  "figures": [
+    {
+      "top": 0.558,
+      "left": 0.2355,
+      "bottom": 0.8377,
+      "right": 0.8333,
+      "fig_id": "Figure 1.27",
+      "caption": "Signal representation in terms of impulse and step components.",
+      "crop_file": "page-101-figure_1_27-1.png"
+    }
+  ]
+}

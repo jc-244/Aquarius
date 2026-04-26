@@ -1,0 +1,33 @@
+{
+  "chapter": "1",
+  "section": "1.10",
+  "subsection": null,
+  "title": "Internal Description: The State-Space Description",
+  "summary": "This page outlines the advantages of state-space techniques, including their generality for nonlinear, time-varying, and MIMO systems, compact matrix notation, suitability for digital simulation, and phase-plane analysis for second-order systems. It notes that state-space analysis is covered in depth in Chapter 10. A drill problem asks students to derive state equations for a series RLC circuit using inductor current and capacitor voltage as state variables.",
+  "keywords": [
+    "state-space",
+    "state equations",
+    "MIMO",
+    "phase-plane analysis",
+    "linear algebra",
+    "nonlinear systems",
+    "time-varying systems",
+    "RLC circuit",
+    "state variables",
+    "digital simulation"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-125",
+  "figures": [
+    {
+      "top": 0.6577,
+      "left": 0.1964,
+      "bottom": 0.9279,
+      "right": 0.5795,
+      "fig_id": "unknown",
+      "caption": "An RLC circuit with a voltage source x(t), a 1 H inductor, a 1/2 F capacitor, and a 3 \u03a9 resistor, with mesh currents q\u2081(t) and capacitor charge q\u2082(t) indicated.",
+      "crop_file": "page-125-unknown-1.png"
+    }
+  ]
+}

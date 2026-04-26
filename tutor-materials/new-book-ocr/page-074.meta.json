@@ -1,0 +1,31 @@
+{
+  "chapter": "1",
+  "section": "1.2",
+  "subsection": null,
+  "title": "Time Scaling",
+  "summary": "This page explains time scaling of continuous-time signals, where replacing t with at compresses the signal if a > 1 and expands it if a < 1. Example 1.4 demonstrates time compression by factor 3 and time expansion by factor 2 applied to a piecewise signal x(t). The mathematical derivations show how the domain intervals transform under each scaling operation.",
+  "keywords": [
+    "time scaling",
+    "compression",
+    "expansion",
+    "continuous-time signals",
+    "signal operations",
+    "piecewise signal",
+    "time compression",
+    "time expansion"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-074",
+  "figures": [
+    {
+      "top": 0.0694,
+      "left": 0.1582,
+      "bottom": 0.4795,
+      "right": 0.6363,
+      "fig_id": "unknown",
+      "caption": "Illustration of time-scaling a continuous-time signal x(t): (a) original signal, (b) time-compressed version x(2t) with duration halved, and (c) time-expanded version x(t/2) with duration doubled.",
+      "crop_file": "page-074-unknown-1.png"
+    }
+  ]
+}

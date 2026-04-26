@@ -1,0 +1,35 @@
+{
+  "chapter": "1",
+  "section": "1.3",
+  "subsection": "1.3-6",
+  "title": "Signals and Systems - Problems",
+  "summary": "This page contains end-of-chapter problems from Chapter 1 on Signals and Systems. Problems cover signal classification (continuous/discrete, analog/digital, periodic/aperiodic, energy/power, causal/noncausal, deterministic/random), properties of bounded periodic and power signals, energy and power scaling under time compression, and periodicity of composite signals including determining fundamental periods and powers.",
+  "keywords": [
+    "signal classification",
+    "periodic signal",
+    "energy signal",
+    "power signal",
+    "bounded signal",
+    "fundamental period",
+    "time scaling",
+    "causal signal",
+    "deterministic signal",
+    "random signal",
+    "analog signal",
+    "digital signal"
+  ],
+  "has_math": true,
+  "page_type": "problems",
+  "book_page": "page-140",
+  "figures": [
+    {
+      "top": 0.0647,
+      "left": 0.1302,
+      "bottom": 0.3109,
+      "right": 0.8261,
+      "fig_id": "Figure P1.2-7",
+      "caption": "Transformed signal y(t) = -\u00bdx(-3t+2) and signal z(t) = ax(bt+c), with part (b) asking to determine v(t) such that z(t) is the running integral of v(t).",
+      "crop_file": "page-140-figure_p1_2-7-1.png"
+    }
+  ]
+}

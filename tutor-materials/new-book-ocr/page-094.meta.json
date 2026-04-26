@@ -1,0 +1,32 @@
+{
+  "chapter": "1",
+  "section": "1.4",
+  "subsection": null,
+  "title": "Even and Odd Components of Signals",
+  "summary": "This page illustrates the decomposition of a signal x(t) = e^(at) into its even and odd components through Figure 1.24, showing graphical representations of the original signal and its even and odd parts. Example 1.9 demonstrates finding the even and odd components of the complex exponential signal e^(jt), showing that the even component is cos(t) and the odd component is j*sin(t).",
+  "keywords": [
+    "even component",
+    "odd component",
+    "signal decomposition",
+    "complex exponential",
+    "cosine",
+    "sine",
+    "Euler's formula",
+    "e^(jt)",
+    "symmetric signals"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-094",
+  "figures": [
+    {
+      "top": 0.0847,
+      "left": 0.1246,
+      "bottom": 0.5761,
+      "right": 0.7461,
+      "fig_id": "Figure 1.24",
+      "caption": "Illustration of decomposing a causal exponential signal x(t) = e^{-at}u(t) into its even component x_e(t) and odd component x_o(t).",
+      "crop_file": "page-094-figure_1_24-1.png"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "chapter": "1",
+  "section": "1.8",
+  "subsection": "1.8-3",
+  "title": "Electromechanical Systems",
+  "summary": "This page covers electromechanical systems, specifically an armature-controlled DC motor driven by a current source. It derives the differential equation relating output angle to input torque for a rotational mechanical system, and extends this to a motor-driven load incorporating viscous damping and moment of inertia.",
+  "keywords": [
+    "electromechanical systems",
+    "armature-controlled DC motor",
+    "torque",
+    "moment of inertia",
+    "viscous damping",
+    "differential equation",
+    "rotational system",
+    "angular displacement",
+    "current source",
+    "free-body diagram"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-118",
+  "figures": [
+    {
+      "top": 0.2532,
+      "left": 0.1898,
+      "bottom": 0.5463,
+      "right": 0.8693,
+      "fig_id": "Figure 1.39",
+      "caption": "Rotational system for Drill 1.19 showing (a) a physical system with moment of inertia J, torsional spring K, and damper B subject to applied torque T(t), and (b) its free-body diagram with restoring torques K\u03b8(t) and B\u03b8\u0307(t).",
+      "crop_file": "page-118-figure_1_39-1.png"
+    }
+  ]
+}

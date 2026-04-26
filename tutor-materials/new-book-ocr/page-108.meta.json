@@ -1,0 +1,33 @@
+{
+  "chapter": "1",
+  "section": "1.7",
+  "subsection": null,
+  "title": "Discrete-Time Signals and Systems",
+  "summary": "This page introduces discrete-time signals as uniformly spaced samples of continuous-time signals, expressed using the notation x[n] = x(nT). It discusses natural occurrences of discrete-time signals in population studies, amortization, and radar tracking, as well as their use in digital filtering where continuous-time signals are processed by discrete-time systems via C/D and D/C conversion.",
+  "keywords": [
+    "discrete-time signals",
+    "sampling",
+    "x[n]",
+    "sampling interval T",
+    "digital filtering",
+    "continuous-to-discrete conversion",
+    "discrete-to-continuous conversion",
+    "sequence",
+    "discrete-time system",
+    "sampled data systems"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-108",
+  "figures": [
+    {
+      "top": 0.4527,
+      "left": 0.1331,
+      "bottom": 0.9433,
+      "right": 0.8902,
+      "fig_id": "Figure 1.32",
+      "caption": "Processing continuous-time signals by discrete-time systems, where a continuous-time input x(t) is converted to a discrete-time signal x[n] via a C/D converter, processed by a discrete-time system to yield y[n], and then converted back to a continuous-time output y(t) via a D/C converter.",
+      "crop_file": "page-108-figure_1_32-1.png"
+    }
+  ]
+}

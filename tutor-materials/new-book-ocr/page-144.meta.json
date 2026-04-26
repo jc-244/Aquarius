@@ -1,0 +1,36 @@
+{
+  "chapter": "1",
+  "section": "1.7",
+  "subsection": "1.7-1",
+  "title": "Signals and Systems",
+  "summary": "This page contains problems related to complex signals, system classifications, and system linearity. Problems cover plotting complex signals with various symmetry properties (even, odd, conjugate symmetric, conjugate antisymmetric), identifying SISO/MISO/SIMO/MIMO systems from personal experience, and determining linearity or nonlinearity of systems described by differential equations.",
+  "keywords": [
+    "complex signals",
+    "even signal",
+    "odd signal",
+    "conjugate symmetric",
+    "conjugate antisymmetric",
+    "SISO",
+    "MISO",
+    "SIMO",
+    "MIMO",
+    "linear systems",
+    "nonlinear systems",
+    "differential equations",
+    "system classification"
+  ],
+  "has_math": true,
+  "page_type": "problems",
+  "book_page": "page-144",
+  "figures": [
+    {
+      "top": 0.0656,
+      "left": 0.5067,
+      "bottom": 0.3123,
+      "right": 0.869,
+      "fig_id": "Fig. P1.6-2",
+      "caption": "A mass M subjected to a horizontal input force x(t) whose resulting horizontal displacement is the output y(t).",
+      "crop_file": "page-144-fig__p1_6-2-1.png"
+    }
+  ]
+}

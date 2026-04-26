@@ -1,0 +1,33 @@
+{
+  "chapter": "B",
+  "section": "B.2",
+  "subsection": null,
+  "title": "Sinusoids",
+  "summary": "This page explains how to sketch sinusoidal signals by interpreting phase shifts as time delays. It demonstrates that delaying C cos(\u03c9\u2080t) by 60\u00b0 yields C cos(\u03c9\u2080t \u2212 60\u00b0), and that a quarter-cycle delay of 90\u00b0 transforms cosine into sine, verifying the trigonometric identity C cos(\u03c9\u2080t \u2212 \u03c0/2) = C sin(\u03c9\u2080t).",
+  "keywords": [
+    "sinusoid",
+    "phase shift",
+    "time delay",
+    "cosine",
+    "sine",
+    "angular frequency",
+    "period",
+    "trigonometric identity",
+    "cycle",
+    "quarter-cycle"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-017",
+  "figures": [
+    {
+      "top": 0.0653,
+      "left": 0.2109,
+      "bottom": 0.7537,
+      "right": 0.8863,
+      "fig_id": "Fig. B.6",
+      "caption": "Sketching a sinusoid, showing (a) C cos \u03c9\u2080t, (b) C sin \u03c9\u2080t, and (c) the phase-shifted sinusoid C cos(\u03c9\u2080t \u2212 60\u00b0) obtained by delaying C cos \u03c9\u2080t by one-sixth of a period (T\u2080/6).",
+      "crop_file": "page-017-fig__b_6-1.png"
+    }
+  ]
+}

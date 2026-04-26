@@ -1,0 +1,32 @@
+{
+  "chapter": "1",
+  "section": "1.4",
+  "subsection": null,
+  "title": "Some Useful Signal Models",
+  "summary": "This page discusses approximations to the unit impulse function, showing that as a parameter approaches infinity the pulse height grows while width shrinks but area remains unity. It then covers multiplication of a function by an impulse, yielding \u03c6(t)\u03b4(t\u2212T) = \u03c6(T)\u03b4(t\u2212T), and introduces the sampling (sifting) property of the unit impulse, which states that integrating the product of a continuous function with a shifted impulse returns the function's value at the impulse location.",
+  "keywords": [
+    "unit impulse",
+    "delta function",
+    "impulse approximation",
+    "multiplication by impulse",
+    "sampling property",
+    "sifting property",
+    "continuous-time signals",
+    "impulse strength",
+    "area under impulse"
+  ],
+  "has_math": true,
+  "page_type": "math_heavy",
+  "book_page": "page-087",
+  "figures": [
+    {
+      "top": 0.0657,
+      "left": 0.2107,
+      "bottom": 0.3384,
+      "right": 0.9054,
+      "fig_id": "Figure 1.20",
+      "caption": "Other possible approximations to a unit impulse, showing three limiting forms: (a) a one-sided exponential \u03b1e^(\u2212\u03b1t) as \u03b1\u2192\u221e, (b) a triangular pulse of height 1/\u03b5 and base 2\u03b5 as \u03b5\u21920, and (c) a Gaussian pulse of unit area as \u03b5\u21920.",
+      "crop_file": "page-087-figure_1_20-1.png"
+    }
+  ]
+}

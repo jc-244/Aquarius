@@ -1,0 +1,39 @@
+{
+  "chapter": "1",
+  "section": "1.7",
+  "subsection": null,
+  "title": "Classification of Systems",
+  "summary": "This page discusses causal and noncausal (anticipative) systems, explaining that any real-time practical system must be causal since it cannot respond to future inputs. An example system y(t) = x(t-2) + x(t+2) is used to illustrate noncausal behavior, with accompanying figures showing input-output relationships. Example 1.13 begins, asking students to assess causality of three given systems.",
+  "keywords": [
+    "causality",
+    "noncausal system",
+    "anticipative system",
+    "real-time system",
+    "causal system",
+    "system classification",
+    "unrealizable system"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-105",
+  "figures": [
+    {
+      "top": 0.0672,
+      "left": 0.2109,
+      "bottom": 0.4746,
+      "right": 0.7979,
+      "fig_id": "Figure 1.30",
+      "caption": "Input\u2013output of a noncausal system and the causal output achieved by delay.",
+      "crop_file": "page-105-figure_1_30-1.png"
+    },
+    {
+      "top": 0.6598,
+      "left": 0.0968,
+      "bottom": 0.963,
+      "right": 0.9482,
+      "fig_id": "EXAMPLE 1.13",
+      "caption": "Example 1.13 asks students to assess the causality of three continuous-time systems: y(t)=x(\u2212t), y(t)=x(t+1), and y(t+1)=x(t).",
+      "crop_file": "page-105-example_1_13-2.png"
+    }
+  ]
+}

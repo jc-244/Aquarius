@@ -1,0 +1,31 @@
+{
+  "chapter": "1",
+  "section": "1.2",
+  "subsection": null,
+  "title": "Problems",
+  "summary": "This page contains end-of-chapter problems from Chapter 1 related to signals and systems, including figures for problems P1.1-12, P1.2-1, P1.2-2, and P1.2-3. Problems involve plotting signals, analyzing time inversion, time shifting, time compression, and time expansion effects on signal energy. A specific problem asks students to sketch and analyze the signal x(t) = 2^(-t)u(t).",
+  "keywords": [
+    "signal energy",
+    "time inversion",
+    "time shifting",
+    "time compression",
+    "time expansion",
+    "unit step function",
+    "signal plotting",
+    "waveform sketching"
+  ],
+  "has_math": true,
+  "page_type": "problems",
+  "book_page": "page-139",
+  "figures": [
+    {
+      "top": 0.0759,
+      "left": 0.1746,
+      "bottom": 0.8174,
+      "right": 0.8369,
+      "fig_id": "Figure P1.2-3",
+      "caption": "A collection of five continuous-time signals x(t), x\u2081(t), x\u2082(t), x\u2083(t), x\u2084(t), and x\u2085(t) with various piecewise-linear waveforms used for signal transformation exercises.",
+      "crop_file": "page-139-figure_p1_2-3-1.png"
+    }
+  ]
+}

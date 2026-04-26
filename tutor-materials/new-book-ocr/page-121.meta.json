@@ -1,0 +1,33 @@
+{
+  "chapter": "1",
+  "section": "1.10",
+  "subsection": null,
+  "title": "Internal Description: The State-Space Description",
+  "summary": "This page introduces the state-space description as an internal description of linear systems, defining state variables as key variables from which every signal in the system can be expressed as a linear combination. An RLC circuit example is used to illustrate how capacitor voltages and inductor currents serve as state variables, demonstrating that knowing their values along with the input allows determination of all other circuit signals. The page also briefly discusses uncontrollable and unobservable systems as undesirable in practice.",
+  "keywords": [
+    "state-space description",
+    "state variables",
+    "internal description",
+    "controllability",
+    "observability",
+    "RLC circuit",
+    "capacitor voltage",
+    "inductor current",
+    "linear system",
+    "state-variable description"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-121",
+  "figures": [
+    {
+      "top": 0.0654,
+      "left": 0.2109,
+      "bottom": 0.344,
+      "right": 0.8905,
+      "fig_id": "Figure 1.42",
+      "caption": "Structures of uncontrollable and unobservable systems.",
+      "crop_file": "page-121-figure_1_42-1.png"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "chapter": "B",
+  "section": "B.7",
+  "subsection": "B.7-6",
+  "title": "Matrix Operations",
+  "summary": "This page covers MATLAB matrix operations, including built-in functions for generating common matrices such as identity, ones, zeros, and diagonal matrices. It demonstrates how to create row vectors and general matrices using square bracket notation with spaces or commas as element separators. A graphical comparison of two signals f(t) and h(t) is also shown in Figure B.14.",
+  "keywords": [
+    "MATLAB",
+    "matrix operations",
+    "row vector",
+    "column vector",
+    "identity matrix",
+    "eye",
+    "ones",
+    "zeros",
+    "diag",
+    "square brackets",
+    "array editor",
+    "matrix creation"
+  ],
+  "has_math": true,
+  "page_type": "matlab",
+  "book_page": "page-049",
+  "figures": [
+    {
+      "top": 0.0518,
+      "left": 0.264,
+      "bottom": 0.4023,
+      "right": 0.7562,
+      "fig_id": "Fig. B.14",
+      "caption": "Graphical comparison of f(t) and h(t).",
+      "crop_file": "page-049-fig__b_14-1.png"
+    }
+  ]
+}

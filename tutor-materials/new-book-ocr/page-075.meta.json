@@ -1,0 +1,31 @@
+{
+  "chapter": "1",
+  "section": "1.2",
+  "subsection": null,
+  "title": "Some Useful Signal Operations",
+  "summary": "This page illustrates time scaling operations on a signal x(t), demonstrating both time compression and time expansion. It shows that x(3t) compresses the signal by a factor of 3, while x(t/2) expands the signal by a factor of 2, with corresponding mathematical expressions and graphical representations. Key time instants are tracked to verify the scaling effects.",
+  "keywords": [
+    "time scaling",
+    "time compression",
+    "time expansion",
+    "signal operations",
+    "x(3t)",
+    "x(t/2)",
+    "compressed signal",
+    "expanded signal"
+  ],
+  "has_math": true,
+  "page_type": "mixed",
+  "book_page": "page-075",
+  "figures": [
+    {
+      "top": 0.088,
+      "left": 0.1883,
+      "bottom": 0.6344,
+      "right": 0.6944,
+      "fig_id": "unknown",
+      "caption": "Illustration of time scaling of a signal x(t) showing the original signal (a), compressed version x_c(t) = x(3t/2) (b), and expanded version x_e(t) = x(t/2) (c).",
+      "crop_file": "page-075-unknown-1.png"
+    }
+  ]
+}

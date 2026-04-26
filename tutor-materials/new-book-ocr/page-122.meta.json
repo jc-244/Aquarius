@@ -1,0 +1,32 @@
+{
+  "chapter": "1",
+  "section": "1.8",
+  "subsection": null,
+  "title": "State-Space Description of a System",
+  "summary": "Example 1.20 demonstrates how state equations can be derived by inspection for an electrical network with capacitor charge q1 and inductor flux q2 as state variables. The example derives two simultaneous first-order differential equations forming the state equations, showing that once solved, all circuit outputs can be determined via output equations.",
+  "keywords": [
+    "state equations",
+    "state variables",
+    "state-space",
+    "first-order differential equations",
+    "output equations",
+    "capacitor",
+    "inductor",
+    "network analysis",
+    "initial conditions"
+  ],
+  "has_math": true,
+  "page_type": "example",
+  "book_page": "page-122",
+  "figures": [
+    {
+      "top": 0.0647,
+      "left": 0.1902,
+      "bottom": 0.3593,
+      "right": 0.7201,
+      "fig_id": "Fig. 1.43",
+      "caption": "Choosing suitable initial conditions in a network.",
+      "crop_file": "page-122-fig__1_43-1.png"
+    }
+  ]
+}

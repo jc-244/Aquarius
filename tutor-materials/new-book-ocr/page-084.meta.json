@@ -1,0 +1,31 @@
+{
+  "chapter": "1",
+  "section": "1.4",
+  "subsection": null,
+  "title": "Describing a Triangle Function with the Unit Step",
+  "summary": "This page presents Example 1.6, which demonstrates how to describe a piecewise triangular signal using unit step functions. The signal is decomposed into two components: x1(t), formed by multiplying a ramp by a gate pulse, and x2(t), formed by multiplying a negative-slope ramp by another gate pulse. The final expressions use combinations of unit step functions to represent each interval of the signal.",
+  "keywords": [
+    "unit step function",
+    "triangle function",
+    "ramp function",
+    "gate pulse",
+    "piecewise signal",
+    "signal decomposition",
+    "u(t)",
+    "step representation"
+  ],
+  "has_math": true,
+  "page_type": "example",
+  "book_page": "page-084",
+  "figures": [
+    {
+      "top": 0.1745,
+      "left": 0.1251,
+      "bottom": 0.6642,
+      "right": 0.6739,
+      "fig_id": "Fig. 1.16",
+      "caption": "Representation of a signal defined interval by interval, showing the decomposition of a triangular signal x(t) into two ramp-based components x\u2081(t) and x\u2082(t) using unit step functions.",
+      "crop_file": "page-084-fig__1_16-1.png"
+    }
+  ]
+}
