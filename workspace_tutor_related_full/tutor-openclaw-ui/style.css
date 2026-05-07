@@ -136,6 +136,11 @@ html, body {
 .hidden { display: none !important; }
 .ghost { color: var(--text-muted); font-style: italic; }
 
+body.app-booting .app,
+body.app-booting .login-view {
+  visibility: hidden !important;
+}
+
 /* Intro landing */
 .intro-landing-new {
   font-family: 'Nunito', sans-serif;

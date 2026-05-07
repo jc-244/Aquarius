@@ -43,7 +43,15 @@ function hideIntroLanding(persist = true) {
   }
 }
 
+function finishStartupBoot() {
+  document.body.classList.remove('app-booting');
+}
+
 function shouldShowIntroLanding() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get(AUTH_VIEW_FLAG) === 'login' || params.has(AUTH_CALLBACK_FLAG)) {
+    return false;
+  }
   return true;
 }
 
@@ -76,11 +84,6 @@ function initIntroLanding() {
     showWelcome();
   };
 
-  const handleExplore = () => {
-    hideIntroLanding(true);
-    showWelcome();
-  };
-
   const navbar = document.getElementById('introNavbar');
   const onScroll = () => {
     if (!navbar || intro.classList.contains('hidden')) return;
@@ -90,7 +93,7 @@ function initIntroLanding() {
   primaryButton.onclick = handleEnter;
   if (heroStartButton) heroStartButton.onclick = handleEnter;
   if (footerCtaButton) footerCtaButton.onclick = handleEnter;
-  if (heroExploreButton) heroExploreButton.onclick = handleExplore;
+  if (heroExploreButton) heroExploreButton.onclick = handleEnter;
 
   intro.removeEventListener('scroll', onScroll);
   intro.addEventListener('scroll', onScroll, { passive: true });
@@ -1440,14 +1443,21 @@ function renderQuizStep() {
 
 document.addEventListener('DOMContentLoaded', () => {
   const bootParams = new URLSearchParams(window.location.search);
-  if (bootParams.get(AUTH_VIEW_FLAG) === 'login' || bootParams.has(AUTH_CALLBACK_FLAG)) {
+  const bootWantsLogin = bootParams.get(AUTH_VIEW_FLAG) === 'login' || bootParams.has(AUTH_CALLBACK_FLAG);
+  if (bootWantsLogin) {
     showLoginView();
   }
 
   try {
-    initIntroLanding();
+    if (bootWantsLogin) {
+      hideIntroLanding(false);
+    } else {
+      initIntroLanding();
+    }
   } catch (e) {
     console.error('Intro landing failed to init:', e);
+  } finally {
+    finishStartupBoot();
   }
   const nextBtn = document.getElementById('quizNextBtn');
   if (nextBtn) {
