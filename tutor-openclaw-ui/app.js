@@ -192,8 +192,7 @@ function setLoginButtonsBusy(isBusy) {
     'clerkGithubBtnLogin',
     'clerkGoogleBtnLogin',
     'clerkSignInBtnLogin',
-    'guestModeBtnLogin',
-    'clerkContinueSessionBtnLogin'
+    'guestModeBtnLogin'
   ].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.disabled = isBusy;
@@ -258,17 +257,6 @@ async function enterWorkspaceWithExistingSession() {
   return true;
 }
 
-function updateExistingSessionLoginAction() {
-  const continueBtn = document.getElementById('clerkContinueSessionBtnLogin');
-  if (!continueBtn) return;
-  const hasSession = Boolean(clerkInstance?.user || currentUser);
-  continueBtn.classList.toggle('hidden', !hasSession);
-  if (hasSession) {
-    const name = currentUser?.name || clerkInstance?.user?.firstName || 'your account';
-    continueBtn.querySelector('span').textContent = `Continue as ${name}`;
-  }
-}
-
 async function startOAuthRedirect(provider) {
   console.log(`[Login] startOAuthRedirect(${provider})`, { clerkLoaded: !!window.Clerk?.loaded, hasClient: !!window.Clerk?.client });
   if (loginActionBusy) return;
@@ -279,6 +267,10 @@ async function startOAuthRedirect(provider) {
   }
   try {
     await clerkInstance.load();
+    if (clerkInstance.user) {
+      await enterWorkspaceWithExistingSession();
+      return;
+    }
     allowAuthNavigation = true;
     setAuthReturnIntent('workspace');
     authRedirectInProgress = true;
@@ -405,27 +397,6 @@ function initLoginExperience() {
 
     directOAuth('clerkGoogleBtnLogin', 'google');
     directOAuth('clerkGithubBtnLogin', 'github');
-    const continueSessionBtn = document.getElementById('clerkContinueSessionBtnLogin');
-    if (continueSessionBtn && !continueSessionBtn.dataset.boundContinueSession) {
-      continueSessionBtn.dataset.boundContinueSession = '1';
-      continueSessionBtn.addEventListener('click', async () => {
-        if (clerkInstance && !clerkInstance.loaded) {
-          try { await clerkInstance.load(); } catch (_) {}
-        }
-        if (clerkInstance?.user) {
-          await enterWorkspaceWithExistingSession();
-        } else if (currentUser) {
-          allowAuthNavigation = true;
-          setAuthReturnIntent('workspace');
-          hideIntroLanding(true);
-          showWelcome();
-          if (!isQuizProfileComplete(userMemory)) showQuiz();
-        } else {
-          setLoginStatus('No saved sign-in session was found. Use Google, GitHub, or Sign In.', 'error');
-          updateExistingSessionLoginAction();
-        }
-      });
-    }
     relayToClerk('loginForgotBtn');
     relayToClerk('loginSignupBtn');
   }
@@ -794,7 +765,6 @@ async function syncCurrentUserWithoutNavigation(user) {
   updatePreferenceSidebarSummary();
   updateLearnModeBadge(userMemory && userMemory.quiz ? userMemory.quiz.track : null);
   renderUserBadge();
-  updateExistingSessionLoginAction();
 }
 
 function startGuestMode() {
@@ -9187,7 +9157,6 @@ function showLoginView() {
   setLoginButtonsBusy(false);
   setLoginStatus('');
   initLoginExperience();
-  updateExistingSessionLoginAction();
 }
 
 function updateSidebarNavActive(key) {
