@@ -677,6 +677,7 @@ async function onUserSignedIn(user) {
   authRedirectInProgress = false;
   document.body.classList.remove('auth-redirecting');
   const authReturnIntent = consumeAuthReturnIntent();
+  const loginViewWasVisible = Boolean(loginView && !loginView.classList.contains('hidden'));
   currentUser = {
     uid: user.id,
     name: user.fullName || user.firstName || 'Student',
@@ -695,11 +696,20 @@ async function onUserSignedIn(user) {
     };
   }
   updatePreferenceSidebarSummary();
-  hideIntroLanding(true);
-
   updateLearnModeBadge(userMemory && userMemory.quiz ? userMemory.quiz.track : null);
   renderUserBadge();
+
+  const quizDone = userMemory.quiz && ['track', 'math', 'timeline', 'preference', 'priority'].every(k => {
+    const v = userMemory.quiz[k];
+    return Array.isArray(v) ? v.length > 0 : !!v;
+  });
+  const shouldEnterWorkspace = authReturnIntent === 'workspace' || loginViewWasVisible;
+
+  if (!shouldEnterWorkspace) return;
+
+  hideIntroLanding(true);
   showWelcome();
+  if (!quizDone) showQuiz();
 }
 
 function startGuestMode() {
@@ -731,6 +741,7 @@ function startGuestMode() {
   if (topbar) topbar.classList.add('hidden');
   renderUserBadge();
   updatePreferenceSidebarSummary();
+  showQuiz();
 }
 
 // Helper for handling sign-out
@@ -1565,10 +1576,18 @@ function fallbackLocalUid() {
         userMemory.quiz.goal = userMemory.quiz.track;
       }
       updateLearnModeBadge(userMemory && userMemory.quiz ? userMemory.quiz.track : null);
+      const quizDone = userMemory.quiz && ['track', 'math', 'timeline', 'preference', 'priority'].every(k => {
+        const v = userMemory.quiz[k];
+        return Array.isArray(v) ? v.length > 0 : !!v;
+      });
       updatePreferenceSidebarSummary();
       renderUserBadge();
+      if (!quizDone) showQuiz();
     })
-    .catch(() => renderUserBadge());
+    .catch(() => {
+      renderUserBadge();
+      showQuiz();
+    });
 }
 
 // Helper: get current uid for API calls
