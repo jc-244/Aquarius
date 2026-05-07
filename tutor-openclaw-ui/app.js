@@ -162,6 +162,7 @@ let clerkInstance = null;
 let loginScene = null;
 let openClerkSignIn = () => {};
 let loginActionBusy = false;
+let authRedirectInProgress = false;
 
 function setLoginStatus(message = '', type = 'error') {
   const statusEl = document.getElementById('loginStatusMessage');
@@ -235,6 +236,9 @@ async function startOAuthRedirect(provider) {
     return;
   }
   try {
+    authRedirectInProgress = true;
+    document.body.classList.add('auth-redirecting');
+    showLoginView();
     setLoginStatus(`Connecting to ${provider === 'github' ? 'GitHub' : 'Google'}...`, 'info');
     setLoginButtonsBusy(true);
     await clerkInstance.load();
@@ -251,6 +255,8 @@ async function startOAuthRedirect(provider) {
     setLoginButtonsBusy(false);
     openClerkSignIn();
   } catch (err) {
+    authRedirectInProgress = false;
+    document.body.classList.remove('auth-redirecting');
     console.error(`[Clerk OAuth ${provider}]`, err);
     const status = err?.status || err?.errors?.[0]?.meta?.status;
     if (status === 429) {
@@ -266,6 +272,9 @@ async function startOAuthRedirect(provider) {
 async function handleAuthRedirectIfNeeded() {
   if (!clerkInstance || !isAuthCallbackRequest()) return false;
   try {
+    authRedirectInProgress = true;
+    document.body.classList.add('auth-redirecting');
+    showLoginView();
     setLoginStatus('Completing sign-in...', 'info');
     setLoginButtonsBusy(true);
     await clerkInstance.handleRedirectCallback({
@@ -277,6 +286,8 @@ async function handleAuthRedirectIfNeeded() {
     clearAuthCallbackParams();
     return true;
   } catch (err) {
+    authRedirectInProgress = false;
+    document.body.classList.remove('auth-redirecting');
     console.error('[Clerk redirect callback]', err);
     setLoginButtonsBusy(false);
     setLoginStatus('OAuth callback could not be completed. Please try again or use Sign In below.', 'error');
@@ -502,7 +513,7 @@ function hideAuthOverlay() {
 }
 
 function showAuthOverlay() {
-  showSettingsView();
+  showLoginView();
 }
 
 let clerkSignInMounted = false;
@@ -640,6 +651,8 @@ async function initClerk() {
 }
 
 async function onUserSignedIn(user) {
+  authRedirectInProgress = false;
+  document.body.classList.remove('auth-redirecting');
   currentUser = {
     uid: user.id,
     name: user.fullName || user.firstName || 'Student',
@@ -673,6 +686,8 @@ async function onUserSignedIn(user) {
 }
 
 function startGuestMode() {
+  authRedirectInProgress = false;
+  document.body.classList.remove('auth-redirecting');
   // Guest uid lives only in sessionStorage (cleared on tab close)
   let gid = sessionStorage.getItem('guestUid');
   if (!gid) {
@@ -705,6 +720,8 @@ function startGuestMode() {
 
 // Helper for handling sign-out
 async function handleSignOut() {
+  authRedirectInProgress = false;
+  document.body.classList.remove('auth-redirecting');
   if (clerkInstance) {
     try { await clerkInstance.signOut(); } catch (e) { console.error('Sign-out error:', e); }
   } else if (currentUser && currentUser.isGuest) {

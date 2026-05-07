@@ -141,6 +141,14 @@ body.app-booting .login-view {
   visibility: hidden !important;
 }
 
+body.auth-redirecting .app {
+  display: none !important;
+}
+
+body.auth-redirecting .login-view {
+  display: block !important;
+}
+
 /* Intro landing */
 .intro-landing-new {
   font-family: 'Nunito', sans-serif;
