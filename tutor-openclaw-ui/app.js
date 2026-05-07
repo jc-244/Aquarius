@@ -52,9 +52,6 @@ function shouldShowIntroLanding() {
   if (params.get(AUTH_VIEW_FLAG) === 'login' || params.has(AUTH_CALLBACK_FLAG)) {
     return false;
   }
-  try {
-    if (sessionStorage.getItem(AUTH_RETURN_INTENT_KEY)) return false;
-  } catch (_) {}
   return true;
 }
 
@@ -82,13 +79,12 @@ function initIntroLanding() {
   if (shell) shell.classList.add('hidden');
 
   const handleEnter = () => {
-    if (!currentUser) {
-      hideIntroLanding(true);
-      showLoginView();
-      return;
-    }
+    setAuthReturnIntent('workspace');
     hideIntroLanding(true);
-    showWelcome();
+    showLoginView();
+    if (currentUser && clerkInstance?.user) {
+      onUserSignedIn(clerkInstance.user);
+    }
   };
 
   const navbar = document.getElementById('introNavbar');
@@ -171,6 +167,13 @@ let loginScene = null;
 let openClerkSignIn = () => {};
 let loginActionBusy = false;
 let authRedirectInProgress = false;
+
+function isQuizProfileComplete(memory = userMemory) {
+  return Boolean(memory && memory.quiz && ['track', 'math', 'timeline', 'preference', 'priority'].every(k => {
+    const v = memory.quiz[k];
+    return Array.isArray(v) ? v.length > 0 : !!v;
+  }));
+}
 
 function setLoginStatus(message = '', type = 'error') {
   const statusEl = document.getElementById('loginStatusMessage');
@@ -536,6 +539,8 @@ function hideAuthOverlay() {
 }
 
 function showAuthOverlay() {
+  const intro = document.getElementById('introLanding');
+  if (intro && !intro.classList.contains('hidden')) return;
   showLoginView();
 }
 
@@ -577,7 +582,9 @@ async function initClerk() {
     clerkInstance.addListener(async (e) => {
       if (e.user) {
         hideAuthOverlay();
-        await onUserSignedIn(e.user);
+        const shouldEnter = authRedirectInProgress || hasPendingAuthReturnIntent() || Boolean(loginView && !loginView.classList.contains('hidden'));
+        if (shouldEnter) await onUserSignedIn(e.user);
+        else await syncCurrentUserWithoutNavigation(e.user);
       } else {
         showAuthOverlay();
       }
@@ -586,7 +593,9 @@ async function initClerk() {
     // Check immediately if already logged in or session resumed early
     if (clerkInstance.user) {
       hideAuthOverlay();
-      await onUserSignedIn(clerkInstance.user);
+      const shouldEnter = authRedirectInProgress || hasPendingAuthReturnIntent() || Boolean(loginView && !loginView.classList.contains('hidden'));
+      if (shouldEnter) await onUserSignedIn(clerkInstance.user);
+      else await syncCurrentUserWithoutNavigation(clerkInstance.user);
       return;
     }
   } else {
@@ -667,7 +676,9 @@ async function initClerk() {
     clerkInstance.addListener(({ user }) => {
       if (user && !currentUser) {
         hideAuthOverlay();
-        onUserSignedIn(user);
+        const shouldEnter = authRedirectInProgress || hasPendingAuthReturnIntent() || Boolean(loginView && !loginView.classList.contains('hidden'));
+        if (shouldEnter) onUserSignedIn(user);
+        else syncCurrentUserWithoutNavigation(user);
       }
     });
   }
@@ -699,10 +710,7 @@ async function onUserSignedIn(user) {
   updateLearnModeBadge(userMemory && userMemory.quiz ? userMemory.quiz.track : null);
   renderUserBadge();
 
-  const quizDone = userMemory.quiz && ['track', 'math', 'timeline', 'preference', 'priority'].every(k => {
-    const v = userMemory.quiz[k];
-    return Array.isArray(v) ? v.length > 0 : !!v;
-  });
+  const quizDone = isQuizProfileComplete(userMemory);
   const shouldEnterWorkspace = authReturnIntent === 'workspace' || loginViewWasVisible;
 
   if (!shouldEnterWorkspace) return;
@@ -710,6 +718,29 @@ async function onUserSignedIn(user) {
   hideIntroLanding(true);
   showWelcome();
   if (!quizDone) showQuiz();
+}
+
+async function syncCurrentUserWithoutNavigation(user) {
+  currentUser = {
+    uid: user.id,
+    name: user.fullName || user.firstName || 'Student',
+    email: (user.emailAddresses[0] || {}).emailAddress || '',
+    imageUrl: user.imageUrl || '',
+    isGuest: false
+  };
+  try {
+    const res = await fetch(`${API_BASE}/api/memory?uid=${encodeURIComponent(currentUser.uid)}`);
+    userMemory = res.ok ? await res.json() : {};
+  } catch (_) { userMemory = {}; }
+  if (!userMemory.preferenceProfile || !userMemory.preferenceProfile.markdown) {
+    userMemory.preferenceProfile = {
+      markdown: DEFAULT_PREFERENCE_PROFILE,
+      updatedAt: new Date().toISOString()
+    };
+  }
+  updatePreferenceSidebarSummary();
+  updateLearnModeBadge(userMemory && userMemory.quiz ? userMemory.quiz.track : null);
+  renderUserBadge();
 }
 
 function startGuestMode() {
@@ -1486,7 +1517,7 @@ function renderQuizStep() {
 
 document.addEventListener('DOMContentLoaded', () => {
   const bootParams = new URLSearchParams(window.location.search);
-  const bootWantsLogin = bootParams.get(AUTH_VIEW_FLAG) === 'login' || bootParams.has(AUTH_CALLBACK_FLAG) || hasPendingAuthReturnIntent();
+  const bootWantsLogin = bootParams.get(AUTH_VIEW_FLAG) === 'login' || bootParams.has(AUTH_CALLBACK_FLAG);
   if (bootWantsLogin) {
     showLoginView();
   }
@@ -1582,11 +1613,13 @@ function fallbackLocalUid() {
       });
       updatePreferenceSidebarSummary();
       renderUserBadge();
-      if (!quizDone) showQuiz();
+      const shouldEnter = hasPendingAuthReturnIntent() || Boolean(loginView && !loginView.classList.contains('hidden'));
+      if (shouldEnter && !quizDone) showQuiz();
     })
     .catch(() => {
       renderUserBadge();
-      showQuiz();
+      const shouldEnter = hasPendingAuthReturnIntent() || Boolean(loginView && !loginView.classList.contains('hidden'));
+      if (shouldEnter) showQuiz();
     });
 }
 
