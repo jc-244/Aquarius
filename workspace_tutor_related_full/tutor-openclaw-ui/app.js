@@ -52,7 +52,14 @@ function shouldShowIntroLanding() {
   if (params.get(AUTH_VIEW_FLAG) === 'login' || params.has(AUTH_CALLBACK_FLAG)) {
     return false;
   }
+  try {
+    if (sessionStorage.getItem(AUTH_RETURN_INTENT_KEY)) return false;
+  } catch (_) {}
   return true;
+}
+
+function hasPendingAuthReturnIntent() {
+  try { return Boolean(sessionStorage.getItem(AUTH_RETURN_INTENT_KEY)); } catch (_) { return false; }
 }
 
 function initIntroLanding() {
@@ -133,6 +140,7 @@ function renderHyperknowLinks(webSources) {
 const CLERK_PUBLISHABLE_KEY = 'pk_test_ZHJpdmVuLXRyb2xsLTI4LmNsZXJrLmFjY291bnRzLmRldiQ';
 const AUTH_CALLBACK_FLAG = 'auth_callback';
 const AUTH_VIEW_FLAG = 'view';
+const AUTH_RETURN_INTENT_KEY = 'aquarius-auth-return-intent';
 
 let currentUser = null;  // { uid, name, email, imageUrl }
 let userMemory  = {};    // loaded from backend after login
@@ -227,6 +235,20 @@ function clearAuthCallbackParams() {
   window.history.replaceState({}, document.title, url.toString());
 }
 
+function setAuthReturnIntent(intent = 'workspace') {
+  try { sessionStorage.setItem(AUTH_RETURN_INTENT_KEY, intent); } catch (_) {}
+}
+
+function consumeAuthReturnIntent() {
+  try {
+    const intent = sessionStorage.getItem(AUTH_RETURN_INTENT_KEY) || '';
+    sessionStorage.removeItem(AUTH_RETURN_INTENT_KEY);
+    return intent;
+  } catch (_) {
+    return '';
+  }
+}
+
 async function startOAuthRedirect(provider) {
   console.log(`[Login] startOAuthRedirect(${provider})`, { clerkLoaded: !!window.Clerk?.loaded, hasClient: !!window.Clerk?.client });
   if (loginActionBusy) return;
@@ -236,6 +258,7 @@ async function startOAuthRedirect(provider) {
     return;
   }
   try {
+    setAuthReturnIntent('workspace');
     authRedirectInProgress = true;
     document.body.classList.add('auth-redirecting');
     showLoginView();
@@ -653,6 +676,7 @@ async function initClerk() {
 async function onUserSignedIn(user) {
   authRedirectInProgress = false;
   document.body.classList.remove('auth-redirecting');
+  const authReturnIntent = consumeAuthReturnIntent();
   currentUser = {
     uid: user.id,
     name: user.fullName || user.firstName || 'Student',
@@ -671,6 +695,7 @@ async function onUserSignedIn(user) {
     };
   }
   updatePreferenceSidebarSummary();
+  hideIntroLanding(true);
 
   // New user = show quiz; returning user = go straight in
   const quizDone = userMemory.quiz && ['track', 'math', 'timeline', 'preference', 'priority'].every(k => {
@@ -678,10 +703,12 @@ async function onUserSignedIn(user) {
     return Array.isArray(v) ? v.length > 0 : !!v;
   });
   if (!quizDone) {
+    showWelcome();
     showQuiz();
   } else {
     updateLearnModeBadge(userMemory && userMemory.quiz ? userMemory.quiz.track : null);
     renderUserBadge();
+    showWelcome();
   }
 }
 
@@ -1460,7 +1487,7 @@ function renderQuizStep() {
 
 document.addEventListener('DOMContentLoaded', () => {
   const bootParams = new URLSearchParams(window.location.search);
-  const bootWantsLogin = bootParams.get(AUTH_VIEW_FLAG) === 'login' || bootParams.has(AUTH_CALLBACK_FLAG);
+  const bootWantsLogin = bootParams.get(AUTH_VIEW_FLAG) === 'login' || bootParams.has(AUTH_CALLBACK_FLAG) || hasPendingAuthReturnIntent();
   if (bootWantsLogin) {
     showLoginView();
   }
