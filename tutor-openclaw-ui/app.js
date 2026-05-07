@@ -298,6 +298,7 @@ async function handleAuthRedirectIfNeeded() {
   if (!clerkInstance || !isAuthCallbackRequest()) return false;
   try {
     allowAuthNavigation = true;
+    setAuthReturnIntent('workspace');
     authRedirectInProgress = true;
     document.body.classList.add('auth-redirecting');
     showLoginView();
@@ -576,6 +577,12 @@ async function initClerk() {
   if (clerkInstance) {
     const handledRedirect = await handleAuthRedirectIfNeeded();
     if (handledRedirect) {
+      try { await clerkInstance.load(); } catch (_) {}
+      if (clerkInstance.user) {
+        await onUserSignedIn(clerkInstance.user);
+      } else {
+        showLoginView();
+      }
       return;
     }
 
@@ -1617,12 +1624,12 @@ function fallbackLocalUid() {
       });
       updatePreferenceSidebarSummary();
       renderUserBadge();
-      const shouldEnter = hasPendingAuthReturnIntent() || Boolean(loginView && !loginView.classList.contains('hidden'));
+      const shouldEnter = allowAuthNavigation || authRedirectInProgress;
       if (shouldEnter && !quizDone) showQuiz();
     })
     .catch(() => {
       renderUserBadge();
-      const shouldEnter = hasPendingAuthReturnIntent() || Boolean(loginView && !loginView.classList.contains('hidden'));
+      const shouldEnter = allowAuthNavigation || authRedirectInProgress;
       if (shouldEnter) showQuiz();
     });
 }
