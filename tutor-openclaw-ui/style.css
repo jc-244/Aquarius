@@ -13802,6 +13802,24 @@ h6,
   cursor: grab !important;
 }
 
+.learn-body.chat-collapsed .learn-chat-fab {
+  position: fixed !important;
+  left: auto !important;
+  top: auto !important;
+  right: 28px !important;
+  bottom: 28px !important;
+  width: 68px !important;
+  height: 68px !important;
+  z-index: 90 !important;
+}
+
+.learn-body.chat-collapsed .learn-side-restore-chat {
+  position: absolute !important;
+  left: auto !important;
+  right: 20px !important;
+  top: 20px !important;
+}
+
 .learn-chat-fab:active,
 .learn-chat-popover-head:active {
   cursor: grabbing !important;

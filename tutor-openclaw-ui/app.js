@@ -5734,6 +5734,7 @@ function applyLearnChatCollapsedState() {
   syncBtn(lectureFocusOverlayBtn);
   syncBtn(learnFocusBtn);
 
+  if (isLearnChatCollapsed) resetLearnChatFabPosition();
   if (learnChatFab) learnChatFab.classList.toggle('hidden', !isLearnChatCollapsed || isLearnChatPopoverOpen);
   if (learnChatRestoreBtn) learnChatRestoreBtn.classList.toggle('hidden', !isLearnChatCollapsed);
   if (!isLearnChatCollapsed && learnChatPopover) learnChatPopover.classList.add('hidden');
@@ -5813,6 +5814,7 @@ function resetLearnChatFabPosition() {
   learnChatFab.style.bottom = '28px';
   learnChatFab.style.width = '';
   learnChatFab.style.height = '';
+  delete learnChatFab.dataset.dragJustEnded;
 }
 
 function enableFloatingDrag(handle, target, defaults = { right: 28, bottom: 28 }, options = {}) {
@@ -7170,7 +7172,6 @@ if (learnChatPopoverCloseBtn) {
   });
 }
 
-enableFloatingDrag(learnChatFab, learnChatFab, { right: 28, bottom: 28 });
 enableFloatingDrag(learnChatPopoverHead, learnChatPopover, { right: 28, bottom: 110 });
 enableFloatingDrag(textbookFocusQaHead, textbookFocusQaPanel, null);
 if (learnFocusClose) learnFocusClose.addEventListener('click', closeLearnFocusMode);
