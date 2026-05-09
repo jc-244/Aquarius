@@ -67,11 +67,11 @@ Here \(r \geq 0\) is the **distance from the origin** (the magnitude), and \(\th
 
 **Reading Fig. B.2 quickly:**
 
-- **a:** horizontal coordinate, so it becomes the real part.
-- **b:** vertical coordinate, so it becomes the imaginary part coefficient.
-- **r:** vector length from the origin to \(z\), so \(r = |z|\).
-- **theta:** rotation from the positive real axis to the vector.
-- **z\*:** reflection of \(z\) across the real axis.
+- \(a\): horizontal coordinate, so it becomes the real part.
+- \(b\): vertical coordinate, so it becomes the imaginary part coefficient.
+- \(r\): vector length from the origin to \(z\), so \(r = |z|\).
+- \(\theta\): rotation from the positive real axis to the vector.
+- \(z^*\): reflection of \(z\) across the real axis.
 
 **Representative example:**
 
