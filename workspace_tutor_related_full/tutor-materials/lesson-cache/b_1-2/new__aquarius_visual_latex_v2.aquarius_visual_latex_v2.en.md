@@ -22,6 +22,9 @@
 
 This is Eq. (B.1), the standard rectangular form of a complex number. The value \(a\) is the **real part** and \(b\) is the **imaginary part**, so \(\operatorname{Re} z = a\) and \(\operatorname{Im} z = b\).
 
+![Rectangular form of a complex number](/figures/page-005-fig__b_2-1.png)
+*The textbook diagram anchors \(z = a + jb\): \(a\) is read on the real axis, while \(b\) is read as the coefficient of \(j\) on the imaginary axis.*
+
 **Minimal example:** For \(z = -2 + j3\), the point on the complex plane is \((-2, 3)\), with \(\operatorname{Re} z = -2\) and \(\operatorname{Im} z = 3\).
 
 ### EXAM TRIGGER
