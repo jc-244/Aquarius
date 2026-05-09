@@ -39,17 +39,42 @@ $$z = a + jb$$
 
 ## 2. Polar/exponential form: distance plus direction
 
-This combines Eq. (B.2), Euler's formula Eq. (B.3), and the polar form Eq. (B.4) into one identity.
+The diagram above is the bridge from rectangular form to polar form. The same number \(z = a + jb\) can be read two ways:
 
-**Euler's bridge** (Eq. B.3) states:
+- **Rectangular reading:** move \(a\) units on the real axis, then \(b\) units on the imaginary axis.
+- **Polar reading:** move a distance \(r\) from the origin at an angle \(\theta\) from the positive real axis.
+
+The dashed guides in Fig. B.2 show the right triangle hidden inside the complex plane. Since \(r\) is the hypotenuse, its horizontal and vertical projections are
+
+$$a = r\cos\theta, \qquad b = r\sin\theta$$
+
+Substituting those projections into \(z = a + jb\) gives the trigonometric polar form:
+
+$$z = a + jb = r\cos\theta + jr\sin\theta = r(\cos\theta + j\sin\theta)$$
+
+Now Euler's formula supplies the shortcut:
 
 $$e^{j\theta} = \cos\theta + j\sin\theta$$
 
-Here \(r \geq 0\) is the **distance from the origin** (the magnitude), and \(\theta\) is the **angle from the positive real axis** (the argument).
+So the same complex number can also be written in exponential form:
 
-**Minimal example:**
+$$z = re^{j\theta}$$
+
+Here \(r \geq 0\) is the **distance from the origin** (the magnitude), and \(\theta\) is the **angle from the positive real axis** (the argument). The point \(z^*\) in the diagram is the conjugate \(a - jb\): it has the same real part \(a\), the same magnitude \(r\), and the opposite vertical coordinate \(-b\).
+
+**Reading Fig. B.2 quickly:**
+
+- \(a\): horizontal coordinate, so it becomes the real part.
+- \(b\): vertical coordinate, so it becomes the imaginary part coefficient.
+- \(r\): vector length from the origin to \(z\), so \(r = |z|\).
+- \(\theta\): rotation from the positive real axis to the vector.
+- \(z^*\): reflection of \(z\) across the real axis.
+
+**Representative example:**
 
 $$2e^{j\pi/3} = 2\left(\cos\frac{\pi}{3} + j\sin\frac{\pi}{3}\right) = 2\left(\frac{1}{2} + j\frac{\sqrt{3}}{2}\right) = 1 + j\sqrt{3}$$
+
+In the diagram language, this means \(r=2\), \(\theta=\pi/3\), \(a=1\), and \(b=\sqrt{3}\). The rectangular point is therefore \((1,\sqrt{3})\), but the polar description remembers the same point as "length 2 at \(60^\circ\)."
 
 ### EXAM TRIGGER
 
@@ -57,7 +82,7 @@ Use polar/exponential form for **multiplication, division, powers, roots, magnit
 
 ### COMMON MISTAKE
 
-Do not treat \(e^{j\theta}\) as changing the magnitude. It only supplies **direction**. The magnitude is already set by \(r\).
+Do not treat \(e^{j\theta}\) as changing the magnitude. It only supplies **direction**. The magnitude is already set by \(r\). Also do not mix degree and radian mode: \(\pi/3\) means \(60^\circ\), but a calculator in the wrong mode will turn a good formula into a bad number.
 
 $$z = re^{j\theta} = r(\cos\theta + j\sin\theta)$$
 
