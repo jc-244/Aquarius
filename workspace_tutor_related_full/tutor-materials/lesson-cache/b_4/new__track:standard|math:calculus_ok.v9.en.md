@@ -11,9 +11,6 @@ First we will identify the matrix form, then we will solve a small system step b
 $$\begin{aligned} a_{11}x_1 + a_{12}x_2 + \cdots + a_{1n}x_n &= y_1 \\ a_{21}x_1 + a_{22}x_2 + \cdots + a_{2n}x_n &= y_2 \\ &\vdots \\ a_{n1}x_1 + a_{n2}x_2 + \cdots + a_{nn}x_n &= y_n \end{aligned}$$
 *This is the general form of n simultaneous linear equations in n unknowns. Cramer's Rule starts from exactly this structure: each row is one equation, and every unknown x₁ through xₙ appears across the entire system — the coefficients aᵢⱼ collect into a square matrix that the rule will operate on.*
 
-![Fig. B.11](/figures/page-023-fig__b_11-1.png)
-*Fig. B.11 from the textbook illustrates an exponentially varying sinusoid — a reminder that the linear-system tools developed in this section underpin the analysis of signals whose behavior is governed by coupled equations.*
-
 ## 1. When Cramer's Rule Applies
 
 ### CONCEPT

@@ -18,9 +18,6 @@ Cramer's rule is tested in one specific scenario: **n linear equations in n unkn
 $$\begin{aligned}a_{11}x_1+a_{12}x_2+\cdots+a_{1n}x_n&=y_1\\a_{21}x_1+a_{22}x_2+\cdots+a_{2n}x_n&=y_2\\&\vdots\\a_{n1}x_1+a_{n2}x_2+\cdots+a_{nn}x_n&=y_n\end{aligned}$$
 *This is the square system Cramer's rule is built for: n equations in exactly n unknowns. The coefficients a_ij fill the main determinant Delta, and the constants y_1, y_2, ..., y_n form the replacement column — swapped in one at a time to solve for each unknown.*
 
-![Fig. B.11](/figures/page-023-fig__b_11-1.png)
-*Fig. B.11 from the textbook illustrates a structured equation system layout — the same column-by-column organization that Cramer's rule exploits to isolate each unknown.*
-
 ## 1. The Rule You Actually Use on Exams
 
 Follow this checklist every time:

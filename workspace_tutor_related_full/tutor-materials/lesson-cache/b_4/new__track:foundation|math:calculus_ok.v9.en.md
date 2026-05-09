@@ -17,9 +17,6 @@ Exam questions typically ask you to solve a 2×2 or 3×3 system, or to identify 
 $$\begin{aligned}a_{11}x_1+a_{12}x_2+\cdots+a_{1n}x_n&=y_1\\a_{21}x_1+a_{22}x_2+\cdots+a_{2n}x_n&=y_2\\&\vdots\\a_{n1}x_1+a_{n2}x_2+\cdots+a_{nn}x_n&=y_n\end{aligned}$$
 *This is the general form of n linear equations in n unknowns. Each symbol has a specific role: aᵢⱼ is a coefficient (a known number in row i, column j), xⱼ is an unknown you are solving for, and yᵢ is a known value on the right-hand side. Do not be intimidated by the double subscripts — they simply tell you the row number and column number, nothing more.*
 
-![Fig. B.11](/figures/page-023-fig__b_11-1.png)
-*This textbook figure illustrates an exponentially varying sinusoid, providing visual context for how mathematical expressions describe real signal behavior — the same structured thinking that underlies Cramer's rule when applied to system equations.*
-
 ## 1. When Cramer's Rule Applies
 
 Cramer's rule has two conditions. Both must be satisfied before you can use it.

@@ -36,11 +36,6 @@ Putting the right-hand-side constants into \(A\) instead of into \(\mathbf{b}\) 
 
 $$A\mathbf{x}=\mathbf{b}$$
 
-%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="book_image" data-teaching-role="concept_anchor" data-visual-use-b64="eyJjcmFtIjoiVXNlIHRoaXMgdmlzdWFsIGZvciBmYXN0IHJlY29nbml0aW9uIG9mIHRoZSBrZXkgcGF0dGVybjogY29lZmZpY2llbnRzIGdvIGludG8gQSwgY29uc3RhbnRzIGdvIGludG8gYi4iLCJzdGFuZGFyZCI6IlVzZSB0aGlzIHZpc3VhbCB0byBjbGFyaWZ5IGhvdyBhIHdyaXR0ZW4gc3lzdGVtIG1hcHMgdG8gdGhlIG1hdHJpeCBmb3JtIGJlZm9yZSBhcHBseWluZyBDcmFtZXIncyBSdWxlLiIsInRvcF9zY29yZSI6IlVzZSB0aGlzIHZpc3VhbCB0byBzdXJmYWNlIHRoZSB0cmFwIG9mIHBsYWNpbmcgY29uc3RhbnRzIGluc2lkZSBBIGluc3RlYWQgb2YgYiwgYW5kIHRvIHZlcmlmeSBjb3JyZWN0IG1hdHJpeCBjb25zdHJ1Y3Rpb24uIn0=" style="display:none;"></div>%%KC_END%%
-![Fig. B.11](/figures/page-023-fig__b_11-1.png)
-*Fig. B.11 from the textbook shows the structure of a linear system written in matrix form, illustrating how coefficients, unknowns, and right-hand-side constants map to \(A\), \(\mathbf{x}\), and \(\mathbf{b}\).*
-<div class="lesson-figure-description">The figure displays a system of simultaneous linear equations alongside its matrix representation. The left side shows the equations with coefficients and unknowns; the right side shows the corresponding \(A\mathbf{x}=\mathbf{b}\) layout. Students should notice how each coefficient in the equations maps to a specific entry in \(A\), how the unknowns form the column vector \(\mathbf{x}\), and how the constants on the right-hand side populate \(\mathbf{b}\). This figure anchors the abstract matrix notation to a concrete equation structure.</div>
-
 ## 2. Cramer’s Rule
 
 ### Determinant Condition
