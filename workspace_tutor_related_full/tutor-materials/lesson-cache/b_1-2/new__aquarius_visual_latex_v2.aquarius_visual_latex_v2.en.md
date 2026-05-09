@@ -62,13 +62,16 @@ $$z = re^{j\theta}$$
 
 Here \(r \geq 0\) is the **distance from the origin** (the magnitude), and \(\theta\) is the **angle from the positive real axis** (the argument). The point \(z^*\) in the diagram is the conjugate \(a - jb\): it has the same real part \(a\), the same magnitude \(r\), and the opposite vertical coordinate \(-b\).
 
+![Representation of a complex number in the complex plane](/figures/page-005-fig__b_2-1.png)
+*Keep this figure in view while reading the symbol guide: every label below is visible on the complex-plane diagram.*
+
 **Reading Fig. B.2 quickly:**
 
-- \(a\): horizontal coordinate, so it becomes the real part.
-- \(b\): vertical coordinate, so it becomes the imaginary part coefficient.
-- \(r\): vector length from the origin to \(z\), so \(r = |z|\).
-- \(\theta\): rotation from the positive real axis to the vector.
-- \(z^*\): reflection of \(z\) across the real axis.
+- **a:** horizontal coordinate, so it becomes the real part.
+- **b:** vertical coordinate, so it becomes the imaginary part coefficient.
+- **r:** vector length from the origin to \(z\), so \(r = |z|\).
+- **theta:** rotation from the positive real axis to the vector.
+- **z\*:** reflection of \(z\) across the real axis.
 
 **Representative example:**
 
