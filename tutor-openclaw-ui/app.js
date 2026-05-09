@@ -9955,45 +9955,98 @@ const learnChatCol = document.getElementById('learnChatCol');
 let isResizing = false;
 
 if (learnResizer && learnExplainCol && learnChatCol) {
-  const DEFAULT_CHAT_WIDTH = 420;
-  if (!isLearnExplainCollapsed) {
-    learnChatCol.style.flex = `0 0 ${DEFAULT_CHAT_WIDTH}px`;
-    learnChatCol.style.width = `${DEFAULT_CHAT_WIDTH}px`;
-    learnChatCol.style.minWidth = `${DEFAULT_CHAT_WIDTH}px`;
-    learnChatCol.style.maxWidth = `${DEFAULT_CHAT_WIDTH}px`;
-  }
+  const LEARN_LAYOUT_KEY = 'aquarius-learn-split';
+  const learnBodyInner = learnResizer.closest('.learn-body-inner') || learnExplainCol.parentElement;
+  const MIN_EXPLAIN_WIDTH = 420;
+  const MIN_CHAT_WIDTH = 320;
+  const DEFAULT_CHAT_RATIO = 0.34;
 
-  learnResizer.addEventListener('mousedown', (e) => {
+  const resizeFollowupInput = () => {
+    const input = document.getElementById('learnFollowupInput');
+    if (input) autoResize(input);
+  };
+
+  const applyLearnSplit = (chatRatio) => {
+    if (!learnBodyInner) return;
+    const boundedChatRatio = Math.max(0.24, Math.min(0.56, Number(chatRatio) || DEFAULT_CHAT_RATIO));
+    const rect = learnBodyInner.getBoundingClientRect();
+    const resizerWidth = learnResizer.offsetWidth || 10;
+    const availableWidth = Math.max(0, rect.width - resizerWidth);
+    if (!availableWidth) return;
+
+    let chatWidth = Math.round(availableWidth * boundedChatRatio);
+    chatWidth = Math.max(MIN_CHAT_WIDTH, Math.min(chatWidth, availableWidth - MIN_EXPLAIN_WIDTH));
+    const explainWidth = Math.max(MIN_EXPLAIN_WIDTH, availableWidth - chatWidth);
+
+    learnBodyInner.style.setProperty(
+      'grid-template-columns',
+      `minmax(0, ${explainWidth}px) ${resizerWidth}px minmax(${MIN_CHAT_WIDTH}px, ${chatWidth}px)`,
+      'important'
+    );
+    learnBodyInner.dataset.customSplit = 'true';
+    learnExplainCol.style.removeProperty('width');
+    learnExplainCol.style.removeProperty('max-width');
+    learnExplainCol.style.removeProperty('flex');
+    learnChatCol.style.removeProperty('width');
+    learnChatCol.style.removeProperty('max-width');
+    learnChatCol.style.removeProperty('flex');
+    resizeFollowupInput();
+  };
+
+  try {
+    const savedRatio = parseFloat(localStorage.getItem(LEARN_LAYOUT_KEY) || '');
+    if (Number.isFinite(savedRatio)) applyLearnSplit(savedRatio);
+  } catch (_) {}
+
+  const startResize = (e) => {
+    if (window.matchMedia('(max-width: 900px)').matches) return;
     isResizing = true;
     document.body.style.cursor = 'col-resize';
+    document.body.classList.add('learn-resizing');
+    if (learnResizer.setPointerCapture && e.pointerId != null) {
+      try { learnResizer.setPointerCapture(e.pointerId); } catch (_) {}
+    }
     e.preventDefault();
-  });
+  };
 
-  document.addEventListener('mousemove', (e) => {
+  const moveResize = (e) => {
     if (!isResizing) return;
-    const containerWidth = learnExplainCol.parentElement.offsetWidth;
-    let newWidth = e.clientX - learnExplainCol.getBoundingClientRect().left;
-    if (newWidth < 360) newWidth = 360;
-    if (newWidth > containerWidth - 360) newWidth = containerWidth - 360;
+    const rect = learnBodyInner.getBoundingClientRect();
+    const resizerWidth = learnResizer.offsetWidth || 10;
+    const availableWidth = Math.max(0, rect.width - resizerWidth);
+    if (!availableWidth) return;
 
-    learnExplainCol.style.flex = 'none';
-    learnExplainCol.style.width = newWidth + 'px';
-    learnChatCol.style.flex = '1';
-    learnChatCol.style.width = 'auto';
-    learnChatCol.style.minWidth = '360px';
-    learnChatCol.style.maxWidth = '';
+    let explainWidth = e.clientX - rect.left;
+    explainWidth = Math.max(MIN_EXPLAIN_WIDTH, Math.min(explainWidth, availableWidth - MIN_CHAT_WIDTH));
+    const chatWidth = availableWidth - explainWidth;
+    const chatRatio = chatWidth / availableWidth;
+    applyLearnSplit(chatRatio);
+    try { localStorage.setItem(LEARN_LAYOUT_KEY, String(chatRatio)); } catch (_) {}
+  };
 
-    learnFollowupInput.style.width = '100%';
-    autoResize(document.getElementById('learnFollowupInput'));
-  });
-
-  document.addEventListener('mouseup', () => {
+  const stopResize = () => {
     if (isResizing) {
       isResizing = false;
       document.body.style.cursor = 'default';
-      learnFollowupInput.style.width = '';
-      autoResize(document.getElementById('learnFollowupInput'));
+      document.body.classList.remove('learn-resizing');
+      resizeFollowupInput();
     }
+  };
+
+  learnResizer.addEventListener('pointerdown', startResize);
+  document.addEventListener('pointermove', moveResize);
+  document.addEventListener('pointerup', stopResize);
+  document.addEventListener('pointercancel', stopResize);
+  window.addEventListener('resize', () => {
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      learnBodyInner.style.removeProperty('grid-template-columns');
+      learnBodyInner.dataset.customSplit = '';
+      return;
+    }
+    try {
+      const savedRatio = parseFloat(localStorage.getItem(LEARN_LAYOUT_KEY) || '');
+      if (Number.isFinite(savedRatio)) applyLearnSplit(savedRatio);
+    } catch (_) {}
   });
 }
 

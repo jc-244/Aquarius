@@ -7610,6 +7610,7 @@ button:focus, input:focus, textarea:focus {
   width: 10px;
   background-color: transparent;
   cursor: col-resize;
+  touch-action: none;
   position: relative;
   z-index: 10;
   display: flex;
@@ -7637,6 +7638,21 @@ button:focus, input:focus, textarea:focus {
 .learn-resizer:hover::before, .learn-resizer:active::before {
   background-color: var(--primary);
   height: 100%;
+}
+
+body.learn-resizing {
+  user-select: none;
+}
+
+body.learn-resizing .learn-resizer::before {
+  background-color: var(--primary);
+  height: 100%;
+}
+
+@media (max-width: 900px) {
+  .learn-body-inner[data-custom-split="true"] {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* Ensure generated math/python diagram plots with transparent backgrounds don't render black on dark mode environments */
