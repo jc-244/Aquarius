@@ -6091,6 +6091,20 @@ function closeLearnFocusMode() {
 function applyLearnChatCollapsedState() {
   const shell = learnBody || document.getElementById('learnBody');
   if (shell) shell.classList.toggle('chat-collapsed', isLearnChatCollapsed);
+  const learnBodyInner = shell?.querySelector?.('.learn-body-inner');
+  if (learnBodyInner) {
+    if (isLearnChatCollapsed) {
+      learnBodyInner.style.removeProperty('grid-template-columns');
+      learnBodyInner.dataset.customSplit = '';
+    } else {
+      try {
+        const savedRatio = parseFloat(localStorage.getItem('aquarius-learn-split') || '');
+        if (Number.isFinite(savedRatio) && typeof window.applyLearnSplit === 'function') {
+          window.applyLearnSplit(savedRatio);
+        }
+      } catch (_) {}
+    }
+  }
   if (learnChatColPanel) {
     learnChatColPanel.classList.toggle('hidden', isLearnChatCollapsed);
     learnChatColPanel.style.display = isLearnChatCollapsed ? 'none' : '';
@@ -10327,6 +10341,7 @@ setTimeout(() => {
       leftSidebar.classList.add('collapsed');
       if (tocSidebar) tocSidebar.classList.add('collapsed');
       appContainer.classList.add('sidebar-collapsed');
+      requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
     });
   }
   if (floatToggleBtn && leftSidebar) {
@@ -10334,6 +10349,7 @@ setTimeout(() => {
       leftSidebar.classList.remove('collapsed');
       if (tocSidebar) tocSidebar.classList.remove('collapsed');
       appContainer.classList.remove('sidebar-collapsed');
+      requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
     });
   }
 }, 500);
@@ -10358,6 +10374,11 @@ if (learnResizer && learnExplainCol && learnChatCol) {
 
   const applyLearnSplit = (chatRatio) => {
     if (!learnBodyInner) return;
+    if (isLearnChatCollapsed || isLearnExplainCollapsed || window.matchMedia('(max-width: 900px)').matches) {
+      learnBodyInner.style.removeProperty('grid-template-columns');
+      learnBodyInner.dataset.customSplit = '';
+      return;
+    }
     const boundedChatRatio = Math.max(0.24, Math.min(0.56, Number(chatRatio) || DEFAULT_CHAT_RATIO));
     const rect = learnBodyInner.getBoundingClientRect();
     const resizerWidth = learnResizer.offsetWidth || 10;
@@ -10382,6 +10403,7 @@ if (learnResizer && learnExplainCol && learnChatCol) {
     learnChatCol.style.removeProperty('flex');
     resizeFollowupInput();
   };
+  window.applyLearnSplit = applyLearnSplit;
 
   try {
     const savedRatio = parseFloat(localStorage.getItem(LEARN_LAYOUT_KEY) || '');

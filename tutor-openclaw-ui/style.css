@@ -5220,7 +5220,8 @@ body.textbook-focus-active .learn-chat-popover {
 }
 
 .learn-explain-body {
-  max-width: 680px;
+  max-width: none !important;
+  width: 100% !important;
   font-size: 15px;
   line-height: 1.8;
   color: var(--text-primary);
@@ -13005,13 +13006,13 @@ h6,
 
 .learn-explain-body {
   min-height: 100% !important;
-  display: flex !important;
-  align-items: stretch !important;
-  justify-content: center !important;
+  display: block !important;
+  width: 100% !important;
 }
 
 .lesson-page-frame {
-  width: min(100%, 1040px) !important;
+  width: min(100%, 1120px) !important;
+  max-width: 1120px !important;
   min-height: calc(100% - 4px) !important;
   margin: 0 auto !important;
   padding: 38px 42px 28px !important;
@@ -13023,6 +13024,34 @@ h6,
   background: rgba(255, 255, 255, 0.94) !important;
   box-shadow: 0 10px 0 rgba(203, 213, 225, 0.75), 0 24px 60px rgba(15, 23, 42, 0.08) !important;
   overflow: visible !important;
+}
+
+.learn-body.chat-collapsed .learn-body-inner {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.learn-body.chat-collapsed .learn-explain-col {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+.learn-body.chat-collapsed .learn-explain-scroll {
+  padding-left: clamp(28px, 5vw, 72px) !important;
+  padding-right: clamp(28px, 5vw, 72px) !important;
+}
+
+.learn-body.chat-collapsed .lesson-page-frame,
+.app.sidebar-collapsed .learn-body:not(.explain-collapsed) .lesson-page-frame {
+  width: min(100%, 1600px) !important;
+  max-width: 1600px !important;
+}
+
+.learn-body.chat-collapsed .lesson-page-heading,
+.app.sidebar-collapsed .learn-body:not(.explain-collapsed) .lesson-page-heading {
+  width: min(100%, 1200px) !important;
 }
 
 .lesson-page-content {
