@@ -2357,8 +2357,7 @@ function getB8TextbookOnlyMarkdown() {
 }
 
 function shouldOpenSectionAsChapterOverview(sectionId = '', sectionTitle = '', subsections = []) {
-  if (isB8TextbookOnlySection(sectionId, sectionTitle)) return false;
-  return Array.isArray(subsections) && subsections.length > 0;
+  return Boolean(compactWhitespace(`${sectionId || ''} ${sectionTitle || ''}`));
 }
 
 function forceB8TextbookOnlyLesson(sectionId = '', sectionTitle = '', markdown = '') {
@@ -9859,13 +9858,14 @@ function findParentOverviewContextForSubsection(sectionId = '', sectionTitle = '
 
 function getOverviewLessonEntries(sectionId = '', sectionTitle = '', subsections = [], includeParentLesson = false) {
   const entries = [];
-  if (includeParentLesson) {
+  const subList = Array.isArray(subsections) ? subsections : [];
+  if (includeParentLesson || !subList.length) {
     entries.push({
       title: sectionTitle || sectionId,
       isParentLesson: true
     });
   }
-  (Array.isArray(subsections) ? subsections : []).forEach(subTitle => {
+  subList.forEach(subTitle => {
     entries.push({
       title: subTitle,
       isParentLesson: false
