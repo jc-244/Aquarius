@@ -25,9 +25,9 @@ The transpose of matrix \(A\), written \(A^T\), is formed by swapping every entr
 $$(A^T)_{ij} = a_{ji}$$
 
 %%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="web_reference_image" data-teaching-role="concept_anchor" data-visual-use-b64="eyJjcmFtIjoiUG9pbnQgdG8gdGhlIHJvdy10by1jb2x1bW4gYXJyb3dzIGFuZCBtYWtlIHRoZSBvcGVyYXRpb24gcmVjb2duaXphYmxlIGluIHNlY29uZHMuIiwic3RhbmRhcmQiOiJQbGFjZSBpdCBiZXNpZGUgdGhlIGZvcm11bGEgc28gc3R1ZGVudHMgY29ubmVjdCBcXCgoQV5UKV97aWp9PWFfe2ppfVxcKSB3aXRoIHRoZSB2aXNpYmxlIHBvc2l0aW9uIHN3YXAuIiwidG9wX3Njb3JlIjoiVXNlIGl0IHRvIHByZXZlbnQgdGhlIHN1YnRsZSB3cm9uZyBvcGVyYXRpb24gb2YgbWVyZWx5IHJldmVyc2luZyByb3cgb3JkZXIgb3IgY29sdW1uIG9yZGVyLiJ9" style="display:none;"></div>%%KC_END%%
-![Principal component analysis](https://upload.wikimedia.org/wikipedia/commons/f/f5/GaussianScatterPCA.svg)
+![Matrix transpose](https://upload.wikimedia.org/wikipedia/commons/e/e4/Matrix_transpose.gif)
 *Each row of the original matrix becomes a column of the transposed matrix — row 1 becomes column 1, row 2 becomes column 2, and so on.*
-%%KC_BLOCK%%<div class="kc-reference-source"><a href="https://upload.wikimedia.org/wikipedia/commons/f/f5/GaussianScatterPCA.svg" target="_blank" rel="noopener noreferrer">Reference image from Wikipedia</a></div>%%KC_END%%
+%%KC_BLOCK%%<div class="kc-reference-source"><a href="https://upload.wikimedia.org/wikipedia/commons/e/e4/Matrix_transpose.gif" target="_blank" rel="noopener noreferrer">Animated reference from Wikimedia Commons</a></div>%%KC_END%%
 
 ## 2. Worked example: transpose the textbook matrix
 

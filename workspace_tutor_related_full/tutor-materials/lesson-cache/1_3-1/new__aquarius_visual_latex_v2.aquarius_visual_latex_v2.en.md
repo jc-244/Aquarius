@@ -50,9 +50,9 @@ Discrete-time does **not** mean the amplitudes must be restricted to 0 and 1. Th
 $$x[n],\quad n \in \mathbb{Z}$$
 
 %%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="web_reference_image" data-teaching-role="concept_anchor" data-visual-use-b64="eyJjcmFtIjoiU2VwYXJhdGVkIHN0ZW1zIG9yIGRvdHMgYXQgaW50ZWdlciBwb3NpdGlvbnMgYXJlIHRoZSBmYXN0IHJlY29nbml0aW9uIGN1ZSBmb3IgZGlzY3JldGUtdGltZS4iLCJzdGFuZGFyZCI6IkNvbm5lY3QgdGhlIGlzb2xhdGVkIHN0ZW1zIHRvIHRoZSBub3RhdGlvbiBcXCh4W25dXFwpOiB2YWx1ZXMgbGlzdGVkIG9ubHkgYXQgaW50ZWdlciBzYW1wbGUgaW5kaWNlcy4iLCJ0b3Bfc2NvcmUiOiJWaXN1YWxseSBjb25uZWN0aW5nIHRoZSBzdGVtIHRpcHMgd2l0aCBhIGxpbmUgY2FuIGJlIG1pc2xlYWRpbmcg4oCUIHRoZSBzaWduYWwgaGFzIG5vIGRlZmluZWQgdmFsdWUgYmV0d2VlbiBpbnRlZ2VyIGluZGljZXMgdW5sZXNzIHRoZSBwcm9ibGVtIGV4cGxpY2l0bHkgc3RhdGVzIG90aGVyd2lzZS4ifQ==" style="display:none;"></div>%%KC_END%%
-![File:Fourier transform, Fourier series, DTFT, DFT.svg](https://upload.wikimedia.org/wikipedia/commons/5/5a/Fourier_transform%2C_Fourier_series%2C_DTFT%2C_DFT.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original)
+![Digital discrete signal](https://upload.wikimedia.org/wikipedia/commons/0/04/Digital.signal.discret.svg)
 *A discrete-time signal \(x[n]\): isolated vertical stems appear only at integer indices \(n\), with no values defined between them.*
-%%KC_BLOCK%%<div class="kc-reference-source"><a href="https://upload.wikimedia.org/wikipedia/commons/5/5a/Fourier_transform%2C_Fourier_series%2C_DTFT%2C_DFT.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original" target="_blank" rel="noopener noreferrer">Reference image from Wikimedia Commons</a></div>%%KC_END%%
+%%KC_BLOCK%%<div class="kc-reference-source"><a href="https://upload.wikimedia.org/wikipedia/commons/0/04/Digital.signal.discret.svg" target="_blank" rel="noopener noreferrer">Reference image from Wikimedia Commons</a></div>%%KC_END%%
 
 ## 3. Worked Classification Example
 

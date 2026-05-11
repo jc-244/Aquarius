@@ -53,9 +53,9 @@ Changing the numerical values of entries — transpose only changes the **positi
 $$A^T = (a_{ji})_{n \times m}$$
 
 %%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="web_reference_image" data-teaching-role="example_support" data-visual-use-b64="eyJjcmFtIjoiRmFzdCBleGFtIGN1ZTogcm93cyB0dXJuIGludG8gY29sdW1ucy4iLCJzdGFuZGFyZCI6IlN1cHBvcnRzIHRoZSB3b3JrZWQgXFwoMiBcXHRpbWVzIDNcXCkgdG8gXFwoMyBcXHRpbWVzIDJcXCkgZXhhbXBsZS4iLCJ0b3Bfc2NvcmUiOiJDaGVjayBib3RoIGVudHJ5IHBsYWNlbWVudCBhbmQgb3JkZXIgY2hhbmdlLiJ9" style="display:none;"></div>%%KC_END%%
-![Principal component analysis](https://upload.wikimedia.org/wikipedia/commons/f/f5/GaussianScatterPCA.svg)
+![Matrix transpose](https://upload.wikimedia.org/wikipedia/commons/e/e4/Matrix_transpose.gif)
 *Watch how each row of the original matrix becomes a column in the transpose — the order changes from \(m \times n\) to \(n \times m\), but no entry value changes.*
-%%KC_BLOCK%%<div class="kc-reference-source"><a href="https://upload.wikimedia.org/wikipedia/commons/f/f5/GaussianScatterPCA.svg" target="_blank" rel="noopener noreferrer">Reference image from Wikipedia</a></div>%%KC_END%%
+%%KC_BLOCK%%<div class="kc-reference-source"><a href="https://upload.wikimedia.org/wikipedia/commons/e/e4/Matrix_transpose.gif" target="_blank" rel="noopener noreferrer">Animated reference from Wikimedia Commons</a></div>%%KC_END%%
 
 ## 3. Double transpose
 
