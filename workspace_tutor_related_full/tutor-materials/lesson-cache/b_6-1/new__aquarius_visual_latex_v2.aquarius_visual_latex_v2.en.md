@@ -31,9 +31,7 @@ Reading \(a_{23}\) as column 2, row 3 — always read row first, column second.
 $$A = (a_{ij})_{m \times n}$$
 
 %%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="web_reference_image" data-teaching-role="concept_anchor" data-visual-use-b64="eyJjcmFtIjoiTWVtb3JpemUgdGhlIHZpc3VhbCBydWxlOiBmaXJzdCBpbmRleCBwb2ludHMgdG8gdGhlIHJvdywgc2Vjb25kIGluZGV4IHBvaW50cyB0byB0aGUgY29sdW1uLiIsInN0YW5kYXJkIjoiVXNlIHRoZSBpbWFnZSBiZXNpZGUgdGhlIFxcKGFfezIzfVxcKSBleGFtcGxlIHNvIHN0dWRlbnRzIGNvbm5lY3Qgbm90YXRpb24gdG8gcG9zaXRpb24uIiwidG9wX3Njb3JlIjoiSWRlbnRpZnkgd2h5IHJldmVyc2luZyByb3cgYW5kIGNvbHVtbiBnaXZlcyBhIGRpZmZlcmVudCBlbnRyeS4ifQ==" style="display:none;"></div>%%KC_END%%
-![File:Matrix transpose.gif](https://upload.wikimedia.org/wikipedia/commons/e/e4/Matrix_transpose.gif?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original)
-*Notice how each entry is located by its row index first, then its column index — the position \(a_{ij}\) sits at the intersection of row \(i\) and column \(j\).*
-%%KC_BLOCK%%<div class="kc-reference-source"><a href="https://upload.wikimedia.org/wikipedia/commons/e/e4/Matrix_transpose.gif?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original" target="_blank" rel="noopener noreferrer">Animated reference from Wikimedia Commons</a></div>%%KC_END%%
+*The entry notation above tells you how to read \(a_{ij}\): row first, column second. The transpose example belongs in the next subsection.*
 
 ## 2. Transpose
 
