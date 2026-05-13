@@ -23,6 +23,8 @@ backup-codex-*/
 **/backup-before-*/
 **/_backup*/
 **/*.legacy-backup-*/
+workspace_tutor_related_full/project-memory/backups/
+**/backup-before-*
 tutor-openclaw-ui/users/
 workspace_tutor_related_full/tutor-openclaw-ui/users/
 tutor-openclaw-ui/generated/
