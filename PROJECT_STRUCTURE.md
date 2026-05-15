@@ -54,18 +54,17 @@ tools/
 workspace/
 ├── memory/
 ├── materials/
-├── app/
-├── root-scripts/
-└── tmp/
+└── app-mirror/
 ```
 
-This directory is the broader workbench: project memory, mirrored materials, QA output, old workspace context, and extraction experiments. It is useful for research and recovery, but the running app primarily uses root `app/` and root `materials/`.
+This directory is the broader workbench: project memory, mirrored materials, old workspace context, and extraction experiments. It is useful for research and recovery, but the running app primarily uses root `app/` and root `materials/`.
 
 ## Local-Only Files
 
 ```text
 .local/
 ├── archive/2026-05-15-cleanup/
+├── archive/2026-05-15-unused-candidates/
 └── visual-audit-20260514/
 ```
 
@@ -93,6 +92,19 @@ Kept in place:
 - Chapter 2 recrops and metadata
 - UI section maps
 - scripts that are still location-dependent
+
+## Second Cleanup Pass
+
+Moved into `.local/archive/2026-05-15-unused-candidates/`:
+
+- `workspace/root-scripts/`
+- `workspace/tmp/`
+- duplicate `workspace/tutor_craft.py`
+- app mirror logs, backups, temporary track samples, debug output, generated output, local users data, and old one-off app mirror scripts
+- empty local runtime directories `app/debug/`, `app/generated/`, and `app/users/`
+- `.DS_Store` files removed
+
+Kept `workspace/app-mirror/` as a lightweight code mirror for reference, but removed its local generated/debug/user payloads.
 
 ## Before Broad Edits
 

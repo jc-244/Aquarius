@@ -8,8 +8,8 @@ Tutor Agent 全量相关文件整理（基于 workspace 全扫描）
 2. materials/
    - 教材 PDF、OCR 文本、背景页图片、预览图、lesson cache、prompts、提取脚本、metadata、section map 等
 3. tools/tutor_craft.py
-4. root-scripts/
-   - workspace 根目录下命中 tutor agent / Aquarius 的辅助脚本、修补脚本、package.json、Dockerfile、重启脚本等
+4. archived root scripts
+   - 旧的辅助脚本、修补脚本、Dockerfile、重启脚本已移入 `.local/archive/2026-05-15-unused-candidates/`
 5. tmp/b5-preview-20260426-1720-en/
    - 与 tutor agent 预览内容相关的临时输出
 6. memory/
@@ -21,5 +21,4 @@ Tutor Agent 全量相关文件整理（基于 workspace 全扫描）
   1) app/
   2) materials/
   3) tools/tutor_craft.py
-  4) root-scripts/
-  5) memory/
+  4) memory/
