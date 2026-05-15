@@ -1,7 +1,8 @@
 import re
 from pathlib import Path
 
-css_path = Path("tutor-openclaw-ui/style.css")
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+css_path = PROJECT_ROOT / "tutor-openclaw-ui" / "style.css"
 css = css_path.read_text()
 
 # We need to rewrite the core theme variables at the top of the file to a beautiful, Apple Notes / Linear / Craft inspired light theme.

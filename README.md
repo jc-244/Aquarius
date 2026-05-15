@@ -21,7 +21,8 @@ http://127.0.0.1:9000/health
 - `tutor-materials/`: textbook pages, OCR metadata, extracted figure crops, and material scripts used by the app.
 - `workspace_tutor_related_full/`: working copy of source materials, project memory, extraction experiments, QA output, and historical context.
 - `docs/`: project handoff notes for humans.
-- `archive/`: local-only cleanup archive. This is intentionally ignored by Git.
+- `tools/`: optional maintenance scripts.
+- `.local/`: local-only archives, visual audits, generated caches, and other machine-specific material. This is intentionally ignored by Git.
 
 ## Important Notes
 

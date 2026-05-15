@@ -39,6 +39,15 @@ tutor-materials/
 
 `tutor-materials/` contains the material files the app reads directly or expects beside the material scripts. The scripts currently rely on their location, so they remain in this directory.
 
+## Tools
+
+```text
+tools/
+└── tutor_craft.py
+```
+
+`tools/` contains optional maintenance scripts. These are not the app entry point.
+
 ## Working Materials And Memory
 
 ```text
@@ -52,20 +61,15 @@ workspace_tutor_related_full/
 
 This directory is the broader workbench: project memory, mirrored materials, QA output, old workspace context, and extraction experiments. It is useful for research and recovery, but the running app primarily uses root `tutor-openclaw-ui/` and root `tutor-materials/`.
 
-## Local Cleanup Archive
+## Local-Only Files
 
 ```text
-archive/2026-05-15-cleanup/
-├── debug-output/
-├── generated-cache/
-├── logs/
-├── old-fix-scripts/
-├── tmp-samples/
-├── ui-backups/
-└── users-local/
+.local/
+├── archive/2026-05-15-cleanup/
+└── visual-audit-20260514/
 ```
 
-This archive is intentionally ignored by Git. It keeps local historical files available without making collaborators pull debug logs, generated images, local user data, or one-off repair scripts.
+`.local/` is intentionally ignored by Git. It keeps local historical files, visual audit sheets, generated images, local user data, logs, and one-off repair scripts available without making collaborators pull them.
 
 ## First Cleanup Pass
 
@@ -78,6 +82,8 @@ Moved into the local archive:
 - `tutor-openclaw-ui/backup-codex-20260505-034837/`
 - `tutor-openclaw-ui/*.log`
 - old one-off scripts such as `fix-html.py`, `fix-intro.py`, `insert_modal.py`, `pregenerate_test.js`, `test_process_python.js`, and `verify_section_visuals.py`
+- root legacy notes and the old root `style.css` moved to `docs/legacy/`
+- local visual audit sheets moved to `.local/visual-audit-20260514/`
 
 Kept in place:
 

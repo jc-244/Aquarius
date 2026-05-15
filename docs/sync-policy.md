@@ -15,7 +15,7 @@ When a material change is meant to affect the app, keep both trees synchronized 
 - `new-book-ocr/`
 - relevant extraction scripts
 
-When a change is only an experiment, QA artifact, or temporary extraction output, keep it under `workspace_tutor_related_full/` or the local `archive/` instead of adding it to the runtime path.
+When a change is only an experiment, QA artifact, or temporary extraction output, keep it under `workspace_tutor_related_full/` or local `.local/` instead of adding it to the runtime path.
 
 ## Chapter 2
 

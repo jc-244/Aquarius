@@ -37,3 +37,9 @@ The desktop backup made before cleanup is:
 ```
 
 That backup preserves the full project state before the first cleanup pass.
+
+Local visual audit contact sheets were moved to:
+
+```text
+.local/visual-audit-20260514/
+```
