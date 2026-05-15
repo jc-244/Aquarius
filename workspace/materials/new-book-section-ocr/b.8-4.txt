@@ -1,0 +1,19 @@
+# Aquarius section OCR
+section_id: b.8-4
+source_pages: page-055
+cut_start_found: yes
+cut_end_found: yes
+
+--- OCR ---
+B.8-4 Taylor and Maclaurin Series
+                                                              ∞
+                                                             " (x − a)k
+                  (x − a)          (x − a)2
+f (x) = f (a) +           ḟ (a) +          f̈ (a) + · · · =            f (k) (a)
+                     1!               2!                     k=0
+                                                                  k!
+                                               "∞ k
+                  x          x2                    x (k)
+f (x) = f (0) +      ḟ (0) + f̈ (0) + · · · =        f (0)
+                  1!         2!                k=0
+                                                   k!

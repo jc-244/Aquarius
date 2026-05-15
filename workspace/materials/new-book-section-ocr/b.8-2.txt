@@ -1,0 +1,18 @@
+# Aquarius section OCR
+section_id: b.8-2
+source_pages: page-054
+cut_start_found: yes
+cut_end_found: yes
+
+--- OCR ---
+B.8-2 Complex Numbers
+     e±jπ/2 = ±j
+             
+              1           n even
+     e±jnπ =
+              −1          n odd
+     e±jθ = cos θ ± j sin θ
+                                  √                    
+     a + jb = rejθ           r=    a2 + b2 , θ = tan−1 ba
+     (rejθ )k = rk ejkθ
+     (r1 ejθ1 )(r2 ejθ2 ) = r1 r2 ej(θ1 +θ2 )

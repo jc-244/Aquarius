@@ -1,0 +1,37 @@
+# Aquarius section OCR
+section_id: b.8-6
+source_pages: page-055, page-056
+cut_start_found: yes
+cut_end_found: yes
+
+--- OCR ---
+B.8-6 Trigonometric Identities
+e±jx = cos x ± j sin x
+cos x = 12 [ejx + e−jx ]
+sin x = 2j1 [ejx − e−jx ]
+cos (x ± π2 ) = ∓ sin x
+sin (x ± π2 ) = ± cos x
+2 sin x cos x = sin 2x
+sin2 x + cos2 x = 1
+cos2 x − sin2 x = cos 2x
+cos2 x = 12 (1 + cos 2x)
+sin2 x = 12 (1 − cos 2x)
+
+[[PAGE page-056]]
+56   CHAPTER B        BACKGROUND
+
+     cos3 x = 14 (3 cos x + cos 3x)
+     sin3 x = 14 (3 sin x − sin 3x)
+     sin (x ± y) = sin x cos y ± cos x sin y
+     cos (x ± y) = cos x cos y ∓ sin x sin y
+                     tan x ± tan y
+     tan (x ± y) =
+                    1 ∓ tan x tan y
+     sin x sin y = 2 [cos (x − y) − cos (x + y)]
+                   1
+
+     cos x cos y = 12 [cos (x − y) + cos (x + y)]
+     sin x cos y = 12 [sin (x − y) + sin (x + y)]
+                                                    √                    
+     a cos x + b sin x = C cos (x + θ )      C=      a2 + b2 , θ = tan−1 −b
+                                                                          a

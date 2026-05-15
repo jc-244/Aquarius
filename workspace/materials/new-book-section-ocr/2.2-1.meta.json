@@ -1,0 +1,20 @@
+{
+  "sectionId": "2.2-1",
+  "sourcePages": [
+    "page-161",
+    "page-162",
+    "page-163"
+  ],
+  "usedPages": [
+    "page-161",
+    "page-162",
+    "page-163"
+  ],
+  "missingPages": [],
+  "foundStart": true,
+  "startLine": "2.2-1 Some Insights into the Zero-Input Behavior of a System",
+  "foundEnd": true,
+  "endBeforeLine": "2.3 The Unit Impulse Response h(t) 163",
+  "endBeforeCode": "2.3",
+  "charCount": 3055
+}

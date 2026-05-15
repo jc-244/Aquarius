@@ -1,0 +1,18 @@
+{
+  "sectionId": "2.8",
+  "sourcePages": [
+    "page-220",
+    "page-221"
+  ],
+  "usedPages": [
+    "page-220",
+    "page-221"
+  ],
+  "missingPages": [],
+  "foundStart": true,
+  "startLine": "2.8 APPENDIX: DETERMINING THE IMPULSE RESPONSE",
+  "foundEnd": true,
+  "endBeforeLine": "2.9 SUMMARY",
+  "endBeforeCode": "2.9",
+  "charCount": 3549
+}

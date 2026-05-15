@@ -1,0 +1,78 @@
+# Aquarius section OCR
+section_id: 2.6-7
+source_pages: page-210, page-211, page-212
+cut_start_found: yes
+cut_end_found: yes
+
+--- OCR ---
+2.6-7 The Resonance Phenomenon
+Finally, we come to the fascinating phenomenon of resonance. As we have already mentioned
+several times, this phenomenon is observed when the input signal is identical or is very close to a
+characteristic mode of the system. For the sake of simplicity and clarity, we consider a first-order
+system having only a single mode, e^{\lambda t}. Let the impulse response of this system be†
+
+h(t) = Ae^{\lambda t}
+
+and let the input be
+
+x(t) = e^{(\lambda-\epsilon)t}
+
+The system response y(t) is then given by
+
+y(t) = Ae^{\lambda t} * e^{(\lambda-\epsilon)t}.
+
+† For convenience, we omit multiplying x(t) and h(t) by u(t). Throughout this discussion, we assume that
+they are causal.
+
+[[PAGE page-211]]
+2.6  Intuitive Insights into System Behavior                                                                 211
+
+From the convolution table we obtain
+
+                                      A
+                         y(t) = — [e^{λt} − e^{(λ−ϵ)t}] = Ae^{λt} ( (1 − e^{−ϵt}) / ϵ )                    (2.49)
+                                      ϵ
+
+Now, as ϵ → 0, both the numerator and the denominator of the term in the parentheses approach
+zero. Applying L’Hôpital’s rule to this term yields
+
+                                   lim y(t) = Ate^{λt}
+                                  ϵ→0
+
+Clearly, the response does not go to infinity as ϵ → 0, but it acquires a factor t, which approaches
+∞ as t → ∞. If λ has a negative real part (so that it lies in the LHP), e^{λt} decays faster than t and
+y(t) → 0 as t → ∞. The resonance phenomenon in this case is present, but its manifestation is
+aborted by the signal’s own exponential decay.
+    This discussion shows that resonance is a cumulative phenomenon, not instantaneous. It builds
+up linearly with t.† When the mode decays exponentially, the signal decays too fast for resonance
+to counteract the decay; as a result, the signal vanishes before resonance has a chance to build
+it up. However, if the mode were to decay at a rate less than 1/t, we should see the resonance
+phenomenon clearly. This specific condition would be possible if Re λ ≥ 0. For instance, when Re
+λ = 0 so that λ lies on the imaginary axis of the complex plane (λ = jω), the output becomes
+
+                                        y(t) = At e^{jωt}
+
+Here, the response does go to infinity linearly with t.
+    For a real system, if λ = jω is a root, λ* = −jω must also be a root; the impulse response
+is of the form Ae^{jωt} + Ae^{−jωt} = 2A cos ωt. The response of this system to input A cos ωt is
+2A cos ωt ∗ cos ωt. The reader can show that this convolution contains a term of the form At cos ωt.
+The resonance phenomenon is clearly visible. The system response to its characteristic mode
+increases linearly with time, eventually reaching ∞, as indicated in Fig. 2.24.
+    Recall that when λ = jω, the system is marginally stable. As we have indicated, the full effect
+of resonance cannot be seen for an asymptotically stable system; only in a marginally stable system
+does the resonance phenomenon boost the system’s response to infinity when the system’s input
+
+Figure 2.24  Buildup of system response in resonance.
+
+† If the characteristic root in question repeats r times, resonance effect increases as t^{r−1}. However, t^{r−1}e^{λt} → 0
+as t → ∞ for any value of r, provided Re λ < 0 (λ in the LHP).
+
+[[PAGE page-212]]
+212
+CHAPTER 2  TIME-DOMAIN ANALYSIS OF CONTINUOUS-TIME SYSTEMS
+
+is a characteristic mode. But even in an asymptotically stable system, we see a manifestation of resonance if its characteristic roots are close to the imaginary axis so that Re λ is a small, negative value. We can show that when the characteristic roots of a system are σ ± jω0, then the system response to the input e^{jω0t} or the sinusoid cos ω0t is very large for small σ.† The system response drops off rapidly as the input signal frequency moves away from ω0. This frequency-selective behavior can be studied more profitably after an understanding of frequency-domain analysis has been acquired. For this reason we postpone full discussion of this subject until Ch. 4.
+
+IMPORTANCE OF THE RESONANCE PHENOMENON
+The resonance phenomenon is very important because it allows us to design frequency-selective systems by choosing their characteristic roots properly. Lowpass, bandpass, highpass, and bandstop filters are all examples of frequency-selective networks. In mechanical systems, the inadvertent presence of resonance can cause signals of such tremendous magnitude that the system may fall apart. A musical note (periodic vibrations) of proper frequency can shatter glass if the frequency is matched to the characteristic root of the glass, which acts as a mechanical system. Similarly, a company of soldiers marching in step across a bridge amounts to applying a periodic force to the bridge. If the frequency of this input force happens to be nearer to a characteristic root of the bridge, the bridge may respond (vibrate) violently and collapse, even though it would have been strong enough to carry many soldiers marching out of step. A case in point is the Tacoma Narrows Bridge failure of 1940. This bridge was opened to traffic in July 1940. Within four months of opening (on November 7, 1940), it collapsed in a mild gale, not because of the wind’s brute force but because the frequencies of wind-generated vortices, which matched the natural frequencies (characteristic roots) of the bridge, caused resonance.
+Because of the great damage that may occur, mechanical resonance is generally to be avoided, especially in structures or vibrating mechanisms. If an engine with periodic force (such as piston motion) is mounted on a platform, the platform with its mass and springs should be designed so that their characteristic roots are not close to the engine’s frequency of vibration. Proper design of this platform can not only avoid resonance, but also attenuate vibrations if the system roots are placed far away from the frequency of vibration.

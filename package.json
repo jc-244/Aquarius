@@ -3,12 +3,12 @@
   "version": "1.1.0",
   "private": true,
   "description": "Aquarius Tutor Agent web UI and API bridge",
-  "main": "tutor-openclaw-ui/ws-bridge.js",
+  "main": "app/ws-bridge.js",
   "scripts": {
-    "start": "node tutor-openclaw-ui/ws-bridge.js",
-    "build:section-ocr": "node tutor-openclaw-ui/scripts/build-new-book-section-ocr.js",
-    "pregen:bg-ch1": "node tutor-openclaw-ui/scripts/pregen-background-chapter1.js",
-    "check": "node --check tutor-openclaw-ui/ws-bridge.js && node --check tutor-openclaw-ui/app.js"
+    "start": "node app/ws-bridge.js",
+    "build:section-ocr": "node app/scripts/build-new-book-section-ocr.js",
+    "pregen:bg-ch1": "node app/scripts/pregen-background-chapter1.js",
+    "check": "node --check app/ws-bridge.js && node --check app/app.js"
   },
   "dependencies": {
     "pptxgenjs": "^4.0.1",

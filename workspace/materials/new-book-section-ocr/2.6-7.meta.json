@@ -1,0 +1,20 @@
+{
+  "sectionId": "2.6-7",
+  "sourcePages": [
+    "page-210",
+    "page-211",
+    "page-212"
+  ],
+  "usedPages": [
+    "page-210",
+    "page-211",
+    "page-212"
+  ],
+  "missingPages": [],
+  "foundStart": true,
+  "startLine": "2.6-7 The Resonance Phenomenon",
+  "foundEnd": true,
+  "endBeforeLine": "2.7 MATLAB: M-FILES",
+  "endBeforeCode": "2.7",
+  "charCount": 6006
+}

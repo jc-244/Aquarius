@@ -1,0 +1,24 @@
+{
+  "sectionId": "2.5-3",
+  "sourcePages": [
+    "page-199",
+    "page-200",
+    "page-201",
+    "page-202",
+    "page-203"
+  ],
+  "usedPages": [
+    "page-199",
+    "page-200",
+    "page-201",
+    "page-202",
+    "page-203"
+  ],
+  "missingPages": [],
+  "foundStart": true,
+  "startLine": "2.5-3 Relationship Between BIBO and Asymptotic Stability",
+  "foundEnd": true,
+  "endBeforeLine": "2.6 Intuitive Insights into System Behavior 203",
+  "endBeforeCode": "2.6",
+  "charCount": 6183
+}

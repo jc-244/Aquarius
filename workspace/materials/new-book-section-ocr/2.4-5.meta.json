@@ -1,0 +1,18 @@
+{
+  "sectionId": "2.4-5",
+  "sourcePages": [
+    "page-195",
+    "page-196"
+  ],
+  "usedPages": [
+    "page-195",
+    "page-196"
+  ],
+  "missingPages": [],
+  "foundStart": true,
+  "startLine": "2.4-5 Total Response",
+  "foundEnd": true,
+  "endBeforeLine": "2.5 SYSTEM STABILITY",
+  "endBeforeCode": "2.5",
+  "charCount": 3117
+}

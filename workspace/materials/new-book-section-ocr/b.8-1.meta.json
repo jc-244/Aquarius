@@ -1,0 +1,16 @@
+{
+  "sectionId": "b.8-1",
+  "sourcePages": [
+    "page-054"
+  ],
+  "usedPages": [
+    "page-054"
+  ],
+  "missingPages": [],
+  "foundStart": true,
+  "startLine": "B.8-1 Some Useful Constants",
+  "foundEnd": true,
+  "endBeforeLine": "B.8-2 Complex Numbers",
+  "endBeforeCode": "b.8-2",
+  "charCount": 153
+}

@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-css_path = PROJECT_ROOT / "tutor-openclaw-ui" / "style.css"
+css_path = PROJECT_ROOT / "app" / "style.css"
 css = css_path.read_text()
 
 # We need to rewrite the core theme variables at the top of the file to a beautiful, Apple Notes / Linear / Craft inspired light theme.
@@ -191,13 +191,13 @@ p, .explain-body p, .learn-explain-body p {
 css_path.write_text(css + craft_overrides)
 print("CRAFT_OVERRIDE_APPLIED")
 
-html_path = Path("tutor-openclaw-ui/index.html")
+html_path = PROJECT_ROOT / "app" / "index.html"
 html = html_path.read_text()
 html = html.replace('color: var(--text-primary);', '') # remove forced old colors
 html = html.replace('color: var(--text-secondary);', '')
 html_path.write_text(html)
 
-app_js = Path("tutor-openclaw-ui/app.js")
+app_js = PROJECT_ROOT / "app" / "app.js"
 app_text = app_js.read_text()
 app_text = app_text.replace("card.style.background = 'rgba(255,255,255,0.05)';", "card.style.background = '#F8FAFC';")
 app_text = app_text.replace("card.style.background = 'rgba(255,255,255,0.02)';", "card.style.background = '#ffffff';")

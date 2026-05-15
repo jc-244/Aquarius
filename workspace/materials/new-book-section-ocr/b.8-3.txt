@@ -1,0 +1,38 @@
+# Aquarius section OCR
+section_id: b.8-3
+source_pages: page-054, page-055
+cut_start_found: yes
+cut_end_found: yes
+
+--- OCR ---
+B.8-3 Sums
+     "
+     n
+                  rn+1 − rm
+           rk =                       r = 1
+     k=m
+                    r−1
+     "n
+                  n(n + 1)
+           k=
+     k=0
+                     2
+     "n
+                  n(n + 1)(2n + 1)
+           k2 =
+     k=0
+                         6
+     "
+     n
+                    r + [n (r − 1) − 1] rn+1
+           k rk =                                  r = 1
+     k=0
+                            (r − 1)2
+     "n
+                      r[(1 + r)(1 − rn ) − 2n(1 − r)rn − n2 (1 − r)2 rn ]
+           k2 r k =                                                         r = 1
+     k=0
+                                           (1 − r)3
+
+[[PAGE page-055]]
+B.8 Appendix: Useful Mathematical Formulas   55

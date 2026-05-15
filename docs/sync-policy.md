@@ -2,10 +2,10 @@
 
 The project currently has two material trees:
 
-- `tutor-materials/`
-- `workspace_tutor_related_full/tutor-materials/`
+- `materials/`
+- `workspace/materials/`
 
-Use root `tutor-materials/` as the runtime materials tree for the app. Use `workspace_tutor_related_full/tutor-materials/` as the workbench for extraction, OCR, scans, manual recrops, and recovery context.
+Use root `materials/` as the runtime materials tree for the app. Use `workspace/materials/` as the workbench for extraction, OCR, scans, manual recrops, and recovery context.
 
 ## Current Rule
 
@@ -15,21 +15,21 @@ When a material change is meant to affect the app, keep both trees synchronized 
 - `new-book-ocr/`
 - relevant extraction scripts
 
-When a change is only an experiment, QA artifact, or temporary extraction output, keep it under `workspace_tutor_related_full/` or local `.local/` instead of adding it to the runtime path.
+When a change is only an experiment, QA artifact, or temporary extraction output, keep it under `workspace/` or local `.local/` instead of adding it to the runtime path.
 
 ## Chapter 2
 
 The current Chapter 2 recrop work exists in both material trees. Treat these files as active project output:
 
-- `tutor-materials/new-book-figures/page-*-figure_2_*.png`
-- `workspace_tutor_related_full/tutor-materials/new-book-figures/page-*-figure_2_*.png`
-- `tutor-materials/new-book-ocr/page-150.meta.json` through `page-223.meta.json`
-- `workspace_tutor_related_full/tutor-materials/new-book-ocr/page-150.meta.json` through `page-223.meta.json`
+- `materials/new-book-figures/page-*-figure_2_*.png`
+- `workspace/materials/new-book-figures/page-*-figure_2_*.png`
+- `materials/new-book-ocr/page-150.meta.json` through `page-223.meta.json`
+- `workspace/materials/new-book-ocr/page-150.meta.json` through `page-223.meta.json`
 
 The app figure map is:
 
-- `tutor-openclaw-ui/section-figure-map-new.json`
-- `workspace_tutor_related_full/tutor-openclaw-ui/section-figure-map-new.json`
+- `app/section-figure-map-new.json`
+- `workspace/app/section-figure-map-new.json`
 
 ## Future Cleanup
 

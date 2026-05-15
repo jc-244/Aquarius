@@ -5,7 +5,7 @@ This file describes the organized project layout after the first cleanup pass on
 ## Runtime App
 
 ```text
-tutor-openclaw-ui/
+app/
 ├── index.html
 ├── app.js
 ├── style.css
@@ -22,12 +22,12 @@ tutor-openclaw-ui/
 └── section-figure-map-new.json
 ```
 
-`tutor-openclaw-ui/` is the running application. Some assets and map files still live at the UI root because the existing frontend and bridge load them from root-relative paths.
+`app/` is the running application. Some assets and map files still live at the UI root because the existing frontend and bridge load them from root-relative paths.
 
 ## Runtime Materials
 
 ```text
-tutor-materials/
+materials/
 ├── new-book-pages/
 ├── new-book-ocr/
 ├── new-book-figures/
@@ -37,13 +37,13 @@ tutor-materials/
 └── extract_new_book_figs.py
 ```
 
-`tutor-materials/` contains the material files the app reads directly or expects beside the material scripts. The scripts currently rely on their location, so they remain in this directory.
+`materials/` contains the material files the app reads directly or expects beside the material scripts. The scripts currently rely on their location, so they remain in this directory.
 
 ## Tools
 
 ```text
 tools/
-└── tutor_craft.py
+└── tools/tutor_craft.py
 ```
 
 `tools/` contains optional maintenance scripts. These are not the app entry point.
@@ -51,15 +51,15 @@ tools/
 ## Working Materials And Memory
 
 ```text
-workspace_tutor_related_full/
-├── project-memory/
-├── tutor-materials/
-├── tutor-openclaw-ui/
-├── workspace-root-related/
+workspace/
+├── memory/
+├── materials/
+├── app/
+├── root-scripts/
 └── tmp/
 ```
 
-This directory is the broader workbench: project memory, mirrored materials, QA output, old workspace context, and extraction experiments. It is useful for research and recovery, but the running app primarily uses root `tutor-openclaw-ui/` and root `tutor-materials/`.
+This directory is the broader workbench: project memory, mirrored materials, QA output, old workspace context, and extraction experiments. It is useful for research and recovery, but the running app primarily uses root `app/` and root `materials/`.
 
 ## Local-Only Files
 
@@ -75,12 +75,12 @@ This directory is the broader workbench: project memory, mirrored materials, QA 
 
 Moved into the local archive:
 
-- `tutor-openclaw-ui/debug/`
-- `tutor-openclaw-ui/generated/`
-- `tutor-openclaw-ui/users/`
-- `tutor-openclaw-ui/tmp-track-samples/`
-- `tutor-openclaw-ui/backup-codex-20260505-034837/`
-- `tutor-openclaw-ui/*.log`
+- `app/debug/`
+- `app/generated/`
+- `app/users/`
+- `app/tmp-track-samples/`
+- `app/backup-codex-20260505-034837/`
+- `app/*.log`
 - old one-off scripts such as `fix-html.py`, `fix-intro.py`, `insert_modal.py`, `pregenerate_test.js`, `test_process_python.js`, and `verify_section_visuals.py`
 - root legacy notes and the old root `style.css` moved to `docs/legacy/`
 - local visual audit sheets moved to `.local/visual-audit-20260514/`
@@ -96,7 +96,7 @@ Kept in place:
 
 ## Before Broad Edits
 
-1. Read `workspace_tutor_related_full/project-memory/MEMORY.md`.
-2. Read the newest files in `workspace_tutor_related_full/project-memory/`.
+1. Read `workspace/memory/MEMORY.md`.
+2. Read the newest files in `workspace/memory/`.
 3. Run `npm run check`.
 4. Avoid deleting Chapter 2 figure crops or metadata unless Harrison explicitly asks.

@@ -1,0 +1,20 @@
+{
+  "sectionId": "2.4",
+  "sourcePages": [
+    "page-168",
+    "page-169",
+    "page-170"
+  ],
+  "usedPages": [
+    "page-168",
+    "page-169",
+    "page-170"
+  ],
+  "missingPages": [],
+  "foundStart": true,
+  "startLine": "2.4 SYSTEM RESPONSE TO EXTERNAL INPUT:",
+  "foundEnd": true,
+  "endBeforeLine": "2.4-1 The Convolution Integral",
+  "endBeforeCode": "2.4-1",
+  "charCount": 3170
+}

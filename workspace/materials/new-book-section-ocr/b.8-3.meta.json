@@ -1,0 +1,18 @@
+{
+  "sectionId": "b.8-3",
+  "sourcePages": [
+    "page-054",
+    "page-055"
+  ],
+  "usedPages": [
+    "page-054",
+    "page-055"
+  ],
+  "missingPages": [],
+  "foundStart": true,
+  "startLine": "B.8-3 Sums",
+  "foundEnd": true,
+  "endBeforeLine": "B.8-4 Taylor and Maclaurin Series",
+  "endBeforeCode": "b.8-4",
+  "charCount": 762
+}

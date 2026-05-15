@@ -13,17 +13,17 @@ Figure 2.1 through Figure 2.29
 Runtime copies live in:
 
 ```text
-tutor-materials/new-book-figures/
-tutor-materials/new-book-ocr/
-tutor-openclaw-ui/section-figure-map-new.json
+materials/new-book-figures/
+materials/new-book-ocr/
+app/section-figure-map-new.json
 ```
 
 Workbench copies live in:
 
 ```text
-workspace_tutor_related_full/tutor-materials/new-book-figures/
-workspace_tutor_related_full/tutor-materials/new-book-ocr/
-workspace_tutor_related_full/tutor-openclaw-ui/section-figure-map-new.json
+workspace/materials/new-book-figures/
+workspace/materials/new-book-ocr/
+workspace/app/section-figure-map-new.json
 ```
 
 ## Important Caution

@@ -1,0 +1,53 @@
+# Aquarius section OCR
+section_id: b.8-7
+source_pages: page-056, page-057
+cut_start_found: yes
+cut_end_found: yes
+
+--- OCR ---
+B.8-7 Common Derivative Formulas
+     d          d         du
+        f (u) = f (u)
+     dx         du        dx
+     d           dv        du
+        (uv) = u + v
+     dx          dx        dx
+     d u         v du  −  u dv
+               = dx 2 dx
+     dx v             v
+     dxn
+          = nxn−1
+     dx
+     d            1
+        ln(ax) =
+     dx            x
+     d               log e
+        log(ax) =
+     dx                x
+     d bx
+        e = bebx
+     dx
+     d bx
+        a = b(ln a)abx
+     dx
+     d
+        sin ax = a cos ax
+     dx
+     d
+        cos ax = −a sin ax
+     dx
+     d                 a
+        tan ax =
+     dx           cos2 ax
+     d                        a
+        (sin−1 ax) = √
+     dx                   1 − a2 x2
+     d                       −a
+        (cos−1 ax) = √
+     dx                    1 − a2 x2
+     d                       a
+        (tan−1 ax) =
+     dx                 1 + a2 x2
+
+[[PAGE page-057]]
+B.8 Appendix: Useful Mathematical Formulas   57

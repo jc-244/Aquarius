@@ -1,0 +1,22 @@
+{
+  "sectionId": "2.7-4",
+  "sourcePages": [
+    "page-217",
+    "page-218",
+    "page-219",
+    "page-220"
+  ],
+  "usedPages": [
+    "page-217",
+    "page-218",
+    "page-219",
+    "page-220"
+  ],
+  "missingPages": [],
+  "foundStart": true,
+  "startLine": "2.7-4 Graphical Understanding of Convolution",
+  "foundEnd": true,
+  "endBeforeLine": "2.8 MATLAB: M-Files 219",
+  "endBeforeCode": "2.8",
+  "charCount": 3725
+}

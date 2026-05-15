@@ -1,0 +1,20 @@
+{
+  "sectionId": "2.9",
+  "sourcePages": [
+    "page-221",
+    "page-222",
+    "page-223"
+  ],
+  "usedPages": [
+    "page-221",
+    "page-222",
+    "page-223"
+  ],
+  "missingPages": [],
+  "foundStart": true,
+  "startLine": "2.9 SUMMARY",
+  "foundEnd": true,
+  "endBeforeLine": "2.2-2 Consider a linear time-invariant system with input x(t) and output y(t) that is described by the differential equation",
+  "endBeforeCode": "2.2-2",
+  "charCount": 7158
+}

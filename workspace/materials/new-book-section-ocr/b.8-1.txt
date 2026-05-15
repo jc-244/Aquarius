@@ -1,0 +1,15 @@
+# Aquarius section OCR
+section_id: b.8-1
+source_pages: page-054
+cut_start_found: yes
+cut_end_found: yes
+
+--- OCR ---
+B.8-1 Some Useful Constants
+     π ≈ 3.1415926535
+     e ≈ 2.7182818284
+     1
+       ≈ 0.3678794411
+     e
+     log10 2 ≈ 0.30103
+     log10 3 ≈ 0.47712

@@ -1,0 +1,53 @@
+# Aquarius section OCR
+section_id: 2.4-5
+source_pages: page-195, page-196
+cut_start_found: yes
+cut_end_found: yes
+
+--- OCR ---
+2.4-5  Total Response
+Assuming distinct roots, the total response of a linear system can be expressed as the sum of its
+zero-input response (ZIR) and its zero-state response (ZSR):
+
+total response = \sum_{k=1}^{N} c_k e^{\lambda_k t} + x(t) ∗ h(t)
+                  ⏟ ZIR                    ⏟ ZSR
+
+For repeated roots, the zero-input component should be appropriately modified.
+For the series RLC circuit in Ex. 2.4 with the input x(t) = 10e^{−3t}u(t) and the initial conditions
+y(0−) = 0, v_C(0−) = 5, we determined the zero-input response in Ex. 2.1a [Eq. (2.9)]. We found
+the zero-state response in Ex. 2.9. From the results in Exs. 2.1a and 2.9, we obtain
+
+total current = (−5e^{−t} + 5e^{−2t}) + (−5e^{−t} + 20e^{−2t} − 15e^{−3t})     t ≥ 0     (2.43)
+                ⏟ zero-input current       ⏟ zero-state current
+
+Figure 2.16a shows the zero-input, zero-state, and total responses.
+
+y(t)
+0
+Zero state
+Total
+Zero input
+t
+(a)
+
+y(t)
+0
+Natural
+Total
+Forced
+t
+(b)
+
+Figure 2.16  Total response and its components.
+
+[[PAGE page-196]]
+196  CHAPTER 2  TIME-DOMAIN ANALYSIS OF CONTINUOUS-TIME SYSTEMS
+
+NATURAL AND FORCED RESPONSE
+For the RLC circuit in Ex. 2.4, the characteristic modes were found to be e^{-t} and e^{-2t}. As we expected, the zero-input response is composed exclusively of characteristic modes. Note, however, that even the zero-state response [Eq. (2.43)] contains characteristic mode terms. This observation is generally true of LTIC systems. We can now lump together all the characteristic mode terms in the total response, giving us a component known as the natural response y_n(t). The remainder, consisting entirely of noncharacteristic mode terms, is known as the forced response y_φ(t). The total response of the RLC circuit in Ex. 2.4 can be expressed in terms of natural and forced components by regrouping the terms in Eq. (2.43) as
+
+total current = (-10e^{-t} + 25e^{-2t}) + (-15e^{-3t})     t ≥ 0     (2.44)
+                   natural response y_n(t)     forced response y_φ(t)
+
+Figure 2.16b shows the natural, forced, and total responses.
+The classical solution to a differential equation includes the natural (also called the homogeneous or complementary) solution and the forced (also known as the particular) solution; traditional courses on differential equations provide simplified procedures to determine these components. Unfortunately, the classical solution lacks the engineering intuition and utility afforded by the zero-input and zero-state responses. The classical approach cannot separate the responses arising from internal conditions and external input. While the natural and forced solutions can be obtained from the zero-input and zero-state responses, the converse is not true. Further, the classical method is unable to express the system response to an input x(t) as an explicit function of x(t). In fact, the classical method is restricted to a certain class of inputs and cannot handle arbitrary inputs, as can the method to determine the zero-state response. For these (and other) reasons, we do not further detail the classical solution of differential equations.
