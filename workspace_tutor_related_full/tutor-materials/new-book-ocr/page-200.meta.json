@@ -19,16 +19,16 @@
   "has_math": true,
   "page_type": "mixed",
   "book_page": "page-200",
+  "metadata_model": "openrouter:openai/gpt-5.4",
   "figures": [
     {
       "fig_id": "Figure 2.18",
-      "top": 0.075,
-      "left": 0.15,
-      "bottom": 0.2932,
-      "right": 0.6333,
-      "caption": "Characteristic roots location and system stability",
+      "top": 0.1114,
+      "left": 0.1583,
+      "bottom": 0.3205,
+      "right": 0.6389,
+      "caption": "Characteristic root location and system stability.",
       "crop_file": "page-200-figure_2_18.png"
     }
-  ],
-  "metadata_model": "openrouter:openai/gpt-5.4"
+  ]
 }

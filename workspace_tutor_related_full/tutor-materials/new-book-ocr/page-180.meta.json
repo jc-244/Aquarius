@@ -18,16 +18,16 @@
   "has_math": true,
   "page_type": "mixed",
   "book_page": "page-180",
+  "metadata_model": "openrouter:openai/gpt-5.4",
   "figures": [
     {
-      "fig_id": "diagram-convolution-cartoon",
-      "top": 0.3705,
-      "left": 0.1661,
-      "bottom": 0.7068,
-      "right": 0.6278,
-      "caption": "Cartoon illustration about convolution with protesting students and dean of engineering; caption reads \"Convolution: Its bark is worse than its bite!\"",
-      "crop_file": "page-180-diagram-convolution-cartoon.png"
+      "fig_id": "convolution-cartoon",
+      "top": 0.59,
+      "left": 0.5194,
+      "bottom": 0.7182,
+      "right": 0.7917,
+      "caption": "Convolution cartoon.",
+      "crop_file": "page-180-convolution-cartoon.png"
     }
-  ],
-  "metadata_model": "openrouter:openai/gpt-5.4"
+  ]
 }

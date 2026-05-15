@@ -19,16 +19,16 @@
   "has_math": true,
   "page_type": "figure",
   "book_page": "page-182",
+  "metadata_model": "openrouter:openai/gpt-5.4",
   "figures": [
     {
       "fig_id": "Figure 2.8",
-      "top": 0.0659,
-      "left": 0.1167,
-      "bottom": 0.725,
-      "right": 0.5278,
-      "caption": "Convolution of x(t) and h(t), showing subplots (a) through (f)",
+      "top": 0.1045,
+      "left": 0.1472,
+      "bottom": 0.7205,
+      "right": 0.5333,
+      "caption": "Convolution of x(t) and h(t).",
       "crop_file": "page-182-figure_2_8.png"
     }
-  ],
-  "metadata_model": "openrouter:openai/gpt-5.4"
+  ]
 }

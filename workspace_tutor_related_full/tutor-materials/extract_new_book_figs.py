@@ -48,8 +48,12 @@ For each figure found, return a JSON array:
 
 Rules:
 - Bounding box values are in PIXELS from the top-left corner of the image
-- Be generous: add 15-25px padding around each figure AND its caption text
-- Include the figure caption/label text within the bounding box
+- Return a PRODUCTION CROP box for the visual object only.
+- Include axes, axis labels, legends, subfigure labels such as (a)/(b), arrows, labels inside the diagram, and all plotted curves.
+- Do NOT include figure captions, "Figure 2.x ..." caption lines, body paragraphs, equations outside the visual, page headers, page numbers, section headings, drill/exercise gray boxes, or unrelated surrounding text.
+- Use tight but safe padding: only 8-14px around the visual object. Do not be generous.
+- If a page has multiple separated figures, return separate boxes rather than one large page-spanning box.
+- If the visible material is mostly text/equations and there is no clean visual figure body, return [] instead of boxing the text.
 - Use the exact figure label from the book (e.g. "Fig. 1.3a", "Figure B.6") if visible; otherwise generate a descriptive id like "diagram-convolution"
 - If NO figures/diagrams exist (only text + equations), return: []
 - Return ONLY a valid JSON array — no markdown fences, no explanation text
@@ -177,6 +181,19 @@ def crop_and_save(img_path: str, page_id: str, figs: list):
             print(f"  ✂️  Saved crop: {out_name} ({r-l}×{b-t}px)")
 
 
+def delete_existing_page_crops(page_id: str):
+    """Remove stale crops for a page before a forced re-extraction."""
+    prefix = f"{page_id}-"
+    removed = 0
+    if os.path.exists(FIGS_DIR):
+        for name in os.listdir(FIGS_DIR):
+            if name.startswith(prefix) and name.lower().endswith(".png"):
+                os.remove(os.path.join(FIGS_DIR, name))
+                removed += 1
+    if removed:
+        print(f"  🧹 removed {removed} stale crop(s) for {page_id}")
+
+
 def process_pages(page_ids: list, force: bool = False):
     total = len(page_ids)
     skipped = 0
@@ -218,6 +235,8 @@ def process_pages(page_ids: list, force: bool = False):
         print(f"[{i+1}/{total}] {page_id}: analyzing… (type={meta.get('page_type','?')}, section={meta.get('section','?')})")
 
         try:
+            if force:
+                delete_existing_page_crops(page_id)
             figs = call_gpt54(img_path)
             # Crop and save each figure
             crop_and_save(img_path, page_id, figs)

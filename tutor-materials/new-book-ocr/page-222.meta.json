@@ -21,6 +21,6 @@
   "has_math": true,
   "page_type": "text",
   "book_page": "page-222",
-  "figures": [],
-  "metadata_model": "openrouter:openai/gpt-5.4"
+  "metadata_model": "openrouter:openai/gpt-5.4",
+  "figures": []
 }

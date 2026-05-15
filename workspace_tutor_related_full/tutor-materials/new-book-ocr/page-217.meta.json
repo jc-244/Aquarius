@@ -21,16 +21,16 @@
   "has_math": true,
   "page_type": "mixed",
   "book_page": "page-217",
+  "metadata_model": "openrouter:openai/gpt-5.4",
   "figures": [
     {
       "fig_id": "Figure 2.26",
-      "top": 0.0773,
+      "top": 0.1114,
       "left": 0.1667,
-      "bottom": 0.3455,
-      "right": 0.7194,
+      "bottom": 0.3795,
+      "right": 0.7222,
       "caption": "Effect of component values on characteristic root locations.",
       "crop_file": "page-217-figure_2_26.png"
     }
-  ],
-  "metadata_model": "openrouter:openai/gpt-5.4"
+  ]
 }

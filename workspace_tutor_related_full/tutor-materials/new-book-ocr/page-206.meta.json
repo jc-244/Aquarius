@@ -19,16 +19,16 @@
   "has_math": true,
   "page_type": "mixed",
   "book_page": "page-206",
+  "metadata_model": "openrouter:openai/gpt-5.4",
   "figures": [
     {
       "fig_id": "Figure 2.21",
-      "top": 0.0795,
-      "left": 0.1333,
-      "bottom": 0.1955,
+      "top": 0.1114,
+      "left": 0.1389,
+      "bottom": 0.2136,
       "right": 0.625,
       "caption": "Effective duration of an impulse response.",
       "crop_file": "page-206-figure_2_21.png"
     }
-  ],
-  "metadata_model": "openrouter:openai/gpt-5.4"
+  ]
 }

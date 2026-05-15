@@ -18,25 +18,25 @@
   "has_math": true,
   "page_type": "figure",
   "book_page": "page-219",
+  "metadata_model": "openrouter:openai/gpt-5.4",
   "figures": [
     {
       "fig_id": "Figure 2.27",
-      "top": 0.0705,
-      "left": 0.225,
-      "bottom": 0.36,
-      "right": 0.7178,
+      "top": 0.1114,
+      "left": 0.2639,
+      "bottom": 0.3886,
+      "right": 0.8861,
       "caption": "Graphical convolution at step t = 0.75 second.",
       "crop_file": "page-219-figure_2_27.png"
     },
     {
       "fig_id": "Figure 2.28",
-      "top": 0.3614,
-      "left": 0.225,
-      "bottom": 0.6582,
-      "right": 0.7178,
+      "top": 0.4636,
+      "left": 0.2639,
+      "bottom": 0.7568,
+      "right": 0.8861,
       "caption": "Graphical convolution at step t = 2.25 seconds.",
       "crop_file": "page-219-figure_2_28.png"
     }
-  ],
-  "metadata_model": "openrouter:openai/gpt-5.4"
+  ]
 }

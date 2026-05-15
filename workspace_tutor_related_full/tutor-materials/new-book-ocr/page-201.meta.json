@@ -21,16 +21,16 @@
   "has_math": true,
   "page_type": "mixed",
   "book_page": "page-201",
+  "metadata_model": "openrouter:openai/gpt-5.4",
   "figures": [
     {
       "fig_id": "Figure 2.19",
-      "top": 0.0841,
+      "top": 0.1136,
       "left": 0.1667,
-      "bottom": 0.1568,
-      "right": 0.7139,
-      "caption": "Composite system for Ex. 2.13: cascade block diagram with input x(t), subsystems S1 and S2, and output y(t)",
+      "bottom": 0.1841,
+      "right": 0.6917,
+      "caption": "Composite cascade system.",
       "crop_file": "page-201-figure_2_19.png"
     }
-  ],
-  "metadata_model": "openrouter:openai/gpt-5.4"
+  ]
 }

@@ -19,16 +19,6 @@
   "has_math": true,
   "page_type": "mixed",
   "book_page": "page-168",
-  "figures": [
-    {
-      "fig_id": "diagram-input-output-arrow-notation",
-      "top": 0.55,
-      "left": 0.1667,
-      "bottom": 0.7068,
-      "right": 0.6361,
-      "caption": "Directed arrow notation showing input-output pairs leading from delayed impulses to the corresponding shifted impulse responses",
-      "crop_file": "page-168-diagram-input-output-arrow-notation.png"
-    }
-  ],
-  "metadata_model": "openrouter:openai/gpt-5.4"
+  "metadata_model": "openrouter:openai/gpt-5.4",
+  "figures": []
 }

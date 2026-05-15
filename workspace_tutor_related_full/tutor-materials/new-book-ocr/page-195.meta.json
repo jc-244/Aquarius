@@ -18,16 +18,16 @@
   "has_math": true,
   "page_type": "mixed",
   "book_page": "page-195",
+  "metadata_model": "openrouter:openai/gpt-5.4",
   "figures": [
     {
       "fig_id": "Figure 2.16",
-      "top": 0.5114,
-      "left": 0.1639,
+      "top": 0.6682,
+      "left": 0.0583,
       "bottom": 0.7568,
-      "right": 0.7139,
-      "caption": "Total response and its components; two response plots labeled (a) and (b) showing zero-state, zero-input, total, natural, and forced components.",
+      "right": 0.775,
+      "caption": "Total response and its components.",
       "crop_file": "page-195-figure_2_16.png"
     }
-  ],
-  "metadata_model": "openrouter:openai/gpt-5.4"
+  ]
 }

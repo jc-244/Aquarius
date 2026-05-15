@@ -33,9 +33,7 @@
     "page-131-figure_1_53-1.png"
   ],
   "2": [
-    "page-150-chapter-banner.png",
     "page-160-figure_2_1.png",
-    "page-168-diagram-input-output-arrow-notation.png",
     "page-169-figure_2_3.png",
     "page-172-figure_2_4.png",
     "page-173-figure_2_5.png",
@@ -226,7 +224,6 @@
   ],
   "2.3": [],
   "2.4": [
-    "page-168-diagram-input-output-arrow-notation.png",
     "page-169-figure_2_3.png"
   ],
   "2.4-1": [
@@ -236,7 +233,7 @@
   ],
   "2.4-2": [
     "page-179-figure_2_7.png",
-    "page-180-diagram-convolution-cartoon.png",
+    "page-180-convolution-cartoon.png",
     "page-182-figure_2_8.png",
     "page-184-figure_2_9.png",
     "page-186-figure_2_10.png",
@@ -287,8 +284,6 @@
     "page-217-figure_2_26.png"
   ],
   "2.7-4": [
-    "page-219-figure_2_27.png",
-    "page-219-figure_2_28.png",
     "page-220-figure_2_29.png"
   ],
   "2.8": [],
