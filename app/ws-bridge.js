@@ -45,6 +45,33 @@ loadLocalEnvFile();
 const HTTP_PORT = process.env.PORT || 9000;
 const APP_NAME = 'Tutor Agent';
 const APP_URL = `http://localhost:${HTTP_PORT}`;
+const MAX_JSON_BODY_BYTES = Number(process.env.TUTOR_MAX_JSON_BODY_BYTES || 35 * 1024 * 1024);
+const PDF_TEXT_MAX_CHARS = Number(process.env.TUTOR_PDF_TEXT_MAX_CHARS || 120000);
+const PDF_VISUAL_PAGE_LIMIT = Number(process.env.TUTOR_PDF_VISUAL_PAGE_LIMIT || 3);
+
+function resolveBinary(candidates = []) {
+    for (const candidate of candidates) {
+        if (!candidate) continue;
+        if (candidate.includes('/') && fs.existsSync(candidate)) return candidate;
+        if (!candidate.includes('/')) return candidate;
+    }
+    return candidates[0] || '';
+}
+
+const PDFTOTEXT_BIN = resolveBinary([
+    process.env.PDFTOTEXT_BIN,
+    '/opt/homebrew/bin/pdftotext',
+    '/usr/local/bin/pdftotext',
+    '/usr/bin/pdftotext',
+    'pdftotext'
+]);
+const PDFTOPPM_BIN = resolveBinary([
+    process.env.PDFTOPPM_BIN,
+    '/opt/homebrew/bin/pdftoppm',
+    '/usr/local/bin/pdftoppm',
+    '/usr/bin/pdftoppm',
+    'pdftoppm'
+]);
 
 function resolveExistingDir(candidates, label, validator = null) {
     for (const candidate of candidates) {
@@ -119,6 +146,8 @@ const GENERATED_DIR = path.join(__dirname, 'generated');
 try { if (!fs.existsSync(GENERATED_DIR)) fs.mkdirSync(GENERATED_DIR, { recursive: true }); } catch (_) {}
 const DEBUG_DIR = path.join(__dirname, 'debug');
 try { if (!fs.existsSync(DEBUG_DIR)) fs.mkdirSync(DEBUG_DIR, { recursive: true }); } catch (_) {}
+const HOMEWORK_DIR = path.join(PROJECT_ROOT, 'HW');
+try { if (!fs.existsSync(HOMEWORK_DIR)) fs.mkdirSync(HOMEWORK_DIR, { recursive: true }); } catch (_) {}
 
 const { processEmbeddedPython, normalizePythonCode } = require('./process-python.js');
 
@@ -1661,17 +1690,82 @@ function serveStaticFromDir(res, baseDir, requestedName) {
     serveStaticFile(res, filePath);
 }
 
+function naturalCompare(a, b) {
+    return String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+}
+
+function isHomeworkImage(fileName) {
+    return /\.(png|jpe?g|webp|gif)$/i.test(String(fileName || ''));
+}
+
+function problemTitleFromFile(fileName, index) {
+    const base = path.basename(fileName || '', path.extname(fileName || ''));
+    const match = base.match(/(?:^|[^0-9])(?:q|p|problem|题)?\s*0*([0-9]+)/i);
+    const num = match ? Number(match[1]) : index + 1;
+    return `Problem ${num}`;
+}
+
+function imageFileToDataUrl(filePath, mimeType) {
+    try {
+        const data = fs.readFileSync(filePath);
+        return `data:${mimeType || 'image/png'};base64,${data.toString('base64')}`;
+    } catch (_) {
+        return '';
+    }
+}
+
+function readHomeworkSets() {
+    if (!fs.existsSync(HOMEWORK_DIR)) return [];
+    return fs.readdirSync(HOMEWORK_DIR, { withFileTypes: true })
+        .filter(entry => entry.isDirectory() && !entry.name.startsWith('.'))
+        .sort((a, b) => naturalCompare(a.name, b.name))
+        .map(entry => {
+            const setDir = path.join(HOMEWORK_DIR, entry.name);
+            const images = fs.readdirSync(setDir, { withFileTypes: true })
+                .filter(file => file.isFile() && isHomeworkImage(file.name))
+                .map(file => file.name)
+                .sort(naturalCompare);
+            const problems = images.map((fileName, index) => {
+                const imagePath = path.join(setDir, fileName);
+                const mimeType = MIME_TYPES[path.extname(fileName).toLowerCase()] || 'image/png';
+                const id = `${entry.name}/${fileName}`.replace(/[^a-zA-Z0-9_\-/.\u4e00-\u9fa5]/g, '_');
+                return {
+                    id,
+                    title: problemTitleFromFile(fileName, index),
+                    body: `${entry.name} ${problemTitleFromFile(fileName, index)}. Use the attached problem image as the source.`,
+                    status: 'Todo',
+                    explanation: '',
+                    qa: [],
+                    images: [{
+                        name: fileName,
+                        url: `/homework-assets/${encodeURIComponent(entry.name)}/${encodeURIComponent(fileName)}`,
+                        dataUrl: imageFileToDataUrl(imagePath, mimeType),
+                        mimeType
+                    }]
+                };
+            });
+            return {
+                id: entry.name,
+                title: entry.name,
+                problems
+            };
+        });
+}
+
 async function readRequestBody(req) {
     return new Promise((resolve, reject) => {
-        let body = '';
+        const chunks = [];
+        let totalBytes = 0;
         req.on('data', chunk => {
-            body += chunk;
-            if (body.length > 2 * 1024 * 1024) {
+            totalBytes += Buffer.byteLength(chunk);
+            if (totalBytes > MAX_JSON_BODY_BYTES) {
                 reject(new Error('Request body too large'));
                 req.destroy();
+                return;
             }
+            chunks.push(Buffer.from(chunk));
         });
-        req.on('end', () => resolve(body));
+        req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
         req.on('error', reject);
     });
 }
@@ -1752,6 +1846,133 @@ function extractTextContent(content) {
             .trim();
     }
     return '';
+}
+
+function runCommand(command, args = [], options = {}) {
+    return new Promise((resolve, reject) => {
+        let settled = false;
+        const timeoutMs = options.timeoutMs || 20000;
+        const spawnOptions = { ...options };
+        delete spawnOptions.timeoutMs;
+        const child = spawn(command, args, {
+            stdio: ['ignore', 'pipe', 'pipe'],
+            ...spawnOptions
+        });
+        const timer = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            child.kill('SIGKILL');
+            reject(new Error(`${command} timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
+        const stdout = [];
+        const stderr = [];
+        child.stdout.on('data', chunk => stdout.push(Buffer.from(chunk)));
+        child.stderr.on('data', chunk => stderr.push(Buffer.from(chunk)));
+        child.on('error', err => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            reject(err);
+        });
+        child.on('close', code => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            const out = Buffer.concat(stdout);
+            const err = Buffer.concat(stderr).toString('utf8');
+            if (code !== 0) {
+                reject(new Error(`${command} exited ${code}${err ? `: ${err.slice(0, 400)}` : ''}`));
+                return;
+            }
+            resolve({ stdout: out, stderr: err });
+        });
+    });
+}
+
+function decodeDataUrl(dataUrl = '') {
+    const match = String(dataUrl || '').match(/^data:([^;,]+)?(;base64)?,([\s\S]*)$/i);
+    if (!match) throw new Error('Invalid attachment data URL');
+    const mimeType = match[1] || 'application/octet-stream';
+    const isBase64 = Boolean(match[2]);
+    const body = match[3] || '';
+    return {
+        mimeType,
+        buffer: isBase64 ? Buffer.from(body, 'base64') : Buffer.from(decodeURIComponent(body), 'utf8')
+    };
+}
+
+function createTempDir(prefix = 'aquarius-attachment-') {
+    return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+}
+
+async function extractPdfAttachment(pdf = {}) {
+    const result = {
+        name: pdf.name || 'attached.pdf',
+        text: '',
+        pageImages: [],
+        error: ''
+    };
+    if (!pdf.dataUrl) return result;
+
+    const tempDir = createTempDir();
+    const pdfPath = path.join(tempDir, 'attachment.pdf');
+    const txtPath = path.join(tempDir, 'attachment.txt');
+    const imagePrefix = path.join(tempDir, 'page');
+
+    try {
+        const decoded = decodeDataUrl(pdf.dataUrl);
+        fs.writeFileSync(pdfPath, decoded.buffer);
+        try {
+            await runCommand(PDFTOTEXT_BIN, ['-layout', '-enc', 'UTF-8', pdfPath, txtPath], { timeoutMs: 30000 });
+            if (fs.existsSync(txtPath)) {
+                result.text = fs.readFileSync(txtPath, 'utf8')
+                    .replace(/\r/g, '')
+                    .replace(/\n{4,}/g, '\n\n\n')
+                    .trim()
+                    .slice(0, PDF_TEXT_MAX_CHARS);
+            }
+        } catch (err) {
+            result.error = `pdftotext failed: ${err.message}`;
+            console.warn(`[attachments] pdftotext failed for ${result.name}:`, err.message);
+        }
+
+        if (result.text.length < 800 && PDF_VISUAL_PAGE_LIMIT > 0) {
+            try {
+                await runCommand(PDFTOPPM_BIN, ['-png', '-r', '150', '-f', '1', '-l', String(PDF_VISUAL_PAGE_LIMIT), pdfPath, imagePrefix], { timeoutMs: 45000 });
+                const pageFiles = fs.readdirSync(tempDir)
+                    .filter(file => /^page-\d+\.png$/.test(file))
+                    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+                result.pageImages = pageFiles.slice(0, PDF_VISUAL_PAGE_LIMIT).map(file => {
+                    const bytes = fs.readFileSync(path.join(tempDir, file));
+                    return `data:image/png;base64,${bytes.toString('base64')}`;
+                });
+            } catch (err) {
+                result.error = result.error || `pdftoppm failed: ${err.message}`;
+                console.warn(`[attachments] pdftoppm failed for ${result.name}:`, err.message);
+            }
+        }
+    } catch (err) {
+        result.error = err.message || 'PDF extraction failed';
+        console.warn(`[attachments] PDF extraction failed for ${result.name}:`, result.error);
+    } finally {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+
+    return result;
+}
+
+async function prepareAttachmentContext(attachments = []) {
+    const pdfAttachments = attachments.filter(a => a && a.type === 'pdf' && a.dataUrl);
+    const wordAttachments = attachments.filter(a => a && (a.type === 'document' || a.type === 'word') && compactWhitespace(a.text || ''));
+    const extractedPdfs = [];
+    for (const pdf of pdfAttachments) {
+        extractedPdfs.push(await extractPdfAttachment(pdf));
+    }
+    const retrievalText = [
+        ...extractedPdfs.map(pdf => pdf.text || ''),
+        ...wordAttachments.map(doc => String(doc.text || ''))
+    ].join('\n\n').slice(0, 50000);
+    return { extractedPdfs, retrievalText };
 }
 
 async function callOpenRouterChat({ model, messages, timeoutMs, temperature = 0.2, maxTokens = 1200 }) {
@@ -2150,6 +2371,29 @@ function selectRelevantBooks(question, keywords, minCount = 3, maxCount = 5, ocr
 
     const fallback = ranked.slice(0, Math.max(minCount, Math.min(maxCount, 4)));
     return fallback.map(item => item.entry);
+}
+
+async function selectBooksFromAttachmentText(attachmentText = '', fallbackQuestion = '', ocrDir = OCR_DIR_OLD) {
+    const text = compactWhitespace(attachmentText || '').slice(0, 12000);
+    const question = compactWhitespace(fallbackQuestion || '');
+    if (!text) return [];
+    const seed = [
+        'Use the user question plus the uploaded attachment text to find the most relevant textbook sections/pages.',
+        'The attachment is the material; the user question is the focus. If the question is vague like "this" or "这个", infer the focus from the attachment.',
+        '',
+        question ? `User question/focus: ${question}` : '',
+        '',
+        `Uploaded attachment text:\n${text}`
+    ].filter(Boolean).join('\n');
+    const keywords = await extractKeywords(seed);
+    const activeIndex = getBookIndex(ocrDir);
+    const scoringText = [question, text].filter(Boolean).join('\n\n');
+    const ranked = activeIndex
+        .map(entry => ({ entry, score: scoreBookEntry(entry, keywords, scoringText) }))
+        .filter(item => item.score >= 12)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+    return ranked.map(item => item.entry);
 }
 
 function readOCRText(filePath, maxChars = 5000) {
@@ -2640,6 +2884,7 @@ async function generateExplanation(question, bookPages, webSources, options = {}
     const mode = options.mode || 'ask';
     const userProfilePrompt = options.userProfilePrompt || '';
     const attachments = Array.isArray(options.attachments) ? options.attachments : [];
+    const preparedAttachments = options.preparedAttachments || null;
     const answerLength = options.answerLength || 'medium';
     const examPriorityGuidance = options.examPriorityGuidance || null;
     const examPriorityAnswerHint = examPriorityGuidance && examPriorityGuidance.json
@@ -2694,7 +2939,11 @@ async function generateExplanation(question, bookPages, webSources, options = {}
         language === 'zh' ? '1. 用中文回答，优先用通俗易懂的方式讲解。' : '1. Answer in clear beginner-friendly English.',
         language === 'zh' ? '2. 用 Markdown 输出。' : '2. Use Markdown formatting.',
         language === 'zh' ? '3. 如果这是继续追问，必须优先承接上文，不要把它当成全新的陌生问题。' : '3. Prioritize context if this is a follow-up question.',
-        language === 'zh' ? '4. 引用时只使用 [书页N] / [来源N] 这样的标注，自然嵌入正文中，**千万不要在结尾专门罗列来源列表**。' : '4. Cite sources naturally inline as [PageN] or [SourceN]. **Do not list sources at the end.**',
+        attachments.length
+            ? (language === 'zh'
+                ? '4. 如果用户上传了附件，必须同时看用户问题和附件内容：附件是材料，用户问题决定讲解焦点。先回答用户针对附件问的点；如果问题很含糊，再简要说明附件在讲什么。匹配到的教材/网页只作为辅助解释，不能喧宾夺主。'
+                : '4. If the user uploaded attachments, consider both the user question and the attachment content: the attachment is the material, and the user question defines the focus. Answer the user’s question about the attachment first; if the question is vague, briefly explain what the attachment is about. Matched textbook/web context is only supporting material.')
+            : (language === 'zh' ? '4. 引用时只使用 [书页N] / [来源N] 这样的标注，自然嵌入正文中，**千万不要在结尾专门罗列来源列表**。' : '4. Cite sources naturally inline as [PageN] or [SourceN]. **Do not list sources at the end.**'),
         language === 'zh' ? '5. 如果需要图示，请在正文自然解释，但不要自己输出 Python 代码块。实际图片会由后置的 gptimage2 绘图模型生成。' : '5. If a diagram would help, explain it naturally in the answer, but do NOT generate Python code blocks yourself. The actual image will be rendered later by gptimage2.',
         language === 'zh' ? '6. 如果出现数学公式，使用 LaTeX，块级公式写成 $$...$$，行内公式写成 $...$。' : '6. Use LaTeX for math. $$...$$ for block, $...$ for inline.',
         language === 'zh' ? '7. 优先结合教材，再补充联网资料。' : '7. Prioritize textbook content, then web sources.',
@@ -2710,22 +2959,41 @@ async function generateExplanation(question, bookPages, webSources, options = {}
     let userContent;
     const imageAttachments = attachments.filter(a => a.type === 'image' && a.dataUrl);
     const pdfAttachments = attachments.filter(a => a.type === 'pdf' && a.dataUrl);
+    const wordAttachments = attachments.filter(a => (a.type === 'document' || a.type === 'word') && compactWhitespace(a.text || ''));
+    const extractedPdfs = preparedAttachments && Array.isArray(preparedAttachments.extractedPdfs)
+        ? preparedAttachments.extractedPdfs
+        : (await prepareAttachmentContext(attachments)).extractedPdfs;
 
-    let pdfContext = '';
-    for (const pdf of pdfAttachments) {
-        pdfContext += `\n\n[Attached document: ${pdf.name}]\n(PDF content will be analyzed by the model)\n`;
+    let attachmentContext = '';
+    const pdfVisualImages = [];
+    for (const pdf of extractedPdfs) {
+        if (pdf.text) {
+            attachmentContext += `\n\n[Attached PDF text: ${pdf.name}]\n${pdf.text}\n`;
+        } else {
+            attachmentContext += `\n\n[Attached PDF: ${pdf.name}]\nCould not extract selectable text from this PDF. Analyze the attached rendered page images if present; otherwise say clearly that the PDF could not be read.\n`;
+        }
+        if (pdf.pageImages && pdf.pageImages.length) {
+            pdfVisualImages.push(...pdf.pageImages.map(url => ({
+                name: pdf.name,
+                dataUrl: url
+            })));
+        }
+    }
+    for (const doc of wordAttachments) {
+        attachmentContext += `\n\n[Attached Word document: ${doc.name}]\n${String(doc.text || '').slice(0, 120000)}\n`;
     }
 
-    if (imageAttachments.length > 0) {
+    const visualAttachments = imageAttachments.concat(pdfVisualImages);
+    if (visualAttachments.length > 0) {
         userContent = [
-            { type: 'text', text: prompt + pdfContext || '(Please analyze the attached image(s))' },
-            ...imageAttachments.map(img => ({
+            { type: 'text', text: prompt + attachmentContext || '(Please analyze the attached image/PDF page(s))' },
+            ...visualAttachments.map(img => ({
                 type: 'image_url',
                 image_url: { url: img.dataUrl }
             }))
         ];
     } else {
-        userContent = prompt + pdfContext;
+        userContent = prompt + attachmentContext;
     }
 
     console.log('[ASK] Pipeline Step 1/3: Generating teaching plan with Gemini...');
@@ -5474,6 +5742,18 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    if (pathname === '/api/homework' && req.method === 'GET') {
+        try {
+            const sets = readHomeworkSets();
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ version: 2, sets }));
+        } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ error: err.message || 'Failed to read homework folder' }));
+        }
+        return;
+    }
+
     if (pathname === '/api/ask' && req.method === 'POST') {
         try {
             const data = await readJsonBody(req);
@@ -5490,6 +5770,13 @@ const server = http.createServer(async (req, res) => {
             const userPrefs = userMemory && userMemory.quiz ? userMemory.quiz : {};
             const answerLength = userPrefs.length || data.answerLength || 'medium';
             const attachments = Array.isArray(data.attachments) ? data.attachments : [];
+            const hasReadableAttachments = attachments.some(att => att && (
+                (att.type === 'image' && att.dataUrl) ||
+                (att.type === 'pdf' && att.dataUrl) ||
+                ((att.type === 'document' || att.type === 'word') && compactWhitespace(att.text || ''))
+            ));
+            const attachmentFirst = Boolean(data.attachmentFirst || data.attachmentOnly || (hasReadableAttachments && !sectionId && !sectionTitle));
+            const preparedAttachments = hasReadableAttachments ? await prepareAttachmentContext(attachments) : { extractedPdfs: [], retrievalText: '' };
             const { ocrDir, pageImageDir } = getBookDirs(data.bookSource);
 
             if (!question) {
@@ -5500,12 +5787,18 @@ const server = http.createServer(async (req, res) => {
 
             console.log('[ASK] Question:', question, 'mode=', mode);
             let relatedBooks = [];
-            const incomingBookPages = filterPagesForBookSource(data.bookPages, data.bookSource);
+            const incomingBookPages = attachmentFirst ? [] : filterPagesForBookSource(data.bookPages, data.bookSource);
             if (Array.isArray(data.bookPages) && data.bookPages.length && !incomingBookPages.length) {
                 console.warn(`[ASK] Dropped ${data.bookPages.length} stale bookPages due to bookSource=${data.bookSource || 'old'} mismatch`);
             }
 
-            if (incomingBookPages.length) {
+            if (attachmentFirst) {
+                relatedBooks = (await selectBooksFromAttachmentText(preparedAttachments.retrievalText, question, ocrDir)).map(item => ({
+                    ...item,
+                    ocrText: readOCRText(item.textPath, 5500)
+                }));
+                console.log(`[ASK] Attachment-first mode: selected ${relatedBooks.length} textbook pages from attachment text`);
+            } else if (incomingBookPages.length) {
                 relatedBooks = incomingBookPages.map(item => ({
                     ...item,
                     pageImage: item.pageImage || `${item.page}.png`,
@@ -5531,9 +5824,9 @@ const server = http.createServer(async (req, res) => {
                 console.log(`[ASK] Exam-priority hint active: ${examPriorityGuidance.source} / ${(examPriorityGuidance.json?.topic_filter?.relevant_topic_ids || []).join(',')}`);
             }
 
-            let webSources = Array.isArray(data.webSources) && data.webSources.length
+            let webSources = attachmentFirst ? [] : (Array.isArray(data.webSources) && data.webSources.length
                 ? data.webSources
-                : [];
+                : []);
             let searchAngles = [];
             let liveSearchEvents = [];
             
@@ -5541,15 +5834,28 @@ const server = http.createServer(async (req, res) => {
             const useWebSearch = data.useWebSearch !== false;
 
             if (useWebSearch && (!webSources.length || mode === 'followup')) {
-                const searchResult = await generateSearchAngles(question, {
+                const searchBase = attachmentFirst && preparedAttachments.retrievalText
+                    ? [
+                        'Search for reliable supporting material that answers the user question about this uploaded attachment.',
+                        'The attachment is the material; the user question is the focus. If the question is vague, infer the focus from the attachment.',
+                        '',
+                        `User question/focus: ${question}`,
+                        '',
+                        `Uploaded attachment text:\n${preparedAttachments.retrievalText.slice(0, 8000)}`
+                    ].join('\n')
+                    : question;
+                const searchQuestion = attachmentFirst ? searchBase : question;
+                const searchResult = await generateSearchAngles(searchQuestion, {
                     history,
                     sectionTitle: sectionTitle || sectionId,
-                    lessonContext,
+                    lessonContext: attachmentFirst ? searchBase : lessonContext,
                     userProfilePrompt,
                     examPriorityGuidance
                 });
                 searchAngles = searchResult.angles || [];
-                const resolvedQuestion = searchResult.resolvedQuery || question;
+                const resolvedQuestion = attachmentFirst
+                    ? (searchResult.resolvedQuery || compactWhitespace(preparedAttachments.retrievalText).slice(0, 180) || question)
+                    : (searchResult.resolvedQuery || question);
                 console.log(`[ASK] Search resolved: "${question}" → "${resolvedQuestion}"`);
                 const newWebSources = await collectWebSources(searchAngles, {
                     question: resolvedQuestion,
@@ -5579,6 +5885,7 @@ const server = http.createServer(async (req, res) => {
                 mode,
                 userProfilePrompt,
                 attachments,
+                preparedAttachments,
                 answerLength,
                 examPriorityGuidance
             });
@@ -5819,6 +6126,20 @@ const server = http.createServer(async (req, res) => {
     if (pathname.startsWith('/generated/')) {
         const filename = pathname.replace(/^\/generated\//, '');
         serveStaticFile(res, path.join(GENERATED_DIR, filename));
+        return;
+    }
+
+    if (pathname.startsWith('/homework-assets/')) {
+        const rest = pathname.replace(/^\/homework-assets\//, '');
+        const parts = rest.split('/').map(part => decodeURIComponent(part || ''));
+        const setName = path.basename(parts[0] || '');
+        const fileName = path.basename(parts.slice(1).join('/') || '');
+        if (!setName || !fileName || !isHomeworkImage(fileName)) {
+            res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('bad homework asset');
+            return;
+        }
+        serveStaticFromDir(res, path.join(HOMEWORK_DIR, setName), fileName);
         return;
     }
 

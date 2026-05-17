@@ -649,6 +649,63 @@ function showAuthOverlay() {
 let clerkSignInMounted = false;
 const sidebarSettingsBtn = document.getElementById('sidebarSettingsBtn');
 const settingsUserCard = document.getElementById('settingsUserCard');
+const workspaceAccountBar = document.getElementById('workspaceAccountBar');
+const workspaceGoogleBtn = document.getElementById('workspaceGoogleBtn');
+const workspaceAccountAvatar = document.getElementById('workspaceAccountAvatar');
+
+function renderWorkspaceAccountBar() {
+  if (!workspaceAccountBar || !workspaceGoogleBtn || !workspaceAccountAvatar) return;
+  const hasSignedInUser = currentUser && !currentUser.isGuest;
+  const hasGuest = currentUser && currentUser.isGuest;
+  workspaceGoogleBtn.classList.toggle('hidden', hasSignedInUser);
+  workspaceAccountAvatar.classList.toggle('is-signed-in', hasSignedInUser);
+  workspaceAccountAvatar.classList.toggle('is-guest', hasGuest);
+
+  if (hasSignedInUser) {
+    const name = currentUser.name || 'Student';
+    const image = currentUser.imageUrl || '';
+    workspaceAccountAvatar.title = `${name} · Account`;
+    workspaceAccountAvatar.setAttribute('aria-label', `${name} account`);
+    workspaceAccountAvatar.innerHTML = image
+      ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(name)}">`
+      : `<span class="workspace-account-initial">${escapeHtml((name[0] || '?').toUpperCase())}</span>`;
+    return;
+  }
+
+  if (hasGuest) {
+    workspaceGoogleBtn.classList.remove('hidden');
+    workspaceGoogleBtn.querySelector('.workspace-google-label').textContent = 'Sign in';
+    workspaceAccountAvatar.title = 'Guest mode';
+    workspaceAccountAvatar.setAttribute('aria-label', 'Guest mode account');
+    workspaceAccountAvatar.innerHTML = '<span class="workspace-account-initial">G</span>';
+    return;
+  }
+
+  workspaceGoogleBtn.querySelector('.workspace-google-label').textContent = 'Sign in';
+  workspaceAccountAvatar.title = 'Account';
+  workspaceAccountAvatar.setAttribute('aria-label', 'Account');
+  workspaceAccountAvatar.innerHTML = '<span class="workspace-account-initial">?</span>';
+}
+
+function bindWorkspaceAccountBar() {
+  if (workspaceGoogleBtn && !workspaceGoogleBtn.dataset.boundAccountAction) {
+    workspaceGoogleBtn.dataset.boundAccountAction = '1';
+    workspaceGoogleBtn.addEventListener('click', () => startOAuthRedirect('google'));
+  }
+  if (workspaceAccountAvatar && !workspaceAccountAvatar.dataset.boundAccountAction) {
+    workspaceAccountAvatar.dataset.boundAccountAction = '1';
+    workspaceAccountAvatar.addEventListener('click', () => {
+      if (currentUser && !currentUser.isGuest) showSettingsView();
+      else startOAuthRedirect('google');
+    });
+  }
+  renderWorkspaceAccountBar();
+}
+
+function setWorkspaceAccountBarVisible(visible) {
+  if (!workspaceAccountBar) return;
+  workspaceAccountBar.classList.toggle('hidden', !visible);
+}
 
 async function waitForClerk(ms = 15000) {
   const t = Date.now();
@@ -758,6 +815,7 @@ async function initClerk() {
   if (primaryBtn) primaryBtn.onclick = mountDrawerSignIn;
   const primaryBtnLogin = document.getElementById('clerkSignInBtnLogin');
   if (primaryBtnLogin) primaryBtnLogin.onclick = mountDrawerSignIn;
+  bindWorkspaceAccountBar();
 
   const enterGuestMode = (afterEnter = null) => {
     setLoginStatus('Entering guest mode...', 'info');
@@ -858,6 +916,7 @@ async function syncCurrentUserWithoutNavigation(user) {
 function startGuestMode() {
   authRedirectInProgress = false;
   document.body.classList.remove('auth-redirecting');
+  hideIntroLanding(true);
   // Guest uid lives only in sessionStorage (cleared on tab close)
   let gid = sessionStorage.getItem('guestUid');
   if (!gid) {
@@ -873,13 +932,16 @@ function startGuestMode() {
   };
   setLoginButtonsBusy(false);
   setLoginStatus('');
+  if (appShell) appShell.classList.remove('hidden');
   if (loginView) loginView.classList.add('hidden');
   if (welcomeScreen) welcomeScreen.classList.remove('hidden');
   if (answerScreen) answerScreen.classList.add('hidden');
   if (learnView) learnView.classList.add('hidden');
   if (settingsView) settingsView.classList.add('hidden');
   if (feedbackView) feedbackView.classList.add('hidden');
+  if (homeworkView) homeworkView.classList.add('hidden');
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
+  if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
   renderUserBadge();
@@ -902,6 +964,7 @@ async function handleSignOut() {
 }
 
 function renderUserBadge() {
+  renderWorkspaceAccountBar();
   const card = document.getElementById('settingsUserCard');
   if (!card || !currentUser) return;
   const shortUid = currentUser.uid.includes('_') ? currentUser.uid.split('_')[1].substring(0,6) : currentUser.uid.substring(currentUser.uid.length-6);
@@ -971,7 +1034,12 @@ function updatePreferenceSidebarSummary() {
 
 const COURSE_TRACKER_STORAGE_KEY = 'aquariusCourseTrackerFall2025';
 const COURSE_TRACKER_STATUSES = ['Not started', 'In progress', 'Done', 'Review'];
+const HOMEWORK_STORAGE_KEY = 'aquariusHomework.v1';
+const HOMEWORK_EXPLANATION_STORAGE_KEY = 'aquariusHomeworkExplanations.v1';
+const HOMEWORK_STATUSES = ['Todo', 'Working', 'Explained', 'Done'];
 const MISTAKE_NOTEBOOK_STORAGE_KEY = 'aquariusMistakeNotebook.v1';
+let currentHomeworkSetId = null;
+let currentHomeworkId = null;
 let currentMistakeId = null;
 const COURSE_GRADE_RULES = [
   { label: 'Homework', detail: '10 HWs', weight: 20 },
@@ -1072,6 +1140,497 @@ function renderCourseTracker() {
         saveCourseTrackerState(nextState);
         renderCourseTracker();
       });
+    });
+  }
+}
+
+function createHomeworkSet(title, problems = []) {
+  const now = new Date().toISOString();
+  return {
+    id: `hw-set-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    title: title || 'HW1',
+    problems: Array.isArray(problems) ? problems : [],
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+function normalizeHomeworkProblem(item = {}, index = 0) {
+  const now = new Date().toISOString();
+  return {
+    id: item.id || `homework-${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${index}`,
+    title: item.title || `Problem ${index + 1}`,
+    body: item.body || '',
+    status: HOMEWORK_STATUSES.includes(item.status) ? item.status : 'Todo',
+    explanation: item.explanation || '',
+    qa: Array.isArray(item.qa) ? item.qa : [],
+    images: Array.isArray(item.images) ? item.images.filter(Boolean) : [],
+    createdAt: item.createdAt || now,
+    updatedAt: item.updatedAt || now
+  };
+}
+
+function normalizeHomeworkStore(raw) {
+  if (raw && Array.isArray(raw.sets)) {
+    const sets = raw.sets.map((set, setIndex) => ({
+      id: set.id || `hw-set-${Date.now()}-${setIndex}`,
+      title: set.title || `HW${setIndex + 1}`,
+      problems: Array.isArray(set.problems) ? set.problems.map(normalizeHomeworkProblem) : [],
+      createdAt: set.createdAt || new Date().toISOString(),
+      updatedAt: set.updatedAt || new Date().toISOString()
+    }));
+    return { version: 2, activeSetId: raw.activeSetId || sets[0]?.id || null, sets };
+  }
+  if (Array.isArray(raw)) {
+    const migrated = createHomeworkSet('HW1', raw.map(normalizeHomeworkProblem));
+    return { version: 2, activeSetId: migrated.id, sets: [migrated] };
+  }
+  const first = createHomeworkSet('HW1', []);
+  return { version: 2, activeSetId: first.id, sets: [first] };
+}
+
+async function refreshHomeworkStoreFromServer() {
+  try {
+    const res = await fetch(`${API_BASE}/api/homework`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const store = normalizeHomeworkStore(data);
+    store.activeSetId = currentHomeworkSetId || store.activeSetId || store.sets[0]?.id || null;
+    if (!store.sets.some(set => set.id === store.activeSetId)) store.activeSetId = store.sets[0]?.id || null;
+    saveHomeworkStore(store);
+    currentHomeworkSetId = store.activeSetId;
+    return store;
+  } catch (err) {
+    setHomeworkSaveState(`Could not load HW folder: ${err.message}`, 'error');
+    return loadHomeworkStore();
+  }
+}
+
+function loadHomeworkStore() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(HOMEWORK_STORAGE_KEY) || 'null');
+    const store = normalizeHomeworkStore(raw);
+    if (!store.sets.length) {
+      const first = createHomeworkSet('HW1', []);
+      store.sets = [first];
+      store.activeSetId = first.id;
+    }
+    if (!store.sets.some(set => set.id === store.activeSetId)) store.activeSetId = store.sets[0].id;
+    return store;
+  } catch {
+    const first = createHomeworkSet('HW1', []);
+    return { version: 2, activeSetId: first.id, sets: [first] };
+  }
+}
+
+function saveHomeworkStore(store) {
+  try {
+    localStorage.setItem(HOMEWORK_STORAGE_KEY, JSON.stringify(normalizeHomeworkStore(store)));
+  } catch {}
+}
+
+function getCurrentHomeworkSet(store = loadHomeworkStore()) {
+  if (!currentHomeworkSetId) currentHomeworkSetId = store.activeSetId || store.sets[0]?.id || null;
+  return store.sets.find(set => set.id === currentHomeworkSetId) || store.sets[0] || null;
+}
+
+function getCurrentHomework(itemsOrSet = getCurrentHomeworkSet()) {
+  const problems = Array.isArray(itemsOrSet)
+    ? itemsOrSet
+    : Array.isArray(itemsOrSet?.problems) ? itemsOrSet.problems : [];
+  const item = problems.find(problem => problem.id === currentHomeworkId) || problems[0] || null;
+  return item ? applyHomeworkProgress(item) : null;
+}
+
+function loadHomeworkProgress() {
+  try {
+    const data = JSON.parse(localStorage.getItem(HOMEWORK_EXPLANATION_STORAGE_KEY) || '{}');
+    return data && typeof data === 'object' ? data : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveHomeworkProgress(progress) {
+  try {
+    localStorage.setItem(HOMEWORK_EXPLANATION_STORAGE_KEY, JSON.stringify(progress || {}));
+  } catch {}
+}
+
+function applyHomeworkProgress(problem) {
+  const progress = loadHomeworkProgress()[problem.id] || {};
+  return {
+    ...problem,
+    status: progress.status || problem.status || 'Todo',
+    explanation: progress.explanation || problem.explanation || '',
+    qa: Array.isArray(progress.qa) ? progress.qa : (Array.isArray(problem.qa) ? problem.qa : [])
+  };
+}
+
+function updateHomeworkStore(mutator) {
+  const store = loadHomeworkStore();
+  mutator(store);
+  store.activeSetId = currentHomeworkSetId || store.activeSetId || store.sets[0]?.id || null;
+  saveHomeworkStore(store);
+  return store;
+}
+
+function homeworkProblemAttachments(item) {
+  return (Array.isArray(item?.images) ? item.images : [])
+    .filter(image => image && (image.dataUrl || image.url))
+    .map((image, index) => ({
+      type: 'image',
+      name: image.name || `${item.title || 'homework-problem'}-${index + 1}.png`,
+      dataUrl: image.dataUrl || image.url,
+      mimeType: image.mimeType || 'image/png'
+    }));
+}
+
+function setHomeworkSaveState(message, tone = 'idle') {
+  if (!homeworkSaveState) return;
+  homeworkSaveState.textContent = message || '';
+  homeworkSaveState.dataset.tone = tone;
+}
+
+function updateHomeworkItem(id, patch, options = {}) {
+  const progress = loadHomeworkProgress();
+  progress[id] = { ...(progress[id] || {}), ...patch, updatedAt: new Date().toISOString() };
+  saveHomeworkProgress(progress);
+  if (!options.silent) setHomeworkSaveState('Saved locally', 'ok');
+  return getCurrentHomeworkSet()?.problems || [];
+}
+
+function homeworkPreviewText(item) {
+  const text = (item.body || item.explanation || '').trim().replace(/\s+/g, ' ');
+  return text ? text.slice(0, 96) : 'No problem text yet';
+}
+
+function homeworkStatusLabel(status) {
+  if (status === 'Done') return 'Done';
+  if (status === 'Explained') return 'Explained';
+  if (status === 'Working') return 'Working';
+  return 'Todo';
+}
+
+function renderHomework() {
+  if (!homeworkView) return;
+  const store = loadHomeworkStore();
+  if (!currentHomeworkSetId) currentHomeworkSetId = store.activeSetId || store.sets[0]?.id || null;
+  if (!store.sets.some(set => set.id === currentHomeworkSetId)) currentHomeworkSetId = store.sets[0]?.id || null;
+  store.activeSetId = currentHomeworkSetId;
+  saveHomeworkStore(store);
+  const currentSet = getCurrentHomeworkSet(store);
+  const items = (currentSet?.problems || []).map(applyHomeworkProgress);
+  if (!currentHomeworkId && items.length) currentHomeworkId = items[0].id;
+  if (currentHomeworkId && !items.some(item => item.id === currentHomeworkId)) {
+    currentHomeworkId = items[0]?.id || null;
+  }
+
+  renderHomeworkSetSelect(store);
+
+  if (homeworkCountPill) {
+    homeworkCountPill.textContent = String(items.length);
+    homeworkCountPill.title = `${items.length} problems in ${currentSet?.title || 'HW'}`;
+  }
+
+  if (homeworkProblemList) {
+    homeworkProblemList.innerHTML = items.length
+      ? items.map((item, index) => `
+        <button class="homework-list-item ${item.id === currentHomeworkId ? 'active' : ''}" data-homework-id="${escapeHtml(item.id)}" type="button" title="${escapeHtml(`${item.title || `Problem ${index + 1}`} · ${homeworkStatusLabel(item.status)}`)}" aria-label="${escapeHtml(`${item.title || `Problem ${index + 1}`} ${homeworkStatusLabel(item.status)}`)}">
+          <span class="homework-list-index">${index + 1}</span>
+          <span class="homework-status-dot" data-status="${escapeHtml(item.status || 'Todo')}"></span>
+        </button>
+      `).join('')
+      : '<div class="homework-list-empty">No problems</div>';
+
+    homeworkProblemList.querySelectorAll('.homework-list-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentHomeworkId = btn.dataset.homeworkId;
+        if (homeworkQaPanel) homeworkQaPanel.classList.add('hidden');
+        renderHomework();
+      });
+    });
+  }
+
+  const current = getCurrentHomework(items);
+  const hasCurrent = Boolean(current);
+  if (homeworkEmptyPanel) homeworkEmptyPanel.classList.toggle('hidden', hasCurrent);
+  if (homeworkDetailContent) homeworkDetailContent.classList.toggle('hidden', !hasCurrent);
+  if (!current) {
+    if (homeworkQaList) homeworkQaList.innerHTML = '<div class="homework-qa-empty">Create a problem first, then Q&A will live here.</div>';
+    return;
+  }
+
+  if (homeworkTitleInput) homeworkTitleInput.value = current.title || '';
+  if (homeworkStatusSelect) homeworkStatusSelect.value = HOMEWORK_STATUSES.includes(current.status) ? current.status : 'Todo';
+  if (homeworkProblemInput) homeworkProblemInput.value = current.body || '';
+  renderHomeworkImages(current);
+  if (homeworkExplanation) {
+    homeworkExplanation.innerHTML = current.explanation
+      ? markdownToHtml(current.explanation)
+      : 'No explanation yet. Generate one when you are ready.';
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise([homeworkExplanation]).catch(() => {});
+    }
+  }
+  renderHomeworkQa(current);
+  setHomeworkSaveState(current.updatedAt ? `Saved ${new Date(current.updatedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : 'Ready', 'idle');
+}
+
+function renderHomeworkSetSelect(store = loadHomeworkStore()) {
+  if (!homeworkSetSelect) return;
+  homeworkSetSelect.innerHTML = store.sets.map((set, index) => {
+    const count = Array.isArray(set.problems) ? set.problems.length : 0;
+    const label = `${set.title || `HW${index + 1}`} (${count})`;
+    return `<option value="${escapeHtml(set.id)}"${set.id === currentHomeworkSetId ? ' selected' : ''}>${escapeHtml(label)}</option>`;
+  }).join('');
+}
+
+function renderHomeworkImages(item) {
+  if (!homeworkImageStrip) return;
+  const images = Array.isArray(item?.images) ? item.images : [];
+  if (!images.length) {
+    homeworkImageStrip.innerHTML = '<div class="homework-image-empty">No problem image found in this HW folder.</div>';
+    return;
+  }
+  homeworkImageStrip.innerHTML = images.map((image, index) => `
+    <figure class="homework-image-card homework-problem-image-card">
+      <button class="homework-image-preview" type="button" data-homework-image-index="${index}" aria-label="Preview ${escapeHtml(image.name || `image ${index + 1}`)}">
+        <img src="${escapeHtml(image.dataUrl || image.url || '')}" alt="${escapeHtml(image.name || `Homework image ${index + 1}`)}">
+      </button>
+    </figure>
+  `).join('');
+  homeworkImageStrip.querySelectorAll('[data-homework-image-index]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.dataset.homeworkImageIndex || 0);
+      const image = images[idx];
+      const src = image?.dataUrl || image?.url;
+      if (src) openAttachmentImageModal(src, image.name || 'Homework image');
+    });
+  });
+}
+
+function renderHomeworkQa(item) {
+  if (!homeworkQaList) return;
+  const qa = Array.isArray(item?.qa) ? item.qa : [];
+  if (!item) {
+    homeworkQaList.innerHTML = '<div class="homework-qa-empty">Create a problem first, then Q&A will live here.</div>';
+    return;
+  }
+  if (!qa.length) {
+    homeworkQaList.innerHTML = '<div class="homework-qa-empty">Ask follow-up questions after you add or explain this problem.</div>';
+    return;
+  }
+  homeworkQaList.innerHTML = qa.map(turn => `
+    <div class="homework-qa-turn ${turn.role === 'user' ? 'is-user' : 'is-assistant'}">
+      <div class="homework-qa-role">${turn.role === 'user' ? 'You' : 'Aquarius'}</div>
+      <div class="homework-qa-body">${turn.role === 'assistant' ? markdownToHtml(turn.content || '') : escapeHtml(turn.content || '').replace(/\n/g, '<br>')}</div>
+    </div>
+  `).join('');
+  homeworkQaList.scrollTop = homeworkQaList.scrollHeight;
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    window.MathJax.typesetPromise([homeworkQaList]).catch(() => {});
+  }
+}
+
+function syncHomeworkFromInputs(options = {}) {
+  const current = getCurrentHomework();
+  if (!current) return;
+  const patch = {
+    status: HOMEWORK_STATUSES.includes(homeworkStatusSelect?.value) ? homeworkStatusSelect.value : current.status || 'Todo'
+  };
+  updateHomeworkItem(current.id, patch, options);
+  if (!options.skipRenderList) renderHomework();
+}
+
+function buildHomeworkExplainPrompt(item) {
+  return [
+    '请讲解这道作业题。你必须同时看题目文本和学生实际问题，不要跳过题目内容。',
+    '目标：先判断题目在考什么知识点，再给出清晰步骤、关键公式、常见错误，以及最后可以检查答案的方式。',
+    '如果题目缺少条件，请明确指出缺什么，并给出下一步应该问什么。',
+    '',
+    `作业题目：\n${item.body || item.title || ''}`,
+    homeworkProblemAttachments(item).length ? `\n题目图片：已附上 ${homeworkProblemAttachments(item).length} 张图片，请一起阅读。` : ''
+  ].join('\n');
+}
+
+async function generateHomeworkExplanation() {
+  syncHomeworkFromInputs({ silent: true, skipRenderList: true });
+  const current = getCurrentHomework();
+  if (!current) return;
+  if (!(current.body || '').trim()) {
+    setHomeworkSaveState('Paste the problem text first.', 'error');
+    homeworkProblemInput?.focus();
+    return;
+  }
+  const original = homeworkExplainBtn ? homeworkExplainBtn.textContent : '';
+  if (homeworkExplainBtn) {
+    homeworkExplainBtn.disabled = true;
+    homeworkExplainBtn.textContent = 'Generating...';
+  }
+  if (homeworkExplanation) homeworkExplanation.textContent = 'Generating a problem-specific explanation...';
+  setHomeworkSaveState('Asking Aquarius...', 'busy');
+  try {
+    const prompt = buildHomeworkExplainPrompt(current);
+    const data = await callAsk(prompt, undefined, {
+      mode: 'ask',
+      useWebSearch: true,
+      language: detectLang(prompt),
+      answerLength: 'detailed',
+      attachments: homeworkProblemAttachments(current)
+    });
+    const explanation = data.explanation || '';
+    updateHomeworkItem(current.id, {
+      explanation,
+      status: 'Explained',
+      qa: Array.isArray(current.qa) ? current.qa : []
+    }, { silent: true });
+    setHomeworkSaveState('Explanation generated', 'ok');
+    renderHomework();
+  } catch (err) {
+    if (homeworkExplanation) homeworkExplanation.innerHTML = `<div class="error-box"><strong>AI failed</strong><p>${escapeHtml(err.message || String(err))}</p></div>`;
+    setHomeworkSaveState(`Failed: ${err.message || err}`, 'error');
+  } finally {
+    if (homeworkExplainBtn) {
+      homeworkExplainBtn.disabled = false;
+      homeworkExplainBtn.textContent = original;
+    }
+  }
+}
+
+async function sendHomeworkQuestion() {
+  syncHomeworkFromInputs({ silent: true, skipRenderList: true });
+  const current = getCurrentHomework();
+  const question = (homeworkQaInput?.value || '').trim();
+  if (!current || !question) return;
+  if (!(current.body || '').trim()) {
+    setHomeworkSaveState('Add the problem text before asking.', 'error');
+    return;
+  }
+  if (homeworkQaInput) homeworkQaInput.value = '';
+  const qa = Array.isArray(current.qa) ? [...current.qa] : [];
+  qa.push({ role: 'user', content: question, createdAt: new Date().toISOString() });
+  updateHomeworkItem(current.id, { qa }, { silent: true });
+  renderHomeworkQa({ ...current, qa });
+
+  const original = homeworkQaSendBtn ? homeworkQaSendBtn.textContent : '';
+  if (homeworkQaSendBtn) {
+    homeworkQaSendBtn.disabled = true;
+    homeworkQaSendBtn.textContent = 'Asking...';
+  }
+  setHomeworkSaveState('Answering follow-up...', 'busy');
+  try {
+    const prompt = [
+      '你正在围绕同一道作业题回答学生追问。',
+      '必须先参考作业题目，再回答学生这次的问题；如果已有讲解，也要保持一致。',
+      '',
+      `作业题目：\n${current.body || current.title || ''}`,
+      homeworkProblemAttachments(current).length ? `题目图片：已附上 ${homeworkProblemAttachments(current).length} 张图片，请一起参考。` : '',
+      '',
+      `已有讲解：\n${current.explanation || '(还没有生成讲解)'}`,
+      '',
+      `学生追问：\n${question}`
+    ].join('\n');
+    const history = [
+      { role: 'user', content: `作业题目：\n${current.body || ''}` },
+      current.explanation ? { role: 'assistant', content: current.explanation } : null,
+      ...qa.slice(-8)
+    ].filter(Boolean);
+    const data = await callAsk(prompt, undefined, {
+      mode: 'followup',
+      history,
+      useWebSearch: true,
+      language: detectLang(`${current.body || ''}\n${question}`),
+      answerLength: 'balanced',
+      attachments: homeworkProblemAttachments(current)
+    });
+    const answer = data.explanation || '';
+    const nextQa = [...qa, { role: 'assistant', content: answer, createdAt: new Date().toISOString() }];
+    updateHomeworkItem(current.id, { qa: nextQa }, { silent: true });
+    setHomeworkSaveState('Follow-up answered', 'ok');
+    renderHomework();
+  } catch (err) {
+    const failedQa = [...qa, { role: 'assistant', content: `AI failed: ${err.message || String(err)}`, createdAt: new Date().toISOString() }];
+    updateHomeworkItem(current.id, { qa: failedQa }, { silent: true });
+    setHomeworkSaveState(`Failed: ${err.message || err}`, 'error');
+    renderHomework();
+  } finally {
+    if (homeworkQaSendBtn) {
+      homeworkQaSendBtn.disabled = false;
+      homeworkQaSendBtn.textContent = original;
+    }
+  }
+}
+
+function bindHomeworkControls() {
+  if (homeworkSetSelect) {
+    homeworkSetSelect.addEventListener('change', () => {
+      currentHomeworkSetId = homeworkSetSelect.value;
+      currentHomeworkId = null;
+      updateHomeworkStore(store => {
+        store.activeSetId = currentHomeworkSetId;
+      });
+      renderHomework();
+    });
+  }
+  if (homeworkAddSetBtn) homeworkAddSetBtn.addEventListener('click', () => {
+    refreshHomeworkStoreFromServer().then(() => {
+      renderHomework();
+      setHomeworkSaveState('HW folder refreshed.', 'ok');
+    });
+  });
+  if (homeworkAddBtn) homeworkAddBtn.addEventListener('click', () => {
+    refreshHomeworkStoreFromServer().then(() => {
+      renderHomework();
+      setHomeworkSaveState('HW folder refreshed.', 'ok');
+    });
+  });
+  if (homeworkEmptyAddBtn) homeworkEmptyAddBtn.addEventListener('click', () => {
+    refreshHomeworkStoreFromServer().then(() => {
+      renderHomework();
+      setHomeworkSaveState('HW folder refreshed.', 'ok');
+    });
+  });
+  if (homeworkSaveBtn) homeworkSaveBtn.addEventListener('click', () => syncHomeworkFromInputs());
+  if (homeworkExplainBtn) homeworkExplainBtn.addEventListener('click', generateHomeworkExplanation);
+  if (homeworkQaSendBtn) homeworkQaSendBtn.addEventListener('click', sendHomeworkQuestion);
+  if (homeworkQaBubbleBtn) {
+    homeworkQaBubbleBtn.addEventListener('click', () => {
+      if (!homeworkQaPanel) return;
+      homeworkQaPanel.classList.toggle('hidden');
+      if (!homeworkQaPanel.classList.contains('hidden')) homeworkQaInput?.focus();
+    });
+  }
+  if (homeworkQaCloseBtn) {
+    homeworkQaCloseBtn.addEventListener('click', () => {
+      if (homeworkQaPanel) homeworkQaPanel.classList.add('hidden');
+    });
+  }
+  if (homeworkDeleteBtn) {
+    homeworkDeleteBtn.addEventListener('click', () => {
+      setHomeworkSaveState('Delete files from the project HW folder to remove preloaded problems.', 'idle');
+    });
+  }
+  if (homeworkImageInput) {
+    homeworkImageInput.addEventListener('click', () => {
+      setHomeworkSaveState('Images are preloaded from the project HW folder.', 'idle');
+    });
+  }
+  [
+    [homeworkStatusSelect, 'change']
+  ].forEach(([el, eventName]) => {
+    if (!el) return;
+    el.addEventListener(eventName, () => {
+      syncHomeworkFromInputs({ silent: true, skipRenderList: false });
+      setHomeworkSaveState('Saved locally', 'ok');
+    });
+  });
+  if (homeworkQaInput) {
+    homeworkQaInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+        event.preventDefault();
+        sendHomeworkQuestion();
+      }
     });
   }
 }
@@ -1966,6 +2525,7 @@ const learnView     = document.getElementById('learnView');
 const settingsView  = document.getElementById('settingsView');
 const preferenceView = document.getElementById('preferenceView');
 const feedbackView = document.getElementById('feedbackView');
+const homeworkView = document.getElementById('homeworkView');
 const courseTrackerView = document.getElementById('courseTrackerView');
 const mistakeNotebookView = document.getElementById('mistakeNotebookView');
 const loginView     = document.getElementById('loginView');
@@ -1976,6 +2536,7 @@ const topbarBreadcrumb = document.getElementById('topbarBreadcrumb');
 const navSyllabusBtn = document.getElementById('navSyllabusBtn');
 const navRecentBtn = document.getElementById('navRecentBtn');
 const navLibraryBtn = document.getElementById('navLibraryBtn');
+const navHomeworkBtn = document.getElementById('navHomeworkBtn');
 const navCourseTrackerBtn = document.getElementById('navCourseTrackerBtn');
 const navMistakeNotebookBtn = document.getElementById('navMistakeNotebookBtn');
 const navPreferenceBtn = document.getElementById('navPreferenceBtn');
@@ -1995,6 +2556,31 @@ const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
 const feedbackRefreshBtn = document.getElementById('feedbackRefreshBtn');
 const feedbackList = document.getElementById('feedbackList');
 const feedbackStatus = document.getElementById('feedbackStatus');
+const homeworkCloseBtn = document.getElementById('homeworkCloseBtn');
+const homeworkAddBtn = document.getElementById('homeworkAddBtn');
+const homeworkEmptyAddBtn = document.getElementById('homeworkEmptyAddBtn');
+const homeworkSetSelect = document.getElementById('homeworkSetSelect');
+const homeworkAddSetBtn = document.getElementById('homeworkAddSetBtn');
+const homeworkCountPill = document.getElementById('homeworkCountPill');
+const homeworkProblemList = document.getElementById('homeworkProblemList');
+const homeworkEmptyPanel = document.getElementById('homeworkEmptyPanel');
+const homeworkDetailContent = document.getElementById('homeworkDetailContent');
+const homeworkTitleInput = document.getElementById('homeworkTitleInput');
+const homeworkStatusSelect = document.getElementById('homeworkStatusSelect');
+const homeworkProblemInput = document.getElementById('homeworkProblemInput');
+const homeworkImageInput = document.getElementById('homeworkImageInput');
+const homeworkImageStrip = document.getElementById('homeworkImageStrip');
+const homeworkExplainBtn = document.getElementById('homeworkExplainBtn');
+const homeworkSaveBtn = document.getElementById('homeworkSaveBtn');
+const homeworkDeleteBtn = document.getElementById('homeworkDeleteBtn');
+const homeworkSaveState = document.getElementById('homeworkSaveState');
+const homeworkExplanation = document.getElementById('homeworkExplanation');
+const homeworkQaBubbleBtn = document.getElementById('homeworkQaBubbleBtn');
+const homeworkQaPanel = document.getElementById('homeworkQaPanel');
+const homeworkQaCloseBtn = document.getElementById('homeworkQaCloseBtn');
+const homeworkQaList = document.getElementById('homeworkQaList');
+const homeworkQaInput = document.getElementById('homeworkQaInput');
+const homeworkQaSendBtn = document.getElementById('homeworkQaSendBtn');
 const courseTrackerCloseBtn = document.getElementById('courseTrackerCloseBtn');
 const mistakeNotebookCloseBtn = document.getElementById('mistakeNotebookCloseBtn');
 const courseTrackerResetBtn = document.getElementById('courseTrackerResetBtn');
@@ -2044,6 +2630,7 @@ const mistakeDraftNotesBtn = document.getElementById('mistakeDraftNotesBtn');
 const mistakeDeleteBtn = document.getElementById('mistakeDeleteBtn');
 
 bindPreferenceControls();
+bindHomeworkControls();
 bindMistakeNotebookControls();
 
 const SIDEBAR_ACCORDION_MS = 380;
@@ -2120,6 +2707,9 @@ if (navRecentBtn) {
 if (navLibraryBtn) {
   navLibraryBtn.addEventListener('click', showLibraryView);
 }
+if (navHomeworkBtn) {
+  navHomeworkBtn.addEventListener('click', showHomeworkView);
+}
 if (navCourseTrackerBtn) {
   navCourseTrackerBtn.addEventListener('click', showCourseTrackerView);
 }
@@ -2160,6 +2750,9 @@ if (feedbackRefreshBtn) {
 if (feedbackSubmitBtn) {
   feedbackSubmitBtn.addEventListener('click', submitFeedbackItem);
 }
+if (homeworkCloseBtn) {
+  homeworkCloseBtn.addEventListener('click', showWelcome);
+}
 if (courseTrackerCloseBtn) {
   courseTrackerCloseBtn.addEventListener('click', showWelcome);
 }
@@ -2181,11 +2774,69 @@ if (loginForm) {
 }
 
 // ── Attachment state ────────────────────────────────────────
-// Each entry: { type: 'image'|'pdf', name, dataUrl, mimeType, pdfText? }
+// Each entry: { type: 'image'|'pdf'|'document', name, dataUrl, mimeType, size?, text? }
 let attachmentsMain = [];
 let attachmentsFollowup = [];
 let attachmentsLearn = [];
 const MAX_ATTACH_SIZE = 20 * 1024 * 1024; // 20MB
+const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+function getAttachmentType(fileOrAttachment = {}) {
+  const name = String(fileOrAttachment.name || '').toLowerCase();
+  const rawType = String(fileOrAttachment.type || '').toLowerCase();
+  const mime = String(fileOrAttachment.mimeType || (rawType.includes('/') ? rawType : '')).toLowerCase();
+  const dataUrl = String(fileOrAttachment.dataUrl || '').toLowerCase();
+  if (rawType === 'image' || rawType === 'pdf' || rawType === 'document' || rawType === 'word' || rawType === 'file') {
+    if (rawType === 'file' && (dataUrl.startsWith('data:image/') || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(name))) return 'image';
+    if (rawType === 'file' && (dataUrl.startsWith('data:application/pdf') || name.endsWith('.pdf'))) return 'pdf';
+    if (rawType === 'file' && (mime === DOCX_MIME || name.endsWith('.docx'))) return 'document';
+    return rawType === 'word' ? 'document' : rawType;
+  }
+  if (dataUrl.startsWith('data:image/')) return 'image';
+  if (dataUrl.startsWith('data:application/pdf')) return 'pdf';
+  if (mime.startsWith('image/')) return 'image';
+  if (/\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(name)) return 'image';
+  if (mime === 'application/pdf' || name.endsWith('.pdf')) return 'pdf';
+  if (mime === DOCX_MIME || mime.includes('wordprocessingml.document') || name.endsWith('.docx')) return 'document';
+  return 'file';
+}
+
+function getAttachmentIcon(att = {}) {
+  const name = String(att.name || '').toLowerCase();
+  const mime = String(att.mimeType || '').toLowerCase();
+  const kind = getAttachmentType(att);
+  if (kind === 'image') return 'IMG';
+  if (kind === 'pdf') return 'PDF';
+  if (kind === 'document' || name.endsWith('.docx') || mime.includes('word')) return 'DOC';
+  return 'FILE';
+}
+
+function getAttachmentMimeType(fileOrAttachment = {}) {
+  const mimeType = fileOrAttachment.mimeType || '';
+  if (mimeType) return mimeType;
+  const rawType = String(fileOrAttachment.type || '').toLowerCase();
+  if (rawType && rawType.includes('/')) return rawType;
+  const dataUrlMatch = String(fileOrAttachment.dataUrl || '').match(/^data:([^;,]+)/i);
+  if (dataUrlMatch) return dataUrlMatch[1];
+  const kind = getAttachmentType(fileOrAttachment);
+  if (kind === 'image') return 'image/png';
+  if (kind === 'pdf') return 'application/pdf';
+  if (kind === 'document') return DOCX_MIME;
+  return 'application/octet-stream';
+}
+
+function isSupportedAttachment(fileOrAttachment = {}) {
+  const kind = getAttachmentType(fileOrAttachment);
+  return kind === 'image' || kind === 'pdf' || kind === 'document';
+}
+
+function attachmentUnsupportedMessage(fileOrAttachment = {}) {
+  const name = String(fileOrAttachment.name || 'this file');
+  if (/\.doc$/i.test(name)) {
+    return '旧版 .doc 不能在浏览器里可靠预览。请上传 .docx、PDF 或图片。';
+  }
+  return '目前只支持图片、PDF 和 Word（.docx）。其他文件不会上传，也不会生成下载入口。';
+}
 
 function getAttachContext(inputEl) {
   if (inputEl === userInput) return { list: attachmentsMain, previewId: 'attachPreviewMain', dropTarget: document.getElementById('searchBox') };
@@ -2198,19 +2849,325 @@ function renderAttachPreview(list, previewId) {
   if (!container) return;
   container.innerHTML = '';
   list.forEach((att, idx) => {
+    const kind = getAttachmentType(att);
     const chip = document.createElement('div');
     chip.className = 'attach-chip';
-    if (att.type === 'image') {
+    if (kind === 'image') {
       chip.innerHTML = `<img src="${att.dataUrl}" alt=""><span class="attach-chip-name">${att.name}</span><button class="attach-chip-remove" data-idx="${idx}">×</button>`;
     } else {
-      chip.innerHTML = `<span style="font-size:16px">📄</span><span class="attach-chip-name">${att.name}</span><button class="attach-chip-remove" data-idx="${idx}">×</button>`;
+      chip.innerHTML = `<span class="attach-chip-filetype">${escapeHtml(getAttachmentIcon(att))}</span><span class="attach-chip-name">${escapeHtml(att.name || 'Attachment')}</span><button class="attach-chip-remove" data-idx="${idx}">×</button>`;
     }
     chip.querySelector('.attach-chip-remove').addEventListener('click', () => {
       list.splice(idx, 1);
       renderAttachPreview(list, previewId);
+      setSendState();
     });
     container.appendChild(chip);
   });
+}
+
+let activeMainAttachmentSources = [];
+let activeMainAttachmentIndex = 0;
+let attachmentCompareOpen = true;
+
+function getAttachmentLabel(att, index) {
+  const kind = getAttachmentType(att);
+  const fallback = kind === 'pdf'
+    ? `PDF ${index + 1}`
+    : (kind === 'image' ? `Image ${index + 1}` : (kind === 'document' ? `Word ${index + 1}` : `Attachment ${index + 1}`));
+  return String(att?.name || fallback);
+}
+
+function renderAttachmentSourcePanel(attachments = activeMainAttachmentSources) {
+  activeMainAttachmentSources = Array.isArray(attachments) ? attachments : [];
+  if (activeMainAttachmentIndex >= activeMainAttachmentSources.length) activeMainAttachmentIndex = 0;
+  const hasSources = activeMainAttachmentSources.length > 0;
+  const shouldShow = hasSources && attachmentCompareOpen;
+
+  if (attachmentCompareToggle) {
+    attachmentCompareToggle.classList.toggle('hidden', !hasSources);
+    attachmentCompareToggle.setAttribute('aria-pressed', shouldShow ? 'true' : 'false');
+    attachmentCompareToggle.classList.toggle('active', shouldShow);
+  }
+  if (attachmentSourcePanel) attachmentSourcePanel.classList.toggle('hidden', !shouldShow);
+  if (answerCompareResizer) answerCompareResizer.classList.toggle('hidden', !shouldShow);
+
+  if (!hasSources) {
+    if (attachmentSourceTitle) attachmentSourceTitle.textContent = 'Compare';
+    if (attachmentSourceTabs) attachmentSourceTabs.innerHTML = '';
+    if (attachmentSourceBody) attachmentSourceBody.innerHTML = '<div class="attachment-source-empty">No attachment to compare.</div>';
+    return;
+  }
+
+  const current = activeMainAttachmentSources[activeMainAttachmentIndex] || activeMainAttachmentSources[0];
+  const currentKind = getAttachmentType(current);
+  if (attachmentSourceTitle) attachmentSourceTitle.textContent = getAttachmentLabel(current, activeMainAttachmentIndex);
+  if (attachmentSourceTabs) {
+    attachmentSourceTabs.innerHTML = activeMainAttachmentSources.map((att, index) => `
+      <button class="attachment-source-tab ${index === activeMainAttachmentIndex ? 'active' : ''}" type="button" data-attachment-source-index="${index}">
+        ${escapeHtml(getAttachmentIcon(att))} ${index + 1}
+      </button>
+    `).join('');
+    attachmentSourceTabs.querySelectorAll('.attachment-source-tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        activeMainAttachmentIndex = Number(btn.dataset.attachmentSourceIndex || 0);
+        renderAttachmentSourcePanel();
+      });
+    });
+  }
+
+  if (!attachmentSourceBody) return;
+  if (currentKind === 'image') {
+    const label = getAttachmentLabel(current, activeMainAttachmentIndex);
+    attachmentSourceBody.innerHTML = `
+      <figure class="attachment-source-figure">
+        <button class="attachment-source-image-btn" type="button" aria-label="Open ${escapeHtml(label)} larger">
+          <img src="${escapeHtml(current.dataUrl)}" alt="${escapeHtml(label)}">
+          <span class="attachment-source-zoom-hint">Click to enlarge</span>
+        </button>
+        <figcaption>${escapeHtml(label)}</figcaption>
+      </figure>
+    `;
+    const imageBtn = attachmentSourceBody.querySelector('.attachment-source-image-btn');
+    if (imageBtn) {
+      imageBtn.addEventListener('click', () => {
+        openAttachmentImageModal(current.dataUrl, label);
+      });
+    }
+  } else if (currentKind === 'pdf') {
+    attachmentSourceBody.innerHTML = `
+      <div class="attachment-source-pdf">
+        <object data="${escapeHtml(current.dataUrl)}" type="application/pdf">
+          <iframe src="${escapeHtml(current.dataUrl)}" title="${escapeHtml(getAttachmentLabel(current, activeMainAttachmentIndex))}"></iframe>
+        </object>
+      </div>
+    `;
+  } else if (currentKind === 'document') {
+    const label = getAttachmentLabel(current, activeMainAttachmentIndex);
+    const text = String(current.text || '').trim();
+    attachmentSourceBody.innerHTML = `
+      <article class="attachment-source-word">
+        <div class="attachment-source-word-head">
+          <div class="attachment-source-file-icon">DOC</div>
+          <div>
+            <div class="attachment-source-file-name">${escapeHtml(label)}</div>
+            <div class="attachment-source-file-meta">Word preview</div>
+          </div>
+        </div>
+        <pre class="attachment-source-word-text">${escapeHtml(text || '这个 Word 文件没有提取到可预览文本。')}</pre>
+      </article>
+    `;
+  } else {
+    attachmentSourceBody.innerHTML = `
+      <div class="attachment-source-empty">
+        Unsupported attachment. Please upload an image, PDF, or Word (.docx).
+      </div>
+    `;
+  }
+}
+
+function closeAttachmentImageModal() {
+  const modal = document.getElementById('attachmentImageModal');
+  if (modal) modal.remove();
+}
+
+function openAttachmentImageModal(src, title = 'Attached image') {
+  if (!src) return;
+  closeAttachmentImageModal();
+  const modal = document.createElement('div');
+  modal.id = 'attachmentImageModal';
+  modal.className = 'attachment-image-modal';
+  modal.innerHTML = `
+    <div class="attachment-image-backdrop" data-attachment-image-close="true"></div>
+    <div class="attachment-image-dialog" role="dialog" aria-modal="true" aria-label="Attached image preview">
+      <div class="attachment-image-head">
+        <div>
+          <div class="attachment-image-kicker">Attached Source</div>
+          <div class="attachment-image-title">${escapeHtml(title)}</div>
+        </div>
+        <button class="attachment-image-close" type="button" data-attachment-image-close="true" aria-label="Close attached image">✕</button>
+      </div>
+      <div class="attachment-image-stage">
+        <img src="${escapeHtml(src)}" alt="${escapeHtml(title)}">
+      </div>
+    </div>
+  `;
+  modal.addEventListener('click', (event) => {
+    if (event.target && event.target.dataset && event.target.dataset.attachmentImageClose) closeAttachmentImageModal();
+  });
+  document.body.appendChild(modal);
+}
+
+function setAttachmentCompareOpen(open) {
+  attachmentCompareOpen = Boolean(open);
+  renderAttachmentSourcePanel();
+}
+
+function clearAttachmentSourcePanel() {
+  activeMainAttachmentSources = [];
+  activeMainAttachmentIndex = 0;
+  attachmentCompareOpen = true;
+  renderAttachmentSourcePanel([]);
+}
+
+function cloneAttachmentSourcesForStorage(attachments = activeMainAttachmentSources) {
+  return (Array.isArray(attachments) ? attachments : [])
+    .filter(att => att && att.dataUrl)
+    .map(att => {
+      const type = getAttachmentType(att);
+      return {
+        type,
+        name: att.name || '',
+        dataUrl: att.dataUrl,
+        mimeType: getAttachmentMimeType(att),
+        size: att.size || 0,
+        text: type === 'document' ? String(att.text || '').slice(0, 100000) : ''
+      };
+    });
+}
+
+function getModelReadableAttachments(attachments = []) {
+  return cloneAttachmentSourcesForStorage(attachments)
+    .filter(att => att.type === 'image' || att.type === 'pdf' || (att.type === 'document' && att.text))
+    .map(att => {
+      if (att.type === 'document') {
+        return {
+          type: 'document',
+          name: att.name,
+          mimeType: att.mimeType,
+          size: att.size,
+          text: att.text
+        };
+      }
+      return att;
+    });
+}
+
+function mergeAttachmentSources(...groups) {
+  const merged = [];
+  const seen = new Set();
+  groups.flat().forEach((att) => {
+    if (!att || !att.dataUrl) return;
+    const key = `${att.name || ''}|${getAttachmentType(att)}|${att.dataUrl.slice(0, 96)}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    merged.push(att);
+  });
+  return merged;
+}
+
+function buildAttachmentOnlyPrompt(attachments = [], lang = 'en') {
+  const files = cloneAttachmentSourcesForStorage(attachments);
+  const names = files.map(file => file.name || getAttachmentIcon(file)).filter(Boolean).join(', ') || 'the attached file';
+  const readable = getModelReadableAttachments(files).length > 0;
+  if (lang === 'zh') {
+    return readable
+      ? `请根据我上传的附件讲解。附件：${names}`
+      : `我上传了附件：${names}。请提醒我改传图片、PDF 或 Word（.docx）后再讲解。`;
+  }
+  return readable
+    ? `Please explain the attached file(s): ${names}`
+    : `I attached: ${names}. Please ask me to upload an image, PDF, or Word (.docx) before explaining it.`;
+}
+
+function readUInt16LE(bytes, offset) {
+  return bytes[offset] | (bytes[offset + 1] << 8);
+}
+
+function readUInt32LE(bytes, offset) {
+  return (bytes[offset] | (bytes[offset + 1] << 8) | (bytes[offset + 2] << 16) | (bytes[offset + 3] << 24)) >>> 0;
+}
+
+function dataUrlToBytes(dataUrl) {
+  const base64 = String(dataUrl || '').split(',')[1] || '';
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function findZipCentralDirectory(bytes) {
+  const minOffset = Math.max(0, bytes.length - 65558);
+  for (let offset = bytes.length - 22; offset >= minOffset; offset -= 1) {
+    if (readUInt32LE(bytes, offset) === 0x06054b50) {
+      return {
+        entries: readUInt16LE(bytes, offset + 10),
+        size: readUInt32LE(bytes, offset + 12),
+        offset: readUInt32LE(bytes, offset + 16)
+      };
+    }
+  }
+  throw new Error('DOCX central directory not found');
+}
+
+async function inflateZipEntry(compressedBytes, method) {
+  if (method === 0) return compressedBytes;
+  if (method !== 8) throw new Error(`Unsupported ZIP compression method ${method}`);
+  if (typeof DecompressionStream !== 'function') {
+    throw new Error('Browser does not support ZIP deflate preview');
+  }
+  const stream = new Blob([compressedBytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+async function extractZipEntry(bytes, targetName) {
+  const decoder = new TextDecoder('utf-8');
+  const central = findZipCentralDirectory(bytes);
+  let offset = central.offset;
+  const end = central.offset + central.size;
+  for (let entryIndex = 0; entryIndex < central.entries && offset < end; entryIndex += 1) {
+    if (readUInt32LE(bytes, offset) !== 0x02014b50) break;
+    const method = readUInt16LE(bytes, offset + 10);
+    const compressedSize = readUInt32LE(bytes, offset + 20);
+    const fileNameLength = readUInt16LE(bytes, offset + 28);
+    const extraLength = readUInt16LE(bytes, offset + 30);
+    const commentLength = readUInt16LE(bytes, offset + 32);
+    const localHeaderOffset = readUInt32LE(bytes, offset + 42);
+    const fileName = decoder.decode(bytes.slice(offset + 46, offset + 46 + fileNameLength));
+    if (fileName === targetName) {
+      if (readUInt32LE(bytes, localHeaderOffset) !== 0x04034b50) {
+        throw new Error('DOCX local file header not found');
+      }
+      const localNameLength = readUInt16LE(bytes, localHeaderOffset + 26);
+      const localExtraLength = readUInt16LE(bytes, localHeaderOffset + 28);
+      const dataStart = localHeaderOffset + 30 + localNameLength + localExtraLength;
+      const compressedBytes = bytes.slice(dataStart, dataStart + compressedSize);
+      return inflateZipEntry(compressedBytes, method);
+    }
+    offset += 46 + fileNameLength + extraLength + commentLength;
+  }
+  throw new Error(`${targetName} not found in DOCX`);
+}
+
+function decodeXmlEntities(text) {
+  return String(text || '')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&');
+}
+
+function extractWordTextFromDocumentXml(xml) {
+  const normalized = String(xml || '')
+    .replace(/<w:tab\s*\/>/g, '\t')
+    .replace(/<w:br\s*\/>/g, '\n')
+    .replace(/<\/w:p>/g, '\n')
+    .replace(/<\/w:tr>/g, '\n')
+    .replace(/<[^>]+>/g, '');
+  return decodeXmlEntities(normalized)
+    .split('\n')
+    .map(line => line.replace(/[ \t]+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n')
+    .slice(0, 100000);
+}
+
+async function extractDocxTextFromDataUrl(dataUrl) {
+  const bytes = dataUrlToBytes(dataUrl);
+  const documentXmlBytes = await extractZipEntry(bytes, 'word/document.xml');
+  const xml = new TextDecoder('utf-8').decode(documentXmlBytes);
+  return extractWordTextFromDocumentXml(xml);
 }
 
 async function processFile(file, list, previewId) {
@@ -2218,17 +3175,35 @@ async function processFile(file, list, previewId) {
     alert(`File too large (max 20MB): ${file.name}`);
     return;
   }
-  if (file.type.startsWith('image/')) {
-    const dataUrl = await readAsDataUrl(file);
-    list.push({ type: 'image', name: file.name, dataUrl, mimeType: file.type });
-    renderAttachPreview(list, previewId);
-  } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-    const dataUrl = await readAsDataUrl(file);
-    list.push({ type: 'pdf', name: file.name, dataUrl, mimeType: 'application/pdf' });
-    renderAttachPreview(list, previewId);
-  } else {
-    alert(`Unsupported file type: ${file.name}`);
+  if (!isSupportedAttachment(file)) {
+    alert(attachmentUnsupportedMessage(file));
+    return;
   }
+  const type = getAttachmentType(file);
+  const dataUrl = await readAsDataUrl(file);
+  const attachment = {
+    type,
+    name: file.name,
+    dataUrl,
+    mimeType: getAttachmentMimeType(file),
+    size: file.size || 0
+  };
+  if (type === 'document') {
+    try {
+      attachment.text = await extractDocxTextFromDataUrl(dataUrl);
+      if (!attachment.text.trim()) {
+        alert('这个 Word 文件没有提取到可预览文本。请上传包含正文的 .docx、PDF 或图片。');
+        return;
+      }
+    } catch (err) {
+      console.warn('[attachments] Failed to preview Word document:', err);
+      alert('这个 Word 文件暂时无法预览。请上传 .docx、PDF 或图片。');
+      return;
+    }
+  }
+  list.push(attachment);
+  renderAttachPreview(list, previewId);
+  setSendState();
 }
 
 function readAsDataUrl(file) {
@@ -2295,6 +3270,9 @@ const bookPagesContainer = document.getElementById('bookPagesContainer') || { in
 const bookPanelMeta = document.getElementById('bookPanelMeta') || { textContent: '' };
 
 const sourcesSection = document.getElementById('sourcesSection');
+const referencesToggleBtn = document.getElementById('referencesToggleBtn');
+const referencesCount = document.getElementById('referencesCount');
+const referencesBody = document.getElementById('referencesBody');
 const bookSourcesRail = document.getElementById('bookSourcesRail') || { innerHTML: '' };
 const webSourcesRail = document.getElementById('webSourcesRail');
 const bookSourcesCount = document.getElementById('bookSourcesCount') || { textContent: '' };
@@ -2307,6 +3285,13 @@ const stopBtn = document.getElementById('stopBtn');
 const webSourcesToggle = document.getElementById('webSourcesToggle');
 const webSourcesToggleCount = document.getElementById('webSourcesToggleCount');
 const webSourcesInline = document.getElementById('webSourcesInline');
+const attachmentCompareToggle = document.getElementById('attachmentCompareToggle');
+const attachmentSourcePanel = document.getElementById('attachmentSourcePanel');
+const attachmentSourceTitle = document.getElementById('attachmentSourceTitle');
+const attachmentSourceTabs = document.getElementById('attachmentSourceTabs');
+const attachmentSourceBody = document.getElementById('attachmentSourceBody');
+const attachmentSourceCloseBtn = document.getElementById('attachmentSourceCloseBtn');
+const answerCompareResizer = document.getElementById('answerCompareResizer');
 
 if (bookSourcesRail && bookSourcesRail.addEventListener) {
   bookSourcesRail.addEventListener('click', (event) => {
@@ -2369,6 +3354,32 @@ webSourcesToggle.addEventListener('click', () => {
   webSourcesInline.classList.toggle('hidden', open);
   webSourcesToggle.classList.toggle('open', !open);
 });
+
+function setReferencesOpen(open) {
+  if (!sourcesSection) return;
+  sourcesSection.classList.toggle('references-collapsed', !open);
+  if (referencesToggleBtn) referencesToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function updateReferencesSummary(bookCount = tutorState.currentBookPages?.length || 0, webCount = tutorState.currentWebSources?.length || 0) {
+  const total = Number(bookCount || 0) + Number(webCount || 0);
+  if (referencesCount) {
+    const label = total === 1 ? '1 source' : `${total} sources`;
+    referencesCount.textContent = total
+      ? `${label} · ${Number(bookCount || 0)} content · ${Number(webCount || 0)} web`
+      : '0 sources';
+  }
+  if (sourcesSection) {
+    sourcesSection.classList.toggle('hidden', total === 0);
+  }
+}
+
+if (referencesToggleBtn) {
+  referencesToggleBtn.addEventListener('click', () => {
+    const nextOpen = sourcesSection.classList.contains('references-collapsed');
+    setReferencesOpen(nextOpen);
+  });
+}
 
 // ═══════════════════════════════════════════════════════════
 // PRE-GENERATED SECTION PREVIEWS (Background + Chapter 1)
@@ -4026,8 +5037,8 @@ function autoResize(el) {
 }
 
 function setSendState() {
-  sendBtn.disabled = !userInput.value.trim();
-  followupBtn.disabled = !followupInput.value.trim();
+  sendBtn.disabled = !userInput.value.trim() && attachmentsMain.length === 0;
+  followupBtn.disabled = !followupInput.value.trim() && attachmentsFollowup.length === 0;
 }
 
 function renderSyllabus() {
@@ -4173,6 +5184,8 @@ const answerLengthToggleLearnPopover = document.getElementById('answerLengthTogg
 const webSearchToggleBtnLearnPopover = document.getElementById('webSearchToggleBtnLearnPopover');
 const answerLengthToggleMain = document.getElementById('answerLengthToggleMain');
 const webSearchToggleBtnMain = document.getElementById('webSearchToggleBtnMain');
+const learnChatShrinkBtn = document.getElementById('learnChatShrinkBtn');
+const learnChatMinimizeBtn = document.getElementById('learnChatMinimizeBtn');
 const learnChatPopoverDockBtn = document.getElementById('learnChatPopoverDockBtn');
 const learnChatPopoverCloseBtn = document.getElementById('learnChatPopoverCloseBtn');
 const learnResizerPanel = document.getElementById('learnResizer');
@@ -4225,7 +5238,7 @@ let textbookFocusDragStartX = 0;
 let textbookFocusDragStartY = 0;
 let textbookFocusPinchDistance = 0;
 let isTextbookFocusQaOpen = false;
-let isLearnChatCollapsed = false;
+let isLearnChatCollapsed = true;
 let isLearnExplainCollapsed = false;
 let learnPanelFocus = 'normal';
 let isLearnChatPopoverOpen = false;
@@ -10680,11 +11693,15 @@ function applyLearnPanelFocusState() {
   const states = ['normal', 'lecture-wide', 'lecture-full', 'qa-wide', 'qa-full'];
   const normalized = states.includes(learnPanelFocus) ? learnPanelFocus : 'normal';
   learnPanelFocus = normalized;
-  shell.dataset.panelFocus = normalized;
+  if (normalized === 'normal') {
+    delete shell.dataset.panelFocus;
+  } else {
+    shell.dataset.panelFocus = normalized;
+  }
   states.forEach(state => shell.classList.toggle(`panel-${state}`, normalized === state));
   shell.classList.remove('chat-collapsed', 'explain-collapsed');
 
-  isLearnChatCollapsed = false;
+  if (normalized !== 'normal') isLearnChatCollapsed = false;
   isLearnExplainCollapsed = false;
 
   const learnBodyInner = shell.querySelector?.('.learn-body-inner');
@@ -10740,9 +11757,13 @@ function applyLearnPanelFocusState() {
 
   if (learnExplainRestoreBtn) learnExplainRestoreBtn.classList.add('hidden');
   if (learnChatRestoreBtn) learnChatRestoreBtn.classList.add('hidden');
-  if (learnChatFab) learnChatFab.classList.add('hidden');
-  if (learnChatPopover) learnChatPopover.classList.add('hidden');
-  isLearnChatPopoverOpen = false;
+  if (normalized === 'normal') {
+    applyLearnChatCollapsedState();
+  } else {
+    if (learnChatFab) learnChatFab.classList.add('hidden');
+    if (learnChatPopover) learnChatPopover.classList.add('hidden');
+    isLearnChatPopoverOpen = false;
+  }
   requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
 }
 
@@ -10806,10 +11827,13 @@ function applyLearnChatCollapsedState() {
 
   if (isLearnChatCollapsed) resetLearnChatFabPosition();
   if (learnChatFab) learnChatFab.classList.toggle('hidden', !isLearnChatCollapsed || isLearnChatPopoverOpen);
-  if (learnChatRestoreBtn) learnChatRestoreBtn.classList.toggle('hidden', !isLearnChatCollapsed);
+  if (learnChatRestoreBtn) learnChatRestoreBtn.classList.add('hidden');
   if (!isLearnChatCollapsed && learnChatPopover) learnChatPopover.classList.add('hidden');
   if (!isLearnChatCollapsed) isLearnChatPopoverOpen = false;
-  if (learnChatFab) learnChatFab.title = isLearnChatCollapsed ? 'Open Q&A assistant' : 'Hide Q&A assistant';
+  if (learnChatFab) {
+    learnChatFab.title = isLearnChatCollapsed ? 'Open Q&A panel' : 'Minimize Q&A to bubble';
+    learnChatFab.setAttribute('aria-label', learnChatFab.title);
+  }
 
   if (learnChatPopoverScroll && learnChatContent && isLearnChatCollapsed) {
     learnChatPopoverScroll.innerHTML = learnChatContent.innerHTML || '';
@@ -10823,6 +11847,27 @@ function toggleLearnChatPanel(forceOpen = null) {
     : !isLearnChatCollapsed;
   isLearnChatCollapsed = nextCollapsed;
   applyLearnChatCollapsedState();
+}
+
+function openLearnQaSidebar() {
+  learnPanelFocus = 'normal';
+  isLearnChatCollapsed = false;
+  isLearnChatPopoverOpen = false;
+  applyLearnChatCollapsedState();
+}
+
+function minimizeLearnQaToBubble() {
+  learnPanelFocus = 'normal';
+  isLearnChatCollapsed = true;
+  isLearnChatPopoverOpen = false;
+  applyLearnChatCollapsedState();
+}
+
+function shrinkLearnQaToPopover() {
+  learnPanelFocus = 'normal';
+  isLearnChatCollapsed = true;
+  applyLearnChatCollapsedState();
+  setLearnChatPopoverOpen(true);
 }
 
 function applyLearnExplainCollapsedState() {
@@ -12154,6 +13199,7 @@ async function startLesson(options = {}) {
     renderLearnWebSources(data.webSources || []);
     renderLearnWebSection(data.webSources || []);
     learnExplainScroll.scrollTop = 0;
+    minimizeLearnQaToBubble();
     setLearnLoading(false);
     // Async: save session summary
     saveSessionSummary(`Studied section "${learnSectionTitle}".`);
@@ -12341,6 +13387,11 @@ function _setLearnMode(mode) {
   if (lectureNextOverlayBtn) lectureNextOverlayBtn.classList.toggle('hidden', mode !== 'lecture' || !isLessonLikeLayout);
   if (lectureFocusOverlayBtn) lectureFocusOverlayBtn.classList.add('hidden');
   applyLearnPanelFocusState();
+  if (isLessonLikeLayout && learnPanelFocus === 'normal') {
+    isLearnChatCollapsed = true;
+    isLearnChatPopoverOpen = false;
+    applyLearnChatCollapsedState();
+  }
 }
 
 if (_btnLecture && _btnTextbook) {
@@ -12474,26 +13525,29 @@ if (lectureFocusOverlayBtn) lectureFocusOverlayBtn.addEventListener('click', () 
 if (learnFocusBtn) learnFocusBtn.addEventListener('click', () => advanceLearnPanelFocus('qa'));
 if (learnExplainToggleBtn) learnExplainToggleBtn.addEventListener('click', () => advanceLearnPanelFocus('lecture'));
 if (learnExplainRestoreBtn) learnExplainRestoreBtn.addEventListener('click', () => advanceLearnPanelFocus('lecture'));
-if (learnChatRestoreBtn) learnChatRestoreBtn.addEventListener('click', () => advanceLearnPanelFocus('qa'));
+if (learnChatRestoreBtn) learnChatRestoreBtn.addEventListener('click', openLearnQaSidebar);
+if (learnChatMinimizeBtn) learnChatMinimizeBtn.addEventListener('click', minimizeLearnQaToBubble);
+if (learnChatShrinkBtn) learnChatShrinkBtn.addEventListener('click', shrinkLearnQaToPopover);
 
 if (learnChatFab) {
   learnChatFab.addEventListener('click', () => {
-    if (!isLearnChatCollapsed) return;
-    setLearnChatPopoverOpen(!isLearnChatPopoverOpen);
+    if (learnChatFab.dataset.dragJustEnded === 'true') {
+      delete learnChatFab.dataset.dragJustEnded;
+      return;
+    }
+    openLearnQaSidebar();
   });
 }
 
 if (learnChatPopoverDockBtn) {
   learnChatPopoverDockBtn.addEventListener('click', () => {
-    learnPanelFocus = 'qa-wide';
-    applyLearnPanelFocusState();
-    setLearnChatPopoverOpen(false);
+    openLearnQaSidebar();
   });
 }
 
 if (learnChatPopoverCloseBtn) {
   learnChatPopoverCloseBtn.addEventListener('click', () => {
-    setLearnChatPopoverOpen(false);
+    minimizeLearnQaToBubble();
   });
 }
 
@@ -12539,6 +13593,10 @@ if (learnFocusNextBtn) {
   });
 }
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('attachmentImageModal')) {
+    closeAttachmentImageModal();
+    return;
+  }
   if (e.key === 'Escape' && document.getElementById('mainBookSourceModal')) {
     closeMainBookSourceModal();
     return;
@@ -12713,7 +13771,7 @@ async function sendLearnFollowup(rawPrompt, options = {}) {
       answerLength: selectedAnswerLength,
       answerStyleInstruction: getAnswerStyleInstruction(selectedAnswerLength, detectLang(prompt)),
       language: detectLang(prompt),
-      attachments: attachments.map(a => ({ type: a.type, name: a.name, dataUrl: a.dataUrl, mimeType: a.mimeType }))
+      attachments: getModelReadableAttachments(attachments)
     });
 
     if (window.loadingTimerLearn) clearInterval(window.loadingTimerLearn);
@@ -14208,11 +15266,14 @@ function showWelcome() {
   if (settingsView) settingsView.classList.add('hidden');
   if (preferenceView) preferenceView.classList.add('hidden');
   if (feedbackView) feedbackView.classList.add('hidden');
+  if (homeworkView) homeworkView.classList.add('hidden');
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
   if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
+  setWorkspaceAccountBarVisible(true);
+  clearAttachmentSourcePanel();
   clearToc();
   updateSidebarNavActive(null);
 }
@@ -14226,11 +15287,13 @@ function showAnswer(question) {
   if (settingsView) settingsView.classList.add('hidden');
   if (preferenceView) preferenceView.classList.add('hidden');
   if (feedbackView) feedbackView.classList.add('hidden');
+  if (homeworkView) homeworkView.classList.add('hidden');
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
   if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.remove('hidden');
+  setWorkspaceAccountBarVisible(false);
   if (topbarBreadcrumb) topbarBreadcrumb.textContent = question;
   updateSidebarNavActive(null);
 }
@@ -14244,12 +15307,14 @@ function showLearnView() {
   if (settingsView) settingsView.classList.add('hidden');
   if (preferenceView) preferenceView.classList.add('hidden');
   if (feedbackView) feedbackView.classList.add('hidden');
+  if (homeworkView) homeworkView.classList.add('hidden');
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
   if (libraryView) libraryView.classList.add('hidden');
   _setLearnMode(_learnViewMode || 'lecture');
   if (topbar) topbar.classList.add('hidden');
+  setWorkspaceAccountBarVisible(true);
   updateSidebarNavActive(null);
 }
 
@@ -14262,11 +15327,13 @@ function showSettingsView() {
   if (settingsView) settingsView.classList.remove('hidden');
   if (preferenceView) preferenceView.classList.add('hidden');
   if (feedbackView) feedbackView.classList.add('hidden');
+  if (homeworkView) homeworkView.classList.add('hidden');
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
   if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
+  setWorkspaceAccountBarVisible(true);
   renderUserBadge();
   clearToc();
   updateSidebarNavActive('settings');
@@ -14281,11 +15348,13 @@ function showPreferenceView() {
   if (settingsView) settingsView.classList.add('hidden');
   if (preferenceView) preferenceView.classList.remove('hidden');
   if (feedbackView) feedbackView.classList.add('hidden');
+  if (homeworkView) homeworkView.classList.add('hidden');
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
   if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
+  setWorkspaceAccountBarVisible(true);
   updateSidebarNavActive('preference');
   syncPreferenceEditorFromMemory();
 }
@@ -14299,11 +15368,13 @@ function showFeedbackView() {
   if (settingsView) settingsView.classList.add('hidden');
   if (preferenceView) preferenceView.classList.add('hidden');
   if (feedbackView) feedbackView.classList.remove('hidden');
+  if (homeworkView) homeworkView.classList.add('hidden');
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
   if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
+  setWorkspaceAccountBarVisible(true);
   clearToc();
   updateSidebarNavActive('feedback');
   loadFeedbackBoard();
@@ -14462,14 +15533,38 @@ function showCourseTrackerView() {
   if (settingsView) settingsView.classList.add('hidden');
   if (preferenceView) preferenceView.classList.add('hidden');
   if (feedbackView) feedbackView.classList.add('hidden');
+  if (homeworkView) homeworkView.classList.add('hidden');
   if (courseTrackerView) courseTrackerView.classList.remove('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
   if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
+  setWorkspaceAccountBarVisible(true);
   clearToc();
   updateSidebarNavActive('course-tracker');
   renderCourseTracker();
+}
+
+function showHomeworkView() {
+  destroyLoginScene();
+  if (appShell) appShell.classList.remove('hidden');
+  welcomeScreen.classList.add('hidden');
+  answerScreen.classList.add('hidden');
+  learnView.classList.add('hidden');
+  if (settingsView) settingsView.classList.add('hidden');
+  if (preferenceView) preferenceView.classList.add('hidden');
+  if (feedbackView) feedbackView.classList.add('hidden');
+  if (homeworkView) homeworkView.classList.remove('hidden');
+  if (courseTrackerView) courseTrackerView.classList.add('hidden');
+  if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
+  if (loginView) loginView.classList.add('hidden');
+  if (libraryView) libraryView.classList.add('hidden');
+  if (topbar) topbar.classList.add('hidden');
+  setWorkspaceAccountBarVisible(true);
+  clearToc();
+  updateSidebarNavActive('homework');
+  renderHomework();
+  refreshHomeworkStoreFromServer().then(() => renderHomework());
 }
 
 function showMistakeNotebookView() {
@@ -14481,11 +15576,13 @@ function showMistakeNotebookView() {
   if (settingsView) settingsView.classList.add('hidden');
   if (preferenceView) preferenceView.classList.add('hidden');
   if (feedbackView) feedbackView.classList.add('hidden');
+  if (homeworkView) homeworkView.classList.add('hidden');
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.remove('hidden');
   if (loginView) loginView.classList.add('hidden');
   if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
+  setWorkspaceAccountBarVisible(true);
   clearToc();
   updateSidebarNavActive('mistake-notebook');
   renderMistakeNotebook();
@@ -14520,23 +15617,27 @@ function showLibraryView() {
   if (settingsView) settingsView.classList.add('hidden');
   if (preferenceView) preferenceView.classList.add('hidden');
   if (feedbackView) feedbackView.classList.add('hidden');
+  if (homeworkView) homeworkView.classList.add('hidden');
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
   if (libraryView) libraryView.classList.remove('hidden');
   if (topbar) topbar.classList.add('hidden');
+  setWorkspaceAccountBarVisible(true);
   clearToc();
   updateSidebarNavActive('library');
 }
 
 function showLoginView() {
   if (appShell) appShell.classList.add('hidden');
+  setWorkspaceAccountBarVisible(false);
   welcomeScreen.classList.add('hidden');
   answerScreen.classList.add('hidden');
   learnView.classList.add('hidden');
   if (settingsView) settingsView.classList.add('hidden');
   if (preferenceView) preferenceView.classList.add('hidden');
   if (feedbackView) feedbackView.classList.add('hidden');
+  if (homeworkView) homeworkView.classList.add('hidden');
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.remove('hidden');
@@ -14561,6 +15662,7 @@ function updateSidebarNavActive(key) {
   if (navSyllabusBtn) navSyllabusBtn.classList.toggle('active', key === 'syllabus');
   if (navRecentBtn) navRecentBtn.classList.toggle('active', key === 'recent');
   if (navLibraryBtn) navLibraryBtn.classList.toggle('active', key === 'library');
+  if (navHomeworkBtn) navHomeworkBtn.classList.toggle('active', key === 'homework');
   if (navCourseTrackerBtn) navCourseTrackerBtn.classList.toggle('active', key === 'course-tracker');
   if (navMistakeNotebookBtn) navMistakeNotebookBtn.classList.toggle('active', key === 'mistake-notebook');
   if (navPreferenceBtn) navPreferenceBtn.classList.toggle('active', key === 'preference');
@@ -14787,6 +15889,7 @@ function domainOf(url) {
 
 function renderBookSources(bookPages = []) {
   bookSourcesCount.textContent = String(bookPages.length || 0);
+  updateReferencesSummary(bookPages.length || 0, tutorState.currentWebSources?.length || 0);
   if (!bookPages.length) {
     bookSourcesRail.innerHTML = '<div class="source-empty">No content sources</div>';
     return;
@@ -14838,6 +15941,7 @@ function openMainBookSource(index) {
 
 function renderWebSources(webSources = []) {
   webSourcesCount.textContent = String(webSources.length || 0);
+  updateReferencesSummary(tutorState.currentBookPages?.length || 0, webSources.length || 0);
   if (!webSources.length) {
     webSourcesRail.innerHTML = '<div class="source-empty">No web sources</div>';
     return;
@@ -14873,6 +15977,61 @@ function renderWebSourcesInline(webSources = []) {
 
 function renderExplanation(markdown) {
   answerContent.innerHTML = markdownToHtml(markdown || '暂无讲解内容');
+  bindExpandableLessonImages(answerContent);
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    window.MathJax.typesetPromise([answerContent]).catch(() => {});
+  }
+  setTimeout(() => buildTocFromContent(answerContent), 80);
+}
+
+function renderMainConversationThread(options = {}) {
+  if (!answerContent) return;
+  const history = Array.isArray(tutorState.chatHistory) ? tutorState.chatHistory : [];
+  const pendingPrompt = String(options.pendingPrompt || '').trim();
+  const pendingAssistantHtml = options.pendingAssistantHtml || '';
+  const pendingAssistantClass = options.pendingAssistantClass || '';
+  const turns = [];
+
+  history.forEach((item) => {
+    if (!item || !item.role || !String(item.content || '').trim()) return;
+    if (item.role === 'user') {
+      turns.push(`
+        <article class="main-chat-turn main-chat-turn-user">
+          <div class="main-chat-label">You</div>
+          <div class="main-chat-user-text">${escapeHtml(item.content).replace(/\n/g, '<br>')}</div>
+        </article>
+      `);
+      return;
+    }
+    if (item.role === 'assistant') {
+      turns.push(`
+        <article class="main-chat-turn main-chat-turn-assistant">
+          <div class="main-chat-label">Aquarius</div>
+          <div class="main-chat-answer">${markdownToHtml(item.content || '暂无讲解内容')}</div>
+        </article>
+      `);
+    }
+  });
+
+  if (pendingPrompt) {
+    turns.push(`
+      <article class="main-chat-turn main-chat-turn-user">
+        <div class="main-chat-label">You</div>
+        <div class="main-chat-user-text">${escapeHtml(pendingPrompt).replace(/\n/g, '<br>')}</div>
+      </article>
+    `);
+  }
+
+  if (pendingAssistantHtml) {
+    turns.push(`
+      <article class="main-chat-turn main-chat-turn-assistant ${escapeHtml(pendingAssistantClass)}">
+        <div class="main-chat-label">Aquarius</div>
+        <div class="main-chat-answer">${pendingAssistantHtml}</div>
+      </article>
+    `);
+  }
+
+  answerContent.innerHTML = `<div class="main-chat-thread">${turns.join('')}</div>`;
   bindExpandableLessonImages(answerContent);
   if (window.MathJax && window.MathJax.typesetPromise) {
     window.MathJax.typesetPromise([answerContent]).catch(() => {});
@@ -15041,15 +16200,23 @@ function stopStepAnimation() {
   setStepsDone();
 }
 
-async function sendQuestion(rawPrompt) {
-  const prompt = (rawPrompt || userInput.value || followupInput.value || '').trim();
+async function sendQuestion(rawPrompt, source = 'auto') {
+  let prompt = (rawPrompt || userInput.value || followupInput.value || '').trim();
   if (!prompt && attachmentsMain.length === 0 && attachmentsFollowup.length === 0) return;
 
-  const isFollowup = document.activeElement === followupInput || !!followupInput.value.trim();
+  const isFollowup = source === 'followup' || (source === 'auto' && (document.activeElement === followupInput || !!followupInput.value.trim()));
   if (!isFollowup && (!tutorState.chatHistory || tutorState.chatHistory.length === 0)) {
     tutorState.chatSessionStartTime = Date.now();
   }
-  const attachments = isFollowup ? [...attachmentsFollowup] : [...attachmentsMain];
+  const attachments = isFollowup
+    ? mergeAttachmentSources(activeMainAttachmentSources, attachmentsFollowup)
+    : [...attachmentsMain];
+  const visibleAttachments = isFollowup ? [...attachmentsFollowup] : attachments;
+  const hasReadableAttachments = getModelReadableAttachments(attachments).length > 0;
+  const shouldCompareAttachments = !isFollowup && attachments.length > 0;
+  if (!prompt && visibleAttachments.length) {
+    prompt = buildAttachmentOnlyPrompt(attachments, 'zh');
+  }
 
   const answerStyleToggle = isFollowup
     ? (document.getElementById('answerLengthToggleLearn')?.value || 'balanced')
@@ -15072,15 +16239,25 @@ async function sendQuestion(rawPrompt) {
   setSendState();
 
   showAnswer(prompt || '(Attachment)');
+  if (shouldCompareAttachments) {
+    attachmentCompareOpen = true;
+    activeMainAttachmentIndex = 0;
+    renderAttachmentSourcePanel(attachments);
+  } else if (!isFollowup) {
+    clearAttachmentSourcePanel();
+  }
   setStatus('Working', 'working');
   renderBookPages([]);
   renderBookSources([]);
   renderWebSources([]);
-  sourcesSection.classList.add('hidden');
-  answerContent.innerHTML = `
-    ${buildSearchProgressMarkup('answer', detectLang(prompt))}
-  `;
-  answerScroll.scrollTop = 0;
+  updateReferencesSummary(0, 0);
+  setReferencesOpen(false);
+  renderMainConversationThread({
+    pendingPrompt: prompt,
+    pendingAssistantHtml: buildSearchProgressMarkup(isFollowup ? 'followup' : 'answer', detectLang(prompt)),
+    pendingAssistantClass: 'main-chat-turn-pending'
+  });
+  answerScroll.scrollTop = isFollowup ? answerScroll.scrollHeight : 0;
 
   // Abort any in-flight request
   if (currentAbortController) currentAbortController.abort();
@@ -15102,13 +16279,14 @@ async function sendQuestion(rawPrompt) {
     const data = await callAsk(prompt, currentAbortController.signal, {
       mode: isFollowup ? 'followup' : 'ask',
       history: tutorState.chatHistory.slice(-8),
-      bookPages: tutorState.currentBookPages,
-      webSources: tutorState.currentWebSources,
+      bookPages: hasReadableAttachments ? [] : tutorState.currentBookPages,
+      webSources: hasReadableAttachments ? [] : tutorState.currentWebSources,
+      attachmentFirst: hasReadableAttachments,
       useWebSearch: useWebSearch,
       answerLength: answerLength,
       answerStyleInstruction: getAnswerStyleInstruction(answerLength, detectLang(prompt)),
       language: detectLang(prompt),
-      attachments: attachments.map(a => ({ type: a.type, name: a.name, dataUrl: a.dataUrl, mimeType: a.mimeType }))
+      attachments: getModelReadableAttachments(attachments)
     });
     stopStepAnimation();
     replayLiveSearchEvents(answerContent, data.liveSearchEvents || [], data.webSources || [], detectLang(prompt));
@@ -15130,12 +16308,14 @@ async function sendQuestion(rawPrompt) {
     updateRecentConversations('answer:stream-finished');
 
     renderBookPages(data.bookPages || []);
-    renderExplanation(data.explanation || '暂无讲解内容');
+    renderMainConversationThread();
+    answerScroll.scrollTop = isFollowup ? answerScroll.scrollHeight : 0;
 
     renderBookSources(data.bookPages || []);
     renderWebSources(data.webSources || []);
     renderWebSourcesInline(data.webSources || []);
-    sourcesSection.classList.remove('hidden');
+    updateReferencesSummary(data.bookPages?.length || 0, data.webSources?.length || 0);
+    setReferencesOpen(false);
 
     setStatus('Done', 'done');
   } catch (err) {
@@ -15144,16 +16324,41 @@ async function sendQuestion(rawPrompt) {
     stopBtn.classList.add('hidden');
     if (err.name === 'AbortError') {
       setStatus('Stopped', 'idle');
-      answerContent.innerHTML = `<p class="ghost">${detectLang(prompt) === 'zh' ? '已停止。' : 'Stopped.'}</p>`;
+      if (isFollowup) {
+        renderMainConversationThread({
+          pendingPrompt: prompt,
+          pendingAssistantHtml: `<p class="ghost">${detectLang(prompt) === 'zh' ? '已停止。' : 'Stopped.'}</p>`,
+          pendingAssistantClass: 'main-chat-turn-pending'
+        });
+      } else {
+        renderMainConversationThread({
+          pendingPrompt: prompt,
+          pendingAssistantHtml: `<p class="ghost">${detectLang(prompt) === 'zh' ? '已停止。' : 'Stopped.'}</p>`,
+          pendingAssistantClass: 'main-chat-turn-pending'
+        });
+      }
     } else {
       setStatus('Error', 'error');
       const failedTitle = detectLang(prompt) === 'zh' ? '请求失败' : 'Request failed';
-      answerContent.innerHTML = `
+      const errorHtml = `
         <div class="error-box">
           <strong>${failedTitle}</strong>
           <p>${escapeHtml(err.message)}</p>
         </div>
       `;
+      if (isFollowup) {
+        renderMainConversationThread({
+          pendingPrompt: prompt,
+          pendingAssistantHtml: errorHtml,
+          pendingAssistantClass: 'main-chat-turn-pending'
+        });
+      } else {
+        renderMainConversationThread({
+          pendingPrompt: prompt,
+          pendingAssistantHtml: errorHtml,
+          pendingAssistantClass: 'main-chat-turn-pending'
+        });
+      }
     }
   }
 }
@@ -15161,6 +16366,65 @@ async function sendQuestion(rawPrompt) {
 stopBtn.addEventListener('click', () => {
   if (currentAbortController) currentAbortController.abort();
 });
+
+if (attachmentCompareToggle) {
+  attachmentCompareToggle.addEventListener('click', () => {
+    setAttachmentCompareOpen(!attachmentCompareOpen);
+  });
+}
+
+if (attachmentSourceCloseBtn) {
+  attachmentSourceCloseBtn.addEventListener('click', () => {
+    setAttachmentCompareOpen(false);
+  });
+}
+
+function setupAnswerCompareResizer() {
+  if (!answerCompareResizer || !attachmentSourcePanel) return;
+  let dragging = false;
+  const minWidth = 260;
+  const maxRatio = 0.68;
+
+  const resizeTo = (clientX) => {
+    const cols = answerCompareResizer.closest('.answer-cols');
+    if (!cols) return;
+    const rect = cols.getBoundingClientRect();
+    const maxWidth = Math.max(minWidth, rect.width * maxRatio);
+    const next = Math.min(maxWidth, Math.max(minWidth, clientX - rect.left));
+    cols.style.setProperty('--attachment-source-width', `${Math.round(next)}px`);
+  };
+
+  answerCompareResizer.addEventListener('pointerdown', (event) => {
+    dragging = true;
+    answerCompareResizer.setPointerCapture(event.pointerId);
+    document.body.classList.add('answer-compare-resizing');
+    event.preventDefault();
+  });
+
+  answerCompareResizer.addEventListener('pointermove', (event) => {
+    if (!dragging) return;
+    resizeTo(event.clientX);
+  });
+
+  const stopDragging = (event) => {
+    if (!dragging) return;
+    dragging = false;
+    document.body.classList.remove('answer-compare-resizing');
+    try { answerCompareResizer.releasePointerCapture(event.pointerId); } catch (_) {}
+  };
+
+  answerCompareResizer.addEventListener('pointerup', stopDragging);
+  answerCompareResizer.addEventListener('pointercancel', stopDragging);
+  answerCompareResizer.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    const cols = answerCompareResizer.closest('.answer-cols');
+    if (!cols) return;
+    const current = parseFloat(getComputedStyle(cols).getPropertyValue('--attachment-source-width')) || attachmentSourcePanel.getBoundingClientRect().width || 420;
+    const delta = event.key === 'ArrowLeft' ? -28 : 28;
+    cols.style.setProperty('--attachment-source-width', `${Math.max(minWidth, current + delta)}px`);
+    event.preventDefault();
+  });
+}
 
 userInput.addEventListener('input', () => {
   autoResize(userInput);
@@ -15175,19 +16439,19 @@ followupInput.addEventListener('input', () => {
 userInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
     e.preventDefault();
-    sendQuestion(userInput.value);
+    sendQuestion(userInput.value, 'main');
   }
 });
 
 followupInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
     e.preventDefault();
-    sendQuestion(followupInput.value);
+    sendQuestion(followupInput.value, 'followup');
   }
 });
 
-sendBtn.addEventListener('click', () => sendQuestion(userInput.value));
-followupBtn.addEventListener('click', () => sendQuestion(followupInput.value));
+sendBtn.addEventListener('click', () => sendQuestion(userInput.value, 'main'));
+followupBtn.addEventListener('click', () => sendQuestion(followupInput.value, 'followup'));
 
 if (backBtn) {
   backBtn.addEventListener('click', () => {
@@ -15215,7 +16479,7 @@ if (topbarCloseBtn) {
 quickChips.querySelectorAll('.chip').forEach(btn => {
   btn.addEventListener('click', () => {
     const prompt = btn.getAttribute('data-prompt') || '';
-    sendQuestion(prompt);
+    sendQuestion(prompt, 'main');
   });
 });
 
@@ -15249,10 +16513,12 @@ setupPaste(userInput);
 setupPaste(followupInput);
 setupPaste(learnFollowupInput);
 if (learnFollowupInputPopover) setupPaste(learnFollowupInputPopover);
+setupAnswerCompareResizer();
 
 // --- Sidebar Toggle Logic ---
 setTimeout(() => {
   const menuToggleBtn = document.getElementById('menuToggleBtn');
+  const sidebarLogoExpandBtn = document.getElementById('sidebarLogoExpandBtn');
   const floatToggleBtn = document.getElementById('floatToggleBtn');
   const appContainer = document.querySelector('.app');
   const leftSidebar = document.getElementById('leftSidebar');
@@ -15263,6 +16529,15 @@ setTimeout(() => {
   };
   const setWorkspaceSidebarCollapsed = (collapsed) => {
     if (!appContainer || !leftSidebar) return;
+    if (menuToggleBtn) {
+      menuToggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      menuToggleBtn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+    }
+    if (sidebarLogoExpandBtn) {
+      sidebarLogoExpandBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      sidebarLogoExpandBtn.title = collapsed ? 'Expand sidebar' : 'Aquarius';
+      sidebarLogoExpandBtn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Aquarius');
+    }
     if (collapsed) {
       requestAnimationFrame(() => {
         leftSidebar.classList.add('collapsed');
@@ -15285,8 +16560,17 @@ setTimeout(() => {
   };
 
   if (menuToggleBtn && leftSidebar) {
+    menuToggleBtn.setAttribute('aria-expanded', leftSidebar.classList.contains('collapsed') ? 'false' : 'true');
     menuToggleBtn.addEventListener('click', () => {
-      setWorkspaceSidebarCollapsed(true);
+      setWorkspaceSidebarCollapsed(!leftSidebar.classList.contains('collapsed'));
+    });
+  }
+  if (sidebarLogoExpandBtn && leftSidebar) {
+    sidebarLogoExpandBtn.setAttribute('aria-expanded', leftSidebar.classList.contains('collapsed') ? 'false' : 'true');
+    sidebarLogoExpandBtn.addEventListener('click', () => {
+      if (leftSidebar.classList.contains('collapsed')) {
+        setWorkspaceSidebarCollapsed(false);
+      }
     });
   }
   if (floatToggleBtn && leftSidebar) {
@@ -15431,10 +16715,22 @@ if (webSearchToggleBtnMain) {
   webSearchToggleBtnMain.style.color = '#2563EB';
 }
 
+function syncLearnNetworkToggle() {
+  if (!webSearchBtnLearn) return;
+  const isActive = webSearchBtnLearn.classList.contains('active');
+  webSearchBtnLearn.classList.toggle('network-on', isActive);
+  webSearchBtnLearn.classList.toggle('network-off', !isActive);
+  webSearchBtnLearn.title = isActive ? 'Web Search: ON' : 'Web Search: OFF';
+  webSearchBtnLearn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  webSearchBtnLearn.style.color = '';
+}
+
 if (webSearchBtnLearn) {
+  webSearchBtnLearn.classList.add('active');
+  syncLearnNetworkToggle();
   webSearchBtnLearn.addEventListener('click', () => {
     webSearchBtnLearn.classList.toggle('active');
-    webSearchBtnLearn.style.color = webSearchBtnLearn.classList.contains('active') ? '#2563EB' : '#94A3B8';
+    syncLearnNetworkToggle();
     if (webSearchToggleBtnLearnPopover) {
       webSearchToggleBtnLearnPopover.classList.toggle('active', webSearchBtnLearn.classList.contains('active'));
       webSearchToggleBtnLearnPopover.style.color = webSearchBtnLearn.classList.contains('active') ? '#2563EB' : '#94A3B8';
@@ -15462,13 +16758,66 @@ if (answerLengthToggleLearnPopover) {
   answerLengthToggleLearnPopover.addEventListener('change', () => {
     const mainSelect = document.getElementById('answerLengthToggleLearn');
     if (mainSelect) mainSelect.value = answerLengthToggleLearnPopover.value;
+    syncLearnModeMenu();
   });
 }
-document.getElementById('answerLengthToggleLearn')?.addEventListener('change', () => {
+const answerLengthToggleLearn = document.getElementById('answerLengthToggleLearn');
+const learnModeToggleBtn = document.getElementById('learnModeToggleBtn');
+const learnModeMenu = document.getElementById('learnModeMenu');
+const learnModeCurrentText = document.getElementById('learnModeCurrentText');
+const learnModeCurrentIcon = document.getElementById('learnModeCurrentIcon');
+const learnModeCopy = {
+  fast: { label: 'Fast', icon: '⚡' },
+  balanced: { label: 'Balanced', icon: '⚖' },
+  detailed: { label: 'Detailed', icon: '⌕' }
+};
+
+function syncLearnModeMenu() {
+  const value = normalizeAnswerStyle(answerLengthToggleLearn?.value || 'balanced');
+  if (answerLengthToggleLearn && answerLengthToggleLearn.value !== value) answerLengthToggleLearn.value = value;
+  if (learnModeCurrentText) learnModeCurrentText.textContent = learnModeCopy[value]?.label || 'Balanced';
+  if (learnModeCurrentIcon) learnModeCurrentIcon.textContent = learnModeCopy[value]?.icon || '⚖';
+  learnModeMenu?.querySelectorAll('.edu-mode-option').forEach(option => {
+    option.classList.toggle('selected', option.dataset.learnMode === value);
+  });
+  if (answerLengthToggleLearnPopover) answerLengthToggleLearnPopover.value = value;
+}
+
+answerLengthToggleLearn?.addEventListener('change', () => {
   if (answerLengthToggleLearnPopover) {
-    answerLengthToggleLearnPopover.value = document.getElementById('answerLengthToggleLearn')?.value || 'balanced';
+    answerLengthToggleLearnPopover.value = answerLengthToggleLearn?.value || 'balanced';
   }
+  syncLearnModeMenu();
 });
+
+if (learnModeToggleBtn && learnModeMenu) {
+  learnModeToggleBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const isOpen = learnModeMenu.classList.toggle('show');
+    learnModeToggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+
+  learnModeMenu.querySelectorAll('.edu-mode-option').forEach(option => {
+    option.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (answerLengthToggleLearn) {
+        answerLengthToggleLearn.value = normalizeAnswerStyle(option.dataset.learnMode || 'balanced');
+        answerLengthToggleLearn.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      learnModeMenu.classList.remove('show');
+      learnModeToggleBtn.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!learnModeMenu.contains(event.target) && !learnModeToggleBtn.contains(event.target)) {
+      learnModeMenu.classList.remove('show');
+      learnModeToggleBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
+syncLearnModeMenu();
 
 if (answerLengthToggleTextbookFocus) {
   answerLengthToggleTextbookFocus.value = document.getElementById('answerLengthToggleLearn')?.value || 'balanced';
@@ -15707,6 +17056,7 @@ function buildRecentConversationSnapshot(source = 'unknown') {
   const lessonMarkdown = shouldUseMain ? '' : (tutorState.learnLessonMarkdown || '');
   const bookPages = shouldUseMain ? (tutorState.currentBookPages || []) : (tutorState.learnBookPages || []);
   const webSources = shouldUseMain ? (tutorState.currentWebSources || []) : (tutorState.learnWebSources || []);
+  const attachments = shouldUseMain ? cloneAttachmentSourcesForStorage(activeMainAttachmentSources) : [];
 
   return {
     origin: shouldUseMain ? 'main' : 'learn',
@@ -15717,6 +17067,7 @@ function buildRecentConversationSnapshot(source = 'unknown') {
     lessonMarkdown,
     bookPages,
     webSources,
+    attachments,
     sessionId: `${shouldUseMain ? 'main' : sectionId || 'learn'}-${timestamp}`
   };
 }
@@ -15772,6 +17123,7 @@ function saveCurrentLearnSession(source = 'unknown') {
     lessonMarkdown: snapshot.lessonMarkdown,
     bookPages: snapshot.bookPages,
     webSources: snapshot.webSources,
+    attachments: snapshot.attachments,
     history: JSON.parse(JSON.stringify(snapshot.history))
   };
 
@@ -15811,18 +17163,26 @@ window.loadHistoricalSession = function(timestamp) {
       tutorState.chatSessionStartTime = session.timestamp;
       tutorState.currentBookPages = Array.isArray(session.bookPages) ? session.bookPages : [];
       tutorState.currentWebSources = Array.isArray(session.webSources) ? session.webSources : [];
+      const restoredAttachments = cloneAttachmentSourcesForStorage(session.attachments || []);
 
       const lastUser = [...tutorState.chatHistory].reverse().find(m => m.role === 'user')?.content || session.title || 'Saved conversation';
-      const lastAssistant = [...tutorState.chatHistory].reverse().find(m => m.role === 'assistant')?.content || '暂无讲解内容';
       showAnswer(lastUser);
       stepsBar.classList.add('hidden');
       setStatus('Restored', 'done');
+      if (restoredAttachments.length) {
+        attachmentCompareOpen = true;
+        activeMainAttachmentIndex = 0;
+        renderAttachmentSourcePanel(restoredAttachments);
+      } else {
+        clearAttachmentSourcePanel();
+      }
       renderBookPages(tutorState.currentBookPages);
       renderBookSources(tutorState.currentBookPages);
       renderWebSources(tutorState.currentWebSources);
       renderWebSourcesInline(tutorState.currentWebSources);
-      sourcesSection.classList.toggle('hidden', !(tutorState.currentBookPages.length || tutorState.currentWebSources.length));
-      renderExplanation(lastAssistant);
+      updateReferencesSummary(tutorState.currentBookPages.length, tutorState.currentWebSources.length);
+      setReferencesOpen(false);
+      renderMainConversationThread();
       return;
     }
 
