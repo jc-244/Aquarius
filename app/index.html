@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aquarius · Signal Processing & Linear Systems</title>
+  <title>Fourier · Signal Processing & Linear Systems</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=DM+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
@@ -66,8 +66,8 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=1778674253">
-  <link rel="icon" type="image/jpeg" href="aquarius-logo.jpg?v=1778524702">
+  <link rel="stylesheet" href="style.css?v=1778674268">
+  <link rel="icon" type="image/png" href="fourier-logo.png?v=1778674267">
 
   <style>
     .cute-btn-primary {
@@ -420,7 +420,7 @@
     .intro-landing-new .scrap-hero-copy {
       position: relative;
       padding-right: 18px;
-      animation: hero-copy-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation: intro-slide-left 0.86s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
 
     .intro-landing-new .scrap-hero-scribble {
@@ -498,7 +498,7 @@
     .intro-landing-new .scrap-collage {
       position: relative;
       min-height: 520px;
-      animation: hero-collage-rise 1s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+      animation: intro-slide-right 0.96s cubic-bezier(0.16, 1, 0.3, 1) 0.10s both;
     }
 
     .intro-landing-new .scrap-polaroid,
@@ -1366,6 +1366,320 @@
       letter-spacing: 0.16em;
     }
 
+    /* Fourier blue notebook theme */
+    .intro-landing-new {
+      --fourier-ink: #0f172a;
+      --fourier-navy: #15345f;
+      --fourier-blue: #1597e8;
+      --fourier-sky: #46c7ff;
+      --fourier-ice: #e8f8ff;
+      --fourier-paper: #f6fcff;
+      --fourier-line: rgba(21, 151, 232, 0.14);
+      color: var(--fourier-ink) !important;
+      background-color: var(--fourier-paper) !important;
+      background-image:
+        radial-gradient(circle at 78% 10%, rgba(70, 199, 255, 0.26), transparent 34%),
+        radial-gradient(circle at 12% 28%, rgba(14, 165, 233, 0.18), transparent 28%),
+        linear-gradient(120deg, rgba(232, 248, 255, 0.78), rgba(255, 255, 255, 0.42) 42%, rgba(209, 242, 255, 0.56)),
+        linear-gradient(to right, var(--fourier-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--fourier-line) 1px, transparent 1px),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E") !important;
+      background-size: auto, auto, auto, 24px 24px, 24px 24px, 200px 200px !important;
+    }
+
+    body.intro-active .intro-landing-new:not(.hidden) {
+      background-color: var(--fourier-paper) !important;
+      background-image:
+        radial-gradient(circle at 78% 10%, rgba(70, 199, 255, 0.26), transparent 34%),
+        radial-gradient(circle at 12% 28%, rgba(14, 165, 233, 0.18), transparent 28%),
+        linear-gradient(120deg, rgba(232, 248, 255, 0.78), rgba(255, 255, 255, 0.42) 42%, rgba(209, 242, 255, 0.56)),
+        linear-gradient(to right, var(--fourier-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--fourier-line) 1px, transparent 1px),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E") !important;
+      background-size: auto, auto, auto, 24px 24px, 24px 24px, 200px 200px !important;
+    }
+
+    .intro-landing-new #introNavbar {
+      background: linear-gradient(to bottom, rgba(235, 249, 255, 0.92), rgba(235, 249, 255, 0.56), transparent);
+      backdrop-filter: blur(2px);
+    }
+
+    .intro-landing-new #introNavbar .max-w-7xl > div:first-child {
+      background:
+        linear-gradient(#ffffff, #ffffff) padding-box,
+        linear-gradient(135deg, #46c7ff, #0f75d6) border-box !important;
+      border-color: transparent !important;
+      box-shadow: 5px 5px 0 var(--fourier-ink), 0 12px 34px rgba(21, 151, 232, 0.18) !important;
+    }
+
+    .intro-landing-new #introNavbar .max-w-7xl > div:first-child span {
+      color: var(--fourier-ink) !important;
+    }
+
+    .intro-landing-new .scrap-logo-mark {
+      border-radius: 14px;
+      filter: drop-shadow(0 7px 16px rgba(21, 151, 232, 0.22));
+    }
+
+    .intro-landing-new #introGetStartedBtn,
+    .intro-landing-new #introHeroExploreBtn,
+    .intro-landing-new #introFooterCtaBtn {
+      background: linear-gradient(135deg, #5bd3ff 0%, #1597e8 52%, #0866c2 100%) !important;
+      color: #ffffff !important;
+      border-color: var(--fourier-ink) !important;
+      box-shadow: 5px 5px 0 var(--fourier-ink), 0 16px 34px rgba(21, 151, 232, 0.25) !important;
+      text-shadow: 0 1px 0 rgba(15, 23, 42, 0.25);
+    }
+
+    .intro-landing-new #introGetStartedBtn:hover,
+    .intro-landing-new #introHeroExploreBtn:hover,
+    .intro-landing-new #introFooterCtaBtn:hover {
+      box-shadow: 7px 7px 0 var(--fourier-ink), 0 20px 42px rgba(21, 151, 232, 0.30) !important;
+    }
+
+    .intro-landing-new .intro-hero-copy > .absolute {
+      color: rgba(21, 151, 232, 0.28) !important;
+      text-shadow: 0 8px 24px rgba(70, 199, 255, 0.20);
+    }
+
+    .intro-landing-new .intro-hero-title {
+      color: var(--fourier-ink);
+      text-shadow: 0 12px 38px rgba(21, 151, 232, 0.08);
+    }
+
+    .intro-landing-new .intro-hero-subtitle,
+    .intro-landing-new .scrap-pipeline-copy p,
+    .intro-landing-new .scrap-footer p {
+      color: rgba(15, 23, 42, 0.68) !important;
+    }
+
+    .intro-landing-new .highlight,
+    .intro-landing-new .highlight-yellow,
+    .intro-landing-new .scrap-highlight {
+      background: linear-gradient(120deg, rgba(98, 211, 255, 0.18) 0%, rgba(98, 211, 255, 0.18) 100%) !important;
+      background-repeat: no-repeat !important;
+      background-size: 100% 42% !important;
+      background-position: 0 88% !important;
+      box-shadow: inset 0 -0.34em rgba(70, 199, 255, 0.42);
+    }
+
+    .intro-landing-new .highlight-pink,
+    .intro-landing-new .scrap-highlight-pink {
+      background: linear-gradient(120deg, rgba(125, 211, 252, 0.58), rgba(191, 232, 255, 0.74)) !important;
+      background-repeat: no-repeat !important;
+      background-size: 100% 38% !important;
+      background-position: 0 88% !important;
+    }
+
+    .intro-landing-new .intro-hero-actions .font-hand,
+    .intro-landing-new .scrap-section-head p,
+    .intro-landing-new .scrap-hero-note,
+    .intro-landing-new .scrap-pipeline::after {
+      color: #0978d7 !important;
+    }
+
+    .intro-landing-new .tape-pattern-1,
+    .intro-landing-new .scrap-tape-blue {
+      background: repeating-linear-gradient(-45deg, rgba(70, 199, 255, 0.86), rgba(70, 199, 255, 0.86) 10px, rgba(255, 255, 255, 0.72) 10px, rgba(255, 255, 255, 0.72) 20px) !important;
+    }
+
+    .intro-landing-new .tape-pattern-2,
+    .intro-landing-new .scrap-tape-pink {
+      background: repeating-linear-gradient(90deg, rgba(125, 211, 252, 0.88), rgba(125, 211, 252, 0.88) 7px, rgba(255, 255, 255, 0.70) 7px, rgba(255, 255, 255, 0.70) 14px) !important;
+    }
+
+    .intro-landing-new .pin,
+    .intro-landing-new .scrap-pin {
+      background: #0ea5e9 !important;
+      box-shadow: inset -2px -2px 4px rgba(15, 23, 42, 0.28), 0 5px 14px rgba(14, 165, 233, 0.36) !important;
+    }
+
+    .intro-landing-new .intro-polaroid-card,
+    .intro-landing-new .intro-window-card,
+    .intro-landing-new .proof-card,
+    .intro-landing-new .scrap-paper,
+    .intro-landing-new .scrap-footer-inner {
+      background: rgba(255, 255, 255, 0.86) !important;
+      border-color: rgba(15, 23, 42, 0.90) !important;
+      box-shadow: 5px 5px 0 var(--fourier-ink), 0 24px 48px rgba(21, 151, 232, 0.14) !important;
+      backdrop-filter: blur(10px);
+    }
+
+    .intro-landing-new .intro-polaroid-card {
+      box-shadow: 0 24px 54px rgba(21, 151, 232, 0.20), 0 0 0 1px rgba(14, 116, 144, 0.12) !important;
+    }
+
+    .intro-landing-new .intro-polaroid-card > .bg-blue-100 {
+      background: linear-gradient(135deg, #dff6ff, #bdefff) !important;
+      border-color: rgba(21, 151, 232, 0.28) !important;
+    }
+
+    .intro-landing-new .intro-window-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(228,248,255,0.84)) !important;
+    }
+
+    .intro-landing-new .intro-window-card .bg-gray-100 {
+      background: #eff8ff !important;
+      color: rgba(15, 23, 42, 0.72) !important;
+    }
+
+    .intro-landing-new .intro-window-card .bg-blue-50 {
+      background: #dff3ff !important;
+      border-color: #8edcff !important;
+    }
+
+    .intro-landing-new .intro-sticky-card,
+    .intro-landing-new .scrap-sticky {
+      background:
+        linear-gradient(135deg, rgba(221, 247, 255, 0.96), rgba(108, 210, 255, 0.92)) !important;
+      color: var(--fourier-ink) !important;
+      border-color: var(--fourier-ink) !important;
+      box-shadow: 5px 5px 0 var(--fourier-ink), 0 22px 44px rgba(21, 151, 232, 0.22) !important;
+    }
+
+    .intro-landing-new .intro-sticky-card .font-mono {
+      color: rgba(15, 23, 42, 0.56) !important;
+      border-bottom-color: rgba(15, 23, 42, 0.16) !important;
+    }
+
+    .intro-landing-new .intro-sticky-card span {
+      color: #075db3 !important;
+      background: rgba(255, 255, 255, 0.68) !important;
+      box-shadow: inset 0 -0.4em rgba(70, 199, 255, 0.18);
+    }
+
+    .intro-landing-new .proof-card-muted {
+      background-color: rgba(255, 255, 255, 0.82) !important;
+      background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 27px, rgba(125, 211, 252, 0.42) 28px) !important;
+      filter: saturate(0.95);
+    }
+
+    .intro-landing-new .proof-card-muted::before {
+      background: rgba(14, 165, 233, 0.38) !important;
+    }
+
+    .intro-landing-new .proof-card-muted::after {
+      background: var(--fourier-paper) !important;
+      box-shadow:
+        0 76px 0 var(--fourier-paper),
+        0 152px 0 var(--fourier-paper),
+        0 228px 0 var(--fourier-paper) !important;
+    }
+
+    .intro-landing-new .proof-card-live {
+      background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(232,248,255,0.92)) !important;
+      box-shadow: 8px 8px 0 var(--fourier-ink), 0 28px 54px rgba(21, 151, 232, 0.20) !important;
+    }
+
+    .intro-landing-new .proof-card-live::before,
+    .intro-landing-new .scrap-footer-inner::before,
+    .intro-landing-new .scrap-pipeline::before {
+      background: repeating-linear-gradient(90deg, rgba(70, 199, 255, 0.82), rgba(70, 199, 255, 0.82) 14px, rgba(255,255,255,0.66) 14px, rgba(255,255,255,0.66) 28px) !important;
+    }
+
+    .intro-landing-new .proof-stamp {
+      color: #0874c9 !important;
+      background: rgba(232, 248, 255, 0.78);
+    }
+
+    .intro-landing-new .proof-context-label {
+      color: #0874c9 !important;
+    }
+
+    .intro-landing-new .proof-book-copy strong {
+      background-image: linear-gradient(transparent 58%, rgba(70, 199, 255, 0.40) 58%) !important;
+      color: var(--fourier-ink) !important;
+    }
+
+    .intro-landing-new .proof-answer-ghost span {
+      background-image: linear-gradient(transparent 56%, rgba(125, 211, 252, 0.28) 56%) !important;
+    }
+
+    .intro-landing-new .proof-red-note,
+    .intro-landing-new .proof-red-note::before {
+      color: #0b78d0 !important;
+      border-color: #0b78d0 !important;
+    }
+
+    .intro-landing-new .proof-page-tabs span {
+      background: rgba(255, 255, 255, 0.78) !important;
+      border-color: rgba(21, 151, 232, 0.32) !important;
+      border-bottom-color: rgba(21, 151, 232, 0.58) !important;
+      color: #155e9e !important;
+    }
+
+    .intro-landing-new .proof-response {
+      background: linear-gradient(135deg, #c8f1ff, #75d7ff) !important;
+      border-color: var(--fourier-ink) !important;
+      box-shadow: 5px 5px 0 var(--fourier-ink), 0 18px 32px rgba(21, 151, 232, 0.18) !important;
+    }
+
+    .intro-landing-new .proof-response strong,
+    .intro-landing-new .proof-margin-note {
+      color: #075db3 !important;
+    }
+
+    .intro-landing-new .scrap-pipeline {
+      background:
+        linear-gradient(90deg, rgba(70, 199, 255, 0.16) 1px, transparent 1px),
+        linear-gradient(rgba(70, 199, 255, 0.16) 1px, transparent 1px),
+        linear-gradient(135deg, rgba(255,255,255,0.88), rgba(219,244,255,0.82)) !important;
+      border-color: rgba(15, 23, 42, 0.88) !important;
+      box-shadow: 7px 7px 0 var(--fourier-ink), 0 26px 58px rgba(21, 151, 232, 0.16) !important;
+    }
+
+    .intro-landing-new .scrap-pipeline-label,
+    .intro-landing-new .scrap-footer-eyebrow {
+      background: #c8f1ff !important;
+      color: #075db3 !important;
+      border-color: var(--fourier-ink) !important;
+    }
+
+    .intro-landing-new .scrap-agent-card.read {
+      background: rgba(255, 255, 255, 0.92) !important;
+    }
+
+    .intro-landing-new .scrap-agent-card.plan {
+      background:
+        linear-gradient(to bottom, rgba(14, 165, 233, 0.34) 0 4px, transparent 4px 100%),
+        repeating-linear-gradient(to bottom, #f3fbff 0, #f3fbff 29px, rgba(70, 199, 255, 0.28) 30px) !important;
+    }
+
+    .intro-landing-new .scrap-agent-card.teach {
+      background: #eaf8ff !important;
+    }
+
+    .intro-landing-new .scrap-agent-card.teach::after,
+    .intro-landing-new .scrap-footer-grade {
+      color: #0874c9 !important;
+    }
+
+    .intro-landing-new .scrap-agent-arrow {
+      color: #1597e8 !important;
+    }
+
+    .intro-landing-new .scrap-footer {
+      background:
+        linear-gradient(90deg, rgba(70, 199, 255, 0.16) 1px, transparent 1px),
+        linear-gradient(rgba(70, 199, 255, 0.16) 1px, transparent 1px),
+        #eaf8ff !important;
+    }
+
+    .intro-landing-new .scrap-footer::before {
+      background-image: radial-gradient(circle at 10px 0, transparent 12px, #eaf8ff 13px) !important;
+    }
+
+    .intro-landing-new .scrap-footer-checklist {
+      background:
+        repeating-linear-gradient(to bottom, #f8fdff 0, #f8fdff 31px, rgba(70, 199, 255, 0.24) 32px) !important;
+      box-shadow: 5px 5px 0 var(--fourier-ink), 0 18px 36px rgba(21, 151, 232, 0.16) !important;
+    }
+
+    .intro-landing-new .scrap-footer-checklist li::before {
+      border-color: #1597e8 !important;
+      background: linear-gradient(135deg, transparent 0 44%, #075db3 44% 58%, transparent 58%) !important;
+    }
+
     @keyframes float {
       0%, 100% { transform: translateY(0) rotate(var(--scrap-rotate, 0deg)); }
       50% { transform: translateY(-10px) rotate(calc(var(--scrap-rotate, 0deg) + 2deg)); }
@@ -1436,6 +1750,63 @@
     }
 
     @media (max-width: 720px) {
+      .intro-landing-new .intro-hero-stage {
+        padding-top: 118px !important;
+        padding-bottom: 96px !important;
+        gap: 30px !important;
+        align-items: stretch !important;
+      }
+
+      .intro-landing-new .intro-hero-copy {
+        width: 100%;
+      }
+
+      .intro-landing-new .intro-hero-title {
+        font-size: clamp(4.2rem, 18vw, 5.2rem) !important;
+        max-width: 100%;
+      }
+
+      .intro-landing-new .intro-hero-subtitle {
+        margin-bottom: 24px !important;
+      }
+
+      .intro-landing-new .intro-hero-actions {
+        justify-content: center;
+        gap: 10px !important;
+      }
+
+      .intro-landing-new .intro-hero-actions .font-hand {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .intro-landing-new .intro-hero-collage {
+        flex: none !important;
+        height: 560px !important;
+        min-height: 560px !important;
+        margin-top: 10px;
+        overflow: visible;
+      }
+
+      .intro-landing-new .intro-window-card {
+        top: 8px !important;
+        left: 4px !important;
+        width: min(86vw, 300px) !important;
+      }
+
+      .intro-landing-new .intro-sticky-card {
+        top: 178px !important;
+        bottom: auto !important;
+        left: 4px !important;
+        width: min(82vw, 270px) !important;
+      }
+
+      .intro-landing-new .intro-polaroid-card {
+        top: 270px !important;
+        right: 0 !important;
+        width: min(82vw, 282px) !important;
+      }
+
       .intro-landing-new .scrap-nav {
         padding: 16px 14px;
       }
@@ -1550,8 +1921,8 @@
       <div class="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between pointer-events-auto">
         <!-- Logo 像是一张贴纸 -->
         <div class="bg-white pr-5 pl-2 py-2 border-2 border-ink shadow-chunky -rotate-2 hover:rotate-0 transition-transform cursor-pointer flex items-center gap-3">
-          <img src="aquarius-logo.jpg?v=1778524702" class="scrap-logo-mark" alt="" aria-hidden="true">
-          <span class="font-title font-bold text-2xl tracking-tight text-ink mt-1">Aquarius</span>
+          <img src="fourier-logo.png?v=1778674267" class="scrap-logo-mark" alt="" aria-hidden="true">
+          <span class="font-title font-bold text-2xl tracking-tight text-ink mt-1">Fourier</span>
         </div>
 
         <button id="introGetStartedBtn" class="bg-highlighter-yellow text-ink border-2 border-ink px-6 py-2 font-bold font-title text-lg shadow-chunky hover:-translate-y-1 hover:shadow-chunky-hover active:translate-y-1 active:shadow-none transition-all rotate-1" type="button">
@@ -1561,24 +1932,22 @@
     </nav>
 
     <!-- Hero Section -->
-    <header class="relative pt-32 pb-24 md:pt-48 md:pb-40 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-16">
+    <header class="intro-hero-stage relative pt-32 pb-24 md:pt-48 md:pb-40 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-16">
       <!-- 左侧：夸张的排版与核心文案 -->
-      <div class="flex-1 relative z-10">
+      <div class="intro-hero-copy flex-1 relative z-10">
         <div class="absolute -top-12 -left-8 text-6xl text-highlighter-pink/30 font-hand -rotate-12 pointer-events-none">Start here!</div>
 
-        <div class="stamp rotate-[15deg] absolute -right-4 md:right-10 top-0 z-20 bg-white/80 backdrop-blur-sm">TEXTBOOK-FIRST</div>
-
-        <h1 class="font-title font-bold text-6xl md:text-7xl lg:text-[5.5rem] leading-[0.95] tracking-tight mb-8">
+        <h1 class="intro-hero-title font-title font-bold text-6xl md:text-7xl lg:text-[5.5rem] leading-[0.95] tracking-tight mb-8">
           An AI Tutor <br>
           That Truly <br>
           <span class="highlight inline-block -rotate-1">Gets You.</span>
         </h1>
 
-        <p class="text-xl md:text-2xl text-ink/70 font-semibold mb-10 max-w-xl">
+        <p class="intro-hero-subtitle text-xl md:text-2xl text-ink/70 font-semibold mb-10 max-w-xl">
           Stop fighting hallucinations. Your engineering syllabus, exact textbook figures, and custom formulas, all pinned to one visual workspace.
         </p>
 
-        <div class="flex flex-wrap gap-4 items-center">
+        <div class="intro-hero-actions flex flex-wrap gap-4 items-center">
           <button id="introHeroExploreBtn" class="bg-ink text-white border-2 border-ink px-8 py-4 font-bold font-title text-xl rounded-xl shadow-chunky hover:-translate-y-1 hover:shadow-chunky-hover transition-all" type="button">
             Open Workspace
           </button>
@@ -1589,9 +1958,9 @@
       </div>
 
       <!-- 右侧：剪贴簿拼贴画展示 -->
-      <div class="flex-1 relative w-full h-[500px]">
+      <div class="intro-hero-collage flex-1 relative w-full h-[500px]">
         <!-- 照片1：课本封面 -->
-        <div class="absolute top-0 right-10 w-64 bg-white p-3 pb-10 border border-ink/10 shadow-polaroid rotate-6 animate-float-slow z-20">
+        <div class="intro-polaroid-card absolute top-0 right-10 w-64 bg-white p-3 pb-10 border border-ink/10 shadow-polaroid rotate-6 animate-float-slow z-20">
           <div class="tape tape-pattern-1 -top-4 left-1/2 -translate-x-1/2 rotate-2"></div>
           <div class="bg-blue-100 h-72 border border-ink/10 flex items-center justify-center overflow-hidden">
             <img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover mix-blend-multiply opacity-80" alt="Math Book">
@@ -1600,7 +1969,7 @@
         </div>
 
         <!-- 便利贴1：公式 -->
-        <div class="absolute bottom-10 left-0 w-56 bg-highlighter-yellow p-6 border-2 border-ink shadow-chunky -rotate-6 animate-float-fast z-30">
+        <div class="intro-sticky-card absolute bottom-10 left-0 w-56 bg-highlighter-yellow p-6 border-2 border-ink shadow-chunky -rotate-6 animate-float-fast z-30">
           <div class="pin"></div>
           <div class="font-mono text-sm font-bold text-ink/50 mb-2 border-b-2 border-ink/10 pb-1">NOTE TO SELF</div>
           <div class="font-hand text-2xl leading-tight">
@@ -1610,7 +1979,7 @@
         </div>
 
         <!-- 纸片1：UI Mockup 对话框 -->
-        <div class="absolute top-32 left-10 w-72 bg-white border-2 border-ink p-4 shadow-paper -rotate-2 z-10">
+        <div class="intro-window-card absolute top-32 left-10 w-72 bg-white border-2 border-ink p-4 shadow-paper -rotate-2 z-10">
           <div class="tape tape-pattern-2 -right-12 top-4 rotate-[70deg] w-24"></div>
           <div class="flex gap-2 mb-3">
             <div class="w-3 h-3 rounded-full bg-red-400"></div>
@@ -1645,7 +2014,7 @@
 
           <div class="proof-card proof-card-live">
             <div class="proof-topline">
-              <span>Aquarius page pull</span>
+              <span>Fourier page pull</span>
               <span class="proof-stamp">source locked</span>
             </div>
             <div class="proof-context-box">
@@ -1653,7 +2022,7 @@
               <p class="proof-context-title">Chapter 3.2 · Continuous-Time Fourier Series</p>
             </div>
             <p class="proof-book-copy">
-              The answer starts from the exact section your course points to: <strong>periodic signals are represented as weighted sinusoids</strong>, then Aquarius opens the matching textbook figure before writing the explanation.
+              The answer starts from the exact section your course points to: <strong>periodic signals are represented as weighted sinusoids</strong>, then Fourier opens the matching textbook figure before writing the explanation.
             </p>
             <div class="proof-margin-note">Lathi p.184<br>Fig. 3.2</div>
             <div class="proof-page-tabs" aria-label="attached source trail">
@@ -1662,7 +2031,7 @@
               <span style="--tab-tilt: -0.5deg;">figure map</span>
             </div>
             <div class="proof-response">
-              <p><strong>Start here:</strong> the figure is not decoration; it is the outline Aquarius follows.</p>
+              <p><strong>Start here:</strong> the figure is not decoration; it is the outline Fourier follows.</p>
             </div>
           </div>
         </div>
@@ -1680,11 +2049,11 @@
               <span class="highlight-yellow">you can inspect.</span>
             </h2>
             <p>
-              Aquarius does not just “answer.” It reads the exact page, turns it into a lesson card, then checks the explanation against what you actually need to practice.
+              Fourier does not just “answer.” It reads the exact page, turns it into a lesson card, then checks the explanation against what you actually need to practice.
             </p>
           </div>
 
-          <div class="scrap-agent-stack" aria-label="Aquarius teaching pipeline">
+          <div class="scrap-agent-stack" aria-label="Fourier teaching pipeline">
             <article class="scrap-agent-card read">
               <div class="scrap-agent-id">STEP 01 · TEXTBOOK</div>
               <div class="scrap-agent-title">Read the source</div>
@@ -1721,7 +2090,7 @@
             </button>
 
             <div class="scrap-footer-meta">
-              © 2026 Aquarius AI Lab. Built with blood, sweat &amp; textbooks.
+              © 2026 Fourier AI Lab. Built with blood, sweat &amp; textbooks.
             </div>
           </div>
 
@@ -1753,9 +2122,9 @@
             </svg>
           </button>
           <button class="logo-icon logo-icon-brand" id="sidebarLogoExpandBtn" type="button" title="Expand sidebar" aria-label="Expand sidebar">
-            <i class="ph-fill ph-planet aquarius-brand-planet" aria-hidden="true"></i>
+            <img src="fourier-logo.png?v=1778674267" alt="" aria-hidden="true">
           </button>
-          <div class="logo-text logo-text-brand">Aquarius</div>
+          <div class="logo-text logo-text-brand">Fourier</div>
         </div>
       </div>
 
@@ -1764,7 +2133,7 @@
         <div class="sidebar-nav" id="sidebarPrimaryNav">
           <button class="sidebar-link" id="navSyllabusBtn" type="button" title="Syllabus">
             <span class="sidebar-link-icon">
-              <i class="ph-bold ph-map-trifold" aria-hidden="true"></i>
+              <i class="ph-bold ph-book-open-text" aria-hidden="true"></i>
             </span>
             <span>Syllabus</span>
           </button>
@@ -1797,12 +2166,6 @@
               <i class="ph-bold ph-calendar-check" aria-hidden="true"></i>
             </span>
             <span>Course Tracker</span>
-          </button>
-          <button class="sidebar-link" id="navHomeworkBtn" type="button" title="Homework">
-            <span class="sidebar-link-icon">
-              <i class="ph-bold ph-pencil-line" aria-hidden="true"></i>
-            </span>
-            <span>Homework</span>
           </button>
           <button class="sidebar-link" id="navMistakeNotebookBtn" type="button" title="Mistake Notebook">
             <span class="sidebar-link-icon">
@@ -2343,7 +2706,7 @@
                     <h2 class="settings-page-card-title">Save progress across sessions</h2>
                   </div>
                 </div>
-                <p class="settings-page-copy">Use an account if you want Aquarius to keep your memory, learning track, and future progress. Guest mode stays lightweight for quick use.</p>
+                <p class="settings-page-copy">Use an account if you want Fourier to keep your memory, learning track, and future progress. Guest mode stays lightweight for quick use.</p>
                 <div id="clerkMountSettings" style="display:none;margin-top:16px;"></div>
                 <div class="settings-page-actions" id="settingsAuthActions">
                   <button id="clerkSignInBtnSettings" class="settings-primary-btn" type="button">
@@ -2364,7 +2727,7 @@
                     <h2 class="settings-page-card-title">Profile & study setup</h2>
                   </div>
                 </div>
-                <p class="settings-page-copy">Reset your learning profile if you want Aquarius to rebuild the tutoring track, pacing, and explanation style from scratch.</p>
+                <p class="settings-page-copy">Reset your learning profile if you want Fourier to rebuild the tutoring track, pacing, and explanation style from scratch.</p>
                 <button id="settingsResetQuizBtn" class="settings-inline-btn" type="button">Reset learning profile</button>
               </section>
 
@@ -2375,7 +2738,7 @@
                     <h2 class="settings-page-card-title">Version</h2>
                   </div>
                 </div>
-                <div class="settings-page-version">Aquarius Tutor Agent <span>v1.1.0</span></div>
+                <div class="settings-page-version">Fourier Tutor Agent <span>v1.1.0</span></div>
               </section>
             </div>
           </div>
@@ -2428,7 +2791,7 @@
             <div>
               <div class="feedback-eyebrow">Community Notes</div>
               <h1 class="feedback-title">Feedback Board</h1>
-              <p class="feedback-subtitle">Leave suggestions for Aquarius, see what others requested, and discuss product ideas together.</p>
+              <p class="feedback-subtitle">Leave suggestions for Fourier, see what others requested, and discuss product ideas together.</p>
             </div>
             <button class="feature-close-btn" id="feedbackCloseBtn" type="button" aria-label="Close feedback board">✕</button>
           </div>
@@ -2470,7 +2833,7 @@
             <div>
               <div class="preference-page-eyebrow">Personalization Memory</div>
               <h1 class="preference-page-title">Learning Preferences</h1>
-              <p class="preference-page-subtitle">Edit the profile Aquarius injects into lesson and Q&A prompts. Save once, and future answers immediately adapt.</p>
+              <p class="preference-page-subtitle">Edit the profile Fourier injects into lesson and Q&A prompts. Save once, and future answers immediately adapt.</p>
             </div>
             <button class="feature-close-btn" id="preferencePageBackBtn" type="button" aria-label="Close preferences">✕</button>
           </div>
@@ -2481,7 +2844,7 @@
               <div class="preference-card-head">
                 <div>
                   <div class="preference-card-eyebrow">Editable Profile</div>
-                  <h2 class="preference-card-title">What Aquarius should remember</h2>
+                  <h2 class="preference-card-title">What Fourier should remember</h2>
                 </div>
                 <div class="preference-save-state" id="preferenceSaveState">Loaded locally</div>
               </div>
@@ -2500,7 +2863,7 @@
                   <h2 class="preference-card-title">Ask AI to rewrite it</h2>
                 </div>
               </div>
-              <p class="preference-page-copy">Describe how you want the profile changed. Aquarius will generate a draft only; it will not apply anything until you click Save.</p>
+              <p class="preference-page-copy">Describe how you want the profile changed. Fourier will generate a draft only; it will not apply anything until you click Save.</p>
               <textarea id="preferenceAiInstruction" class="preference-ai-input" placeholder="Example: Make my tutor more exam-oriented, but keep explanations visual and step-by-step."></textarea>
               <button id="preferenceAiDraftBtn" class="preference-secondary-btn preference-ai-btn" type="button">Generate AI Draft</button>
               <div class="preference-draft-panel hidden" id="preferenceDraftPanel">
@@ -2523,75 +2886,6 @@
               <div id="preferenceProfilePreview" class="preference-profile-preview"></div>
             </section>
           </div>
-        </div>
-      </div>
-
-      <div class="homework-view hidden" id="homeworkView">
-        <div class="homework-shell">
-          <aside class="homework-rail">
-            <select class="homework-set-select" id="homeworkSetSelect" aria-label="Select homework set"></select>
-            <button class="homework-rail-refresh" id="homeworkAddSetBtn" type="button" aria-label="Refresh homework">↻</button>
-            <div class="homework-count-pill" id="homeworkCountPill">0</div>
-            <div class="homework-list" id="homeworkProblemList"></div>
-            <button class="homework-rail-refresh" id="homeworkAddBtn" type="button" aria-label="Refresh problems">↻</button>
-          </aside>
-
-          <main class="homework-main">
-            <div class="homework-empty-panel" id="homeworkEmptyPanel">
-              <div class="homework-empty-icon">HW</div>
-              <h2>No homework loaded</h2>
-              <p>Put screenshots into the project HW folder, then refresh.</p>
-              <button class="homework-primary-btn" id="homeworkEmptyAddBtn" type="button">Refresh</button>
-            </div>
-
-            <div class="homework-detail-content hidden" id="homeworkDetailContent">
-              <section class="homework-problem-dock">
-                <div class="homework-problem-bar">
-                  <div>
-                    <div class="homework-eyebrow">Homework</div>
-                    <input class="homework-title-input" id="homeworkTitleInput" type="text" placeholder="Problem title" readonly>
-                  </div>
-                  <select class="homework-status-select" id="homeworkStatusSelect" aria-label="Homework status">
-                    <option value="Todo">Todo</option>
-                    <option value="Working">Working</option>
-                    <option value="Explained">Explained</option>
-                    <option value="Done">Done</option>
-                  </select>
-                </div>
-                <textarea class="homework-problem-input" id="homeworkProblemInput" spellcheck="true" placeholder="Problem text loaded from the project HW folder." readonly></textarea>
-                <button class="homework-secondary-btn homework-image-source-btn hidden" id="homeworkImageInput" type="button">From HW Folder</button>
-                <div class="homework-image-strip" id="homeworkImageStrip"></div>
-                <div class="homework-actions">
-                  <button class="homework-primary-btn" id="homeworkExplainBtn" type="button">Generate Explanation</button>
-                  <button class="homework-secondary-btn hidden" id="homeworkSaveBtn" type="button">Save</button>
-                  <button class="homework-danger-btn hidden" id="homeworkDeleteBtn" type="button">Delete</button>
-                  <div class="homework-save-state" id="homeworkSaveState">Ready</div>
-                </div>
-              </section>
-
-              <section class="homework-explanation-panel">
-                <div class="homework-panel-kicker">Explanation</div>
-                <div class="homework-explanation" id="homeworkExplanation">No explanation yet.</div>
-              </section>
-            </div>
-          </main>
-
-          <button class="homework-qa-bubble" id="homeworkQaBubbleBtn" type="button" aria-label="Open homework Q&A">Q&A</button>
-          <aside class="homework-qa-panel hidden" id="homeworkQaPanel">
-            <div class="homework-qa-head">
-              <div>
-                <div class="homework-panel-kicker">Q&A</div>
-                <h2>Ask about this problem</h2>
-              </div>
-              <button class="homework-qa-close" id="homeworkQaCloseBtn" type="button" aria-label="Close Q&A">×</button>
-            </div>
-            <div class="homework-qa-list" id="homeworkQaList"></div>
-            <div class="homework-qa-compose">
-              <textarea id="homeworkQaInput" class="homework-qa-input" placeholder="Ask a follow-up about the selected problem..."></textarea>
-              <button class="homework-primary-btn" id="homeworkQaSendBtn" type="button">Ask</button>
-            </div>
-          </aside>
-          <button class="feature-close-btn homework-close-btn" id="homeworkCloseBtn" type="button" aria-label="Close homework">✕</button>
         </div>
       </div>
 
@@ -2673,7 +2967,7 @@
             <div>
               <div class="mistake-notebook-eyebrow">Mistake Review</div>
               <h1 class="mistake-notebook-title">Mistake Notebook</h1>
-              <p class="mistake-notebook-subtitle">Upload problem images, keep one note page per mistake, search your weak spots, and ask Aquarius to solve or draft review notes.</p>
+              <p class="mistake-notebook-subtitle">Upload problem images, keep one note page per mistake, search your weak spots, and ask Fourier to solve or draft review notes.</p>
             </div>
             <button class="feature-close-btn" id="mistakeNotebookCloseBtn" type="button" aria-label="Close mistake notebook">✕</button>
           </div>
@@ -2704,7 +2998,7 @@
               <div class="mistake-empty-panel" id="mistakeEmptyPanel">
                 <div class="mistake-empty-icon">✦</div>
                 <h2>Start with a screenshot</h2>
-                <p>Upload a problem image. Aquarius will keep it as a page you can annotate, solve, and review later.</p>
+                <p>Upload a problem image. Fourier will keep it as a page you can annotate, solve, and review later.</p>
               </div>
 
               <div class="mistake-detail-content hidden" id="mistakeDetailContent">
@@ -2783,7 +3077,7 @@
           <path d="M50 10 Q50 50 90 50 Q50 50 50 90 Q50 50 10 50 Q50 50 50 10" fill="#38bdf8" stroke="#0f172a" stroke-width="5"/>
         </svg>
         <div class="login-topbar">
-          <div class="login-status-label">AQUARIUS // SYSTEM SECURE</div>
+          <div class="login-status-label">FOURIER // SYSTEM SECURE</div>
         </div>
         <div class="login-shell">
           <div class="login-desk-collage login-desk-collage-left" aria-hidden="true">
@@ -2823,9 +3117,9 @@
               <div class="login-card-stage" id="loginCustomStage">
               <div class="login-card-header">
                 <div class="login-brand-mark login-brand-mark-aurora">
-                  <img src="aquarius-logo.jpg?v=1778524702" class="aquarius-glow" alt="Aquarius">
+                  <img src="fourier-logo.png?v=1778674267" class="aquarius-glow" alt="Fourier">
                 </div>
-                <h1 class="login-card-title">Welcome to <span class="text-gradient-aurora">Aquarius</span></h1>
+                <h1 class="login-card-title">Welcome to <span class="text-gradient-aurora">Fourier</span></h1>
                 <p class="login-card-subtitle">Your journey of endless exploration awaits.</p>
               </div>
 
@@ -2884,7 +3178,7 @@
                 </button>
               </div>
 
-              <p class="login-footnote">By continuing, you keep your study path aligned with Aquarius across future sessions.</p>
+              <p class="login-footnote">By continuing, you keep your study path aligned with Fourier across future sessions.</p>
               <p class="login-signup-copy">Need an account? <a href="#" id="loginSignupBtn" class="login-link login-link-strong">Sign up</a></p>
               </div>
 
@@ -2916,9 +3210,9 @@
 
   <div id="authOverlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(15,23,42,0.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:24px;">
     <div style="background:rgba(255,255,255,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(226,232,240,0.9);border-radius:24px;padding:44px 48px;max-width:440px;width:min(440px,92vw);box-shadow:0 32px 80px rgba(15,23,42,0.24);text-align:center;">
-      <div style="font-size:30px;font-family:'Playfair Display',serif;font-weight:700;font-style:italic;color:#0F172A;margin-bottom:6px;">Aquarius</div>
+      <div style="font-size:30px;font-family:'Playfair Display',serif;font-weight:700;font-style:italic;color:#0F172A;margin-bottom:6px;">Fourier</div>
       <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;margin:0 0 8px;">Signal Processing &amp; Linear Systems</p>
-      <p style="font-size:15px;color:#475569;margin:0 0 36px;line-height:1.6;">Sign in to save your progress and continue learning with Aquarius.</p>
+      <p style="font-size:15px;color:#475569;margin:0 0 36px;line-height:1.6;">Sign in to save your progress and continue learning with Fourier.</p>
 
       <div id="clerkMount" style="display:none;margin-bottom:16px;"></div>
 

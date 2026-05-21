@@ -1,6 +1,6 @@
-# Aquarius Tutor Agent
+# Fourier Tutor Agent
 
-Aquarius Tutor Agent is a local web tutor for signal processing and linear systems. The current app combines a browser UI, a Node bridge, textbook OCR, page images, extracted figures, lesson cache files, and project memory.
+Fourier Tutor Agent is a local web tutor for signal processing and linear systems. The current app combines a browser UI, a Node bridge, textbook OCR, page images, extracted figures, lesson cache files, and project memory.
 
 ## Quick Start
 

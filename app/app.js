@@ -151,7 +151,7 @@ const AUTH_RETURN_TARGET_KEY = 'aquarius-auth-return-target';
 let currentUser = null;  // { uid, name, email, imageUrl }
 let userMemory  = {};    // loaded from backend after login
 
-const DEFAULT_PREFERENCE_PROFILE = `# Aquarius Learning Profile
+const DEFAULT_PREFERENCE_PROFILE = `# Fourier Learning Profile
 
 ## Current Goal
 - Prepare for Linear Systems & Signals with enough conceptual understanding to solve exam problems confidently.
@@ -1007,7 +1007,7 @@ function getPreferenceProfileMarkdown() {
 function summarizePreferenceProfile(markdown) {
   const text = String(markdown || '').replace(/^#+\s*/gm, '').replace(/[-*]\s+/g, '').trim();
   const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
-  const preferred = lines.find(line => /intuition|formula|exam|visual|step|example|理解|公式|考试|图/i.test(line)) || lines[0] || 'Tell Aquarius how you like to learn.';
+  const preferred = lines.find(line => /intuition|formula|exam|visual|step|example|理解|公式|考试|图/i.test(line)) || lines[0] || 'Tell Fourier how you like to learn.';
   return preferred.length > 88 ? `${preferred.slice(0, 86)}...` : preferred;
 }
 
@@ -1423,7 +1423,7 @@ function renderHomeworkQa(item) {
   }
   homeworkQaList.innerHTML = qa.map(turn => `
     <div class="homework-qa-turn ${turn.role === 'user' ? 'is-user' : 'is-assistant'}">
-      <div class="homework-qa-role">${turn.role === 'user' ? 'You' : 'Aquarius'}</div>
+      <div class="homework-qa-role">${turn.role === 'user' ? 'You' : 'Fourier'}</div>
       <div class="homework-qa-body">${turn.role === 'assistant' ? markdownToHtml(turn.content || '') : escapeHtml(turn.content || '').replace(/\n/g, '<br>')}</div>
     </div>
   `).join('');
@@ -1469,7 +1469,7 @@ async function generateHomeworkExplanation() {
     homeworkExplainBtn.textContent = 'Generating...';
   }
   if (homeworkExplanation) homeworkExplanation.textContent = 'Generating a problem-specific explanation...';
-  setHomeworkSaveState('Asking Aquarius...', 'busy');
+  setHomeworkSaveState('Asking Fourier...', 'busy');
   try {
     const prompt = buildHomeworkExplainPrompt(current);
     const data = await callAsk(prompt, undefined, {
@@ -2536,7 +2536,6 @@ const topbarBreadcrumb = document.getElementById('topbarBreadcrumb');
 const navSyllabusBtn = document.getElementById('navSyllabusBtn');
 const navRecentBtn = document.getElementById('navRecentBtn');
 const navLibraryBtn = document.getElementById('navLibraryBtn');
-const navHomeworkBtn = document.getElementById('navHomeworkBtn');
 const navCourseTrackerBtn = document.getElementById('navCourseTrackerBtn');
 const navMistakeNotebookBtn = document.getElementById('navMistakeNotebookBtn');
 const navPreferenceBtn = document.getElementById('navPreferenceBtn');
@@ -2706,9 +2705,6 @@ if (navRecentBtn) {
 }
 if (navLibraryBtn) {
   navLibraryBtn.addEventListener('click', showLibraryView);
-}
-if (navHomeworkBtn) {
-  navHomeworkBtn.addEventListener('click', showHomeworkView);
 }
 if (navCourseTrackerBtn) {
   navCourseTrackerBtn.addEventListener('click', showCourseTrackerView);
@@ -15522,28 +15518,6 @@ function showCourseTrackerView() {
   renderCourseTracker();
 }
 
-function showHomeworkView() {
-  destroyLoginScene();
-  if (appShell) appShell.classList.remove('hidden');
-  welcomeScreen.classList.add('hidden');
-  answerScreen.classList.add('hidden');
-  learnView.classList.add('hidden');
-  if (settingsView) settingsView.classList.add('hidden');
-  if (preferenceView) preferenceView.classList.add('hidden');
-  if (feedbackView) feedbackView.classList.add('hidden');
-  if (homeworkView) homeworkView.classList.remove('hidden');
-  if (courseTrackerView) courseTrackerView.classList.add('hidden');
-  if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
-  if (loginView) loginView.classList.add('hidden');
-  if (libraryView) libraryView.classList.add('hidden');
-  if (topbar) topbar.classList.add('hidden');
-  setWorkspaceAccountBarVisible(true);
-  clearToc();
-  updateSidebarNavActive('homework');
-  renderHomework();
-  refreshHomeworkStoreFromServer().then(() => renderHomework());
-}
-
 function showMistakeNotebookView() {
   destroyLoginScene();
   if (appShell) appShell.classList.remove('hidden');
@@ -15639,7 +15613,6 @@ function updateSidebarNavActive(key) {
   if (navSyllabusBtn) navSyllabusBtn.classList.toggle('active', key === 'syllabus');
   if (navRecentBtn) navRecentBtn.classList.toggle('active', key === 'recent');
   if (navLibraryBtn) navLibraryBtn.classList.toggle('active', key === 'library');
-  if (navHomeworkBtn) navHomeworkBtn.classList.toggle('active', key === 'homework');
   if (navCourseTrackerBtn) navCourseTrackerBtn.classList.toggle('active', key === 'course-tracker');
   if (navMistakeNotebookBtn) navMistakeNotebookBtn.classList.toggle('active', key === 'mistake-notebook');
   if (navPreferenceBtn) navPreferenceBtn.classList.toggle('active', key === 'preference');
@@ -15983,7 +15956,7 @@ function renderMainConversationThread(options = {}) {
     if (item.role === 'assistant') {
       turns.push(`
         <article class="main-chat-turn main-chat-turn-assistant">
-          <div class="main-chat-label">Aquarius</div>
+          <div class="main-chat-label">Fourier</div>
           <div class="main-chat-answer">${markdownToHtml(item.content || '暂无讲解内容')}</div>
         </article>
       `);
@@ -16002,7 +15975,7 @@ function renderMainConversationThread(options = {}) {
   if (pendingAssistantHtml) {
     turns.push(`
       <article class="main-chat-turn main-chat-turn-assistant ${escapeHtml(pendingAssistantClass)}">
-        <div class="main-chat-label">Aquarius</div>
+        <div class="main-chat-label">Fourier</div>
         <div class="main-chat-answer">${pendingAssistantHtml}</div>
       </article>
     `);
@@ -16523,8 +16496,8 @@ setTimeout(() => {
     }
     if (sidebarLogoExpandBtn) {
       sidebarLogoExpandBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-      sidebarLogoExpandBtn.title = collapsed ? 'Expand sidebar' : 'Aquarius';
-      sidebarLogoExpandBtn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Aquarius');
+      sidebarLogoExpandBtn.title = collapsed ? 'Expand sidebar' : 'Fourier';
+      sidebarLogoExpandBtn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Fourier');
     }
     if (collapsed) {
       requestAnimationFrame(() => {
