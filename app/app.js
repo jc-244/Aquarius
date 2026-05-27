@@ -20,7 +20,9 @@ const THEME_STORAGE_KEY = 'aquarius-theme';
 let introScene = null;
 
 function applyTheme(theme) {
-  const normalized = theme === 'dark' ? 'dark' : 'light';
+  const normalized = theme === 'dusk' || theme === 'dark'
+    ? 'dusk'
+    : 'dawn';
   document.documentElement.setAttribute('data-theme', normalized);
   try { localStorage.setItem(THEME_STORAGE_KEY, normalized); } catch (_) {}
   document.querySelectorAll('.theme-toggle-btn').forEach((btn) => {
@@ -29,9 +31,9 @@ function applyTheme(theme) {
 }
 
 function initTheme() {
-  let stored = 'light';
+  let stored = 'dawn';
   try {
-    stored = localStorage.getItem(THEME_STORAGE_KEY) || 'light';
+    stored = localStorage.getItem(THEME_STORAGE_KEY) || 'dawn';
   } catch (_) {}
   applyTheme(stored);
 }
@@ -872,7 +874,9 @@ async function onUserSignedIn(user) {
   if (!userMemory.preferenceProfile || !userMemory.preferenceProfile.markdown) {
     userMemory.preferenceProfile = {
       markdown: DEFAULT_PREFERENCE_PROFILE,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      source: 'default',
+      manualEdited: false
     };
   }
   updatePreferenceSidebarSummary();
@@ -905,7 +909,9 @@ async function syncCurrentUserWithoutNavigation(user) {
   if (!userMemory.preferenceProfile || !userMemory.preferenceProfile.markdown) {
     userMemory.preferenceProfile = {
       markdown: DEFAULT_PREFERENCE_PROFILE,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      source: 'default',
+      manualEdited: false
     };
   }
   updatePreferenceSidebarSummary();
@@ -927,7 +933,9 @@ function startGuestMode() {
   userMemory = {
     preferenceProfile: {
       markdown: DEFAULT_PREFERENCE_PROFILE,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      source: 'default',
+      manualEdited: false
     }
   };
   setLoginButtonsBusy(false);
@@ -942,7 +950,6 @@ function startGuestMode() {
   if (homeworkView) homeworkView.classList.add('hidden');
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
-  if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
   renderUserBadge();
   updatePreferenceSidebarSummary();
@@ -1004,6 +1011,96 @@ function getPreferenceProfileMarkdown() {
   return stored.trim() || DEFAULT_PREFERENCE_PROFILE;
 }
 
+function getQuizOptionLabel(key, value) {
+  const question = QUIZ_QUESTIONS.find(item => item.key === key);
+  const option = question && question.options.find(item => item.value === value);
+  return option ? option.en.replace(/\s*[^\x00-\x7F]+$/g, '').trim() : String(value || '').replace(/_/g, ' ');
+}
+
+function getQuizAnswerLabels(key, value) {
+  const values = Array.isArray(value) ? value : (value ? [value] : []);
+  return values.map(item => getQuizOptionLabel(key, item)).filter(Boolean);
+}
+
+function buildQuizPreferenceMarkdown(quiz = {}) {
+  const track = getQuizOptionLabel('track', quiz.track || 'standard');
+  const math = getQuizOptionLabel('math', quiz.math || 'calculus_ok');
+  const timeline = getQuizOptionLabel('timeline', quiz.timeline || 'two_weeks');
+  const preference = getQuizAnswerLabels('preference', quiz.preference).join('; ') || 'Use a balanced concept-first start';
+  const priority = getQuizAnswerLabels('priority', quiz.priority).join('; ') || 'Build confidence and solve standard problems';
+
+  return `# Fourier Learning Profile
+
+## Quick Setup Snapshot
+- Learning mode: ${track}
+- Math background: ${math}
+- Exam timeline: ${timeline}
+- Preferred lesson opening: ${preference}
+- Current priorities: ${priority}
+
+## Tutor Behavior
+- Use this Quick Setup snapshot as the default pacing and format signal.
+- Keep explanations aligned with the current exam timeline and math comfort level.
+- Update the approach when later observed learning history gives stronger evidence.`;
+}
+
+function normalizePreferenceProfileMarkdown(markdown = '') {
+  return String(markdown || '').replace(/\r\n/g, '\n').trim();
+}
+
+function isDefaultPreferenceProfile(markdown = '') {
+  return normalizePreferenceProfileMarkdown(markdown) === normalizePreferenceProfileMarkdown(DEFAULT_PREFERENCE_PROFILE);
+}
+
+function isManuallyEditedPreferenceProfile(profile = {}) {
+  if (!profile || !profile.markdown) return false;
+  if (profile.manualEdited === true) return true;
+  if (['quick_setup', 'merged_quick_setup', 'default'].includes(profile.source)) return false;
+  return !isDefaultPreferenceProfile(profile.markdown);
+}
+
+function buildPreferenceProfileAfterQuiz(quiz = {}, existingProfile = {}) {
+  const now = new Date().toISOString();
+  const quickMarkdown = buildQuizPreferenceMarkdown(quiz);
+  const existingMarkdown = normalizePreferenceProfileMarkdown(existingProfile.markdown);
+  const hasManual = isManuallyEditedPreferenceProfile(existingProfile);
+
+  if (!hasManual) {
+    return {
+      markdown: quickMarkdown,
+      updatedAt: now,
+      source: 'quick_setup',
+      manualEdited: false,
+      quizUpdatedAt: now
+    };
+  }
+
+  const withoutOldQuickSetup = existingMarkdown
+    .replace(/\n*---\n*## Latest Quick Setup[\s\S]*$/m, '')
+    .trim();
+
+  return {
+    markdown: `${withoutOldQuickSetup}
+
+---
+
+## Latest Quick Setup
+- Learning mode: ${getQuizOptionLabel('track', quiz.track || 'standard')}
+- Math background: ${getQuizOptionLabel('math', quiz.math || 'calculus_ok')}
+- Exam timeline: ${getQuizOptionLabel('timeline', quiz.timeline || 'two_weeks')}
+- Preferred lesson opening: ${getQuizAnswerLabels('preference', quiz.preference).join('; ') || 'Use a balanced concept-first start'}
+- Current priorities: ${getQuizAnswerLabels('priority', quiz.priority).join('; ') || 'Build confidence and solve standard problems'}
+
+## Priority Rule
+- Treat the manually written profile above as higher priority.
+- Use this Quick Setup block as a recent pacing and format supplement.`,
+    updatedAt: now,
+    source: 'merged_quick_setup',
+    manualEdited: true,
+    quizUpdatedAt: now
+  };
+}
+
 function summarizePreferenceProfile(markdown) {
   const text = String(markdown || '').replace(/^#+\s*/gm, '').replace(/[-*]\s+/g, '').trim();
   const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
@@ -1013,14 +1110,36 @@ function summarizePreferenceProfile(markdown) {
 
 function renderPreferenceMarkdownPreview(markdown) {
   if (!preferenceProfilePreview) return;
-  const safe = escapeHtml(String(markdown || '').trim() || DEFAULT_PREFERENCE_PROFILE);
-  preferenceProfilePreview.innerHTML = safe
-    .replace(/^###\s+(.+)$/gm, '<h4>$1</h4>')
-    .replace(/^##\s+(.+)$/gm, '<h3>$1</h3>')
-    .replace(/^#\s+(.+)$/gm, '<h2>$1</h2>')
-    .replace(/^- (.+)$/gm, '<div class="preference-preview-bullet">$1</div>')
-    .replace(/\n{2,}/g, '<br>')
-    .replace(/\n/g, '');
+  const source = String(markdown || '').trim() || DEFAULT_PREFERENCE_PROFILE;
+  const lines = source.split('\n').map(line => line.trim()).filter(Boolean);
+  const bullets = lines
+    .filter(line => /^[-*]\s+/.test(line))
+    .map(line => line.replace(/^[-*]\s+/, '').trim())
+    .filter(Boolean);
+  const findSignal = (patterns, fallbackIndex) => {
+    const found = bullets.find(line => patterns.some(pattern => pattern.test(line)));
+    return found || bullets[fallbackIndex] || 'Keep tutoring concise, visual, and exam-aware.';
+  };
+  const signals = [
+    {
+      label: 'Goal',
+      text: findSignal([/prepare|goal|exam|confident|solve/i], 0)
+    },
+    {
+      label: 'Teaching Style',
+      text: findSignal([/intuition|formula|example|visual|step|pages/i], 1)
+    },
+    {
+      label: 'Watch For',
+      text: findSignal([/\btrap\b|friction|confus|mistake|\bsign\b|notation/i], 2)
+    }
+  ];
+  preferenceProfilePreview.innerHTML = signals.map(signal => `
+    <article class="preference-signal-card">
+      <div class="preference-signal-label">${escapeHtml(signal.label)}</div>
+      <p>${escapeHtml(signal.text)}</p>
+    </article>
+  `).join('');
 }
 
 function updatePreferenceSidebarSummary() {
@@ -1094,9 +1213,16 @@ function renderCourseTracker() {
   if (!courseTrackerView) return;
   const state = loadCourseTrackerState();
   const doneCount = COURSE_SCHEDULE.filter(item => state[item.id] === 'Done').length;
+  const progressRatio = COURSE_SCHEDULE.length > 0 ? doneCount / COURSE_SCHEDULE.length : 0;
+  const progressPercent = Math.round(progressRatio * 100);
+  const progressDegrees = Math.round(progressRatio * 360);
   const nextItem = COURSE_SCHEDULE.find(item => state[item.id] !== 'Done') || COURSE_SCHEDULE[COURSE_SCHEDULE.length - 1];
   if (courseDoneCount) courseDoneCount.textContent = String(doneCount);
-  if (courseProgressFill) courseProgressFill.style.width = `${Math.round((doneCount / COURSE_SCHEDULE.length) * 100)}%`;
+  if (courseProgressFill) courseProgressFill.style.width = `${progressPercent}%`;
+  if (courseProgressRing) {
+    courseProgressRing.style.setProperty('--course-progress-deg', `${progressDegrees}deg`);
+    courseProgressRing.style.setProperty('--course-progress-percent', `${progressPercent}%`);
+  }
   if (courseNextLecture && nextItem) courseNextLecture.textContent = `${nextItem.lecture} · ${nextItem.date}`;
   if (courseNextTopic && nextItem) courseNextTopic.textContent = nextItem.topic;
 
@@ -1113,22 +1239,37 @@ function renderCourseTracker() {
   }
 
   if (courseTrackerTableBody) {
+    let activeMonth = '';
     courseTrackerTableBody.innerHTML = COURSE_SCHEDULE.map(item => {
       const status = state[item.id] || 'Not started';
       const options = COURSE_TRACKER_STATUSES.map(option => `<option value="${escapeHtml(option)}"${option === status ? ' selected' : ''}>${escapeHtml(option)}</option>`).join('');
+      const month = item.date.split('/')[0];
+      const monthName = {
+        '9': 'September',
+        '10': 'October',
+        '11': 'November',
+        '12': 'December'
+      }[month] || month;
+      const monthMarker = month !== activeMonth ? `<div class="course-month-marker">${escapeHtml(monthName)}</div>` : '';
+      activeMonth = month;
       return `
-        <tr class="${item.milestone ? 'is-milestone' : ''}">
-          <td><span class="course-date-pill">${escapeHtml(item.date)}</span></td>
-          <td>${escapeHtml(item.lecture)}</td>
-          <td>${escapeHtml(item.topic)}</td>
-          <td>${escapeHtml(item.sections)}</td>
-          <td>${item.milestone ? `<span class="course-milestone-chip">${escapeHtml(item.milestone)}</span>` : '<span class="course-muted">-</span>'}</td>
-          <td>
+        ${monthMarker}
+        <article class="course-timeline-item${item.milestone ? ' is-milestone' : ''}" data-status="${escapeHtml(status)}">
+          <div class="course-date-pill">${escapeHtml(item.date)}</div>
+          <div class="course-timeline-body">
+            <div class="course-timeline-topline">
+              <span class="course-lecture-label">${escapeHtml(item.lecture)}</span>
+              ${item.milestone ? `<span class="course-milestone-chip">${escapeHtml(item.milestone)}</span>` : ''}
+            </div>
+            <h3>${escapeHtml(item.topic)}</h3>
+            <div class="course-section-line">${escapeHtml(item.sections)}</div>
+          </div>
+          <div class="course-timeline-status">
             <select class="course-status-select" data-course-id="${escapeHtml(item.id)}" data-status="${escapeHtml(status)}">
               ${options}
             </select>
-          </td>
-        </tr>
+          </div>
+        </article>
       `;
     }).join('');
 
@@ -1670,7 +1811,8 @@ function addMistakeNotebookItem(item) {
     title: `Problem ${items.length + 1}`,
     tags: '',
     notes: '',
-    aiInstruction: '',
+    noteImages: [],
+    aiDraftNotes: '',
     aiAnswer: '',
     imageDataUrl: '',
     mimeType: '',
@@ -1685,6 +1827,80 @@ function addMistakeNotebookItem(item) {
   return next;
 }
 
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(reader.error || new Error('Could not read image file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function addMistakeImageFile(file, options = {}) {
+  if (!file || !String(file.type || '').startsWith('image/')) return false;
+  const imageDataUrl = await readFileAsDataUrl(file);
+  const fallbackTitle = options.title || `Pasted Screenshot ${loadMistakeNotebook().length + 1}`;
+  addMistakeNotebookItem({
+    title: fallbackTitle,
+    tags: '',
+    notes: '',
+    aiAnswer: '',
+    imageDataUrl,
+    mimeType: file.type || 'image/png',
+  });
+  return true;
+}
+
+async function addMistakeNoteImageFile(file) {
+  const current = getCurrentMistake();
+  if (!current || !file || !String(file.type || '').startsWith('image/')) return false;
+  const dataUrl = await readFileAsDataUrl(file);
+  const noteImages = Array.isArray(current.noteImages) ? current.noteImages : [];
+  updateMistakeItem(current.id, {
+    noteImages: [
+      ...noteImages,
+      {
+        id: `note-image-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        name: file.name || `note-image-${noteImages.length + 1}.png`,
+        mimeType: file.type || 'image/png',
+        dataUrl
+      }
+    ]
+  });
+  renderMistakeNotebook();
+  return true;
+}
+
+function isMistakeNotebookVisible() {
+  return Boolean(mistakeNotebookView && !mistakeNotebookView.classList.contains('hidden'));
+}
+
+function shouldPasteIntoMistakeNotes(target) {
+  if (!target) return false;
+  return Boolean(
+    target === mistakeNotesInput ||
+    target === mistakeNoteImages ||
+    target.closest?.('.mistake-user-note-card')
+  );
+}
+
+async function handleMistakeNotebookPaste(event) {
+  if (!isMistakeNotebookVisible()) return;
+  const items = Array.from(event.clipboardData?.items || []);
+  const imageItem = items.find(item => String(item.type || '').startsWith('image/'));
+  if (!imageItem) return;
+  const file = imageItem.getAsFile();
+  if (!file) return;
+  event.preventDefault();
+  if (shouldPasteIntoMistakeNotes(event.target) && getCurrentMistake()) {
+    await addMistakeNoteImageFile(new File([file], file.name || 'note-screenshot.png', { type: file.type || 'image/png' }));
+    return;
+  }
+  await addMistakeImageFile(new File([file], file.name || 'pasted-screenshot.png', { type: file.type || 'image/png' }), {
+    title: `Pasted Screenshot ${loadMistakeNotebook().length + 1}`
+  });
+}
+
 function renderMistakeNotebook() {
   const items = loadMistakeNotebook();
   const query = (mistakeSearchInput?.value || '').trim().toLowerCase();
@@ -1694,7 +1910,7 @@ function renderMistakeNotebook() {
   }
 
   const filtered = query
-    ? items.filter(item => [item.title, item.tags, item.notes, item.aiAnswer].join(' ').toLowerCase().includes(query))
+    ? items.filter(item => [item.title, item.tags, item.notes, item.aiDraftNotes, item.aiAnswer].join(' ').toLowerCase().includes(query))
     : items;
 
   if (mistakeCountPill) mistakeCountPill.textContent = `${items.length} problem${items.length === 1 ? '' : 's'}`;
@@ -1730,7 +1946,31 @@ function renderMistakeNotebook() {
   if (mistakeTitleInput) mistakeTitleInput.value = current.title || '';
   if (mistakeTagsInput) mistakeTagsInput.value = current.tags || '';
   if (mistakeNotesInput) mistakeNotesInput.value = current.notes || '';
-  if (mistakeAiInstructionInput) mistakeAiInstructionInput.value = current.aiInstruction || '';
+  if (mistakeNoteImages) {
+    const noteImages = Array.isArray(current.noteImages) ? current.noteImages : [];
+    mistakeNoteImages.innerHTML = noteImages.length
+      ? noteImages.map((image, index) => `
+        <figure class="mistake-note-image-chip">
+          <img src="${escapeHtml(image.dataUrl || '')}" alt="${escapeHtml(image.name || `Note image ${index + 1}`)}">
+          <button type="button" data-note-image-index="${index}" aria-label="Remove note image">×</button>
+        </figure>
+      `).join('')
+      : '<div class="mistake-note-image-empty">Paste or add images here.</div>';
+    mistakeNoteImages.querySelectorAll('[data-note-image-index]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const current = getCurrentMistake();
+        if (!current) return;
+        const nextImages = (Array.isArray(current.noteImages) ? current.noteImages : []).filter((_, idx) => idx !== Number(btn.dataset.noteImageIndex));
+        updateMistakeItem(current.id, { noteImages: nextImages });
+        renderMistakeNotebook();
+      });
+    });
+  }
+  if (mistakeDraftNotesOutput) {
+    mistakeDraftNotesOutput.innerHTML = current.aiDraftNotes
+      ? markdownToHtml(current.aiDraftNotes)
+      : 'No AI notes yet.';
+  }
   if (mistakeImagePreview) {
     mistakeImagePreview.src = current.imageDataUrl || '';
     mistakeImagePreview.classList.toggle('hidden', !current.imageDataUrl);
@@ -1747,33 +1987,32 @@ function renderMistakeNotebook() {
 
 function bindMistakeNotebookControls() {
   if (mistakeImageInput) {
-    mistakeImageInput.addEventListener('change', () => {
+    mistakeImageInput.addEventListener('change', async () => {
       const file = mistakeImageInput.files && mistakeImageInput.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        addMistakeNotebookItem({
-          title: file.name.replace(/\.[^.]+$/, '') || `Problem ${loadMistakeNotebook().length + 1}`,
-          tags: '',
-          notes: '',
-          aiInstruction: '',
-          aiAnswer: '',
-          imageDataUrl: String(reader.result || ''),
-          mimeType: file.type || 'image/png',
-        });
-        mistakeImageInput.value = '';
-      };
-      reader.readAsDataURL(file);
+      await addMistakeImageFile(file, {
+        title: file.name.replace(/\.[^.]+$/, '') || `Problem ${loadMistakeNotebook().length + 1}`
+      });
+      mistakeImageInput.value = '';
     });
   }
+  if (mistakeNoteImageInput) {
+    mistakeNoteImageInput.addEventListener('change', async () => {
+      const files = Array.from(mistakeNoteImageInput.files || []).filter(file => String(file.type || '').startsWith('image/'));
+      for (const file of files) {
+        await addMistakeNoteImageFile(file);
+      }
+      mistakeNoteImageInput.value = '';
+    });
+  }
+  document.addEventListener('paste', handleMistakeNotebookPaste);
 
   if (mistakeSearchInput) mistakeSearchInput.addEventListener('input', renderMistakeNotebook);
 
   [
     [mistakeTitleInput, 'title'],
     [mistakeTagsInput, 'tags'],
-    [mistakeNotesInput, 'notes'],
-    [mistakeAiInstructionInput, 'aiInstruction']
+    [mistakeNotesInput, 'notes']
   ].forEach(([el, field]) => {
     if (!el) return;
     el.addEventListener('input', () => {
@@ -1829,17 +2068,35 @@ async function runMistakeAi(kind) {
   const original = btn ? btn.textContent : '';
   if (btn) {
     btn.disabled = true;
-    btn.textContent = isNotes ? 'Drafting...' : 'Solving...';
+    btn.textContent = isNotes ? 'Generating...' : 'Solving...';
   }
-  if (mistakeAiAnswer) mistakeAiAnswer.textContent = isNotes ? 'Drafting review notes...' : 'Solving this problem...';
+  if (isNotes) {
+    if (mistakeDraftNotesOutput) mistakeDraftNotesOutput.textContent = 'Generating AI notes...';
+  } else if (mistakeAiAnswer) {
+    mistakeAiAnswer.textContent = 'Solving this problem...';
+  }
   try {
+    const noteImages = Array.isArray(current.noteImages) ? current.noteImages : [];
+    const imageAttachments = [
+      current.imageDataUrl ? {
+        type: 'image',
+        name: current.title || 'mistake-problem',
+        dataUrl: current.imageDataUrl,
+        mimeType: current.mimeType || 'image/png'
+      } : null,
+      ...noteImages.map((image, index) => ({
+        type: 'image',
+        name: image.name || `note-image-${index + 1}`,
+        dataUrl: image.dataUrl,
+        mimeType: image.mimeType || 'image/png'
+      }))
+    ].filter(attachment => attachment && attachment.dataUrl);
     const prompt = isNotes
       ? [
-          'Create concise study notes for this mistake notebook page.',
-          current.imageDataUrl ? 'Use the uploaded image as the problem source.' : `Use this saved quiz problem as the problem source:\n${current.problemText || current.title || ''}`,
-          `Student notes so far: ${current.notes || '(empty)'}`,
-          `Student instruction: ${current.aiInstruction || 'Explain the mistake pattern, key formula, and future checklist.'}`,
-          'Return notes with: mistake pattern, correct method, key formula, and a short review checklist.'
+          'Create concise study notes for this mistake notebook page based on the problem image, any images inside Your Notes, and any user-written notes.',
+          imageAttachments.length ? 'Use the attached images as the visual source.' : `Use this saved quiz problem as the problem source:\n${current.problemText || current.title || ''}`,
+          `User notes so far: ${current.notes || '(empty)'}`,
+          'Return notes with: mistake pattern, correct method, key formula, and a short review checklist. Do not ask for extra instructions.'
         ].join('\n')
       : [
           current.imageDataUrl ? 'Solve this uploaded problem image step by step.' : `Solve this saved quiz problem step by step:\n${current.problemText || current.title || ''}`,
@@ -1853,25 +2110,22 @@ async function runMistakeAi(kind) {
       useWebSearch: false,
       language: detectLang(prompt),
       answerLength: isNotes ? 'balanced' : 'detailed',
-      attachments: current.imageDataUrl ? [{
-        type: 'image',
-        name: current.title || 'mistake-problem',
-        dataUrl: current.imageDataUrl,
-        mimeType: current.mimeType || 'image/png'
-      }] : []
+      attachments: imageAttachments
     });
     const answer = data.explanation || '';
     if (isNotes) {
-      const mergedNotes = current.notes
-        ? `${current.notes}\n\n## AI Draft Notes\n${answer}`
-        : `## AI Draft Notes\n${answer}`;
-      updateMistakeItem(current.id, { notes: mergedNotes, aiAnswer: answer });
+      updateMistakeItem(current.id, { aiDraftNotes: answer });
     } else {
       updateMistakeItem(current.id, { aiAnswer: answer });
     }
     renderMistakeNotebook();
   } catch (err) {
-    if (mistakeAiAnswer) mistakeAiAnswer.innerHTML = `<div class="error-box"><strong>AI failed</strong><p>${escapeHtml(err.message || String(err))}</p></div>`;
+    const errorHtml = `<div class="error-box"><strong>AI failed</strong><p>${escapeHtml(err.message || String(err))}</p></div>`;
+    if (isNotes && mistakeDraftNotesOutput) {
+      mistakeDraftNotesOutput.innerHTML = errorHtml;
+    } else if (mistakeAiAnswer) {
+      mistakeAiAnswer.innerHTML = errorHtml;
+    }
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -1902,7 +2156,9 @@ async function savePreferenceProfile(markdown) {
     uid: currentUser.uid,
     preferenceProfile: {
       markdown: cleaned,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      source: 'manual',
+      manualEdited: true
     }
   };
   const res = await fetch(`${API_BASE}/api/memory`, {
@@ -2013,11 +2269,13 @@ async function resetQuiz() {
     await fetch(`${API_BASE}/api/memory`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uid: currentUser.uid, quiz: {} })
+      body: JSON.stringify({ uid: currentUser.uid, resetQuiz: true })
     });
   } catch (_) {}
+  if (userMemory) userMemory.quiz = {};
+  localStorage.removeItem('tutorQuiz');
   quizAnswers = {};
-  showQuiz();
+  showQuiz({ returnView: 'settings' });
 }
 
 const settingsResetQuizBtn = document.getElementById('settingsResetQuizBtn');
@@ -2097,6 +2355,7 @@ const QUIZ_QUESTIONS = [
 
 let quizStep = 0;
 let quizAnswers = {};
+let quizReturnView = null;
 
 function getTrackMeta(track) {
   switch (track) {
@@ -2118,12 +2377,24 @@ function updateLearnModeBadge(track) {
   learnModeBadge.title = meta.label;
 }
 
-function showQuiz() {
+function showQuiz(options = {}) {
   quizStep = 0;
   quizAnswers = {};
+  quizReturnView = options.returnView || null;
   const overlay = document.getElementById('quizOverlay');
   if (overlay) { overlay.style.display = 'flex'; }
   renderQuizStep();
+}
+
+function closeQuizWithoutSaving() {
+  const overlay = document.getElementById('quizOverlay');
+  if (overlay) overlay.style.display = 'none';
+  quizStep = 0;
+  quizAnswers = {};
+  quizReturnView = null;
+  renderQuizStep();
+  renderUserBadge();
+  updateLearnModeBadge(userMemory && userMemory.quiz ? userMemory.quiz.track : null);
 }
 
 function hasStartupViewClaimedScreen() {
@@ -2205,6 +2476,14 @@ document.addEventListener('DOMContentLoaded', () => {
     finishStartupBoot();
   }
   const nextBtn = document.getElementById('quizNextBtn');
+  const quizCloseBtn = document.getElementById('quizCloseBtn');
+  if (quizCloseBtn && !quizCloseBtn.dataset.boundClose) {
+    quizCloseBtn.dataset.boundClose = '1';
+    quizCloseBtn.addEventListener('click', () => {
+      closeQuizWithoutSaving();
+      showWelcome();
+    });
+  }
   if (nextBtn) {
     nextBtn.addEventListener('click', async () => {
       quizStep++;
@@ -2216,10 +2495,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (overlay) overlay.style.display = 'none';
         if (currentUser) {
           try {
+            const quizProfile = buildPreferenceProfileAfterQuiz(quizAnswers, userMemory?.preferenceProfile || {});
             const res = await fetch(`${API_BASE}/api/memory`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ uid: currentUser.uid, quiz: quizAnswers })
+              body: JSON.stringify({
+                uid: currentUser.uid,
+                quiz: quizAnswers,
+                preferenceProfile: quizProfile
+              })
             });
             const data = await res.json();
             userMemory = data.memory || userMemory;
@@ -2227,6 +2511,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (userMemory && userMemory.quiz) {
               localStorage.setItem('tutorQuiz', JSON.stringify(userMemory.quiz));
             }
+            syncPreferenceEditorFromMemory();
           } catch (_) {}
         }
         if (userMemory && userMemory.quiz && !userMemory.quiz.timeline) {
@@ -2237,6 +2522,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateLearnModeBadge(userMemory && userMemory.quiz ? userMemory.quiz.track : null);
         renderUserBadge();
+        const returnView = quizReturnView;
+        quizReturnView = null;
+        if (returnView === 'settings') {
+          showSettingsView();
+          return;
+        }
+        if (returnView === 'preference') {
+          showPreferenceView();
+          return;
+        }
         if (continueToPendingLearnTarget()) return;
         showWelcome();
       }
@@ -2270,7 +2565,9 @@ function fallbackLocalUid() {
       if (!userMemory.preferenceProfile || !userMemory.preferenceProfile.markdown) {
         userMemory.preferenceProfile = {
           markdown: DEFAULT_PREFERENCE_PROFILE,
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
+          source: 'default',
+          manualEdited: false
         };
       }
       if (userMemory && userMemory.quiz && !userMemory.quiz.timeline) {
@@ -2529,13 +2826,12 @@ const homeworkView = document.getElementById('homeworkView');
 const courseTrackerView = document.getElementById('courseTrackerView');
 const mistakeNotebookView = document.getElementById('mistakeNotebookView');
 const loginView     = document.getElementById('loginView');
-const libraryView   = document.getElementById('libraryView');
 const appShell      = document.querySelector('.app');
 const topbar        = document.getElementById('topbar');
 const topbarBreadcrumb = document.getElementById('topbarBreadcrumb');
+const navHomeBtn = document.getElementById('navHomeBtn');
 const navSyllabusBtn = document.getElementById('navSyllabusBtn');
 const navRecentBtn = document.getElementById('navRecentBtn');
-const navLibraryBtn = document.getElementById('navLibraryBtn');
 const navCourseTrackerBtn = document.getElementById('navCourseTrackerBtn');
 const navMistakeNotebookBtn = document.getElementById('navMistakeNotebookBtn');
 const navPreferenceBtn = document.getElementById('navPreferenceBtn');
@@ -2544,7 +2840,6 @@ const navSettingsBtn = document.getElementById('sidebarSettingsBtn');
 const sidebarSyllabusPanel = document.getElementById('sidebarSyllabusPanel');
 const sidebarRecentPanel = document.getElementById('sidebarRecentPanel');
 const welcomeCoverBtn = document.getElementById('welcomeCoverBtn');
-const libraryCurrentBookBtn = document.getElementById('libraryCurrentBookBtn');
 const settingsPageBackBtn = document.getElementById('settingsPageBackBtn');
 const preferencePageBackBtn = document.getElementById('preferencePageBackBtn');
 const feedbackCloseBtn = document.getElementById('feedbackCloseBtn');
@@ -2555,6 +2850,16 @@ const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
 const feedbackRefreshBtn = document.getElementById('feedbackRefreshBtn');
 const feedbackList = document.getElementById('feedbackList');
 const feedbackStatus = document.getElementById('feedbackStatus');
+const feedbackReplyTargets = new Map();
+
+function setFeedbackSubmitButtonLabel(label) {
+  if (!feedbackSubmitBtn) return;
+  feedbackSubmitBtn.innerHTML = `
+    <span>${escapeHtml(label)}</span>
+    <i class="ph-bold ph-paper-plane-tilt" aria-hidden="true"></i>
+  `;
+}
+
 const homeworkCloseBtn = document.getElementById('homeworkCloseBtn');
 const homeworkAddBtn = document.getElementById('homeworkAddBtn');
 const homeworkEmptyAddBtn = document.getElementById('homeworkEmptyAddBtn');
@@ -2587,9 +2892,9 @@ const courseTrackerTableBody = document.getElementById('courseTrackerTableBody')
 const courseGradeList = document.getElementById('courseGradeList');
 const courseDoneCount = document.getElementById('courseDoneCount');
 const courseProgressFill = document.getElementById('courseProgressFill');
+const courseProgressRing = document.getElementById('courseProgressRing');
 const courseNextLecture = document.getElementById('courseNextLecture');
 const courseNextTopic = document.getElementById('courseNextTopic');
-const libraryCloseBtn = document.getElementById('libraryCloseBtn');
 const tocNav        = document.getElementById('tocNav');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
@@ -2617,7 +2922,9 @@ const mistakeDetailContent = document.getElementById('mistakeDetailContent');
 const mistakeTitleInput = document.getElementById('mistakeTitleInput');
 const mistakeTagsInput = document.getElementById('mistakeTagsInput');
 const mistakeNotesInput = document.getElementById('mistakeNotesInput');
-const mistakeAiInstructionInput = document.getElementById('mistakeAiInstructionInput');
+const mistakeNoteImageInput = document.getElementById('mistakeNoteImageInput');
+const mistakeNoteImages = document.getElementById('mistakeNoteImages');
+const mistakeDraftNotesOutput = document.getElementById('mistakeDraftNotesOutput');
 const mistakeImagePreview = document.getElementById('mistakeImagePreview');
 const mistakeTextPreview = document.getElementById('mistakeTextPreview');
 const mistakeAiAnswer = document.getElementById('mistakeAiAnswer');
@@ -2697,14 +3004,14 @@ function setAccordionOpen(panel, open) {
 if (sidebarSettingsBtn) {
   sidebarSettingsBtn.addEventListener('click', showSettingsView);
 }
+if (navHomeBtn) {
+  navHomeBtn.addEventListener('click', showWelcome);
+}
 if (navSyllabusBtn) {
   navSyllabusBtn.addEventListener('click', toggleSyllabusPanel);
 }
 if (navRecentBtn) {
   navRecentBtn.addEventListener('click', toggleRecentPanel);
-}
-if (navLibraryBtn) {
-  navLibraryBtn.addEventListener('click', showLibraryView);
 }
 if (navCourseTrackerBtn) {
   navCourseTrackerBtn.addEventListener('click', showCourseTrackerView);
@@ -2719,13 +3026,7 @@ if (navFeedbackBtn) {
   navFeedbackBtn.addEventListener('click', showFeedbackView);
 }
 if (welcomeCoverBtn) {
-  welcomeCoverBtn.addEventListener('click', showLibraryView);
-}
-if (libraryCurrentBookBtn) {
-  libraryCurrentBookBtn.addEventListener('click', showWelcome);
-}
-if (libraryCloseBtn) {
-  libraryCloseBtn.addEventListener('click', showWelcome);
+  welcomeCoverBtn.addEventListener('click', () => toggleSyllabusPanel(true));
 }
 if (settingsPageBackBtn) {
   settingsPageBackBtn.addEventListener('click', () => {
@@ -5194,6 +5495,14 @@ document.querySelectorAll('.learn-chat-window-actions').forEach(node => node.rem
 const learnKpTitle        = document.getElementById('learnKpTitle');
 const learnLecturePageIndicator = document.getElementById('learnLecturePageIndicator');
 const learnFocusPageIndicator = document.getElementById('learnFocusPageIndicator');
+const learnTopbarActions = document.querySelector('#learnView .learn-topbar-actions');
+const learnToolbarCenter = document.querySelector('#learnExplainToolbar .learn-toolbar-center');
+const learnViewSelectorEl = document.getElementById('learnViewSelector');
+if (learnTopbarActions && learnViewSelectorEl && !learnTopbarActions.contains(learnViewSelectorEl)) {
+  learnTopbarActions.insertBefore(learnViewSelectorEl, learnTopbarActions.firstChild);
+} else if (!learnTopbarActions && learnToolbarCenter && learnViewSelectorEl && !learnToolbarCenter.contains(learnViewSelectorEl)) {
+  learnToolbarCenter.appendChild(learnViewSelectorEl);
+}
 const lecturePrevOverlayBtn = document.getElementById('lecturePrevOverlayBtn');
 const lectureNextOverlayBtn = document.getElementById('lectureNextOverlayBtn');
 const lectureFocusOverlayBtn = document.getElementById('lectureFocusOverlayBtn');
@@ -5236,10 +5545,12 @@ let textbookFocusDragStartX = 0;
 let textbookFocusDragStartY = 0;
 let textbookFocusPinchDistance = 0;
 let isTextbookFocusQaOpen = false;
-let isLearnChatCollapsed = true;
+let isLearnChatCollapsed = false;
 let isLearnExplainCollapsed = false;
 let learnPanelFocus = 'normal';
 let isLearnChatPopoverOpen = false;
+let _learnViewMode = 'lecture';
+let _learnLayoutMode = 'lesson';
 const learnWebToggle  = document.getElementById('learnWebToggle') || { classList: { add() {}, remove() {}, toggle() {} } };
 const learnWebBtn     = document.getElementById('learnWebBtn') || { classList: { add() {}, remove() {}, toggle() {} }, addEventListener() {} };
 const learnWebCount   = document.getElementById('learnWebCount') || { textContent: '' };
@@ -6284,47 +6595,30 @@ function injectCenteredLectureToolbarStyles() {
     #learnView #learnBody.chapter-overview-split-active #learnExplainToolbar,
     #learnView #learnExplainToolbar {
       position: relative !important;
-      display: block !important;
-      min-height: 112px !important;
-      padding: 24px clamp(18px, 3vw, 42px) !important;
-      overflow: visible !important;
+      display: none !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      max-height: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: 0 !important;
+      overflow: hidden !important;
       pointer-events: none !important;
     }
 
     #learnView #learnBody:not(.chapter-overview-active) #learnExplainToolbar .learn-toolbar-center,
     #learnView #learnBody.chapter-overview-split-active #learnExplainToolbar .learn-toolbar-center,
     #learnView #learnExplainToolbar .learn-toolbar-center {
-      position: absolute !important;
-      left: 50% !important;
-      top: 50% !important;
-      right: auto !important;
-      bottom: auto !important;
-      transform: translate(-50%, -50%) !important;
-      display: grid !important;
-      grid-template-columns: minmax(88px, auto) clamp(230px, 26vw, 360px) minmax(88px, auto) !important;
-      align-items: center !important;
-      justify-content: center !important;
-      justify-items: center !important;
-      gap: clamp(14px, 1.8vw, 22px) !important;
-      width: max-content !important;
-      max-width: calc(100% - 220px) !important;
-      min-width: 0 !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      overflow: visible !important;
-      z-index: 90 !important;
+      display: none !important;
       pointer-events: none !important;
     }
 
     #learnView #learnBody:not(.chapter-overview-active) #learnViewSelector,
     #learnView #learnBody.chapter-overview-split-active #learnViewSelector,
     #learnView #learnViewSelector {
-      grid-column: 2 !important;
-      order: initial !important;
-      justify-self: center !important;
-      width: clamp(230px, 26vw, 360px) !important;
-      min-width: 230px !important;
-      max-width: 360px !important;
+      width: auto !important;
+      min-width: 0 !important;
+      max-width: none !important;
       flex: 0 0 auto !important;
       pointer-events: auto !important;
       z-index: 92 !important;
@@ -7038,9 +7332,15 @@ function decorateLectureContent(root) {
       summaryCard.className = 'lecture-note-card lecture-note-card-summary';
       const list = document.createElement('ol');
       list.className = 'learn-key-takeaways-list';
-      takeawayNodes.forEach((node) => {
+      takeawayNodes.forEach((node, index) => {
         const li = document.createElement('li');
-        li.innerHTML = node.innerHTML;
+        const marker = document.createElement('span');
+        marker.className = 'takeaway-index';
+        marker.textContent = String(index + 1);
+        const copy = document.createElement('div');
+        copy.className = 'takeaway-copy';
+        copy.innerHTML = node.innerHTML;
+        li.append(marker, copy);
         list.appendChild(li);
       });
       takeawayHeading.parentNode.insertBefore(summaryCard, takeawayHeading);
@@ -11416,6 +11716,61 @@ function setLearnLessonContent(fullHtml, options = {}) {
   }
 }
 
+let learnPageTurnTimer = null;
+let learnPageTurnMidTimer = null;
+let isLearnPageTurning = false;
+
+function clearLearnPageTurnClasses() {
+  const targets = [learnBody, learnExplainScroll, learnExplainContent].filter(Boolean);
+  targets.forEach((el) => {
+    el.classList.remove(
+      'learn-page-turn-active',
+      'learn-page-turn-next',
+      'learn-page-turn-prev',
+      'learn-page-turn-reveal'
+    );
+  });
+  isLearnPageTurning = false;
+}
+
+function runLearnPageTurn(direction = 1, commit = () => {}) {
+  const dir = Number(direction) < 0 ? -1 : 1;
+  const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!learnExplainContent || prefersReducedMotion) {
+    commit();
+    return true;
+  }
+  if (isLearnPageTurning) return false;
+
+  if (learnPageTurnTimer) window.clearTimeout(learnPageTurnTimer);
+  if (learnPageTurnMidTimer) window.clearTimeout(learnPageTurnMidTimer);
+  clearLearnPageTurnClasses();
+  isLearnPageTurning = true;
+
+  const turnClass = dir < 0 ? 'learn-page-turn-prev' : 'learn-page-turn-next';
+  [learnBody, learnExplainScroll, learnExplainContent].filter(Boolean).forEach((el) => {
+    el.classList.add('learn-page-turn-active', turnClass);
+  });
+
+  learnPageTurnMidTimer = window.setTimeout(() => {
+    try {
+      commit();
+    } finally {
+      window.requestAnimationFrame(() => {
+        if (learnExplainContent) learnExplainContent.classList.add('learn-page-turn-reveal');
+      });
+    }
+  }, 255);
+
+  learnPageTurnTimer = window.setTimeout(() => {
+    clearLearnPageTurnClasses();
+    learnPageTurnTimer = null;
+    learnPageTurnMidTimer = null;
+  }, 720);
+
+  return true;
+}
+
 function getOverviewPreludeFallbackTitle(markdownHeading = '', index = 0) {
   const text = compactWhitespace(String(markdownHeading || '')
     .replace(/^#{1,6}\s+/, '')
@@ -11506,11 +11861,13 @@ function ensureOverviewPreludePagination(markdown = '', chooserHtml = '') {
 
 function moveLearnKnowledgePoint(delta) {
   if (!learnKnowledgePoints.length) return false;
+  if (isLearnPageTurning) return false;
   const nextIndex = Math.max(0, Math.min(currentKnowledgePointIndex + delta, learnKnowledgePoints.length - 1));
   if (nextIndex === currentKnowledgePointIndex) return false;
-  currentKnowledgePointIndex = nextIndex;
-  renderCurrentKnowledgePoint();
-  return true;
+  return runLearnPageTurn(delta, () => {
+    currentKnowledgePointIndex = nextIndex;
+    renderCurrentKnowledgePoint();
+  });
 }
 
 function animateLectureNavButton(delta) {
@@ -11519,7 +11876,7 @@ function animateLectureNavButton(delta) {
   button.classList.remove('is-flipping');
   void button.offsetWidth;
   button.classList.add('is-flipping');
-  window.setTimeout(() => button.classList.remove('is-flipping'), 180);
+  window.setTimeout(() => button.classList.remove('is-flipping'), 560);
 }
 
 function getLectureOverlayDeltaFromEvent(event) {
@@ -11579,7 +11936,7 @@ function buildLessonTestBannerHtml() {
         Ready to test your knowledge?
       </h3>
       <p style="margin: 0 0 16px 0; color: #475569; font-size: 14px;">Take the adaptive quick check to expose any blind spots.</p>
-      <button id="startTestBtn" style="background: #2563EB; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">Start Pre-generated Challenge</button>
+      <button id="startTestBtn" style="background: #2563EB; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">Start Quick Check</button>
     </div>
   `;
 }
@@ -11628,19 +11985,16 @@ function setChapterOverviewLayoutActive(active) {
   }
   if (!active) return;
 
-  if (!isOverviewLesson) learnPanelFocus = 'normal';
-  isLearnChatCollapsed = false;
+  learnPanelFocus = 'normal';
+  isLearnChatCollapsed = !isOverviewLesson;
   isLearnExplainCollapsed = false;
   isLearnChatPopoverOpen = false;
 
   const shell = learnBody || document.getElementById('learnBody');
   if (shell) {
-    if (isOverviewLesson) {
-      shell.dataset.panelFocus = learnPanelFocus || 'normal';
-    } else {
-      delete shell.dataset.panelFocus;
-    }
-    shell.classList.remove('chat-collapsed', 'explain-collapsed');
+    shell.dataset.panelFocus = learnPanelFocus || 'normal';
+    shell.classList.toggle('chat-collapsed', !isOverviewLesson);
+    shell.classList.remove('explain-collapsed');
     if (!isOverviewLesson) shell.classList.remove('panel-normal', 'panel-lecture-wide', 'panel-lecture-full', 'panel-qa-wide', 'panel-qa-full');
     const learnBodyInner = shell.querySelector?.('.learn-body-inner');
     if (learnBodyInner) {
@@ -11652,10 +12006,10 @@ function setChapterOverviewLayoutActive(active) {
     learnExplainColEl.classList.remove('hidden');
     learnExplainColEl.style.display = '';
     if (!isOverviewLesson) {
-      learnExplainColEl.style.flex = '1 1 100%';
-      learnExplainColEl.style.width = '100%';
-      learnExplainColEl.style.maxWidth = '100%';
-      learnExplainColEl.style.borderRight = 'none';
+      learnExplainColEl.style.flex = '';
+      learnExplainColEl.style.width = '';
+      learnExplainColEl.style.maxWidth = '';
+      learnExplainColEl.style.borderRight = '1px solid var(--border)';
     } else {
       learnExplainColEl.style.flex = '';
       learnExplainColEl.style.width = '';
@@ -11664,9 +12018,14 @@ function setChapterOverviewLayoutActive(active) {
     }
   }
   if (learnBookColEl) learnBookColEl.style.display = 'none';
-  if (learnChatColPanel) learnChatColPanel.style.display = isOverviewLesson ? '' : 'none';
-  if (learnResizerPanel) learnResizerPanel.style.display = isOverviewLesson ? '' : 'none';
-  if (isOverviewLesson) applyLearnPanelFocusState();
+  if (learnChatColPanel) {
+    learnChatColPanel.classList.toggle('hidden', !isOverviewLesson);
+    learnChatColPanel.style.display = isOverviewLesson ? '' : 'none';
+  }
+  if (learnResizerPanel) {
+    learnResizerPanel.classList.toggle('hidden', !isOverviewLesson);
+    learnResizerPanel.style.display = isOverviewLesson ? '' : 'none';
+  }
   if (learnChatRestoreBtn) learnChatRestoreBtn.classList.add('hidden');
   if (learnChatFab) learnChatFab.classList.add('hidden');
   if (learnChatPopover) learnChatPopover.classList.add('hidden');
@@ -11675,7 +12034,7 @@ function setChapterOverviewLayoutActive(active) {
 function applyLearnPanelFocusState() {
   const shell = learnBody || document.getElementById('learnBody');
   if (!shell) return;
-  const isOverviewLayout = _learnLayoutMode === 'overview';
+  const isOverviewLayout = false;
   const states = ['normal', 'lecture-wide', 'lecture-full', 'qa-wide', 'qa-full'];
   const normalized = states.includes(learnPanelFocus) ? learnPanelFocus : 'normal';
   learnPanelFocus = normalized;
@@ -11696,10 +12055,7 @@ function applyLearnPanelFocusState() {
     learnBodyInner.dataset.customSplit = '';
   }
 
-  if (isOverviewLayout) {
-    setChapterOverviewLayoutActive(true);
-    return;
-  }
+  if (isOverviewLayout) return;
 
   if (learnExplainColEl) {
     learnExplainColEl.classList.remove('hidden');
@@ -11761,6 +12117,26 @@ function applyLearnChatCollapsedState() {
   const shell = learnBody || document.getElementById('learnBody');
   const isOverviewLayout = _learnLayoutMode === 'overview';
   if (isOverviewLayout || learnPanelFocus !== 'normal') {
+    if (isOverviewLayout) {
+      isLearnChatCollapsed = true;
+      isLearnChatPopoverOpen = false;
+      if (shell) {
+        shell.classList.add('chat-collapsed');
+        shell.classList.remove('explain-collapsed');
+      }
+      if (learnChatColPanel) {
+        learnChatColPanel.classList.add('hidden');
+        learnChatColPanel.style.display = 'none';
+      }
+      if (learnResizerPanel) {
+        learnResizerPanel.classList.add('hidden');
+        learnResizerPanel.style.display = 'none';
+      }
+      if (learnChatFab) learnChatFab.classList.add('hidden');
+      if (learnChatPopover) learnChatPopover.classList.add('hidden');
+      if (learnChatRestoreBtn) learnChatRestoreBtn.classList.add('hidden');
+      return;
+    }
     applyLearnPanelFocusState();
     return;
   }
@@ -11780,12 +12156,12 @@ function applyLearnChatCollapsedState() {
     }
   }
   if (learnChatColPanel) {
-    learnChatColPanel.classList.remove('hidden');
-    learnChatColPanel.style.display = '';
+    learnChatColPanel.classList.toggle('hidden', isLearnChatCollapsed);
+    learnChatColPanel.style.display = isLearnChatCollapsed ? 'none' : '';
   }
   if (learnResizerPanel) {
-    learnResizerPanel.classList.remove('hidden');
-    learnResizerPanel.style.display = '';
+    learnResizerPanel.classList.toggle('hidden', isLearnChatCollapsed);
+    learnResizerPanel.style.display = isLearnChatCollapsed ? 'none' : '';
   }
 
   const buttonTitle = isLearnChatCollapsed ? 'Show Q&A panel' : 'Hide Q&A panel';
@@ -11800,7 +12176,7 @@ function applyLearnChatCollapsedState() {
   syncBtn(lectureFocusOverlayBtn);
 
   if (isLearnChatCollapsed) resetLearnChatFabPosition();
-  if (learnChatFab) learnChatFab.classList.toggle('hidden', !isLearnChatCollapsed || isLearnChatPopoverOpen);
+  if (learnChatFab) learnChatFab.classList.add('hidden');
   if (learnChatRestoreBtn) learnChatRestoreBtn.classList.add('hidden');
   if (!isLearnChatCollapsed && learnChatPopover) learnChatPopover.classList.add('hidden');
   if (!isLearnChatCollapsed) isLearnChatPopoverOpen = false;
@@ -11845,7 +12221,7 @@ function shrinkLearnQaToPopover() {
 }
 
 function applyLearnExplainCollapsedState() {
-  const isOverviewLayout = _learnLayoutMode === 'overview';
+  const isOverviewLayout = false;
   if (isOverviewLayout || learnPanelFocus !== 'normal') {
     applyLearnPanelFocusState();
     return;
@@ -11872,10 +12248,10 @@ function applyLearnExplainCollapsedState() {
       learnChatColPanel.style.minWidth = '0';
       learnChatColPanel.style.maxWidth = '100%';
     } else {
-      learnChatColPanel.style.flex = '0 0 45%';
-      learnChatColPanel.style.width = '45%';
-      learnChatColPanel.style.minWidth = '360px';
-      learnChatColPanel.style.maxWidth = '45%';
+      learnChatColPanel.style.flex = '1 1 auto';
+      learnChatColPanel.style.width = '100%';
+      learnChatColPanel.style.minWidth = '0';
+      learnChatColPanel.style.maxWidth = '100%';
     }
   }
 }
@@ -11891,7 +12267,7 @@ function toggleLearnExplainPanel(forceOpen = null) {
 function setLearnChatPopoverOpen(open) {
   isLearnChatPopoverOpen = !!open;
   if (learnChatPopover) learnChatPopover.classList.toggle('hidden', !isLearnChatPopoverOpen);
-  if (learnChatFab) learnChatFab.classList.toggle('hidden', !isLearnChatCollapsed || isLearnChatPopoverOpen);
+  if (learnChatFab) learnChatFab.classList.add('hidden');
   if (learnChatPopoverScroll && learnChatContent && isLearnChatPopoverOpen) {
     learnChatPopoverScroll.innerHTML = learnChatContent.innerHTML || '';
     learnChatPopoverScroll.scrollTop = learnChatPopoverScroll.scrollHeight;
@@ -12657,40 +13033,45 @@ function getOverviewSummaryHtml(sectionId, sectionTitle, subsections = [], optio
     const entryTitle = typeof entry === 'string' ? entry : entry.title;
     const isParentLesson = Boolean(entry && typeof entry === 'object' && entry.isParentLesson);
     const parsedSub = parseOverviewSubsectionTitle(entryTitle, idx);
+    const noteTone = ['lemon', 'sky', 'mint', 'rose'][idx % 4];
     return `
-      <button class="chapter-overview-subcard chapter-overview-subrow" type="button" data-sublesson-title="${escapeHtml(entryTitle)}"${isParentLesson ? ' data-parent-lesson="true"' : ''}>
+      <button class="chapter-overview-subcard chapter-overview-subrow chapter-overview-note chapter-overview-note-${noteTone}" type="button" data-sublesson-title="${escapeHtml(entryTitle)}"${isParentLesson ? ' data-parent-lesson="true"' : ''}>
+        <span class="chapter-overview-note-pin" aria-hidden="true"></span>
         <span class="chapter-overview-subcard-marker">${escapeHtml(parsedSub.code)}</span>
         <span class="chapter-overview-subcard-copy">
           <span class="chapter-overview-subcard-title">${escapeHtml(parsedSub.title)}</span>
         </span>
-        <span class="chapter-overview-open-cue">Start</span>
+        <span class="chapter-overview-open-cue" aria-hidden="true">Open</span>
       </button>
     `;
   }).join('');
 
   const heroHtml = hasPreludePanel ? '' : `
       <div class="chapter-overview-map">
-        <section class="chapter-overview-hero">
-          <div class="chapter-overview-hero-main">
-            <div class="chapter-overview-kicker">
-              <span class="chapter-overview-code">${escapeHtml(sectionCodeLabel)}</span>
+        <div class="chapter-overview-book-spread" aria-label="${escapeHtml(rawTitle || sectionTitle || sectionId)} overview">
+          <section class="chapter-overview-hero chapter-overview-book-page chapter-overview-book-page-left">
+            <div class="chapter-overview-page-rule" aria-hidden="true"></div>
+            <div class="chapter-overview-hero-main">
+              <div class="chapter-overview-kicker">Section</div>
+              <div class="chapter-overview-code">${escapeHtml(sectionCodeLabel)}</div>
+              <h1 class="chapter-overview-title">${escapeHtml(sectionName || rawTitle)}</h1>
+              <p class="chapter-overview-summary">${escapeHtml(summary)}</p>
             </div>
-            <h1 class="chapter-overview-title">${escapeHtml(sectionName || rawTitle)}</h1>
-            <p class="chapter-overview-summary">${escapeHtml(summary)}</p>
-          </div>
-        </section>
+          </section>
 
-        <section class="chapter-overview-list-block chapter-overview-list-block-side">
-          <div class="chapter-overview-list-head">
-            <div>
-              <div class="chapter-overview-list-eyebrow">Study sequence</div>
-              <h2 class="chapter-overview-list-title">Subsections</h2>
+          <section class="chapter-overview-list-block chapter-overview-list-block-side chapter-overview-book-page chapter-overview-book-page-right">
+            <div class="chapter-overview-page-rule" aria-hidden="true"></div>
+            <div class="chapter-overview-list-head">
+              <div>
+                <div class="chapter-overview-list-eyebrow">Study sequence</div>
+                <h2 class="chapter-overview-list-title">Subsections</h2>
+              </div>
             </div>
-          </div>
-          <div class="chapter-overview-grid">
-            ${cardsHtml}
-          </div>
-        </section>
+            <div class="chapter-overview-grid">
+              ${cardsHtml}
+            </div>
+          </section>
+        </div>
       </div>
   `;
 
@@ -12720,13 +13101,15 @@ function buildOverviewSubsectionCardsHtml(subsections = []) {
     const entryTitle = typeof entry === 'string' ? entry : entry.title;
     const isParentLesson = Boolean(entry && typeof entry === 'object' && entry.isParentLesson);
     const parsedSub = parseOverviewSubsectionTitle(entryTitle, idx);
+    const noteTone = ['lemon', 'sky', 'mint', 'rose'][idx % 4];
     return `
-      <button class="chapter-overview-subcard chapter-overview-subrow" type="button" data-sublesson-title="${escapeHtml(entryTitle)}"${isParentLesson ? ' data-parent-lesson="true"' : ''}>
+      <button class="chapter-overview-subcard chapter-overview-subrow chapter-overview-note chapter-overview-note-${noteTone}" type="button" data-sublesson-title="${escapeHtml(entryTitle)}"${isParentLesson ? ' data-parent-lesson="true"' : ''}>
+        <span class="chapter-overview-note-pin" aria-hidden="true"></span>
         <span class="chapter-overview-subcard-marker">${escapeHtml(parsedSub.code)}</span>
         <span class="chapter-overview-subcard-copy">
           <span class="chapter-overview-subcard-title">${escapeHtml(parsedSub.title)}</span>
         </span>
-        <span class="chapter-overview-open-cue">Start</span>
+        <span class="chapter-overview-open-cue" aria-hidden="true">Open</span>
       </button>
     `;
   }).join('');
@@ -12810,9 +13193,7 @@ async function loadChapterOverviewPrelude(sectionId, sectionTitle, subsections =
         sectionTitle,
         mode: 'overview',
         language: 'en',
-        uid: getUid(),
-        bookSource: currentBook,
-        profileOverride: userMemory && userMemory.quiz ? { ...userMemory.quiz } : undefined
+        bookSource: currentBook
       })
     });
     clearTimeout(timeout);
@@ -12880,9 +13261,7 @@ async function openChapterParentLessonFromOverview(sectionId, sectionTitle, subs
         sectionTitle,
         mode: 'overview',
         language: 'en',
-        uid: getUid(),
-        bookSource: currentBook,
-        profileOverride: userMemory && userMemory.quiz ? { ...userMemory.quiz } : undefined
+        bookSource: currentBook
       })
     });
     if (!canWriteParentLesson()) return;
@@ -12907,15 +13286,23 @@ async function openChapterParentLessonFromOverview(sectionId, sectionTitle, subs
 function bindOverviewSubsectionCards() {
   if (!learnExplainContent) return;
   learnExplainContent.querySelectorAll('.chapter-overview-subcard').forEach(btn => {
+    if (btn._learnOverviewTurnBound) return;
+    btn._learnOverviewTurnBound = true;
     btn.addEventListener('click', () => {
       const subTitle = btn.getAttribute('data-sublesson-title');
       if (!subTitle) return;
+      if (isLearnPageTurning) return;
+      btn.classList.add('is-launching');
       if (btn.getAttribute('data-parent-lesson') === 'true') {
-        openChapterParentLessonFromOverview(learnSectionId, learnSectionTitle, findSyllabusSubsections(learnSectionTitle));
+        runLearnPageTurn(1, () => {
+          openChapterParentLessonFromOverview(learnSectionId, learnSectionTitle, findSyllabusSubsections(learnSectionTitle));
+        });
         return;
       }
       const parentContext = createOverviewContext(learnSectionId, learnSectionTitle, findSyllabusSubsections(learnSectionTitle));
-      openLearnModeKeepToc(subTitle, subTitle, parentContext);
+      runLearnPageTurn(1, () => {
+        openLearnModeKeepToc(subTitle, subTitle, parentContext);
+      });
     });
   });
 }
@@ -12929,9 +13316,15 @@ function updateLearnChatEmptyState() {
     learnChatEmptyState.style.setProperty('visibility', 'hidden', 'important');
     learnChatEmptyState.style.setProperty('opacity', '0', 'important');
   } else {
-    learnChatEmptyState.style.removeProperty('display');
-    learnChatEmptyState.style.removeProperty('visibility');
-    learnChatEmptyState.style.removeProperty('opacity');
+    if (_learnLayoutMode === 'overview') {
+      learnChatEmptyState.style.setProperty('display', 'none', 'important');
+      learnChatEmptyState.style.setProperty('visibility', 'hidden', 'important');
+      learnChatEmptyState.style.setProperty('opacity', '0', 'important');
+    } else {
+      learnChatEmptyState.style.removeProperty('display');
+      learnChatEmptyState.style.removeProperty('visibility');
+      learnChatEmptyState.style.removeProperty('opacity');
+    }
   }
   learnChatContent.classList.toggle('is-chat-active', hasChat);
   learnChatContent.closest('#learnChatCol')?.classList.toggle('is-chat-active', hasChat);
@@ -13036,7 +13429,7 @@ async function openLearnMode(sectionId, sectionTitle, subsections = [], options 
       const res = await fetch(`${API_BASE}/api/section`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sectionId, sectionTitle, mode: 'intro', language: 'en', uid: getUid(), bookSource: currentBook }),
+        body: JSON.stringify({ sectionId, sectionTitle, mode: 'intro', language: 'en', bookSource: currentBook }),
         signal: learnAbort.signal
       });
       const data = await readApiJson(res, 'section preview request');
@@ -13112,10 +13505,8 @@ async function startLesson(options = {}) {
         sectionTitle: requestSectionTitle,
         mode: 'lesson',
         language: 'en',
-        uid: getUid(),
         bookSource: 'new',
-        webSources: [],
-        profileOverride: userMemory && userMemory.quiz ? { ...userMemory.quiz } : undefined
+        webSources: []
       }),
       signal: learnAbort.signal
     });
@@ -13180,7 +13571,7 @@ async function startLesson(options = {}) {
     renderLearnWebSources(data.webSources || []);
     renderLearnWebSection(data.webSources || []);
     learnExplainScroll.scrollTop = 0;
-    minimizeLearnQaToBubble();
+    openLearnQaSidebar();
     setLearnLoading(false);
     // Async: save session summary
     saveSessionSummary(`Studied section "${learnSectionTitle}".`);
@@ -13235,8 +13626,6 @@ const learnExplainRestoreLabel = document.getElementById('learnExplainRestoreLab
 const _bookOverlay = document.getElementById('learnBookOverlay');
 const _explainContent = document.getElementById('learnExplainContent');
 const _tocSidebar = document.getElementById('tocSidebar');
-let _learnViewMode = 'lecture';
-let _learnLayoutMode = 'lesson';
 let _textbookZoomed = false;
 
 // Pre-load section page map for instant textbook lookup (no waiting for API)
@@ -13266,10 +13655,7 @@ function _setTabActive(activeBtn, inactiveBtn) {
 function syncInlineTextbookViewportToStart(options = {}) {
   if (!_bookOverlay) return;
   const alignFirstPage = options.alignFirstPage !== false;
-  const requestedRatio = Number(options.startRatio ?? _textbookStartRatio ?? 0);
-  const startRatio = Number.isFinite(requestedRatio)
-    ? Math.max(0, Math.min(0.92, requestedRatio))
-    : 0;
+  const startRatio = 0;
   const reset = () => {
     if (learnExplainScroll) {
       learnExplainScroll.scrollTop = 0;
@@ -13294,18 +13680,20 @@ function _setLearnMode(mode) {
   _learnViewMode = mode;
   const isOverviewLayout = _learnLayoutMode === 'overview';
   const isLessonLikeLayout = _learnLayoutMode === 'lesson' || _learnLayoutMode === 'overview_lesson';
+  const supportsTextbookLayout = isLessonLikeLayout || isOverviewLayout;
   const isOverviewOnlyLayout = _learnLayoutMode === 'overview';
   _setTabActive(mode === 'textbook' ? _btnTextbook : _btnLecture, mode === 'textbook' ? _btnLecture : _btnTextbook);
+  if (learnBody) learnBody.classList.toggle('learn-textbook-active', mode === 'textbook' && supportsTextbookLayout);
   if (learnExplainScroll) learnExplainScroll.classList.toggle('textbook-mode', mode === 'textbook');
   if (_bookOverlay) {
-    _bookOverlay.classList.toggle('hidden', mode !== 'textbook' || !isLessonLikeLayout);
-    _bookOverlay.style.display = mode === 'textbook' && isLessonLikeLayout ? 'block' : 'none';
+    _bookOverlay.classList.toggle('hidden', mode !== 'textbook' || !supportsTextbookLayout);
+    _bookOverlay.style.display = mode === 'textbook' && supportsTextbookLayout ? 'block' : 'none';
   }
-  if (mode === 'textbook' && isLessonLikeLayout) {
+  if (mode === 'textbook' && supportsTextbookLayout) {
     syncInlineTextbookViewportToStart();
   }
   if (_explainContent) {
-    const hideExplainForTextbook = mode === 'textbook' && isLessonLikeLayout;
+    const hideExplainForTextbook = mode === 'textbook' && supportsTextbookLayout;
     _explainContent.style.opacity = hideExplainForTextbook ? '0' : '1';
     _explainContent.style.pointerEvents = hideExplainForTextbook ? 'none' : 'auto';
     _explainContent.style.display = hideExplainForTextbook ? 'none' : '';
@@ -13323,18 +13711,22 @@ function _setLearnMode(mode) {
   if (learnExplainToolbarEl) learnExplainToolbarEl.style.display = isOverviewOnlyLayout ? 'none' : '';
   if (learnBookColEl) learnBookColEl.style.display = 'none';
   if (learnChatColPanel) {
-    learnChatColPanel.style.display = isOverviewLayout ? 'none' : '';
+    learnChatColPanel.classList.toggle('hidden', isOverviewOnlyLayout);
+    learnChatColPanel.style.display = isOverviewOnlyLayout ? 'none' : '';
   }
   if (learnResizerPanel) {
-    learnResizerPanel.style.display = isOverviewLayout ? 'none' : '';
+    learnResizerPanel.classList.toggle('hidden', isOverviewOnlyLayout);
+    learnResizerPanel.style.display = isOverviewOnlyLayout ? 'none' : '';
   }
   if (learnExplainColEl) {
-    learnExplainColEl.style.flex = isOverviewLayout ? '1' : '5.5';
+    learnExplainColEl.style.flex = isOverviewLayout ? '1' : '1 1 auto';
     if (isOverviewLayout) {
       learnExplainColEl.style.width = '100%';
       learnExplainColEl.style.borderRight = 'none';
     } else {
-      learnExplainColEl.style.width = '';
+      learnExplainColEl.style.width = '100%';
+      learnExplainColEl.style.minWidth = '0';
+      learnExplainColEl.style.maxWidth = '100%';
       learnExplainColEl.style.borderRight = '1px solid var(--border)';
     }
   }
@@ -13350,20 +13742,23 @@ function _setLearnMode(mode) {
       learnChatColPanel.style.minWidth = '0';
       learnChatColPanel.style.maxWidth = '100%';
     } else {
-      learnChatColPanel.style.flex = '0 0 45%';
-      learnChatColPanel.style.width = '45%';
-      learnChatColPanel.style.minWidth = '360px';
-      learnChatColPanel.style.maxWidth = '45%';
+      learnChatColPanel.style.flex = '1 1 auto';
+      learnChatColPanel.style.width = '100%';
+      learnChatColPanel.style.minWidth = '0';
+      learnChatColPanel.style.maxWidth = '100%';
     }
   }
   if (learnExplainOverlayRail) learnExplainOverlayRail.style.display = 'none';
   if (learnExplainBottomRail) learnExplainBottomRail.style.display = (isLessonLikeLayout && mode === 'lecture') ? '' : 'none';
+  if (learnLecturePageIndicator) {
+    learnLecturePageIndicator.style.display = (isLessonLikeLayout && mode === 'lecture') ? '' : 'none';
+  }
   if (lecturePrevOverlayBtn) lecturePrevOverlayBtn.classList.toggle('hidden', mode !== 'lecture' || !isLessonLikeLayout);
   if (lectureNextOverlayBtn) lectureNextOverlayBtn.classList.toggle('hidden', mode !== 'lecture' || !isLessonLikeLayout);
   if (lectureFocusOverlayBtn) lectureFocusOverlayBtn.classList.add('hidden');
   applyLearnPanelFocusState();
   if (isLessonLikeLayout && learnPanelFocus === 'normal') {
-    isLearnChatCollapsed = true;
+    isLearnChatCollapsed = false;
     isLearnChatPopoverOpen = false;
     applyLearnChatCollapsedState();
   }
@@ -13379,6 +13774,7 @@ if (_btnLecture && _btnTextbook) {
     _setTabActive(_btnTextbook, _btnLecture);
     _setLearnMode('textbook');
     loadTextbookPages();
+    syncInlineTextbookViewportToStart({ startRatio: 0 });
   });
 }
 
@@ -13482,18 +13878,20 @@ if (learnKpNextBtn) {
     moveLearnKnowledgePoint(1);
   });
 }
-if (lecturePrevOverlayBtn) {
-  lecturePrevOverlayBtn.addEventListener('click', (event) => {
-    event.preventDefault();
-    if (moveLearnKnowledgePoint(-1)) animateLectureNavButton(-1);
-  });
-}
-if (lectureNextOverlayBtn) {
-  lectureNextOverlayBtn.addEventListener('click', (event) => {
-    event.preventDefault();
-    if (moveLearnKnowledgePoint(1)) animateLectureNavButton(1);
-  });
-}
+  if (lecturePrevOverlayBtn) {
+    lecturePrevOverlayBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (isLearnPageTurning) return;
+      if (moveLearnKnowledgePoint(-1)) animateLectureNavButton(-1);
+    });
+  }
+  if (lectureNextOverlayBtn) {
+    lectureNextOverlayBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (isLearnPageTurning) return;
+      if (moveLearnKnowledgePoint(1)) animateLectureNavButton(1);
+    });
+  }
 document.addEventListener('pointerdown', handleLectureOverlayNavEvent, true);
 document.addEventListener('click', handleLectureOverlayNavEvent, true);
 if (lectureFocusOverlayBtn) lectureFocusOverlayBtn.addEventListener('click', () => advanceLearnPanelFocus('qa'));
@@ -14390,7 +14788,6 @@ function inlineFormat(text) {
         correct || '(fill in after review)',
         explanation ? `\n## Explanation\n${explanation}` : ''
       ].join('\n'),
-      aiInstruction: 'Turn this saved quiz question into concise review notes. Emphasize the mistake pattern, correct method, and what to check next time.',
       aiAnswer: explanation || '',
       problemText,
       sourceType: 'quiz',
@@ -15243,12 +15640,13 @@ function showWelcome() {
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
-  if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
   setWorkspaceAccountBarVisible(true);
   clearAttachmentSourcePanel();
   clearToc();
-  updateSidebarNavActive(null);
+  toggleSyllabusPanel(false);
+  toggleRecentPanel(false);
+  updateSidebarNavActive('home');
 }
 
 function showAnswer(question) {
@@ -15264,7 +15662,6 @@ function showAnswer(question) {
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
-  if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.remove('hidden');
   setWorkspaceAccountBarVisible(false);
   if (topbarBreadcrumb) topbarBreadcrumb.textContent = question;
@@ -15284,10 +15681,9 @@ function showLearnView() {
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
-  if (libraryView) libraryView.classList.add('hidden');
   _setLearnMode(_learnViewMode || 'lecture');
   if (topbar) topbar.classList.add('hidden');
-  setWorkspaceAccountBarVisible(true);
+  setWorkspaceAccountBarVisible(false);
   updateSidebarNavActive(null);
 }
 
@@ -15304,9 +15700,8 @@ function showSettingsView() {
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
-  if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
-  setWorkspaceAccountBarVisible(true);
+  setWorkspaceAccountBarVisible(false);
   renderUserBadge();
   clearToc();
   updateSidebarNavActive('settings');
@@ -15325,9 +15720,8 @@ function showPreferenceView() {
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
-  if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
-  setWorkspaceAccountBarVisible(true);
+  setWorkspaceAccountBarVisible(false);
   updateSidebarNavActive('preference');
   syncPreferenceEditorFromMemory();
 }
@@ -15345,9 +15739,8 @@ function showFeedbackView() {
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
-  if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
-  setWorkspaceAccountBarVisible(true);
+  setWorkspaceAccountBarVisible(false);
   clearToc();
   updateSidebarNavActive('feedback');
   loadFeedbackBoard();
@@ -15372,6 +15765,61 @@ function setFeedbackStatus(message, kind = 'idle') {
   feedbackStatus.dataset.kind = kind;
 }
 
+function feedbackReplyTargetForItem(item) {
+  return {
+    type: 'thread',
+    id: item.id || '',
+    author: item.author || 'Anonymous',
+    body: item.body || item.title || ''
+  };
+}
+
+function feedbackReplyTargetForReply(reply) {
+  return {
+    type: 'reply',
+    id: reply.id || '',
+    author: reply.author || 'Anonymous',
+    body: reply.body || ''
+  };
+}
+
+function feedbackTargetSnippet(text = '') {
+  const clean = String(text || '').replace(/\s+/g, ' ').trim();
+  return clean.length > 54 ? `${clean.slice(0, 54)}...` : clean;
+}
+
+function setFeedbackReplyTarget(thread, target) {
+  if (!thread || !target) return;
+  const id = thread.dataset.feedbackId;
+  if (!id) return;
+  feedbackReplyTargets.set(id, target);
+  thread.querySelectorAll('.feedback-click-reply.is-target').forEach(node => node.classList.remove('is-target'));
+  const targetNode = thread.querySelector(`[data-feedback-reply-anchor="${CSS.escape(target.id || 'thread')}"]`);
+  if (targetNode) targetNode.classList.add('is-target');
+  const chip = thread.querySelector('.feedback-reply-target');
+  const chipName = thread.querySelector('.feedback-reply-target-name');
+  const chipText = thread.querySelector('.feedback-reply-target-text');
+  if (chip) chip.classList.remove('hidden');
+  if (chipName) chipName.textContent = `Replying to ${target.author || 'Anonymous'}`;
+  if (chipText) chipText.textContent = feedbackTargetSnippet(target.body || '');
+  const input = thread.querySelector('.feedback-reply-input');
+  if (input) {
+    input.placeholder = `Reply to ${target.author || 'this note'}...`;
+    input.focus();
+  }
+}
+
+function clearFeedbackReplyTarget(thread) {
+  if (!thread) return;
+  const id = thread.dataset.feedbackId;
+  if (id) feedbackReplyTargets.delete(id);
+  thread.querySelectorAll('.feedback-click-reply.is-target').forEach(node => node.classList.remove('is-target'));
+  const chip = thread.querySelector('.feedback-reply-target');
+  if (chip) chip.classList.add('hidden');
+  const input = thread.querySelector('.feedback-reply-input');
+  if (input) input.placeholder = 'Discuss this suggestion...';
+}
+
 function renderFeedbackBoard(items = []) {
   if (!feedbackList) return;
   if (!items.length) {
@@ -15380,26 +15828,58 @@ function renderFeedbackBoard(items = []) {
   }
   feedbackList.innerHTML = items.map(item => {
     const replies = Array.isArray(item.replies) ? item.replies : [];
+    const authorLaneMap = new Map([[String(item.author || 'Anonymous').trim().toLowerCase(), 'left']]);
+    const authorToneMap = new Map();
+    let nextReplyLane = 'right';
+    let nextAuthorTone = 0;
+    const toneForAuthor = (author) => {
+      const key = String(author || 'Anonymous').trim().toLowerCase();
+      if (!authorToneMap.has(key)) {
+        authorToneMap.set(key, nextAuthorTone % 6);
+        nextAuthorTone += 1;
+      }
+      return authorToneMap.get(key);
+    };
+    const laneForAuthor = (author) => {
+      const key = String(author || 'Anonymous').trim().toLowerCase();
+      if (!authorLaneMap.has(key)) {
+        authorLaneMap.set(key, nextReplyLane);
+        nextReplyLane = nextReplyLane === 'right' ? 'left' : 'right';
+      }
+      return authorLaneMap.get(key) || 'left';
+    };
+    const threadTone = toneForAuthor(item.author);
     return `
-      <article class="feedback-thread" data-feedback-id="${escapeHtml(item.id)}">
+      <article class="feedback-thread tone-${threadTone}" data-feedback-id="${escapeHtml(item.id)}">
         <div class="feedback-thread-pin" aria-hidden="true"></div>
         <div class="feedback-thread-head">
-          <div>
+          <div class="feedback-thread-click-target feedback-click-reply" data-feedback-reply-anchor="thread" role="button" tabindex="0" aria-label="Reply to ${escapeHtml(item.author || 'Anonymous')}">
             <h3>${escapeHtml(item.title || 'Untitled suggestion')}</h3>
             <div class="feedback-thread-meta">${escapeHtml(item.author || 'Anonymous')} · ${escapeHtml(formatFeedbackTime(item.createdAt))}</div>
           </div>
           <span class="feedback-reply-count">${replies.length} replies</span>
         </div>
-        <p class="feedback-thread-body">${escapeHtml(item.body || '').replace(/\n/g, '<br>')}</p>
+        <p class="feedback-thread-body feedback-click-reply" data-feedback-reply-anchor="thread-body" role="button" tabindex="0" aria-label="Reply to this suggestion">${escapeHtml(item.body || '').replace(/\n/g, '<br>')}</p>
         <div class="feedback-replies">
-          ${replies.map(reply => `
-            <div class="feedback-reply">
+          ${replies.map((reply, idx) => {
+            const align = laneForAuthor(reply.author);
+            const tone = toneForAuthor(reply.author);
+            const replyToAuthor = reply.replyToAuthor || item.author || '';
+            return `
+            <div class="feedback-reply feedback-click-reply is-${align} tone-${tone}" data-feedback-reply-anchor="${escapeHtml(reply.id || '')}" role="button" tabindex="0" aria-label="Reply to ${escapeHtml(reply.author || 'Anonymous')}">
               <div class="feedback-reply-meta">${escapeHtml(reply.author || 'Anonymous')} · ${escapeHtml(formatFeedbackTime(reply.createdAt))}</div>
+              ${reply.replyTo ? `<div class="feedback-reply-context">to ${escapeHtml(replyToAuthor || 'this note')}${reply.replyToBody ? ` · ${escapeHtml(feedbackTargetSnippet(reply.replyToBody))}` : ''}</div>` : ''}
               <div class="feedback-reply-body">${escapeHtml(reply.body || '').replace(/\n/g, '<br>')}</div>
             </div>
-          `).join('')}
+          `;
+          }).join('')}
         </div>
         <div class="feedback-reply-compose">
+          <div class="feedback-reply-target hidden">
+            <span class="feedback-reply-target-name"></span>
+            <span class="feedback-reply-target-text"></span>
+            <button class="feedback-reply-target-clear" type="button" aria-label="Clear reply target">×</button>
+          </div>
           <input class="feedback-reply-name" type="text" maxlength="60" placeholder="Name (optional)">
           <textarea class="feedback-reply-input" maxlength="800" placeholder="Discuss this suggestion..."></textarea>
           <button class="feedback-reply-btn" type="button">Reply</button>
@@ -15407,6 +15887,35 @@ function renderFeedbackBoard(items = []) {
       </article>
     `;
   }).join('');
+
+  feedbackList.querySelectorAll('.feedback-thread').forEach(thread => {
+    const id = thread.dataset.feedbackId;
+    const item = items.find(entry => entry.id === id);
+    if (!item) return;
+    const threadTarget = feedbackReplyTargetForItem(item);
+    const bodyTarget = { ...threadTarget, id: 'thread-body' };
+    thread.querySelector('[data-feedback-reply-anchor="thread"]')?.addEventListener('click', () => setFeedbackReplyTarget(thread, threadTarget));
+    thread.querySelector('[data-feedback-reply-anchor="thread-body"]')?.addEventListener('click', () => setFeedbackReplyTarget(thread, bodyTarget));
+    thread.querySelectorAll('.feedback-reply[data-feedback-reply-anchor]').forEach(node => {
+      const reply = (Array.isArray(item.replies) ? item.replies : []).find(entry => entry.id === node.dataset.feedbackReplyAnchor);
+      if (!reply) return;
+      node.addEventListener('click', () => setFeedbackReplyTarget(thread, feedbackReplyTargetForReply(reply)));
+    });
+    thread.querySelectorAll('.feedback-click-reply').forEach(node => {
+      node.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          node.click();
+        }
+      });
+    });
+    thread.querySelector('.feedback-reply-target-clear')?.addEventListener('click', event => {
+      event.stopPropagation();
+      clearFeedbackReplyTarget(thread);
+    });
+    const savedTarget = feedbackReplyTargets.get(id);
+    if (savedTarget) setFeedbackReplyTarget(thread, savedTarget);
+  });
 
   feedbackList.querySelectorAll('.feedback-reply-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -15417,6 +15926,11 @@ function renderFeedbackBoard(items = []) {
       const bodyEl = thread.querySelector('.feedback-reply-input');
       const body = (bodyEl?.value || '').trim();
       if (!body) return;
+      const target = feedbackReplyTargets.get(id) || {
+        id: 'thread',
+        author: thread.querySelector('.feedback-thread-meta')?.textContent?.split(' · ')[0] || '',
+        body: thread.querySelector('.feedback-thread-body')?.textContent || ''
+      };
       btn.disabled = true;
       btn.textContent = 'Posting...';
       try {
@@ -15425,7 +15939,10 @@ function renderFeedbackBoard(items = []) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             author: (nameEl?.value || '').trim() || feedbackAuthorName(),
-            body
+            body,
+            replyTo: target.id || '',
+            replyToAuthor: target.author || '',
+            replyToBody: target.body || ''
           })
         });
         if (!res.ok) {
@@ -15433,6 +15950,7 @@ function renderFeedbackBoard(items = []) {
           throw new Error(data.error || `HTTP ${res.status}`);
         }
         if (bodyEl) bodyEl.value = '';
+        clearFeedbackReplyTarget(thread);
         await loadFeedbackBoard();
       } catch (err) {
         alert(`Reply failed: ${err.message}`);
@@ -15466,7 +15984,7 @@ async function submitFeedbackItem() {
   }
   if (feedbackSubmitBtn) {
     feedbackSubmitBtn.disabled = true;
-    feedbackSubmitBtn.textContent = 'Posting...';
+    setFeedbackSubmitButtonLabel('Posting...');
   }
   setFeedbackStatus('Pinning your suggestion...', 'busy');
   try {
@@ -15492,7 +16010,7 @@ async function submitFeedbackItem() {
   } finally {
     if (feedbackSubmitBtn) {
       feedbackSubmitBtn.disabled = false;
-      feedbackSubmitBtn.textContent = 'Post Suggestion';
+      setFeedbackSubmitButtonLabel('Post Suggestion');
     }
   }
 }
@@ -15510,9 +16028,8 @@ function showCourseTrackerView() {
   if (courseTrackerView) courseTrackerView.classList.remove('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.add('hidden');
-  if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
-  setWorkspaceAccountBarVisible(true);
+  setWorkspaceAccountBarVisible(false);
   clearToc();
   updateSidebarNavActive('course-tracker');
   renderCourseTracker();
@@ -15531,9 +16048,8 @@ function showMistakeNotebookView() {
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.remove('hidden');
   if (loginView) loginView.classList.add('hidden');
-  if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
-  setWorkspaceAccountBarVisible(true);
+  setWorkspaceAccountBarVisible(false);
   clearToc();
   updateSidebarNavActive('mistake-notebook');
   renderMistakeNotebook();
@@ -15559,25 +16075,6 @@ function toggleRecentPanel(forceOpen = null) {
   updateSidebarNavActive(nextOpen ? 'recent' : null);
 }
 
-function showLibraryView() {
-  destroyLoginScene();
-  if (appShell) appShell.classList.remove('hidden');
-  welcomeScreen.classList.add('hidden');
-  answerScreen.classList.add('hidden');
-  learnView.classList.add('hidden');
-  if (settingsView) settingsView.classList.add('hidden');
-  if (preferenceView) preferenceView.classList.add('hidden');
-  if (feedbackView) feedbackView.classList.add('hidden');
-  if (homeworkView) homeworkView.classList.add('hidden');
-  if (courseTrackerView) courseTrackerView.classList.add('hidden');
-  if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
-  if (loginView) loginView.classList.add('hidden');
-  if (libraryView) libraryView.classList.remove('hidden');
-  if (topbar) topbar.classList.add('hidden');
-  setWorkspaceAccountBarVisible(true);
-  clearToc();
-  updateSidebarNavActive('library');
-}
 
 function showLoginView() {
   if (appShell) appShell.classList.add('hidden');
@@ -15592,7 +16089,6 @@ function showLoginView() {
   if (courseTrackerView) courseTrackerView.classList.add('hidden');
   if (mistakeNotebookView) mistakeNotebookView.classList.add('hidden');
   if (loginView) loginView.classList.remove('hidden');
-  if (libraryView) libraryView.classList.add('hidden');
   if (topbar) topbar.classList.add('hidden');
   clearToc();
   updateSidebarNavActive(null);
@@ -15610,9 +16106,9 @@ function showLoginView() {
 }
 
 function updateSidebarNavActive(key) {
+  if (navHomeBtn) navHomeBtn.classList.toggle('active', key === 'home');
   if (navSyllabusBtn) navSyllabusBtn.classList.toggle('active', key === 'syllabus');
   if (navRecentBtn) navRecentBtn.classList.toggle('active', key === 'recent');
-  if (navLibraryBtn) navLibraryBtn.classList.toggle('active', key === 'library');
   if (navCourseTrackerBtn) navCourseTrackerBtn.classList.toggle('active', key === 'course-tracker');
   if (navMistakeNotebookBtn) navMistakeNotebookBtn.classList.toggle('active', key === 'mistake-notebook');
   if (navPreferenceBtn) navPreferenceBtn.classList.toggle('active', key === 'preference');
@@ -15757,10 +16253,13 @@ function buildTocFromContent(containerEl) {
       btn._learnBound = true;
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (isLearnPageTurning) return;
         const subTitle = btn.dataset.lessonTitle || btn.textContent.trim();
         tocNav.querySelectorAll('.toc-item.depth-2:not(.content-anchor)').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        openLearnModeKeepToc(subTitle, subTitle, learnParentOverviewContext || findParentOverviewContextForSubsection(subTitle, subTitle));
+        runLearnPageTurn(1, () => {
+          openLearnModeKeepToc(subTitle, subTitle, learnParentOverviewContext || findParentOverviewContextForSubsection(subTitle, subTitle));
+        });
       });
     });
   }
@@ -16457,7 +16956,7 @@ setStatus('', 'idle');
 
 document.querySelectorAll('.theme-toggle-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
-    applyTheme(btn.dataset.themeValue || 'light');
+    applyTheme(btn.dataset.themeValue || 'dawn');
   });
 });
 
@@ -16553,7 +17052,7 @@ if (learnResizer && learnExplainCol && learnChatCol) {
   const MIN_EXPLAIN_WIDTH = 420;
   const MIN_CHAT_WIDTH = 320;
   const DEFAULT_CHAT_RATIO = 0.45;
-  const DEFAULT_SPLIT_VERSION = '2026-05-10-55-45';
+  const DEFAULT_SPLIT_VERSION = '2026-05-23-strict-55-45-full-lecture';
   try {
     const storedVersion = localStorage.getItem(`${LEARN_LAYOUT_KEY}-version`);
     if (storedVersion !== DEFAULT_SPLIT_VERSION) {
@@ -16668,6 +17167,7 @@ if (learnResizer && learnExplainCol && learnChatCol) {
 
 const webSearchBtnLearn = document.getElementById('webSearchToggleBtnLearn');
 const homeModeToggleBtn = document.getElementById('homeModeToggleBtn');
+const homeModeMenu = document.getElementById('homeModeMenu');
 const homeModeCurrentText = document.getElementById('homeModeCurrentText');
 const homeModeCurrentIcon = document.getElementById('homeModeCurrentIcon');
 const homeModeSequence = ['fast', 'balanced', 'detailed'];
@@ -16686,16 +17186,35 @@ function syncHomeModeToggle() {
     homeModeCurrentIcon.className = `home-mode-icon ${mode.iconClass}`;
     homeModeCurrentIcon.innerHTML = `<i class="${mode.phClass}"></i>`;
   }
+  homeModeMenu?.querySelectorAll('.home-mode-option').forEach(option => {
+    option.classList.toggle('selected', option.dataset.homeMode === value);
+  });
 }
 
-if (homeModeToggleBtn && answerLengthToggleMain) {
+if (homeModeToggleBtn && homeModeMenu && answerLengthToggleMain) {
   syncHomeModeToggle();
-  homeModeToggleBtn.addEventListener('click', () => {
-    const current = answerLengthToggleMain.value || 'balanced';
-    const next = homeModeSequence[(homeModeSequence.indexOf(current) + 1) % homeModeSequence.length] || 'balanced';
-    answerLengthToggleMain.value = next;
-    answerLengthToggleMain.dispatchEvent(new Event('change', { bubbles: true }));
-    syncHomeModeToggle();
+  homeModeToggleBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const isOpen = homeModeMenu.classList.toggle('show');
+    homeModeToggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+  homeModeMenu.querySelectorAll('.home-mode-option').forEach(option => {
+    option.addEventListener('click', (event) => {
+      event.stopPropagation();
+      answerLengthToggleMain.value = homeModeSequence.includes(option.dataset.homeMode)
+        ? option.dataset.homeMode
+        : 'balanced';
+      answerLengthToggleMain.dispatchEvent(new Event('change', { bubbles: true }));
+      syncHomeModeToggle();
+      homeModeMenu.classList.remove('show');
+      homeModeToggleBtn.setAttribute('aria-expanded', 'false');
+    });
+  });
+  document.addEventListener('click', (event) => {
+    if (!homeModeMenu.contains(event.target) && !homeModeToggleBtn.contains(event.target)) {
+      homeModeMenu.classList.remove('show');
+      homeModeToggleBtn.setAttribute('aria-expanded', 'false');
+    }
   });
 }
 
@@ -17367,18 +17886,21 @@ function updateRecentConversations(source = 'unknown') {
     #learnView #learnBody[data-panel-focus="normal"] #learnChatCol,
     #learnView #learnBody[data-panel-focus="qa-wide"] #learnChatCol,
     #learnView #learnBody[data-panel-focus="qa-full"] #learnChatCol {
-      background:
-        radial-gradient(ellipse 120% 62% at 52% 12%, rgba(125, 211, 252, 0.42), transparent 68%),
-        radial-gradient(ellipse 128% 66% at 58% 100%, rgba(110, 231, 183, 0.34), transparent 70%),
-        linear-gradient(180deg, #f4f7f9 0%, #eefbf6 100%) !important;
-      border: 0 !important;
-      border-left: 0 !important;
-      box-shadow: none !important;
+      position: relative !important;
+      isolation: isolate !important;
       display: flex !important;
       flex-direction: column !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      padding: 0 !important;
       gap: 0 !important;
-      padding: 24px 20px 18px !important;
       overflow: hidden !important;
+      border: 0 !important;
+      border-left: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      background: var(--theme-page-surface-soft) !important;
+      background-image: var(--theme-page-surface-soft) !important;
     }
 
     #learnView #learnBody.chat-collapsed #learnChatCol {
@@ -17398,270 +17920,352 @@ function updateRecentConversations(source = 'unknown') {
     }
 
     #learnView #learnBody.chat-collapsed #learnChatCol::before,
-    #learnView #learnBody.chat-collapsed #learnChatCol::after {
+    #learnView #learnBody.chat-collapsed #learnChatCol::after,
+    #learnView #learnChatCol::before,
+    #learnView #learnChatCol::after {
       content: none !important;
       display: none !important;
     }
 
-    #learnView #learnChatCol .ambient-background {
-      position: absolute !important;
-      inset: 0 !important;
-      width: auto !important;
-      height: auto !important;
-      z-index: 0 !important;
-      pointer-events: none !important;
-      overflow: hidden !important;
-      display: none !important;
-    }
-
-    #learnView #learnChatCol .orb-edu-blue {
-      top: -14% !important;
-      left: -20% !important;
-      width: 105% !important;
-      height: 62% !important;
-    }
-
-    #learnView #learnChatCol .orb-edu-green {
-      right: -22% !important;
-      bottom: -18% !important;
-      width: 105% !important;
-      height: 58% !important;
-    }
-
-    #learnView #learnChatCol .learn-chat-topbar,
-    #learnView #learnChatCol .learn-chat-scroll,
-    #learnView #learnChatCol .learn-web-section,
-    #learnView #learnChatCol #learnChatEmptyState,
-    #learnView #learnChatCol .edu-tutor-empty-inner,
-    #learnView #learnChatCol .learn-followup-bar,
-    #learnView #learnChatCol .glass-panel,
-    #learnView #learnChatCol .edu-tutor-composer,
-    #learnView #learnChatCol .followup-bubble {
-      background: transparent !important;
-      border: 0 !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-    }
-
-    #learnView #learnChatCol .learn-chat-scroll::before,
-    #learnView #learnChatCol .learn-chat-scroll::after,
-    #learnView #learnChatCol #learnChatEmptyState::before,
-    #learnView #learnChatCol #learnChatEmptyState::after,
-    #learnView #learnChatCol .learn-followup-bar::before,
-    #learnView #learnChatCol .learn-followup-bar::after,
-    #learnView #learnChatCol .edu-tutor-composer::before,
-    #learnView #learnChatCol .edu-tutor-composer::after,
-    #learnView #learnChatCol .glass-panel::before,
-    #learnView #learnChatCol .glass-panel::after {
-      content: none !important;
-      display: none !important;
-      background: transparent !important;
-      border: 0 !important;
-      box-shadow: none !important;
-    }
-
+    #learnView #learnChatCol .ambient-background,
+    #learnView #learnChatCol .orb-edu-blue,
+    #learnView #learnChatCol .orb-edu-green,
     #learnView #learnChatCol .learn-chat-topbar {
-      margin: 0 !important;
-      padding: 14px 14px 6px !important;
+      display: none !important;
     }
 
-    #learnView #learnChatCol .learn-chat-scroll {
+    #learnView #learnChatCol .learn-chat-scroll,
+    #learnView #learnChatCol.is-chat-active #learnChatScroll,
+    #learnView #learnChatScroll.is-chat-active {
+      position: relative !important;
+      z-index: 1 !important;
       flex: 1 1 auto !important;
+      width: 100% !important;
+      max-width: none !important;
       min-height: 0 !important;
       margin: 0 !important;
-      padding: 18px 14px 8px !important;
-      overflow: visible !important;
+      padding: clamp(96px, 14vh, 156px) clamp(24px, 5vw, 72px) 24px !important;
       display: flex !important;
       flex-direction: column !important;
-      gap: 0 !important;
-      width: 100% !important;
-      max-width: none !important;
-    }
-
-    #learnView #learnChatCol #learnChatEmptyState {
-      position: relative !important;
-      inset: auto !important;
-      width: 100% !important;
-      max-width: none !important;
-      margin: 0 !important;
-      padding: 42px 0 12px !important;
-      min-height: 0 !important;
-      flex: 1 1 auto !important;
-    }
-
-    #learnView #learnChatCol .edu-tutor-empty-inner {
-      width: 100% !important;
-      max-width: none !important;
-      padding: 0 !important;
-    }
-
-    #learnView #learnChatCol .learn-followup-bar {
-      width: 100% !important;
-      max-width: none !important;
-      margin: 0 !important;
-      padding: 0 14px 6px !important;
-      overflow: visible !important;
-    }
-
-    #learnView #learnChatCol .edu-tutor-composer {
-      margin-top: 0 !important;
-      padding: 0 !important;
-      overflow: visible !important;
-    }
-
-    #learnView #learnChatCol #learnFollowupBar,
-    #learnView #learnChatCol #learnFollowupBar:focus-within,
-    #learnView #learnChatCol .learn-followup-bar,
-    #learnView #learnChatCol .learn-followup-bar:focus-within,
-    #learnView #learnChatCol .glass-panel,
-    #learnView #learnChatCol .glass-panel:focus-within,
-    #learnView #learnChatCol .edu-tutor-composer,
-    #learnView #learnChatCol .edu-tutor-composer:focus-within {
+      align-items: stretch !important;
+      justify-content: center !important;
+      overflow-y: auto !important;
+      overflow-x: visible !important;
       background: transparent !important;
       background-image: none !important;
       border: 0 !important;
-      border-color: transparent !important;
       border-radius: 0 !important;
-      outline: 0 !important;
       box-shadow: none !important;
-      filter: none !important;
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
     }
 
-    #learnView #learnChatCol .input-wrapper {
-      margin: 0 !important;
-      border: 1px solid rgba(226, 232, 240, 0.78) !important;
-      border-radius: 20px !important;
-      background: rgba(255, 255, 255, 0.84) !important;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 8px 20px rgba(15,23,42,0.045) !important;
-    }
-
-    #learnView #learnChatCol .edu-tutor-actions {
-      margin-top: 10px !important;
+    #learnView #learnChatCol .learn-chat-empty-state,
+    #learnView #learnChatCol #learnChatEmptyState,
+    #learnView #learnChatCol .edu-tutor-empty {
+      position: relative !important;
+      inset: auto !important;
+      z-index: 2 !important;
+      width: 100% !important;
+      max-width: none !important;
+      min-height: 0 !important;
+      height: auto !important;
+      margin: auto 0 !important;
       padding: 0 !important;
-      border: 0 !important;
-      background: transparent !important;
       display: flex !important;
+      flex-direction: column !important;
       align-items: center !important;
-      justify-content: flex-end !important;
-      gap: 8px !important;
-      flex-wrap: wrap !important;
-      overflow: visible !important;
+      justify-content: center !important;
+      gap: 0 !important;
+      text-align: center !important;
+      color: #0f172a !important;
+      background: transparent !important;
+      background-image: none !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      pointer-events: none !important;
     }
 
-    #learnView #learnChatCol .action-chip,
-    #learnView #learnChatCol .edu-mode-toggle,
-    #learnView #learnChatCol .network-on,
-    #learnView #learnChatCol .network-off,
-    #learnView #learnChatCol .edu-tutor-native-select {
+    #learnView #learnChatCol #learnChatEmptyState.hidden,
+    #learnView #learnChatCol.is-chat-active #learnChatEmptyState,
+    #learnView #learnChatCol.is-chat-active .learn-chat-empty-state {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    #learnView #learnChatCol .widget-icon {
+      width: 28px !important;
+      height: 28px !important;
+      margin: 0 0 18px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      color: #0284c7 !important;
+      background: transparent !important;
+      border: 0 !important;
       box-shadow: none !important;
     }
 
-    #learnView #learnChatCol .edu-mode-toggle,
-    #learnView #learnChatCol #webSearchToggleBtnLearn {
-      height: 38px !important;
-      min-height: 38px !important;
-      align-items: center !important;
-      justify-content: center !important;
-      line-height: 1 !important;
+    #learnView #learnChatCol .qa-hero-icon,
+    #learnView #learnChatCol .qa-hero-icon svg {
+      width: 28px !important;
+      height: 28px !important;
+      display: block !important;
     }
 
-    #learnView #learnChatCol .edu-mode-toggle {
-      padding: 0 14px !important;
+    #learnView #learnChatCol .empty-title {
+      margin: 0 !important;
+      color: #0f172a !important;
+      font-family: "Source Serif 4", "Bricolage Grotesque", "Inter", sans-serif !important;
+      font-size: clamp(24px, 2vw, 30px) !important;
+      line-height: 1.14 !important;
+      font-weight: 650 !important;
+      letter-spacing: 0 !important;
+    }
+
+    #learnView #learnChatCol .empty-subtitle {
+      margin: 12px 0 0 !important;
+      max-width: 560px !important;
+      color: #64748b !important;
+      font-size: clamp(13px, 0.92vw, 16px) !important;
+      line-height: 1.45 !important;
+      font-weight: 500 !important;
+      letter-spacing: 0 !important;
+    }
+
+    #learnView #learnChatCol .tag-group {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-wrap: wrap !important;
+      gap: 10px !important;
+      margin-top: 16px !important;
+    }
+
+    #learnView #learnChatCol .edu-tag {
+      min-height: 30px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      padding: 0 13px !important;
+      border: 2px solid rgba(255, 255, 255, 0.92) !important;
+      border-radius: 999px !important;
+      background: rgba(255, 255, 255, 0.62) !important;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.92) inset !important;
+      font-size: clamp(12px, 0.82vw, 14px) !important;
+      font-weight: 750 !important;
+      line-height: 1 !important;
+      letter-spacing: 0 !important;
+      text-transform: none !important;
+    }
+
+    #learnView #learnChatCol .edu-tag svg,
+    #learnView #learnChatCol .edu-tag .qa-inline-icon,
+    #learnView #learnChatCol .edu-tag .qa-inline-icon svg {
+      width: 14px !important;
+      height: 14px !important;
+      margin: 0 !important;
+    }
+
+    #learnView #learnChatCol .tag-formula { color: #0369a1 !important; }
+    #learnView #learnChatCol .tag-screenshot { color: #7e22ce !important; }
+    #learnView #learnChatCol .tag-trap { color: #c2410c !important; }
+
+    #learnView #learnChatCol #learnFollowupBar,
+    #learnView #learnBody #learnChatCol #learnFollowupBar,
+    #learnView #learnBody[data-panel-focus] #learnChatCol #learnFollowupBar,
+    #learnView #learnChatCol #learnFollowupBar:focus-within {
+      position: relative !important;
+      z-index: 3 !important;
+      width: min(820px, calc(100% - 36px)) !important;
+      max-width: 820px !important;
+      min-height: 112px !important;
+      margin: 0 auto clamp(14px, 2.4vh, 26px) !important;
+      padding: 14px 18px 16px !important;
+      display: block !important;
+      overflow: visible !important;
+      border: 1px solid rgba(255, 255, 255, 0.66) !important;
+      border-radius: 18px !important;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.18)) !important;
+      background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.18)) !important;
+      box-shadow:
+        0 30px 78px rgba(20, 118, 156, 0.16),
+        0 12px 30px rgba(15, 23, 42, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.86),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.22) !important;
+      backdrop-filter: blur(34px) saturate(190%) brightness(1.05) !important;
+      -webkit-backdrop-filter: blur(34px) saturate(190%) brightness(1.05) !important;
+    }
+
+    #learnView #learnChatCol #learnFollowupBar::before,
+    #learnView #learnChatCol #learnFollowupBar::after {
+      content: "" !important;
+      position: absolute !important;
+      inset: 1px !important;
+      border-radius: inherit !important;
+      pointer-events: none !important;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.10) 42%, rgba(255, 255, 255, 0.34) 100%) !important;
+      opacity: 0.46 !important;
+      mix-blend-mode: screen !important;
+    }
+
+    #learnView #learnChatCol #learnFollowupBar::after {
+      inset: 0 !important;
+      background:
+        radial-gradient(520px 120px at 18% 0%, rgba(255, 255, 255, 0.48), transparent 70%),
+        radial-gradient(420px 120px at 92% 100%, rgba(255, 255, 255, 0.22), transparent 72%) !important;
+      opacity: 0.72 !important;
+    }
+
+    #learnView #learnChatCol #learnFollowupBar .attach-preview,
+    #learnView #learnChatCol #learnFollowupBar .input-wrapper,
+    #learnView #learnChatCol #learnFollowupBar .bottom-actions {
+      position: relative !important;
+      z-index: 1 !important;
+    }
+
+    #learnView #learnChatCol #learnFollowupBar .input-wrapper,
+    #learnView #learnChatCol #learnFollowupBar .input-wrapper:focus-within {
+      display: grid !important;
+      grid-template-columns: 40px minmax(0, 1fr) 40px !important;
+      align-items: center !important;
+      gap: 10px !important;
+      width: 100% !important;
+      min-height: 44px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: transparent !important;
+      background-image: none !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      outline: 0 !important;
+    }
+
+    #learnView #learnChatCol #learnFollowupBar .btn-clip,
+    #learnView #learnChatCol #learnFollowupBar .btn-send {
+      width: 38px !important;
+      min-width: 38px !important;
+      height: 38px !important;
+      min-height: 38px !important;
+      padding: 0 !important;
+      border-radius: 12px !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    #learnView #learnChatCol #learnFollowupBar .btn-clip {
+      color: #94a3b8 !important;
+      background: transparent !important;
+      border: 0 !important;
+    }
+
+    #learnView #learnChatCol #learnFollowupBar .btn-send {
+      position: relative !important;
+      top: auto !important;
+      right: auto !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.46) !important;
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.78), rgba(37, 99, 235, 0.58)) !important;
+      box-shadow: 0 14px 28px rgba(14, 165, 233, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
+      backdrop-filter: blur(18px) saturate(160%) !important;
+      -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+    }
+
+    #learnView #learnChatCol #learnFollowupBar .input-field {
+      min-height: 40px !important;
+      max-height: 96px !important;
+      padding: 8px 6px !important;
+      color: #0f172a !important;
+      font-size: clamp(14px, 0.95vw, 16px) !important;
+      font-weight: 500 !important;
+      line-height: 1.35 !important;
+      background: transparent !important;
+      border: 0 !important;
+      outline: 0 !important;
+      box-shadow: none !important;
+      resize: none !important;
+    }
+
+    #learnView #learnChatCol #learnFollowupBar .input-field::placeholder {
+      color: #94a3b8 !important;
+      font-weight: 600 !important;
+    }
+
+    #learnView #learnChatCol #learnFollowupBar .bottom-actions {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-end !important;
+      gap: 10px !important;
+      flex-wrap: wrap !important;
+      margin-top: 8px !important;
+      padding: 0 !important;
+      overflow: visible !important;
+    }
+
+    #learnView #learnChatCol #learnFollowupBar .edu-mode-toggle,
+    #learnView #learnChatCol #learnFollowupBar #webSearchToggleBtnLearn {
+      height: 38px !important;
+      min-height: 38px !important;
+      padding: 0 15px !important;
+      border: 1px solid rgba(255, 255, 255, 0.62) !important;
+      border-radius: 14px !important;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.50), rgba(255, 255, 255, 0.22)) !important;
+      background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.50), rgba(255, 255, 255, 0.22)) !important;
+      box-shadow:
+        0 14px 34px rgba(148, 47, 62, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.78),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.18) !important;
+      backdrop-filter: blur(22px) saturate(175%) !important;
+      -webkit-backdrop-filter: blur(22px) saturate(175%) !important;
+    }
+
+    #learnView #learnChatCol #learnFollowupBar .edu-mode-toggle {
+      color: #475569 !important;
       gap: 6px !important;
     }
 
-    #learnView #learnChatCol #webSearchToggleBtnLearn {
-      width: 42px !important;
-      min-width: 42px !important;
+    #learnView #learnChatCol #learnFollowupBar #webSearchToggleBtnLearn {
+      width: 44px !important;
+      min-width: 44px !important;
       padding: 0 !important;
-      display: inline-flex !important;
-    }
-
-    #learnView #learnChatCol #webSearchToggleBtnLearn .qa-inline-icon,
-    #learnView #learnChatCol #learnModeCurrentIcon {
-      display: block !important;
-      line-height: 1 !important;
-    }
-
-    #learnView #learnChatCol #webSearchToggleBtnLearn .qa-inline-icon {
-      transform: translateY(-1px) !important;
-    }
-
-    #learnView #learnChatCol .bottom-actions {
-      position: relative !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: flex-end !important;
-      gap: 8px !important;
-      flex-wrap: wrap !important;
-      margin-top: 10px !important;
-      overflow: visible !important;
     }
 
     #learnView #learnChatCol .edu-mode-menu {
-      right: 0 !important;
-      bottom: calc(100% + 10px) !important;
-      width: min(210px, calc(100vw - 40px)) !important;
-      transform-origin: bottom right !important;
-      overflow: visible !important;
-    }
-
-    #learnView #learnChatCol .edu-mode-option {
-      align-items: center !important;
-    }
-
-    #learnView #learnChatCol #learnFollowupBar,
-    #learnView #learnChatCol #learnFollowupBar:focus,
-    #learnView #learnChatCol #learnFollowupBar:focus-within,
-    #learnView #learnChatCol .learn-followup-bar,
-    #learnView #learnChatCol .learn-followup-bar:focus,
-    #learnView #learnChatCol .learn-followup-bar:focus-within,
-    #learnView #learnChatCol .glass-panel,
-    #learnView #learnChatCol .glass-panel:focus,
-    #learnView #learnChatCol .glass-panel:focus-within,
-    #learnView #learnChatCol .edu-tutor-composer,
-    #learnView #learnChatCol .edu-tutor-composer:focus,
-    #learnView #learnChatCol .edu-tutor-composer:focus-within {
-      background: transparent !important;
-      background-image: none !important;
-      border: 0 !important;
-      border-color: transparent !important;
-      border-radius: 0 !important;
-      outline: 0 !important;
-      box-shadow: none !important;
-      filter: none !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-    }
-
-    #learnView #learnChatCol .input-wrapper:focus-within {
-      background: #ffffff !important;
-      border-color: #7dd3fc !important;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.01), 0 0 0 4px rgba(2,132,199,0.1) !important;
-    }
-
-    #learnView #learnChatCol .edu-mode-menu {
-      width: 210px !important;
-      right: 46px !important;
-      bottom: calc(100% + 8px) !important;
-      padding: 6px !important;
-      border-radius: 16px !important;
-      background: rgba(255, 255, 255, 0.95) !important;
-      backdrop-filter: blur(24px) saturate(120%) !important;
-      -webkit-backdrop-filter: blur(24px) saturate(120%) !important;
-      border: 1px solid rgba(226, 232, 240, 0.8) !important;
-      box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(15, 23, 42, 0.04) !important;
+      width: min(292px, calc(100vw - 48px)) !important;
+      min-width: 256px !important;
+      right: 58px !important;
+      bottom: calc(100% + 14px) !important;
+      padding: 10px !important;
+      border-radius: 22px !important;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.24)) !important;
+      background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.24)) !important;
+      backdrop-filter: blur(30px) saturate(190%) brightness(1.05) !important;
+      -webkit-backdrop-filter: blur(30px) saturate(190%) brightness(1.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.68) !important;
+      box-shadow:
+        0 26px 62px rgba(20, 118, 156, 0.18),
+        0 10px 26px rgba(15, 23, 42, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.86),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.20) !important;
       display: flex !important;
       flex-direction: column !important;
-      gap: 4px !important;
+      gap: 7px !important;
       opacity: 0 !important;
       pointer-events: none !important;
       transform: translateY(10px) scale(0.96) !important;
       transform-origin: bottom right !important;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-      z-index: 100 !important;
+      z-index: 300 !important;
     }
 
     #learnView #learnChatCol .edu-mode-menu.show {
@@ -17674,11 +18278,11 @@ function updateRecentConversations(source = 'unknown') {
       width: 100% !important;
       display: flex !important;
       align-items: flex-start !important;
-      gap: 10px !important;
-      grid-template-columns: none !important;
-      padding: 9px 11px !important;
-      border: none !important;
-      border-radius: 12px !important;
+      gap: 13px !important;
+      min-height: 66px !important;
+      padding: 12px 14px !important;
+      border: 1px solid transparent !important;
+      border-radius: 16px !important;
       background: transparent !important;
       text-align: left !important;
       cursor: pointer !important;
@@ -17686,11 +18290,16 @@ function updateRecentConversations(source = 'unknown') {
     }
 
     #learnView #learnChatCol .edu-mode-option:hover:not(.selected) {
-      background: rgba(241, 245, 249, 0.8) !important;
+      border-color: rgba(255, 255, 255, 0.42) !important;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.14)) !important;
     }
 
     #learnView #learnChatCol .edu-mode-option.selected {
-      background: #f0f9ff !important;
+      border-color: rgba(255, 255, 255, 0.58) !important;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.54), rgba(224, 242, 254, 0.36)) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.78),
+        0 10px 24px rgba(14, 165, 233, 0.10) !important;
     }
 
     #learnView #learnChatCol .edu-mode-icon {
@@ -17737,45 +18346,10 @@ function updateRecentConversations(source = 'unknown') {
       line-height: 1.3 !important;
     }
 
-    #learnView #learnChatCol .action-chip {
-      border: 1px solid transparent !important;
-      color: #475569 !important;
-      font-size: 13px !important;
-      font-weight: 600 !important;
-      padding: 8px 16px !important;
-      border-radius: 12px !important;
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 6px !important;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    }
-
-    #learnView #learnChatCol .edu-mode-toggle {
-      background: rgba(255, 255, 255, 0.8) !important;
-      border-color: #e2e8f0 !important;
-      height: 38px !important;
-      min-height: 38px !important;
-      padding: 0 13px !important;
-      gap: 6px !important;
-      border-radius: 14px !important;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
-    }
-
-    #learnView #learnChatCol .edu-mode-toggle:hover {
-      background: #ffffff !important;
+    #learnView #learnChatCol #learnFollowupBar .edu-mode-toggle:hover {
       color: #0284c7 !important;
       border-color: #bae6fd !important;
       box-shadow: 0 4px 8px rgba(2, 132, 199, 0.08) !important;
-    }
-
-    #learnView #learnChatCol #webSearchToggleBtnLearn {
-      width: auto !important;
-      min-width: 44px !important;
-      height: 36px !important;
-      min-height: 36px !important;
-      padding: 8px 12px !important;
-      border-radius: 12px !important;
     }
 
     #learnView #learnChatCol #webSearchToggleBtnLearn.network-on,
@@ -17786,23 +18360,12 @@ function updateRecentConversations(source = 'unknown') {
       box-shadow: 0 2px 8px rgba(2, 132, 199, 0.15) !important;
     }
 
-    #learnView #learnChatCol #webSearchToggleBtnLearn.network-on:hover,
-    #learnView #learnChatCol .network-on:hover {
-      background: #bae6fd !important;
-    }
-
     #learnView #learnChatCol #webSearchToggleBtnLearn.network-off,
     #learnView #learnChatCol .network-off {
       background: rgba(255, 255, 255, 0.4) !important;
       border-color: transparent !important;
       color: #94a3b8 !important;
       box-shadow: none !important;
-    }
-
-    #learnView #learnChatCol #webSearchToggleBtnLearn.network-off:hover,
-    #learnView #learnChatCol .network-off:hover {
-      background: rgba(255, 255, 255, 0.7) !important;
-      color: #64748b !important;
     }
 
     #learnView #learnChatCol #webSearchToggleBtnLearn .qa-inline-icon,
@@ -17814,208 +18377,180 @@ function updateRecentConversations(source = 'unknown') {
       transform: none !important;
     }
 
-    #learnView #learnBody #learnChatCol #learnFollowupBar,
-    #learnView #learnBody #learnChatCol #learnFollowupBar:focus,
-    #learnView #learnBody #learnChatCol #learnFollowupBar:focus-within,
-    #learnView #learnBody:not(.explain-collapsed):not(.chat-collapsed) #learnChatCol #learnFollowupBar,
-    #learnView #learnBody:not(.explain-collapsed):not(.chat-collapsed) #learnChatCol #learnFollowupBar:focus-within,
-    #learnView #learnBody.explain-collapsed:not(.chat-collapsed) #learnChatCol #learnFollowupBar,
-    #learnView #learnBody.explain-collapsed:not(.chat-collapsed) #learnChatCol #learnFollowupBar:focus-within,
-    #learnView #learnBody[data-panel-focus="normal"] #learnChatCol #learnFollowupBar,
-    #learnView #learnBody[data-panel-focus="normal"] #learnChatCol #learnFollowupBar:focus-within,
-    #learnView #learnBody[data-panel-focus="qa-wide"] #learnChatCol #learnFollowupBar,
-    #learnView #learnBody[data-panel-focus="qa-wide"] #learnChatCol #learnFollowupBar:focus-within,
-    #learnView #learnBody[data-panel-focus="qa-full"] #learnChatCol #learnFollowupBar,
-    #learnView #learnBody[data-panel-focus="qa-full"] #learnChatCol #learnFollowupBar:focus-within {
-      background: transparent !important;
-      background-image: none !important;
-      border: 0 !important;
-      border-color: transparent !important;
-      border-radius: 0 !important;
-      outline: 0 !important;
-      box-shadow: none !important;
-      filter: none !important;
-      transform: none !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
+    #learnView #learnChatCol.is-chat-active {
+      padding: 0 0 18px !important;
+      overflow: hidden !important;
     }
 
-    #learnView #learnChatCol #learnFollowupBar,
-    #learnView #learnChatCol #learnFollowupBar:focus,
-    #learnView #learnChatCol #learnFollowupBar:focus-within,
-    #learnView #learnBody #learnChatCol #learnFollowupBar,
-    #learnView #learnBody #learnChatCol #learnFollowupBar:focus,
-    #learnView #learnBody #learnChatCol #learnFollowupBar:focus-within,
-    #learnView #learnBody:not(.explain-collapsed):not(.chat-collapsed) #learnChatCol #learnFollowupBar,
-    #learnView #learnBody:not(.explain-collapsed):not(.chat-collapsed) #learnChatCol #learnFollowupBar:focus-within,
-    #learnView #learnBody.explain-collapsed:not(.chat-collapsed) #learnChatCol #learnFollowupBar,
-    #learnView #learnBody.explain-collapsed:not(.chat-collapsed) #learnChatCol #learnFollowupBar:focus-within,
-    #learnView #learnBody[data-panel-focus="normal"] #learnChatCol #learnFollowupBar,
-    #learnView #learnBody[data-panel-focus="normal"] #learnChatCol #learnFollowupBar:focus-within,
-    #learnView #learnBody[data-panel-focus="qa-wide"] #learnChatCol #learnFollowupBar,
-    #learnView #learnBody[data-panel-focus="qa-wide"] #learnChatCol #learnFollowupBar:focus-within,
-    #learnView #learnBody[data-panel-focus="qa-full"] #learnChatCol #learnFollowupBar,
-    #learnView #learnBody[data-panel-focus="qa-full"] #learnChatCol #learnFollowupBar:focus-within {
-      position: relative !important;
-      width: min(900px, calc(100% - 28px)) !important;
-      max-width: 900px !important;
-      min-height: 132px !important;
-      margin: 0 auto 8px !important;
-      padding: 18px 18px 18px !important;
-      display: block !important;
-      overflow: visible !important;
-      background: rgba(255, 255, 255, 0.94) !important;
-      background-image: none !important;
-      border: 1px solid rgba(226, 232, 240, 0.95) !important;
-      border-radius: 18px !important;
-      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.98) !important;
-      backdrop-filter: blur(24px) saturate(140%) !important;
-      -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
-    }
-
-    #learnView #learnChatCol #learnFollowupBar .input-wrapper,
-    #learnView #learnChatCol #learnFollowupBar .input-wrapper:focus-within {
-      position: relative !important;
-      display: grid !important;
-      grid-template-columns: 42px minmax(0, 1fr) 48px !important;
-      align-items: start !important;
-      gap: 10px !important;
-      width: 100% !important;
-      min-height: 58px !important;
-      margin: 0 !important;
-      padding: 2px 0 0 !important;
-      background: transparent !important;
-      background-image: none !important;
-      border: 0 !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      outline: 0 !important;
-    }
-
-    #learnView #learnChatCol #learnFollowupBar .btn-clip {
-      width: 38px !important;
-      height: 38px !important;
-      min-width: 38px !important;
-      min-height: 38px !important;
-      margin-top: 4px !important;
-      padding: 0 !important;
-      color: #94a3b8 !important;
-      background: transparent !important;
-      border: 0 !important;
-      border-radius: 12px !important;
-      box-shadow: none !important;
-    }
-
-    #learnView #learnChatCol #learnFollowupBar .input-field {
-      min-height: 44px !important;
-      max-height: 84px !important;
-      padding: 8px 6px !important;
-      color: #0f172a !important;
-      font-size: 15px !important;
-      font-weight: 600 !important;
-      line-height: 1.35 !important;
-      background: transparent !important;
-      border: 0 !important;
-      outline: 0 !important;
-      box-shadow: none !important;
-      resize: none !important;
-    }
-
-    #learnView #learnChatCol #learnFollowupBar .input-field::placeholder {
-      color: #94a3b8 !important;
-      font-weight: 750 !important;
-    }
-
-    #learnView #learnChatCol #learnFollowupBar .btn-send {
-      position: absolute !important;
-      top: 12px !important;
-      right: 12px !important;
-      width: 44px !important;
-      height: 44px !important;
-      min-width: 44px !important;
-      min-height: 44px !important;
-      padding: 0 !important;
-      border-radius: 13px !important;
-      background: #cbd5e1 !important;
-      color: #ffffff !important;
-      box-shadow: none !important;
-      transform: none !important;
-    }
-
-    #learnView #learnChatCol #learnFollowupBar .bottom-actions {
-      position: absolute !important;
-      right: 18px !important;
-      bottom: 18px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: flex-end !important;
-      gap: 10px !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      overflow: visible !important;
-    }
-
-    #learnView #learnChatCol #learnFollowupBar .edu-mode-toggle {
-      height: 38px !important;
-      min-height: 38px !important;
-      padding: 0 15px !important;
-      border-radius: 14px !important;
-      background: rgba(255, 255, 255, 0.92) !important;
-      border: 1px solid rgba(226, 232, 240, 0.95) !important;
-      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05) !important;
-    }
-
-    #learnView #learnChatCol #learnFollowupBar #webSearchToggleBtnLearn {
-      width: auto !important;
-      min-width: 44px !important;
-      height: 38px !important;
-      min-height: 38px !important;
-      padding: 0 13px !important;
-      border-radius: 14px !important;
-    }
-
-    #learnView #learnChatCol.is-chat-active #learnChatEmptyState,
-    #learnView #learnChatCol.is-chat-active .learn-chat-empty-state,
-    #learnView #learnChatScroll.is-chat-active #learnChatEmptyState,
-    #learnView #learnChatScroll.is-chat-active .learn-chat-empty-state,
-    #learnView #learnChatContent.is-chat-active + #learnChatEmptyState {
-      display: none !important;
-      visibility: hidden !important;
-      opacity: 0 !important;
-      pointer-events: none !important;
-      width: 0 !important;
-      height: 0 !important;
-      min-height: 0 !important;
-      padding: 0 !important;
-      margin: 0 !important;
-    }
-
-    #learnView #learnChatScroll.is-chat-active,
     #learnView #learnChatCol.is-chat-active #learnChatScroll {
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: center !important;
-      align-items: stretch !important;
-      overflow-y: auto !important;
-      padding: 26px 24px 18px !important;
+      justify-content: flex-start !important;
+      padding-top: 24px !important;
+      padding-inline: 0 !important;
     }
 
-    #learnView #learnChatContent.is-chat-active,
     #learnView #learnChatCol.is-chat-active #learnChatContent {
       display: flex !important;
-      flex: 0 1 auto !important;
+      flex: 1 1 auto !important;
       width: 100% !important;
-      max-width: 560px !important;
-      margin: auto !important;
-      align-self: center !important;
-      justify-content: center !important;
-      gap: 14px !important;
+      max-width: none !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      align-self: stretch !important;
+      justify-content: flex-start !important;
+      align-items: stretch !important;
+      gap: 18px !important;
+      box-sizing: border-box !important;
+      padding: 0 clamp(24px, 4vw, 48px) 18px !important;
     }
 
     #learnView #learnChatContent.is-chat-active .followup-bubble,
     #learnView #learnChatCol.is-chat-active #learnChatContent .followup-bubble {
       width: 100% !important;
       margin: 0 !important;
+    }
+
+    #learnView #learnChatCol.is-chat-active .followup-bubble::before,
+    #learnView #learnChatCol.is-chat-active .followup-bubble .fub-a::before {
+      content: none !important;
+      display: none !important;
+    }
+
+    #learnView #learnChatCol.is-chat-active .followup-bubble .fub-a {
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      background-image: none !important;
+      box-shadow: none !important;
+      overflow: visible !important;
+    }
+
+    #learnView#learnView #learnBody#learnBody #learnChatCol#learnChatCol #learnFollowupBar#learnFollowupBar,
+    #learnView#learnView #learnBody#learnBody:not(.explain-collapsed):not(.chat-collapsed) #learnChatCol#learnChatCol #learnFollowupBar#learnFollowupBar,
+    #learnView#learnView #learnBody#learnBody.explain-collapsed:not(.chat-collapsed) #learnChatCol#learnChatCol #learnFollowupBar#learnFollowupBar,
+    #learnView#learnView #learnBody#learnBody[data-panel-focus="normal"] #learnChatCol#learnChatCol #learnFollowupBar#learnFollowupBar,
+    #learnView#learnView #learnBody#learnBody[data-panel-focus="qa-wide"] #learnChatCol#learnChatCol #learnFollowupBar#learnFollowupBar,
+    #learnView#learnView #learnBody#learnBody[data-panel-focus="qa-full"] #learnChatCol#learnChatCol #learnFollowupBar#learnFollowupBar {
+      position: relative !important;
+      width: min(820px, calc(100% - 36px)) !important;
+      max-width: 820px !important;
+      min-height: 112px !important;
+      margin: 0 auto clamp(14px, 2.4vh, 26px) !important;
+      padding: 14px 18px 16px !important;
+      display: block !important;
+      overflow: visible !important;
+      border: 1px solid rgba(255, 255, 255, 0.66) !important;
+      border-radius: 18px !important;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.18)) !important;
+      background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.18)) !important;
+      box-shadow:
+        0 30px 78px rgba(20, 118, 156, 0.16),
+        0 12px 30px rgba(15, 23, 42, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.86),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.22) !important;
+      backdrop-filter: blur(34px) saturate(190%) brightness(1.05) !important;
+      -webkit-backdrop-filter: blur(34px) saturate(190%) brightness(1.05) !important;
+      filter: none !important;
+      transform: none !important;
+    }
+
+    #learnView#learnView #learnBody#learnBody #learnChatCol#learnChatCol .empty-title.empty-title {
+      font-size: clamp(24px, 2vw, 30px) !important;
+    }
+
+    #learnView#learnView #learnBody#learnBody #learnChatCol#learnChatCol #learnFollowupBar#learnFollowupBar .input-wrapper,
+    #learnView#learnView #learnBody#learnBody #learnChatCol#learnChatCol #learnFollowupBar#learnFollowupBar .input-wrapper:focus-within {
+      display: grid !important;
+      grid-template-columns: 40px minmax(0, 1fr) 40px !important;
+      min-height: 44px !important;
+      padding: 0 !important;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+
+    #learnView#learnView #learnBody#learnBody #learnChatCol#learnChatCol #learnFollowupBar#learnFollowupBar .input-field {
+      min-height: 40px !important;
+      max-height: 86px !important;
+      font-size: 14px !important;
+      font-weight: 500 !important;
+    }
+
+    #learnView#learnView #learnBody#learnBody #learnChatCol#learnChatCol #learnFollowupBar#learnFollowupBar .bottom-actions {
+      position: relative !important;
+      right: auto !important;
+      bottom: auto !important;
+      margin-top: 8px !important;
+      gap: 10px !important;
+    }
+
+    #learnView #learnBody:not(.chat-collapsed) #learnChatCol:not(.is-chat-active) #learnChatEmptyState,
+    #learnView #learnBody:not(.chat-collapsed) #learnChatCol:not(.is-chat-active) .learn-chat-empty-state.edu-tutor-empty,
+    #learnView#learnView #learnBody#learnBody:not(.chat-collapsed) #learnChatCol#learnChatCol:not(.is-chat-active) #learnChatEmptyState {
+      transform: translateY(clamp(38px, 5.2vh, 62px)) !important;
+    }
+
+    #learnView #learnChatCol #learnFollowupBar,
+    #learnView #learnBody #learnChatCol #learnFollowupBar,
+    #learnView #learnBody[data-panel-focus] #learnChatCol #learnFollowupBar,
+    #learnView#learnView #learnBody#learnBody #learnChatCol#learnChatCol #learnFollowupBar#learnFollowupBar {
+      transform: none !important;
+      will-change: translate, box-shadow, border-color !important;
+    }
+
+    #learnView #learnChatCol #learnFollowupBar:focus-within,
+    #learnView #learnBody #learnChatCol #learnFollowupBar:focus-within,
+    #learnView #learnBody[data-panel-focus] #learnChatCol #learnFollowupBar:focus-within,
+    #learnView#learnView #learnBody#learnBody #learnChatCol#learnChatCol #learnFollowupBar#learnFollowupBar:focus-within {
+      border-color: rgba(255, 255, 255, 0.78) !important;
+      box-shadow:
+        0 30px 74px rgba(20, 118, 156, 0.18),
+        0 12px 30px rgba(15, 23, 42, 0.09),
+        inset 0 1px 0 rgba(255, 255, 255, 0.90),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.26) !important;
+      animation: learn-qa-composer-focus-bounce 360ms cubic-bezier(0.2, 0.9, 0.22, 1.18) both !important;
+    }
+
+    @keyframes learn-qa-composer-focus-bounce {
+      0% {
+        translate: 0 0;
+      }
+
+      38% {
+        translate: 0 -5px;
+      }
+
+      72% {
+        translate: 0 1.5px;
+      }
+
+      100% {
+        translate: 0 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #learnView #learnChatCol #learnFollowupBar:focus-within,
+      #learnView #learnBody #learnChatCol #learnFollowupBar:focus-within,
+      #learnView #learnBody[data-panel-focus] #learnChatCol #learnFollowupBar:focus-within,
+      #learnView#learnView #learnBody#learnBody #learnChatCol#learnChatCol #learnFollowupBar#learnFollowupBar:focus-within {
+        animation: none !important;
+      }
+    }
+
+    #learnView #learnBody #learnChatCol #learnChatEmptyState .tag-group,
+    #learnView #learnBody #learnChatCol .learn-chat-empty-state.edu-tutor-empty .tag-group,
+    #learnView #learnChatCol #learnChatEmptyState .tag-group,
+    #learnView #learnChatCol .edu-tutor-empty .tag-group {
+      margin-top: 12px !important;
+      transform: translateY(-22px) !important;
+    }
+
+    #learnView #learnBody #learnChatCol #learnChatEmptyState .edu-tag,
+    #learnView #learnBody #learnChatCol .learn-chat-empty-state.edu-tutor-empty .edu-tag,
+    #learnView #learnChatCol #learnChatEmptyState .edu-tag,
+    #learnView #learnChatCol .edu-tutor-empty .edu-tag {
+      transform: none !important;
     }
   `;
   document.head.appendChild(style);

@@ -1,0 +1,109 @@
+{
+  "sectionId": "1.1-2",
+  "sectionTitle": "Signal Power",
+  "bookSource": "new",
+  "status": "verified",
+  "verification": {
+    "method": "manual_visual_check_against_page_image",
+    "sourcePages": ["page-065", "page-066", "page-067", "page-068", "page-069", "page-070"],
+    "verifiedAt": "2026-05-26"
+  },
+  "formulas": [
+    {
+      "label": "(1.2)",
+      "name": "Signal power",
+      "latex": "P_x = \\lim_{T\\to\\infty} \\frac{1}{T}\\int_{-T/2}^{T/2}|x(t)|^2\\,dt",
+      "sourcePage": "page-065",
+      "role": "core_definition",
+      "status": "verified"
+    },
+    {
+      "label": null,
+      "name": "Signal power for a real-valued signal",
+      "latex": "P_x = \\lim_{T\\to\\infty} \\frac{1}{T}\\int_{-T/2}^{T/2}x^2(t)\\,dt",
+      "sourcePage": "page-065",
+      "role": "special_case",
+      "status": "verified"
+    },
+    {
+      "label": null,
+      "name": "Periodic-signal power over one period",
+      "latex": "P_x = \\frac{1}{T_0}\\int_{t_0}^{t_0+T_0}|x(t)|^2\\,dt",
+      "sourcePage": "page-066",
+      "role": "derived_rule",
+      "status": "derived_from_text"
+    },
+    {
+      "label": null,
+      "name": "Energy of the decaying example signal",
+      "latex": "E_x = \\int_{-\\infty}^{\\infty}|x(t)|^2\\,dt = \\int_{-1}^{0}(2)^2\\,dt + \\int_{0}^{\\infty}4e^{-t}\\,dt = 4 + 4 = 8",
+      "sourcePage": "page-067",
+      "role": "worked_example",
+      "status": "verified"
+    },
+    {
+      "label": null,
+      "name": "Power of the periodic ramp example",
+      "latex": "P_x = \\frac{1}{2}\\int_{-1}^{1}|x(t)|^2\\,dt = \\frac{1}{2}\\int_{-1}^{1}t^2\\,dt = \\frac{1}{3}",
+      "sourcePage": "page-067",
+      "role": "worked_example",
+      "status": "verified"
+    },
+    {
+      "label": null,
+      "name": "Power of a sinusoid",
+      "latex": "P_x = \\frac{C^2}{2}",
+      "sourcePage": "page-068",
+      "role": "worked_example_result",
+      "status": "verified"
+    },
+    {
+      "label": null,
+      "name": "Power of two distinct-frequency sinusoids",
+      "latex": "P_x = \\frac{C_1^2}{2} + \\frac{C_2^2}{2}",
+      "sourcePage": "page-069",
+      "role": "worked_example_result",
+      "status": "verified"
+    },
+    {
+      "label": null,
+      "name": "Signal as a sum of distinct-frequency sinusoids",
+      "latex": "x(t) = \\sum_{n=1}^{\\infty} C_n\\cos(\\omega_n t + \\theta_n)",
+      "sourcePage": "page-069",
+      "role": "worked_example_condition",
+      "status": "verified"
+    },
+    {
+      "label": null,
+      "name": "Power of a sum of distinct-frequency sinusoids",
+      "latex": "P_x = \\frac{1}{2}\\sum_{n=1}^{\\infty}C_n^2",
+      "sourcePage": "page-069",
+      "role": "worked_example_result",
+      "status": "verified"
+    },
+    {
+      "label": "(1.3)",
+      "name": "Power of a sinusoidal sum with a dc term",
+      "latex": "P_x = C_0^2 + \\frac{1}{2}\\sum_{n=1}^{\\infty}C_n^2",
+      "sourcePage": "page-069",
+      "role": "canonical_result",
+      "status": "verified"
+    },
+    {
+      "label": "(1.4)",
+      "name": "Power of a complex exponential",
+      "latex": "P_x = |D|^2",
+      "sourcePage": "page-069",
+      "role": "canonical_result",
+      "status": "verified"
+    },
+    {
+      "label": null,
+      "name": "Power of two equal-frequency sinusoids",
+      "latex": "P_x = \\frac{C_1^2 + C_2^2 + 2C_1C_2\\cos(\\theta_1 - \\theta_2)}{2}",
+      "sourcePage": "page-070",
+      "role": "drill_result",
+      "status": "verified"
+    }
+  ]
+}

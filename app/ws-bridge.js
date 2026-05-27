@@ -121,6 +121,25 @@ const PAGE_IMAGE_DIR = PAGE_IMAGE_DIR_OLD;
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
+const RAGFLOW_ENABLED = String(process.env.RAGFLOW_ENABLED || '').toLowerCase() === 'true';
+const RAGFLOW_BASE_URL = String(process.env.RAGFLOW_BASE_URL || '').trim();
+const RAGFLOW_API_KEY = String(process.env.RAGFLOW_API_KEY || '').trim();
+const RAGFLOW_PROXY_URL = String(process.env.RAGFLOW_PROXY || process.env.RAGFLOW_HTTP_PROXY || '').trim();
+const RAGFLOW_DATASET_IDS = String(process.env.RAGFLOW_DATASET_IDS || process.env.RAGFLOW_DATASET_ID || '')
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean);
+const RAGFLOW_DOCUMENT_IDS = String(process.env.RAGFLOW_DOCUMENT_IDS || '')
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean);
+const RAGFLOW_TOP_K = Math.max(1, Number(process.env.RAGFLOW_TOP_K || 8));
+const RAGFLOW_PAGE_SIZE = Math.max(1, Number(process.env.RAGFLOW_PAGE_SIZE || RAGFLOW_TOP_K || 8));
+const RAGFLOW_TIMEOUT_MS = Math.max(1000, Number(process.env.RAGFLOW_TIMEOUT_MS || 8000));
+const RAGFLOW_SIMILARITY_THRESHOLD = Number(process.env.RAGFLOW_SIMILARITY_THRESHOLD || 0.2);
+const RAGFLOW_VECTOR_SIMILARITY_WEIGHT = Number(process.env.RAGFLOW_VECTOR_SIMILARITY_WEIGHT || 0.5);
+const RAGFLOW_RETRIEVAL_PATH = process.env.RAGFLOW_RETRIEVAL_PATH || '/api/v1/retrieval';
+
 function getOpenAIKey() {
     loadLocalEnvFile();
     return process.env.OPENAI_API_KEY || '';
@@ -411,6 +430,7 @@ NON-NEGOTIABLE LESSON RULES:
 14. "Concise" means no filler, not no teaching. Each major knowledge page must still contain enough explanation to learn from: normally 80-160 words of supporting explanation around the formula, plus at least one minimal example, near-miss, or trap when the concept is exam-relevant.
 15. Textbook-numbered equations such as "(B.16)" are high-priority formula signals. If OCR shows an equation label like (B.16), treat that equation as a likely key formula: preserve the label when useful, teach it locally, and consider it for the final summary.
 16. Key Takeaways must be complete but selective: include all numbered/canonical/exam-trigger formulas and core conceptual conclusions, but exclude worked-example intermediate calculations and low-value algebra steps.
+17. When verified_canonical_formulas are provided, they override OCR rendering for those formulas. Use their exact LaTeX and labels, and do not invent conflicting variants from lossy OCR.
 `;
 
 const VISUAL_SELECTION_DECISION_LADDER = `
@@ -802,10 +822,11 @@ function getAllowedNewBookFigures(sectionId = '', bookPages = [], bookSource = '
     const code = extractSectionCode(sectionId);
     if (!code) return new Set();
 
+    const localBookPages = (Array.isArray(bookPages) ? bookPages : []).filter(page => !(page && page.ragFlow));
     const mapKey = Object.keys(SECTION_FIGURE_MAP_NEW).find(k => k.toLowerCase() === code.toLowerCase());
     if (!mapKey) {
         const fallback = new Set();
-        (Array.isArray(bookPages) ? bookPages : []).forEach(page => {
+        localBookPages.forEach(page => {
             const pageKey = String(page && page.page || '').trim().toLowerCase();
             (NEW_BOOK_FIGURE_INDEX[pageKey] || []).forEach(file => fallback.add(path.basename(String(file || ''))));
         });
@@ -1127,10 +1148,63 @@ try { if (!fs.existsSync(USERS_DIR)) fs.mkdirSync(USERS_DIR, { recursive: true }
 const FEEDBACK_BOARD_PATH = path.join(USERS_DIR, 'feedback-board.json');
 
 const LESSON_CACHE_DIR = path.join(TUTOR_MATERIALS_DIR, 'lesson-cache');
+const FORMULA_CATALOG_DIR = path.join(TUTOR_MATERIALS_DIR, 'formula-catalog');
 const LESSON_CACHE_VERSION = 'aquarius_visual_latex_v2';
 const LESSON_CACHE_MISS_MESSAGE = 'This section has not been prepared yet.';
 const BLUEPRINT_DIR = path.join(TUTOR_MATERIALS_DIR, '');
 try { if (!fs.existsSync(LESSON_CACHE_DIR)) fs.mkdirSync(LESSON_CACHE_DIR, { recursive: true }); } catch (_) {}
+
+function formulaCatalogFileForSection(sectionId = '') {
+    const code = extractSectionCode(sectionId);
+    if (!code) return null;
+    const safeCode = code.replace(/[^a-z0-9._-]+/gi, '_').toLowerCase();
+    return path.join(FORMULA_CATALOG_DIR, `${safeCode}.formulas.json`);
+}
+
+function readVerifiedFormulaCatalog(sectionId = '', bookSource = 'old') {
+    if (bookSource !== 'new') return null;
+    const file = formulaCatalogFileForSection(sectionId);
+    if (!file || !fs.existsSync(file)) return null;
+
+    try {
+        const catalog = JSON.parse(fs.readFileSync(file, 'utf8'));
+        const formulas = Array.isArray(catalog.formulas)
+            ? catalog.formulas.filter(formula => (
+                formula
+                && formula.status === 'verified'
+                && compactWhitespace(formula.latex)
+            ))
+            : [];
+        if (!formulas.length) return null;
+        return {
+            ...catalog,
+            sourceFile: path.relative(TUTOR_MATERIALS_DIR, file),
+            formulas
+        };
+    } catch (err) {
+        console.warn(`[FormulaCatalog] Failed to load ${file}:`, err.message);
+        return null;
+    }
+}
+
+function buildVerifiedFormulaPromptSection(catalog) {
+    if (!catalog || !Array.isArray(catalog.formulas) || !catalog.formulas.length) return '';
+    const lines = [
+        'verified_canonical_formulas:',
+        'These formulas were manually verified against the textbook page images. Use the exact LaTeX below when teaching these formulas; do not reconstruct conflicting versions from OCR.',
+        `source_file: ${catalog.sourceFile || ''}`,
+        `section_id: ${catalog.sectionId || ''}`,
+        ''
+    ];
+    catalog.formulas.forEach((formula, index) => {
+        const label = formula.label ? ` ${formula.label}` : '';
+        lines.push(`${index + 1}.${label} ${formula.name || 'Formula'}`);
+        lines.push(`   latex: ${formula.latex}`);
+        if (formula.sourcePage) lines.push(`   source_page: ${formula.sourcePage}`);
+        if (formula.role) lines.push(`   role: ${formula.role}`);
+    });
+    return lines.join('\n');
+}
 
 function hasLessonCacheFile(sectionId, memory, bookSource = 'old', cacheVariant = 'lesson') {
     const key = buildLessonCacheKey(memory, bookSource, cacheVariant);
@@ -1398,7 +1472,10 @@ function publicFeedbackItem(item) {
             id: reply.id,
             body: reply.body,
             author: reply.author,
-            createdAt: reply.createdAt
+            createdAt: reply.createdAt,
+            replyTo: reply.replyTo || null,
+            replyToAuthor: reply.replyToAuthor || '',
+            replyToBody: reply.replyToBody || ''
         })) : []
     };
 }
@@ -1786,13 +1863,37 @@ function normalizeUrl(u) {
 function httpRequestJson(targetUrl, options = {}, body = null, timeoutMs = 30000) {
     return new Promise((resolve, reject) => {
         const parsed = new URL(targetUrl);
-        const req = https.request({
-            protocol: parsed.protocol,
-            hostname: parsed.hostname,
-            port: parsed.port || 443,
-            path: `${parsed.pathname}${parsed.search}`,
+        if (!['http:', 'https:'].includes(parsed.protocol)) {
+            reject(new Error(`Unsupported protocol: ${parsed.protocol}`));
+            return;
+        }
+        let requestTarget = parsed;
+        let requestPath = `${parsed.pathname}${parsed.search}`;
+        let requestHeaders = options.headers || {};
+
+        if (options.proxyUrl) {
+            const proxy = new URL(options.proxyUrl);
+            if (proxy.protocol !== 'http:') {
+                reject(new Error(`Unsupported proxy protocol: ${proxy.protocol}`));
+                return;
+            }
+            if (parsed.protocol !== 'http:') {
+                reject(new Error(`HTTP proxy is only supported for http targets in this helper: ${parsed.protocol}`));
+                return;
+            }
+            requestTarget = proxy;
+            requestPath = targetUrl;
+            requestHeaders = { ...requestHeaders, Host: parsed.host };
+        }
+
+        const client = requestTarget.protocol === 'http:' ? http : https;
+        const req = client.request({
+            protocol: requestTarget.protocol,
+            hostname: requestTarget.hostname,
+            port: requestTarget.port || (requestTarget.protocol === 'http:' ? 80 : 443),
+            path: requestPath,
             method: options.method || (body ? 'POST' : 'GET'),
-            headers: options.headers || {}
+            headers: requestHeaders
         }, (res) => {
             let raw = '';
             res.setEncoding('utf8');
@@ -2776,15 +2877,42 @@ function sortSourcesByType(sources = []) {
 
 function buildSearchPlan(question, searchAngles = []) {
     const q = compactWhitespace(question || '');
-    return [
+    const rawPlan = [
         { label: 'video', provider: 'serper', query: `${q} site:youtube.com` },
+        { label: 'video', provider: 'duckduckgo', query: `${q} site:youtube.com` },
         { label: 'visual', provider: 'serper', query: `${q} 3blue1brown OR interactive OR visual explanation OR desmos OR geogebra` },
+        { label: 'visual', provider: 'duckduckgo', query: `${q} visual explanation interactive demo` },
         { label: 'course', provider: 'serper', query: `${q} lecture notes OR university OR site:.edu OR pdf` },
+        { label: 'course', provider: 'duckduckgo', query: `${q} lecture notes university pdf` },
         { label: 'insight', provider: 'serper', query: `${q} intuition OR betterexplained OR brilliant OR tutorial` },
+        { label: 'insight', provider: 'duckduckgo', query: `${q} intuition tutorial explained` },
         { label: 'general', provider: 'serper', query: q },
+        { label: 'general', provider: 'duckduckgo', query: q },
         { label: 'reference', provider: 'wikipedia', query: `${q} wikipedia OR mathworld OR wolfram` },
-        ...searchAngles.map(angle => ({ label: 'general', provider: 'serper', query: angle }))
+        ...searchAngles.flatMap(angle => [
+            { label: 'general', provider: 'serper', query: angle },
+            { label: 'general', provider: 'duckduckgo', query: angle }
+        ])
     ];
+    const seen = new Set();
+    return rawPlan.filter(entry => {
+        const key = `${entry.provider}|${compactWhitespace(entry.query).toLowerCase()}`;
+        if (!compactWhitespace(entry.query) || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
+function shouldKeepWebSource(source = {}) {
+    const urlValue = compactWhitespace(source.url || '');
+    const title = compactWhitespace(source.title || '');
+    if (!urlValue || !title) return false;
+    const text = `${urlValue} ${title}`.toLowerCase();
+    if (/\/search\?|duckduckgo\.com|google\.com\/search|bing\.com\/search/.test(text)) return false;
+    if (/pinterest|facebook|instagram|tiktok|x\.com|twitter\.com/.test(text)) return false;
+    if (/reddit|quora/.test(text)) return false;
+    if (/coursehero|chegg|brainly|quizlet/.test(text)) return false;
+    return true;
 }
 
 async function collectWebSources(searchAngles, options = {}) {
@@ -2792,12 +2920,26 @@ async function collectWebSources(searchAngles, options = {}) {
     const seen = new Set();
     const onSource = typeof options.onSource === 'function' ? options.onSource : null;
     const question = options.question || '';
+    const providerStats = {};
+    const providerErrors = [];
+
+    const noteProvider = (provider, count = 0, ok = true, message = '') => {
+        const key = provider || 'unknown';
+        if (!providerStats[key]) providerStats[key] = { attempts: 0, items: 0, ok: 0, failed: 0 };
+        providerStats[key].attempts += 1;
+        providerStats[key].items += Number(count || 0);
+        if (ok) providerStats[key].ok += 1;
+        else {
+            providerStats[key].failed += 1;
+            if (message) providerErrors.push(`${key}: ${message}`);
+        }
+    };
 
     const addItems = (items, bucket = 'general') => {
         const enriched = sortSourcesByType(enrichSources(items));
         for (const item of enriched) {
             const key = normalizeUrl(item.url).toLowerCase();
-            if (!key || seen.has(key)) continue;
+            if (!key || seen.has(key) || !shouldKeepWebSource(item)) continue;
             seen.add(key);
             const source = { ...item, bucket };
             merged.push(source);
@@ -2809,12 +2951,18 @@ async function collectWebSources(searchAngles, options = {}) {
     const plan = buildSearchPlan(question, searchAngles);
     for (const entry of plan) {
         let items = [];
-        if (entry.provider === 'wikipedia') {
-            items = await wikipediaSearch(entry.query);
-        } else if (entry.provider === 'serper') {
-            items = await serperSearch(entry.query, entry.label === 'general' ? 10 : 6);
-        } else {
-            items = await duckDuckGoSearch(entry.query);
+        try {
+            if (entry.provider === 'wikipedia') {
+                items = await wikipediaSearch(entry.query);
+            } else if (entry.provider === 'serper') {
+                items = await serperSearch(entry.query, entry.label === 'general' ? 10 : 6);
+            } else {
+                items = await duckDuckGoSearch(entry.query);
+            }
+            noteProvider(entry.provider, items.length, true);
+        } catch (err) {
+            noteProvider(entry.provider, 0, false, err.message);
+            items = [];
         }
         addItems(items, entry.label);
         if (merged.length >= 18) break;
@@ -2829,7 +2977,12 @@ async function collectWebSources(searchAngles, options = {}) {
             `${question} site:.edu`,
             `${question} betterexplained`
         ], 6)) {
-            const items = await serperSearch(angle, 6);
+            let items = await serperSearch(angle, 6);
+            noteProvider('serper', items.length, true);
+            if (!items.length) {
+                items = await duckDuckGoSearch(angle);
+                noteProvider('duckduckgo', items.length, true);
+            }
             addItems(items, 'fallback');
             if (merged.length >= 18) break;
         }
@@ -2847,8 +3000,17 @@ async function collectWebSources(searchAngles, options = {}) {
     }
 
     const finalSources = diverse;
-    console.log(`[Search] collectWebSources: ${finalSources.length} sources for question: ${question || searchAngles.join(' | ')}`);
-    return finalSources;
+    const debug = {
+        requested: true,
+        sourceCount: finalSources.length,
+        providersUsed: Object.keys(providerStats).filter(key => providerStats[key].items > 0),
+        providerStats,
+        providerErrors: providerErrors.slice(0, 5),
+        serperConfigured: Boolean(process.env.SERPER_API_KEY || ''),
+        planCount: plan.length
+    };
+    console.log(`[Search] collectWebSources: ${finalSources.length} sources for question: ${question || searchAngles.join(' | ')} providers=${debug.providersUsed.join(',') || 'none'}`);
+    return { sources: finalSources, debug };
 }
 
 function buildBookContext(bookPages) {
@@ -2874,6 +3036,191 @@ function buildWebContext(webSources) {
             `摘要: ${item.snippet || '无摘要'}`
         ].join('\n');
     }).join('\n\n----------------\n\n');
+}
+
+function buildRagFlowRetrievalUrl() {
+    if (!RAGFLOW_BASE_URL) return '';
+    const base = normalizeUrl(RAGFLOW_BASE_URL) + '/';
+    return new URL(RAGFLOW_RETRIEVAL_PATH, base).toString();
+}
+
+function extractRagFlowText(chunk) {
+    if (!chunk || typeof chunk !== 'object') return '';
+    const candidates = [
+        chunk.content,
+        chunk.text,
+        chunk.chunk,
+        chunk.content_with_weight,
+        Array.isArray(chunk.important_kwd) ? chunk.important_kwd.join(' ') : '',
+        Array.isArray(chunk.important_keywords) ? chunk.important_keywords.join(' ') : ''
+    ];
+    return compactWhitespace(candidates.find(item => compactWhitespace(item)) || '');
+}
+
+function extractRagFlowPage(chunk, text, index) {
+    const positions = Array.isArray(chunk?.positions) ? chunk.positions : [];
+    const firstPosition = positions.find(item => item && typeof item === 'object') || {};
+    const haystack = [
+        chunk?.page,
+        chunk?.page_id,
+        chunk?.page_number,
+        firstPosition.page_number,
+        chunk?.document_name,
+        chunk?.document_keyword,
+        chunk?.docnm_kwd,
+        chunk?.source,
+        chunk?.filename,
+        chunk?.name,
+        text
+    ].map(item => String(item || '')).join(' ');
+    const explicit = haystack.match(/\b(?:page|book)[-_ ]?0*(\d{1,4})\b/i);
+    if (explicit) return `page-${String(Number(explicit[1])).padStart(3, '0')}`;
+    const numeric = String(chunk?.page || chunk?.page_id || chunk?.page_number || '').match(/\d{1,4}/);
+    if (numeric) return `page-${String(Number(numeric[0])).padStart(3, '0')}`;
+    return `ragflow-${index + 1}`;
+}
+
+function normalizeRagFlowChunk(chunk, index) {
+    const text = extractRagFlowText(chunk);
+    if (!text) return null;
+    const metadata = chunk.metadata && typeof chunk.metadata === 'object' ? chunk.metadata : {};
+    const source = compactWhitespace(
+        chunk.document_name ||
+        chunk.document_keyword ||
+        chunk.docnm_kwd ||
+        chunk.source ||
+        chunk.filename ||
+        chunk.name ||
+        metadata.document_name ||
+        metadata.document_keyword ||
+        metadata.source ||
+        chunk.id ||
+        `RAGFlow chunk ${index + 1}`
+    );
+    const score = Number(
+        chunk.similarity ??
+        chunk.score ??
+        chunk.vector_similarity ??
+        chunk.term_similarity ??
+        metadata.score ??
+        NaN
+    );
+    const sectionTitle = compactWhitespace(
+        chunk.section ||
+        chunk.section_title ||
+        metadata.section ||
+        metadata.section_title ||
+        metadata.title ||
+        ''
+    );
+    return {
+        text,
+        page: extractRagFlowPage(chunk, text, index),
+        source,
+        score: Number.isFinite(score) ? score : null,
+        sectionTitle,
+        rawId: chunk.id || chunk.chunk_id || null
+    };
+}
+
+function ragFlowChunksToBookPages(ragFlowContext) {
+    const chunks = ragFlowContext && Array.isArray(ragFlowContext.chunks) ? ragFlowContext.chunks : [];
+    return chunks.map((chunk, index) => {
+        const scoreText = chunk.score === null ? '' : `score ${chunk.score.toFixed(3)}`;
+        return {
+            page: chunk.page || `ragflow-${index + 1}`,
+            title: chunk.sectionTitle || chunk.source || `RAGFlow chunk ${index + 1}`,
+            subsection: chunk.sectionTitle || 'RAGFlow retrieval',
+            summary: compactWhitespace(['RAGFlow retrieval', scoreText, chunk.source].filter(Boolean).join(' · ')),
+            keywords: ['RAGFlow'],
+            ocrText: chunk.text,
+            ragFlow: true,
+            ragFlowScore: chunk.score,
+            ragFlowSource: chunk.source,
+            ragFlowId: chunk.rawId
+        };
+    });
+}
+
+function mergeAskBookContexts(localPages = [], ragPages = []) {
+    const merged = [];
+    const seen = new Set();
+    const pushPage = (page) => {
+        if (!page || typeof page !== 'object') return;
+        const key = [
+            page.ragFlow ? 'ragflow' : 'local',
+            compactWhitespace(page.page || ''),
+            compactWhitespace(page.ragFlowId || page.ragFlowSource || page.title || ''),
+            compactWhitespace(page.ocrText || '').slice(0, 140)
+        ].join('|');
+        if (seen.has(key)) return;
+        seen.add(key);
+        merged.push(page);
+    };
+    localPages.forEach(pushPage);
+    ragPages.forEach(pushPage);
+    return merged;
+}
+
+async function retrieveFromRagFlow({ query, topK = RAGFLOW_TOP_K } = {}) {
+    const cleanedQuery = compactWhitespace(query || '');
+    if (!RAGFLOW_ENABLED || !RAGFLOW_BASE_URL || !RAGFLOW_DATASET_IDS.length || !cleanedQuery) return null;
+
+    const bodyObj = {
+        question: cleanedQuery,
+        dataset_ids: RAGFLOW_DATASET_IDS,
+        page_size: RAGFLOW_PAGE_SIZE,
+        top_k: Math.max(1, Number(topK || RAGFLOW_TOP_K)),
+        similarity_threshold: RAGFLOW_SIMILARITY_THRESHOLD,
+        vector_similarity_weight: RAGFLOW_VECTOR_SIMILARITY_WEIGHT
+    };
+    if (RAGFLOW_DOCUMENT_IDS.length) bodyObj.document_ids = RAGFLOW_DOCUMENT_IDS;
+
+    const body = JSON.stringify(bodyObj);
+    const headers = {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body)
+    };
+    if (RAGFLOW_API_KEY) headers.Authorization = `Bearer ${RAGFLOW_API_KEY}`;
+
+    const response = await httpRequestJson(buildRagFlowRetrievalUrl(), {
+        method: 'POST',
+        headers,
+        proxyUrl: RAGFLOW_PROXY_URL
+    }, body, RAGFLOW_TIMEOUT_MS);
+    const rawChunks = Array.isArray(response?.data?.chunks)
+        ? response.data.chunks
+        : (Array.isArray(response?.chunks) ? response.chunks : []);
+    const chunks = rawChunks
+        .map((chunk, index) => normalizeRagFlowChunk(chunk, index))
+        .filter(Boolean)
+        .slice(0, bodyObj.top_k);
+    console.log(`[ragflow] retrieved ${chunks.length}/${rawChunks.length} chunks`);
+    return chunks.length ? { chunks, rawTotal: rawChunks.length } : null;
+}
+
+function inspectLessonGenerationContext(sectionId, sectionTitle, options = {}) {
+    const bookSource = options.bookSource === 'new' ? 'new' : 'old';
+    const { ocrDir: secOcrDir } = getBookDirs(bookSource);
+    const mappedPages = getPagesForSection(sectionId, secOcrDir);
+    const localPages = shouldGenerateParentPreludeLesson(sectionId, sectionTitle, mappedPages)
+        ? getParentPreludePages(sectionId, sectionTitle, mappedPages)
+        : attachSectionOcrToPages(sectionId, mappedPages, bookSource);
+    return {
+        sectionId,
+        sectionTitle,
+        bookSource,
+        lessonContextSource: 'local_ocr',
+        mappedPageCount: mappedPages.length,
+        localPageCount: localPages.length,
+        finalBookPageCount: localPages.length,
+        localPages: localPages.map(page => ({
+            page: page.page,
+            title: page.title,
+            subsection: page.subsection,
+            hasOcrOverride: Object.prototype.hasOwnProperty.call(page, 'ocrOverrideText')
+        }))
+    };
 }
 
 async function generateExplanation(question, bookPages, webSources, options = {}) {
@@ -3988,21 +4335,24 @@ function focusOcrTextForSection(sectionId = '', sectionTitle = '', rawText = '')
  * Agent A — Lesson Architect (OpenAI GPT-5.4)
  * Reads OCR + existing page images, outputs a Rendering Blueprint JSON.
  */
-async function agentA_plan(sectionId, sectionTitle, bookPages, webSources, language = 'en', userProfilePrompt = '', bookSource = 'old') {
+async function agentA_plan(sectionId, sectionTitle, bookPages, webSources, language = 'en', bookSource = 'old') {
     const ocrPages = bookPages.map(p => ({
         pageId: p.page,
         text: Object.prototype.hasOwnProperty.call(p, 'ocrOverrideText')
             ? p.ocrOverrideText
             : focusOcrTextForSection(sectionId, sectionTitle, readOCRText(p.textPath, 3000))
     }));
-    const existingPageImages = bookPages.map(p => p.page);
+    const localBookPages = bookPages.filter(p => !(p && p.ragFlow));
+    const existingPageImages = localBookPages.map(p => p.page);
     const allowedNewBookFigures = getAllowedNewBookFigures(sectionId, bookPages, bookSource);
     const examPriorityGuidance = loadExamPriorityGuidance(sectionId, sectionTitle);
+    const verifiedFormulaCatalog = readVerifiedFormulaCatalog(sectionId, bookSource);
+    const verifiedFormulaSection = buildVerifiedFormulaPromptSection(verifiedFormulaCatalog);
     const availableFigures = {};
     // pageInfo: page -> { page_type, has_math, has_figures, summary_excerpt }
     // Gives Agent A full context even for math-heavy pages with no extracted figure crops.
     const pageInfo = {};
-    for (const p of bookPages) {
+    for (const p of localBookPages) {
         const metaPath = path.join((p.textPath ? path.dirname(p.textPath) : OCR_DIR), `${p.page}.meta.json`);
         if (fs.existsSync(metaPath)) {
             const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
@@ -4037,7 +4387,6 @@ async function agentA_plan(sectionId, sectionTitle, bookPages, webSources, langu
         `section_id: ${sectionId}`,
         `section_title: ${sectionTitle}`,
         `language: ${language}`,
-        userProfilePrompt ? `student_profile: ${userProfilePrompt.trim()}` : '',
         '',
         'existing_page_images:',
         existingPageImages.join(', '),
@@ -4050,6 +4399,11 @@ async function agentA_plan(sectionId, sectionTitle, bookPages, webSources, langu
         '',
         'web_sources_available:',
         webSources.slice(0, 6).map((w, i) => `[${i+1}] ${w.title} — ${w.url}`).join('\n') || 'none',
+        '',
+        verifiedFormulaSection || [
+            'verified_canonical_formulas:',
+            'none available; treat OCR math as unverified and avoid inventing exact formulas beyond what the source supports.'
+        ].join('\n'),
         '',
         'ocr_pages:',
         ocrPages.map(p => `=== ${p.pageId} ===\n${p.text}`).join('\n\n'),
@@ -4283,11 +4637,13 @@ async function agentB_execute(sectionId, blueprint, bookPages, webSources, langu
     ) + '\n\n' + LESSON_GENERATION_RULES_TEXT + '\n' + VISUAL_SELECTION_DECISION_LADDER + '\n' + AGENT_B_RULES_APPENDIX;
     const examPriorityGuidance = loadExamPriorityGuidance(sectionId, blueprint?.section_title || sectionId);
     const summaryHint = getSummaryHintForSection(sectionId, blueprint?.section_title || sectionId);
+    const verifiedFormulaCatalog = readVerifiedFormulaCatalog(sectionId, bookSource);
 
     const existingPageImages = {};
     const allowedNewBookFigures = getAllowedNewBookFigures(sectionId, bookPages, bookSource);
     const availableFigures = {};   // page -> [{fig_id, caption}]
-    for (const p of bookPages) {
+    const localBookPages = bookPages.filter(p => !(p && p.ragFlow));
+    for (const p of localBookPages) {
         existingPageImages[p.page] = `/pages/${p.pageImage}`;
         // Load figure metadata for precision crop
         const metaPath = path.join((p.textPath ? path.dirname(p.textPath) : OCR_DIR), `${p.page}.meta.json`);
@@ -4326,6 +4682,11 @@ async function agentB_execute(sectionId, blueprint, bookPages, webSources, langu
             compact_json_preferred: true
         },
         section_specific_rules: buildSectionSpecificPromptSection(sectionId, blueprint?.section_title || sectionId) || null,
+        verified_canonical_formulas: verifiedFormulaCatalog ? {
+            source_file: verifiedFormulaCatalog.sourceFile || null,
+            instruction: 'These formulas were manually verified against textbook page images. Copy exact LaTeX and labels when teaching these formulas; do not reconstruct conflicting OCR variants.',
+            formulas: verifiedFormulaCatalog.formulas
+        } : null,
         summary_hint: summaryHint || null,
         exam_priority_guidance: examPriorityGuidance ? {
             source: examPriorityGuidance.source,
@@ -4484,9 +4845,7 @@ async function preGenerateSectionLesson(sectionId, sectionTitle, options = {}) {
     const language = options.language === 'zh' ? 'zh' : 'en';
     const bookSource = options.bookSource === 'new' ? 'new' : 'old';
     const cacheVariant = options.cacheVariant || 'lesson';
-    const uid = options.uid || null;
-    const profileMemory = options.profileMemory || (uid ? readUserMemory(uid) : null) || { quiz: {} };
-    const userProfilePrompt = buildUserProfilePrompt(profileMemory);
+    const baseLessonMemory = null;
     const { ocrDir: secOcrDir } = getBookDirs(bookSource);
 
     const mappedPages = getPagesForSection(sectionId, secOcrDir);
@@ -4508,11 +4867,11 @@ async function preGenerateSectionLesson(sectionId, sectionTitle, options = {}) {
             webSources: []
         };
     }
-    const rawPages = preludePages.length
+    const localPages = preludePages.length
         ? preludePages
         : attachSectionOcrToPages(sectionId, mappedPages, bookSource);
 
-    const cachedLesson = readLessonCache(sectionId, profileMemory, bookSource, cacheVariant);
+    const cachedLesson = readLessonCache(sectionId, baseLessonMemory, bookSource, cacheVariant);
     if (cachedLesson && !options.force) {
         return {
             sectionId,
@@ -4524,6 +4883,8 @@ async function preGenerateSectionLesson(sectionId, sectionTitle, options = {}) {
             webSources: []
         };
     }
+
+    const rawPages = localPages;
 
     let webSources = [];
     try {
@@ -4541,7 +4902,6 @@ async function preGenerateSectionLesson(sectionId, sectionTitle, options = {}) {
             rawPages,
             webSources,
             language,
-            userProfilePrompt,
             bookSource
         );
     } catch (err) {
@@ -4559,7 +4919,7 @@ async function preGenerateSectionLesson(sectionId, sectionTitle, options = {}) {
     }
 
     try {
-        writeLessonCache(sectionId, profileMemory, normalizedLesson, bookSource, cacheVariant);
+        writeLessonCache(sectionId, baseLessonMemory, normalizedLesson, bookSource, cacheVariant);
     } catch (err) {
         console.error(`[Pregen:${sectionId}] writeLessonCache failed:`, err && err.stack ? err.stack : err);
         throw err;
@@ -5216,14 +5576,14 @@ function buildFallbackBlueprint(sectionId, sectionTitle, bookPages, language = '
     };
 }
 
-async function generateSectionLesson(sectionId, sectionTitle, bookPages, webSources, language = 'en', userProfilePrompt = '', bookSource = 'old') {
+async function generateSectionLesson(sectionId, sectionTitle, bookPages, webSources, language = 'en', bookSource = 'old') {
     // ── Agent A: Plan ──────────────────────────────────────────────────────────
     let blueprint = null;
     let agentARaw = '';
     const finalizeLesson = (markdown) => normalizeLessonVisualPolicy(markdown, language);
 
     try {
-        const result = await agentA_plan(sectionId, sectionTitle, bookPages, webSources, language, userProfilePrompt, bookSource);
+        const result = await agentA_plan(sectionId, sectionTitle, bookPages, webSources, language, bookSource);
         blueprint = result.blueprint;
         agentARaw = String(result.raw || '');
     } catch (err) {
@@ -5429,7 +5789,12 @@ const server = http.createServer(async (req, res) => {
                 if (!uid) { res.writeHead(400); res.end(JSON.stringify({ error: 'Missing uid' })); return; }
                 const existing = readUserMemory(uid) || { uid, createdAt: new Date().toISOString() };
                 // Merge patch: quiz, knownConcepts, weakConcepts, sessionSummaries
-                if (data.quiz) existing.quiz = normalizeQuizProfile(Object.assign({}, existing.quiz || {}, data.quiz));
+                if (data.resetQuiz === true) {
+                    existing.quiz = {};
+                    existing.quizResetAt = new Date().toISOString();
+                } else if (data.quiz) {
+                    existing.quiz = normalizeQuizProfile(Object.assign({}, existing.quiz || {}, data.quiz));
+                }
                 if (Array.isArray(data.knownConcepts)) {
                     const set = new Set([...(existing.knownConcepts || []), ...data.knownConcepts]);
                     existing.knownConcepts = [...set];
@@ -5486,13 +5851,7 @@ const server = http.createServer(async (req, res) => {
             const sectionTitle = compactWhitespace(data.sectionTitle || sectionId);
             const mode = data.mode || 'intro'; // 'intro' | 'lesson'
             const language = (data.language === 'zh') ? 'zh' : 'en'; // default EN
-            const uid = data.uid || null;
-            const userMemory = uid ? readUserMemory(uid) : null;
-            const requestProfileMemory = data.profileOverride ? { quiz: normalizeQuizProfile(data.profileOverride) } : null;
-            // profileMemory: explicit override wins; otherwise fall back to persisted uid-based memory
-            const profileMemory = requestProfileMemory
-                || (userMemory ? { ...userMemory, quiz: normalizeQuizProfile(userMemory.quiz || {}) } : null);
-            const userProfilePrompt = buildUserProfilePrompt(profileMemory);
+            const baseLessonMemory = null;
             const b8FormulaAppendix = getB8FormulaAppendix(sectionId, sectionTitle);
             const { ocrDir: secOcrDir } = getBookDirs(data.bookSource);
 
@@ -5546,9 +5905,9 @@ const server = http.createServer(async (req, res) => {
                     }))
                 }));
             } else if (mode === 'overview') {
-                const hasExistingPrelude = hasLessonCacheFile(sectionId, profileMemory, data.bookSource, 'parent_prelude');
+                const hasExistingPrelude = hasLessonCacheFile(sectionId, baseLessonMemory, data.bookSource, 'parent_prelude');
                 const hasPrelude = hasExistingPrelude || shouldGenerateParentPreludeLesson(sectionId, sectionTitle, rawPages);
-                let cachedLesson = hasPrelude ? readLessonCache(sectionId, profileMemory, data.bookSource, 'parent_prelude') : null;
+                let cachedLesson = hasPrelude ? readLessonCache(sectionId, baseLessonMemory, data.bookSource, 'parent_prelude') : null;
                 const normalizedCachedLesson = cachedLesson
                     ? normalizeMathMarkdown(convertLegacyQuickCheckToKcBlocks(cachedLesson))
                     : '';
@@ -5559,12 +5918,10 @@ const server = http.createServer(async (req, res) => {
                     generatedResult = await preGenerateSectionLesson(sectionId, sectionTitle, {
                         language,
                         bookSource: data.bookSource,
-                        uid,
-                        profileMemory,
                         cacheVariant: 'parent_prelude',
                         force: Boolean(responseFormatIssues.length)
                     });
-                    cachedLesson = generatedResult.lesson || readLessonCache(sectionId, profileMemory, data.bookSource, 'parent_prelude');
+                    cachedLesson = generatedResult.lesson || readLessonCache(sectionId, baseLessonMemory, data.bookSource, 'parent_prelude');
                 }
 
                 const finalLesson = cachedLesson
@@ -5593,7 +5950,7 @@ const server = http.createServer(async (req, res) => {
                 }));
             } else if (mode === 'lesson') {
                 // ── Check lesson cache first ──────────────────────────────
-                const cachedLesson = readLessonCache(sectionId, profileMemory, data.bookSource);
+                const cachedLesson = readLessonCache(sectionId, baseLessonMemory, data.bookSource);
                 if (cachedLesson) {
                     console.log(`[SECTION] Cache hit for ${sectionId}, skipping pipeline.`);
                     const normalizedCachedLesson = normalizeMathMarkdown(convertLegacyQuickCheckToKcBlocks(cachedLesson));
@@ -5601,11 +5958,12 @@ const server = http.createServer(async (req, res) => {
                     if (responseFormatIssues.length) {
                         console.warn(`[SECTION] Cache response rejected for ${sectionId}: ${responseFormatIssues.join(', ')}`);
                     } else {
-                        if (normalizedCachedLesson !== cachedLesson && profileMemory) {
-                            writeLessonCache(sectionId, profileMemory, normalizedCachedLesson, data.bookSource);
+                        if (normalizedCachedLesson !== cachedLesson) {
+                            writeLessonCache(sectionId, baseLessonMemory, normalizedCachedLesson, data.bookSource);
                         }
-                        const activeCacheExists = !!buildLessonCacheKey(profileMemory, data.bookSource)
-                            && fs.existsSync(path.join(LESSON_CACHE_DIR, normalizeSectionId(sectionId), `${buildLessonCacheKey(profileMemory, data.bookSource)}.${LESSON_CACHE_VERSION}.en.md`));
+                        const activeCacheKey = buildLessonCacheKey(baseLessonMemory, data.bookSource);
+                        const activeCacheExists = !!activeCacheKey
+                            && fs.existsSync(path.join(LESSON_CACHE_DIR, normalizeSectionId(sectionId), `${activeCacheKey}.${LESSON_CACHE_VERSION}.en.md`));
 
                         if (hasVisualMetadataMarkup(normalizedCachedLesson)
                             && !hasDisallowedNewBookPageFallback(normalizedCachedLesson, sectionId, rawPages, data.bookSource)
@@ -5670,10 +6028,22 @@ const server = http.createServer(async (req, res) => {
                 return;
             }
 
+            if (data.inspectContextOnly) {
+                const context = await inspectLessonGenerationContext(sectionId, sectionTitle, {
+                    bookSource: data.bookSource
+                });
+                res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({
+                    ok: true,
+                    inspectContextOnly: true,
+                    ...context
+                }));
+                return;
+            }
+
             const result = await preGenerateSectionLesson(sectionId, sectionTitle, {
                 language: data.language,
                 bookSource: data.bookSource,
-                uid: data.uid,
                 force: !!data.force,
                 cacheVariant: data.cacheVariant
             });
@@ -5787,35 +6157,110 @@ const server = http.createServer(async (req, res) => {
 
             console.log('[ASK] Question:', question, 'mode=', mode);
             let relatedBooks = [];
+            let localBookContextCount = 0;
+            let ragFlowBookContextCount = 0;
+            let textbookContextStrategy = 'local_ocr';
+            let usedLocalFallback = false;
             const incomingBookPages = attachmentFirst ? [] : filterPagesForBookSource(data.bookPages, data.bookSource);
             if (Array.isArray(data.bookPages) && data.bookPages.length && !incomingBookPages.length) {
                 console.warn(`[ASK] Dropped ${data.bookPages.length} stale bookPages due to bookSource=${data.bookSource || 'old'} mismatch`);
             }
 
+            const loadIncomingBookPages = () => incomingBookPages.map(item => ({
+                ...item,
+                pageImage: item.pageImage || `${item.page}.png`,
+                textPath: path.join(ocrDir, `${item.page}.txt`),
+                ocrText: readOCRText(path.join(ocrDir, `${item.page}.txt`), 5500)
+            }));
+            const loadQuestionLocalOcrPages = async () => {
+                const keywords = await extractKeywords(question);
+                return selectRelevantBooks(question, keywords, 3, 5, ocrDir).map(item => ({
+                    ...item,
+                    ocrText: readOCRText(item.textPath, 5500)
+                }));
+            };
+            const loadMainLocalContext = async () => incomingBookPages.length
+                ? loadIncomingBookPages()
+                : loadQuestionLocalOcrPages();
+
+            let ragFlowContext = null;
+            let ragFlowUsed = false;
+            const useSectionAnchor = Boolean(sectionId || sectionTitle);
+            const useMainRagFirst = !attachmentFirst && !useSectionAnchor;
+
+            if (useMainRagFirst) {
+                textbookContextStrategy = 'ragflow_first';
+                try {
+                    ragFlowContext = await retrieveFromRagFlow({ query: question });
+                    if (ragFlowContext && ragFlowContext.chunks.length) {
+                        relatedBooks = ragFlowChunksToBookPages(ragFlowContext);
+                        ragFlowBookContextCount = relatedBooks.length;
+                        ragFlowUsed = true;
+                        console.log(`[ASK] Main Q&A using RAGFlow-first context (${ragFlowBookContextCount} chunks)`);
+                    }
+                } catch (err) {
+                    console.warn('[ragflow] main Q&A retrieval failed, falling back to local OCR retrieval:', err.message);
+                    ragFlowContext = null;
+                    ragFlowUsed = false;
+                    ragFlowBookContextCount = 0;
+                }
+            }
+
             if (attachmentFirst) {
+                textbookContextStrategy = 'attachment_local_ocr';
                 relatedBooks = (await selectBooksFromAttachmentText(preparedAttachments.retrievalText, question, ocrDir)).map(item => ({
                     ...item,
                     ocrText: readOCRText(item.textPath, 5500)
                 }));
                 console.log(`[ASK] Attachment-first mode: selected ${relatedBooks.length} textbook pages from attachment text`);
-            } else if (incomingBookPages.length) {
-                relatedBooks = incomingBookPages.map(item => ({
+            } else if (useSectionAnchor) {
+                textbookContextStrategy = 'section_ocr_plus_ragflow';
+                const sectionKey = sectionId || sectionTitle;
+                const mappedSectionPages = getPagesForSection(sectionKey, ocrDir);
+                const fallbackPages = mappedSectionPages.length
+                    ? mappedSectionPages
+                    : incomingBookPages.map(item => ({
+                        ...item,
+                        pageImage: item.pageImage || `${item.page}.png`,
+                        textPath: path.join(ocrDir, `${item.page}.txt`)
+                    }));
+                const sectionPages = data.bookSource === 'new'
+                    ? attachSectionOcrToPages(sectionKey, fallbackPages, data.bookSource).slice(0, 5)
+                    : fallbackPages.slice(0, 5);
+                relatedBooks = sectionPages.map(item => ({
                     ...item,
-                    pageImage: item.pageImage || `${item.page}.png`,
-                    textPath: path.join(ocrDir, `${item.page}.txt`),
-                    ocrText: readOCRText(path.join(ocrDir, `${item.page}.txt`), 5500)
+                    ocrText: Object.prototype.hasOwnProperty.call(item, 'ocrOverrideText')
+                        ? String(item.ocrOverrideText || '').slice(0, 18000)
+                        : readOCRText(item.textPath, 5500)
                 }));
-            } else if (sectionId || sectionTitle) {
-                relatedBooks = getPagesForSection(sectionId || sectionTitle, ocrDir).slice(0, 5).map(item => ({
-                    ...item,
-                    ocrText: readOCRText(item.textPath, 5500)
-                }));
-            } else {
-                const keywords = await extractKeywords(question);
-                relatedBooks = selectRelevantBooks(question, keywords, 3, 5, ocrDir).map(item => ({
-                    ...item,
-                    ocrText: readOCRText(item.textPath, 5500)
-                }));
+            } else if (!relatedBooks.length) {
+                usedLocalFallback = useMainRagFirst;
+                relatedBooks = await loadMainLocalContext();
+                if (useMainRagFirst) console.log(`[ASK] Main Q&A RAGFlow empty/unavailable; local OCR fallback selected ${relatedBooks.length} pages`);
+            }
+            localBookContextCount = relatedBooks.filter(item => !(item && item.ragFlow)).length;
+
+            if (!attachmentFirst && useSectionAnchor) {
+                try {
+                    const ragFlowQuery = compactWhitespace([
+                        sectionTitle || sectionId,
+                        lessonContext.slice(0, 800),
+                        question
+                    ].filter(Boolean).join('\n'));
+                    ragFlowContext = await retrieveFromRagFlow({ query: ragFlowQuery });
+                    if (ragFlowContext && ragFlowContext.chunks.length) {
+                        const ragFlowBookPages = ragFlowChunksToBookPages(ragFlowContext);
+                        ragFlowBookContextCount = ragFlowBookPages.length;
+                        relatedBooks = mergeAskBookContexts(relatedBooks, ragFlowBookPages);
+                        ragFlowUsed = true;
+                        console.log(`[ASK] Using section OCR + RAGFlow context (${localBookContextCount} local pages + ${ragFlowBookContextCount} chunks)`);
+                    }
+                } catch (err) {
+                    console.warn('[ragflow] retrieval failed, falling back to local OCR retrieval:', err.message);
+                    ragFlowContext = null;
+                    ragFlowUsed = false;
+                    ragFlowBookContextCount = 0;
+                }
             }
 
             const examContext = inferExamPriorityContext(sectionId, sectionTitle, relatedBooks);
@@ -5829,6 +6274,14 @@ const server = http.createServer(async (req, res) => {
                 : []);
             let searchAngles = [];
             let liveSearchEvents = [];
+            let webSearchDebug = {
+                requested: false,
+                sourceCount: webSources.length,
+                providersUsed: [],
+                providerStats: {},
+                providerErrors: [],
+                serperConfigured: Boolean(process.env.SERPER_API_KEY || '')
+            };
             
             // Check if web search is enabled from UI
             const useWebSearch = data.useWebSearch !== false;
@@ -5857,12 +6310,16 @@ const server = http.createServer(async (req, res) => {
                     ? (searchResult.resolvedQuery || compactWhitespace(preparedAttachments.retrievalText).slice(0, 180) || question)
                     : (searchResult.resolvedQuery || question);
                 console.log(`[ASK] Search resolved: "${question}" → "${resolvedQuestion}"`);
-                const newWebSources = await collectWebSources(searchAngles, {
+                const webResult = await collectWebSources(searchAngles, {
                     question: resolvedQuestion,
                     onSource: (source, currentSorted) => {
                         liveSearchEvents.push({ type: 'source', source, sources: currentSorted.slice(0, 8) });
                     }
                 });
+                const newWebSources = Array.isArray(webResult) ? webResult : (webResult.sources || []);
+                webSearchDebug = Array.isArray(webResult)
+                    ? { ...webSearchDebug, requested: true, sourceCount: newWebSources.length }
+                    : (webResult.debug || webSearchDebug);
                 // merge avoiding duplicates by url
                 const seenUrls = new Set(webSources.map(w => w.url));
                 for (const w of newWebSources) {
@@ -5872,8 +6329,10 @@ const server = http.createServer(async (req, res) => {
                     }
                 }
                 webSources = sortSourcesByType(webSources);
+                webSearchDebug.sourceCount = webSources.length;
             } else if (!useWebSearch) {
                 console.log('[ASK] Web search bypassed due to useWebSearch=false');
+                webSearchDebug.requested = false;
                 liveSearchEvents.push({ type: 'status', message: 'Web search bypassed via toggle' });
             }
 
@@ -5902,11 +6361,18 @@ const server = http.createServer(async (req, res) => {
             explanation = await processEmbeddedPython(explanation, GENERATED_DIR);
 
             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+            const textbookStep = ragFlowUsed
+                ? (
+                    localBookContextCount > 0
+                        ? `✅ ${sectionId || sectionTitle ? '当前小节 OCR' : '相关教材 OCR'} ${localBookContextCount} 页 + RAGFlow ${ragFlowBookContextCount} 个教材片段`
+                        : `✅ RAGFlow 检索到 ${ragFlowBookContextCount} 个教材片段`
+                )
+                : `✅ 找到 ${relatedBooks.length} 个相关书页`;
             res.end(JSON.stringify({
                 explanation,
                 bookPages: relatedBooks.map(item => ({
                     page: item.page,
-                    image: item.image || getPageImageUrl(data.bookSource, item.pageImage),
+                    image: item.image || (item.pageImage ? getPageImageUrl(data.bookSource, item.pageImage) : ''),
                     subsection: item.subsection,
                     title: item.title,
                     summary: item.summary,
@@ -5915,7 +6381,7 @@ const server = http.createServer(async (req, res) => {
                 webSources,
                 liveSearchEvents,
                 steps: [
-                    `✅ 找到 ${relatedBooks.length} 个相关书页`,
+                    textbookStep,
                     `✅ 搜索到 ${webSources.length} 个网页来源`,
                     '✅ Haiku 讲解生成完毕'
                 ],
@@ -5924,6 +6390,21 @@ const server = http.createServer(async (req, res) => {
 	                    searchAngles,
 	                    historyCount: history.length,
 	                    sectionTitle: sectionTitle || sectionId,
+	                    ragFlowEnabled: RAGFLOW_ENABLED,
+	                    ragFlowUsed,
+	                    ragFlowChunkCount: ragFlowContext ? ragFlowContext.chunks.length : 0,
+	                    localBookContextCount,
+	                    ragFlowBookContextCount,
+	                    finalBookContextCount: relatedBooks.length,
+	                    textbookContextStrategy,
+	                    usedLocalFallback,
+	                    webSearchEnabled: useWebSearch,
+	                    webSearchUsed: Boolean(useWebSearch && webSources.length),
+	                    webSourceCount: webSources.length,
+	                    webProvidersUsed: webSearchDebug.providersUsed || [],
+	                    webProviderStats: webSearchDebug.providerStats || {},
+	                    webProviderErrors: webSearchDebug.providerErrors || [],
+	                    serperConfigured: Boolean(process.env.SERPER_API_KEY || ''),
 	                    examPrioritySource: examPriorityGuidance ? examPriorityGuidance.source : null,
 	                    examPriorityTopics: examPriorityGuidance ? (examPriorityGuidance.json?.topic_filter?.relevant_topic_ids || []) : []
 	                }
@@ -6011,6 +6492,9 @@ const server = http.createServer(async (req, res) => {
             const data = await readJsonBody(req);
             const body = cleanFeedbackText(data.body, 800);
             const author = cleanFeedbackText(data.author, 60) || 'Anonymous';
+            const replyTo = cleanFeedbackText(data.replyTo, 80);
+            const replyToAuthor = cleanFeedbackText(data.replyToAuthor, 60);
+            const replyToBody = cleanFeedbackText(data.replyToBody, 160);
             if (!id || !body) {
                 res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
                 res.end(JSON.stringify({ error: 'feedback id and body are required' }));
@@ -6027,7 +6511,10 @@ const server = http.createServer(async (req, res) => {
                 id: `rp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
                 body,
                 author,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                replyTo: replyTo || '',
+                replyToAuthor: replyToAuthor || '',
+                replyToBody: replyToBody || ''
             };
             item.replies = Array.isArray(item.replies) ? item.replies : [];
             item.replies.push(reply);

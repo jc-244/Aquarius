@@ -6,7 +6,7 @@
   <title>Fourier · Signal Processing & Linear Systems</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=DM+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=DM+Mono:wght@400;500;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
@@ -66,8 +66,9 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=1778674268">
-  <link rel="icon" type="image/png" href="fourier-logo.png?v=1778674267">
+  <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,500;0,700;1,600&family=Fira+Code:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=1200">
+  <link rel="icon" type="image/png" href="logo.png?v=1778674347">
 
   <style>
     .cute-btn-primary {
@@ -1921,7 +1922,7 @@
       <div class="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between pointer-events-auto">
         <!-- Logo 像是一张贴纸 -->
         <div class="bg-white pr-5 pl-2 py-2 border-2 border-ink shadow-chunky -rotate-2 hover:rotate-0 transition-transform cursor-pointer flex items-center gap-3">
-          <img src="fourier-logo.png?v=1778674267" class="scrap-logo-mark" alt="" aria-hidden="true">
+          <img src="logo.png?v=1778674347" class="scrap-logo-mark" alt="" aria-hidden="true">
           <span class="font-title font-bold text-2xl tracking-tight text-ink mt-1">Fourier</span>
         </div>
 
@@ -2122,7 +2123,7 @@
             </svg>
           </button>
           <button class="logo-icon logo-icon-brand" id="sidebarLogoExpandBtn" type="button" title="Expand sidebar" aria-label="Expand sidebar">
-            <img src="fourier-logo.png?v=1778674267" alt="" aria-hidden="true">
+            <img src="logo.png?v=1778674347" alt="" aria-hidden="true">
           </button>
           <div class="logo-text logo-text-brand">Fourier</div>
         </div>
@@ -2131,6 +2132,12 @@
       <div class="sidebar-nav-shell">
         <div class="sidebar-nav-group-label">Workspace</div>
         <div class="sidebar-nav" id="sidebarPrimaryNav">
+          <button class="sidebar-link sidebar-home-link" id="navHomeBtn" type="button" title="Home">
+            <span class="sidebar-link-icon">
+              <i class="ph-bold ph-house-line" aria-hidden="true"></i>
+            </span>
+            <span>Home</span>
+          </button>
           <button class="sidebar-link" id="navSyllabusBtn" type="button" title="Syllabus">
             <span class="sidebar-link-icon">
               <i class="ph-bold ph-book-open-text" aria-hidden="true"></i>
@@ -2155,12 +2162,6 @@
               </div>
             </div>
           </div>
-          <button class="sidebar-link" id="navLibraryBtn" type="button" title="Library">
-            <span class="sidebar-link-icon">
-              <i class="ph-bold ph-books" aria-hidden="true"></i>
-            </span>
-            <span>Library</span>
-          </button>
           <button class="sidebar-link" id="navCourseTrackerBtn" type="button" title="Course Tracker">
             <span class="sidebar-link-icon">
               <i class="ph-bold ph-calendar-check" aria-hidden="true"></i>
@@ -2197,7 +2198,7 @@
         </button>
         <div class="sidebar-version-row">
           <span class="sidebar-version-dot"></span>
-          <span>v1.1.0</span>
+          <span>v1.2.0</span>
         </div>
       </div>
     </aside>
@@ -2289,11 +2290,36 @@
                 <option value="balanced" selected>Balanced</option>
                 <option value="detailed">Detailed</option>
               </select>
-              <button class="home-mode-toggle" id="homeModeToggleBtn" type="button" aria-label="Explanation style">
+              <div class="home-mode-picker" id="homeModePicker">
+              <div class="home-mode-menu" id="homeModeMenu" aria-label="Explanation style menu">
+                <button class="home-mode-option" type="button" data-home-mode="fast">
+                  <span class="home-mode-menu-icon icon-fast"><i class="ph-bold ph-lightning"></i></span>
+                  <span class="home-mode-menu-text">
+                    <strong>Fast</strong>
+                    <small>Quick & concise answers</small>
+                  </span>
+                </button>
+                <button class="home-mode-option selected" type="button" data-home-mode="balanced">
+                  <span class="home-mode-menu-icon icon-balanced"><i class="ph-bold ph-scales"></i></span>
+                  <span class="home-mode-menu-text">
+                    <strong>Balanced</strong>
+                    <small>Optimal detail & speed</small>
+                  </span>
+                </button>
+                <button class="home-mode-option" type="button" data-home-mode="detailed">
+                  <span class="home-mode-menu-icon icon-detailed"><i class="ph-bold ph-magnifying-glass"></i></span>
+                  <span class="home-mode-menu-text">
+                    <strong>Detailed</strong>
+                    <small>Deep & thorough analysis</small>
+                  </span>
+                </button>
+              </div>
+              <button class="home-mode-toggle" id="homeModeToggleBtn" type="button" aria-label="Explanation style" aria-expanded="false" aria-controls="homeModeMenu">
                 <span class="home-mode-icon icon-balanced" id="homeModeCurrentIcon" aria-hidden="true"><i class="ph-bold ph-scales"></i></span>
                 <span id="homeModeCurrentText">Balanced</span>
                 <svg class="qa-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 14 5-5 5 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
               </button>
+              </div>
               <button id="webSearchToggleBtnMain" class="icon-toggle-btn active search-box-web-toggle home-ask-web-toggle" title="Enable Web Search">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"></circle>
@@ -2408,7 +2434,13 @@
             <span class="learn-badge" id="learnModeBadge">LEARNING MODE</span>
             <h2 class="learn-title" id="learnTitle">Section Title</h2>
           </div>
-          <button class="learn-close" id="learnClose">Back</button>
+          <div class="learn-topbar-actions">
+            <div class="learn-view-selector" id="learnViewSelector" aria-label="Lesson view">
+              <button class="learn-view-btn active" id="btnLectureView">Lecture</button>
+              <button class="learn-view-btn" id="btnTextbookView">Textbook</button>
+            </div>
+            <button class="learn-close" id="learnClose">Back</button>
+          </div>
         </div>
 
         <div class="learn-intro-card" id="learnIntroCard">
@@ -2453,20 +2485,7 @@
 
             <div class="learn-explain-col" id="learnExplainCol" style="border-right: 1px solid var(--border);">
               <div class="learn-explain-toolbar" id="learnExplainToolbar">
-                <div class="learn-toolbar-center">
-                  <button class="lecture-overlay-btn lecture-overlay-btn-left" id="lecturePrevOverlayBtn" title="Previous knowledge point" aria-label="Previous knowledge point">
-                    <span class="lecture-overlay-btn-icon">←</span>
-                    <span class="lecture-overlay-btn-text">previous</span>
-                  </button>
-                  <div class="learn-view-selector" id="learnViewSelector">
-                  <button class="learn-view-btn active" id="btnLectureView">Lecture</button>
-                  <button class="learn-view-btn" id="btnTextbookView">Textbook</button>
-                </div>
-                  <button class="lecture-overlay-btn lecture-overlay-btn-right" id="lectureNextOverlayBtn" title="Next knowledge point" aria-label="Next knowledge point">
-                    <span class="lecture-overlay-btn-text">next</span>
-                    <span class="lecture-overlay-btn-icon">→</span>
-                  </button>
-                </div>
+                <div class="learn-toolbar-center"></div>
 
                 <div class="learn-kp-nav">
                   <button class="learn-kp-btn" id="learnKpPrevBtn" title="Previous knowledge point">←</button>
@@ -2485,6 +2504,12 @@
                     <div style="padding:40px; text-align:center; color:#64748B;">Textbook page loading...</div>
                 </div>
               </div>
+              <button class="lecture-page-corner lecture-page-corner-prev page-turner prev" id="lecturePrevOverlayBtn" title="Previous knowledge point" aria-label="Previous knowledge point">
+                <span class="turner-content"><i class="ph-bold ph-arrow-left" aria-hidden="true"></i> Previous</span>
+              </button>
+              <button class="lecture-page-corner lecture-page-corner-next page-turner next" id="lectureNextOverlayBtn" title="Next knowledge point" aria-label="Next knowledge point">
+                <span class="turner-content">Next <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></span>
+              </button>
               <div class="learn-explain-bottom-rail" id="learnExplainBottomRail">
                 <div class="learn-lecture-page-indicator" id="learnLecturePageIndicator">1 / 1</div>
               </div>
@@ -2682,10 +2707,10 @@
                     <h2 class="settings-page-card-title">Theme</h2>
                   </div>
                 </div>
-                <p class="settings-page-copy">Switch the whole workspace between the light study surface and the darker control-room style.</p>
+                <p class="settings-page-copy">Switch the whole workspace between the soft morning gradient and the warm dusk gradient.</p>
                 <div class="theme-toggle-group" id="themeToggleGroup">
-                  <button class="theme-toggle-btn active" type="button" data-theme-value="light">Light</button>
-                  <button class="theme-toggle-btn" type="button" data-theme-value="dark">Dark</button>
+                  <button class="theme-toggle-btn active" type="button" data-theme-value="dawn">Morning</button>
+                  <button class="theme-toggle-btn" type="button" data-theme-value="dusk">Dusk</button>
                 </div>
               </section>
 
@@ -2738,48 +2763,8 @@
                     <h2 class="settings-page-card-title">Version</h2>
                   </div>
                 </div>
-                <div class="settings-page-version">Fourier Tutor Agent <span>v1.1.0</span></div>
+                <div class="settings-page-version">Fourier Tutor Agent <span>v1.2.0</span></div>
               </section>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="library-view hidden" id="libraryView">
-        <div class="syllabus-page-shell">
-          <div class="syllabus-page-header">
-            <div>
-              <div class="syllabus-page-eyebrow">Library</div>
-              <h1 class="syllabus-page-title">Courses & Books</h1>
-              <p class="syllabus-page-subtitle">Choose the course workspace you want to enter. Right now there is only one active tutor, but this page is ready for more subjects later.</p>
-            </div>
-            <button class="feature-close-btn" id="libraryCloseBtn" type="button" aria-label="Close library">✕</button>
-          </div>
-          <div class="library-grid">
-            <button class="library-card library-card-current" id="libraryCurrentBookBtn" type="button">
-              <div class="library-card-cover">
-                <img src="latest_cover.png" alt="Linear Systems and Signals cover" />
-              </div>
-              <div class="library-card-body">
-                <div class="library-card-status">Current Course</div>
-                <h2 class="library-card-title">Signal Processing & Linear Systems</h2>
-                <p class="library-card-copy">B.P. Lathi, 3rd Edition. Continue with the current tutor workspace and section flow.</p>
-                <div class="library-card-meta">
-                  <span class="library-chip">Available</span>
-                  <span class="library-chip">3rd Edition</span>
-                </div>
-              </div>
-            </button>
-
-            <div class="library-card library-card-placeholder">
-              <div class="library-card-body">
-                <div class="library-card-status">Coming Later</div>
-                <h2 class="library-card-title">More subjects</h2>
-                <p class="library-card-copy">You can add future tutor agents here for other textbooks, exam tracks, or full new courses.</p>
-                <div class="library-card-meta">
-                  <span class="library-chip">Placeholder</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -2805,7 +2790,10 @@
               <input id="feedbackNameInput" class="feedback-input" type="text" maxlength="60" placeholder="Your name (optional)">
               <input id="feedbackTitleInput" class="feedback-input" type="text" maxlength="120" placeholder="Short title">
               <textarea id="feedbackBodyInput" class="feedback-textarea" maxlength="1200" placeholder="Describe the suggestion, bug, or idea..."></textarea>
-              <button id="feedbackSubmitBtn" class="feedback-primary-btn" type="button">Post Suggestion</button>
+              <button id="feedbackSubmitBtn" class="feedback-primary-btn" type="button">
+                <span>Post Suggestion</span>
+                <i class="ph-bold ph-paper-plane-tilt" aria-hidden="true"></i>
+              </button>
               <div id="feedbackStatus" class="feedback-status" role="status" aria-live="polite"></div>
             </section>
 
@@ -2879,8 +2867,8 @@
             <section class="preference-preview-card">
               <div class="preference-card-head">
                 <div>
-                  <div class="preference-card-eyebrow">Prompt Preview</div>
-                  <h2 class="preference-card-title">How it will guide the tutor</h2>
+                  <div class="preference-card-eyebrow">Active Tutor Signals</div>
+                  <h2 class="preference-card-title">What changes in answers</h2>
                 </div>
               </div>
               <div id="preferenceProfilePreview" class="preference-profile-preview"></div>
@@ -2900,62 +2888,55 @@
             <button class="feature-close-btn" id="courseTrackerCloseBtn" type="button" aria-label="Close course tracker">✕</button>
           </div>
 
-          <div class="course-tracker-overview">
-            <section class="course-tracker-stat-card">
-              <div class="course-tracker-stat-label">Lecture Progress</div>
-              <div class="course-tracker-stat-value"><span id="courseDoneCount">0</span><span>/26</span></div>
-              <div class="course-tracker-progress-bar" aria-hidden="true"><span id="courseProgressFill"></span></div>
-            </section>
-            <section class="course-tracker-stat-card">
-              <div class="course-tracker-stat-label">Next Lecture</div>
+          <section class="course-tracker-command">
+            <div class="course-tracker-hero-card">
+              <div class="course-tracker-ring" id="courseProgressRing" aria-hidden="true">
+                <span id="courseDoneCount">0</span>
+                <small>/26</small>
+              </div>
+              <div class="course-tracker-hero-copy">
+                <div class="course-tracker-stat-label">Lecture Progress</div>
+                <h2>Keep the semester moving.</h2>
+                <p>Finish lectures, mark review spots, and keep the next exam visible without reading a wall of rows.</p>
+                <div class="course-tracker-progress-bar" aria-hidden="true"><span id="courseProgressFill"></span></div>
+              </div>
+            </div>
+
+            <div class="course-tracker-now-card">
+              <div class="course-tracker-card-kicker">Next up</div>
               <div class="course-tracker-stat-main" id="courseNextLecture">Lecture #1 · 9/2</div>
               <div class="course-tracker-stat-note" id="courseNextTopic">Math background: complex numbers, sinusoids</div>
-            </section>
-            <section class="course-tracker-stat-card">
-              <div class="course-tracker-stat-label">Major Milestones</div>
-              <div class="course-tracker-milestones">
+              <div class="course-tracker-milestones" aria-label="Major milestones">
                 <span>MT1 · 10/21</span>
                 <span>MT2 · 11/18</span>
                 <span>Final · TBA</span>
               </div>
-            </section>
-          </div>
+            </div>
+          </section>
 
-          <div class="course-tracker-grid">
-            <section class="course-tracker-card course-grading-card">
-              <div class="course-tracker-card-head">
-                <div>
-                  <div class="course-tracker-card-kicker">Grade Policy</div>
-                  <h2>Score Rules</h2>
+          <div class="course-tracker-layout">
+            <aside class="course-tracker-side-rail">
+              <section class="course-tracker-card course-grading-card">
+                <div class="course-tracker-card-head">
+                  <div>
+                    <div class="course-tracker-card-kicker">Grade Policy</div>
+                    <h2>Score Rules</h2>
+                  </div>
+                  <div class="course-tracker-source-chip">PDF</div>
                 </div>
-                <div class="course-tracker-source-chip">PDF syllabus</div>
-              </div>
-              <div class="course-grade-list" id="courseGradeList"></div>
-            </section>
+                <div class="course-grade-list" id="courseGradeList"></div>
+              </section>
+            </aside>
 
             <section class="course-tracker-card course-calendar-card">
               <div class="course-tracker-card-head">
                 <div>
-                  <div class="course-tracker-card-kicker">Date Table</div>
+                  <div class="course-tracker-card-kicker">Roadmap</div>
                   <h2>Lecture Schedule</h2>
                 </div>
                 <button class="course-tracker-reset-btn" id="courseTrackerResetBtn" type="button">Reset Status</button>
               </div>
-              <div class="course-tracker-table-wrap">
-                <table class="course-tracker-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Lecture</th>
-                      <th>Topic</th>
-                      <th>Textbook Sections</th>
-                      <th>Milestone</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody id="courseTrackerTableBody"></tbody>
-                </table>
-              </div>
+              <div class="course-tracker-timeline" id="courseTrackerTableBody"></div>
             </section>
           </div>
         </div>
@@ -2976,6 +2957,7 @@
             <label class="mistake-upload-btn" for="mistakeImageInput">
               <span>＋</span>
               <span>Add Problem Image</span>
+              <small>or paste screenshot</small>
             </label>
             <input id="mistakeImageInput" type="file" accept="image/*" hidden>
             <div class="mistake-search-wrap">
@@ -2983,7 +2965,7 @@
                 <circle cx="11" cy="11" r="7"></circle>
                 <path d="M20 20l-3.5-3.5"></path>
               </svg>
-              <input id="mistakeSearchInput" type="search" placeholder="Search title, tags, notes, or AI answer...">
+              <input id="mistakeSearchInput" type="search" placeholder="Search title, tags, notes, AI draft, or AI answer...">
             </div>
             <div class="mistake-count-pill" id="mistakeCountPill">0 problems</div>
           </div>
@@ -3024,15 +3006,28 @@
                     <label class="mistake-field-label" for="mistakeTagsInput">Tags</label>
                     <input id="mistakeTagsInput" class="mistake-tags-input" type="text" placeholder="Example: Fourier, sign error, exam">
 
-                    <label class="mistake-field-label" for="mistakeNotesInput">Your Notes</label>
-                    <textarea id="mistakeNotesInput" class="mistake-notes-input" placeholder="What went wrong? What should future-you remember?"></textarea>
+                    <div class="mistake-note-columns">
+                      <section class="mistake-user-note-card">
+                        <div class="mistake-note-card-head">
+                          <label class="mistake-field-label" for="mistakeNotesInput">Your Notes</label>
+                          <label class="mistake-note-image-btn" for="mistakeNoteImageInput">Add Image</label>
+                          <input id="mistakeNoteImageInput" type="file" accept="image/*" multiple hidden>
+                        </div>
+                        <textarea id="mistakeNotesInput" class="mistake-notes-input" placeholder="What went wrong? What should future-you remember?"></textarea>
+                        <div id="mistakeNoteImages" class="mistake-note-images"></div>
+                      </section>
 
-                    <label class="mistake-field-label" for="mistakeAiInstructionInput">AI note helper</label>
-                    <textarea id="mistakeAiInstructionInput" class="mistake-ai-instruction" placeholder="Example: Turn this into concise review notes with common traps."></textarea>
+                      <section class="mistake-ai-draft-card">
+                        <div class="mistake-draft-head">
+                          <div class="mistake-field-label">AI Notes</div>
+                        </div>
+                        <div id="mistakeDraftNotesOutput" class="mistake-draft-notes-output">No AI notes yet.</div>
+                      </section>
+                    </div>
 
                     <div class="mistake-actions">
                       <button id="mistakeSolveBtn" class="mistake-primary-btn" type="button">AI Solve Problem</button>
-                      <button id="mistakeDraftNotesBtn" class="mistake-secondary-btn" type="button">AI Draft Notes</button>
+                      <button id="mistakeDraftNotesBtn" class="mistake-secondary-btn" type="button">Generate AI Notes</button>
                       <button id="mistakeDeleteBtn" class="mistake-danger-btn" type="button">Delete</button>
                     </div>
                   </div>
@@ -3117,7 +3112,7 @@
               <div class="login-card-stage" id="loginCustomStage">
               <div class="login-card-header">
                 <div class="login-brand-mark login-brand-mark-aurora">
-                  <img src="fourier-logo.png?v=1778674267" class="aquarius-glow" alt="Fourier">
+                  <img src="logo.png?v=1778674347" class="aquarius-glow" alt="Fourier">
                 </div>
                 <h1 class="login-card-title">Welcome to <span class="text-gradient-aurora">Fourier</span></h1>
                 <p class="login-card-subtitle">Your journey of endless exploration awaits.</p>
@@ -3197,6 +3192,7 @@
 
   <div id="quizOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.4);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
     <div id="quizCard" style="background: #ffffff; border: 3px solid #cbd5e1; border-radius: 28px; padding: 40px 48px; max-width: 560px; width: 90%; box-shadow: 0 16px 0px -4px #f8fafc, 0 16px 0px 1px #94a3b8, 0 30px 40px rgba(0,0,0,0.08); position: relative; font-family: 'Nunito', sans-serif;">
+      <button id="quizCloseBtn" class="quiz-close-btn" type="button" aria-label="Close quick setup without saving">✕</button>
       <div style="font-family:'Quicksand',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;margin-bottom:8px;">Quick Setup • 30 seconds</div>
       <h2 style="font-family:'Quicksand',sans-serif;font-size:26px;font-weight:800;color:#1e293b;margin:0 0 12px;">Let's personalize your experience</h2>
       <p style="font-size:16px;color:#64748b;margin:0 0 32px;font-weight:600;">Your answers help the AI tutor explain things exactly how you learn best.</p>
@@ -3426,6 +3422,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
   <script src="config.js?v=1778524701"></script>
-  <script src="app.js?v=1778674253"></script>
+  <script src="app.js?v=1200"></script>
 </body>
 </html>

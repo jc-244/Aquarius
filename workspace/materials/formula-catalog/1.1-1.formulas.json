@@ -1,0 +1,29 @@
+{
+  "sectionId": "1.1-1",
+  "sectionTitle": "Signal Energy",
+  "bookSource": "new",
+  "status": "verified",
+  "verification": {
+    "method": "manual_visual_check_against_page_image",
+    "sourcePages": ["page-065"],
+    "verifiedAt": "2026-05-26"
+  },
+  "formulas": [
+    {
+      "label": "(1.1)",
+      "name": "Signal energy",
+      "latex": "E_x = \\int_{-\\infty}^{\\infty} |x(t)|^2\\,dt",
+      "sourcePage": "page-065",
+      "role": "core_definition",
+      "status": "verified"
+    },
+    {
+      "label": null,
+      "name": "Signal energy for a real-valued signal",
+      "latex": "E_x = \\int_{-\\infty}^{\\infty} x^2(t)\\,dt",
+      "sourcePage": "page-065",
+      "role": "special_case",
+      "status": "verified"
+    }
+  ]
+}
