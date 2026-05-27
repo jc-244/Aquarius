@@ -1851,6 +1851,17 @@ async function addMistakeImageFile(file, options = {}) {
   return true;
 }
 
+function getPrimaryMistakeTag(tags = '') {
+  return String(tags || '')
+    .split(/[,，;；|#\n]/)
+    .map(tag => tag.trim())
+    .find(Boolean) || '';
+}
+
+function isDefaultMistakeTitle(title = '') {
+  return /^(Pasted Screenshot|Problem)\s+\d+$/i.test(String(title || '').trim());
+}
+
 async function addMistakeNoteImageFile(file) {
   const current = getCurrentMistake();
   if (!current || !file || !String(file.type || '').startsWith('image/')) return false;
@@ -1968,7 +1979,7 @@ function renderMistakeNotebook() {
   }
   if (mistakeDraftNotesOutput) {
     mistakeDraftNotesOutput.innerHTML = current.aiDraftNotes
-      ? markdownToHtml(current.aiDraftNotes)
+      ? markdownToHtml(normalizeMistakeNotebookMarkdown(current.aiDraftNotes))
       : 'No AI notes yet.';
   }
   if (mistakeImagePreview) {
@@ -1979,13 +1990,129 @@ function renderMistakeNotebook() {
     mistakeTextPreview.classList.toggle('hidden', Boolean(current.imageDataUrl) || !current.problemText);
     mistakeTextPreview.innerHTML = current.problemText ? markdownToHtml(current.problemText) : '';
   }
-  if (mistakeAiAnswer) mistakeAiAnswer.innerHTML = current.aiAnswer ? markdownToHtml(current.aiAnswer) : 'No AI answer yet.';
+  if (mistakeAiAnswer) {
+    mistakeAiAnswer.innerHTML = current.aiAnswer
+      ? markdownToHtml(normalizeMistakeNotebookMarkdown(current.aiAnswer))
+      : 'No AI answer yet.';
+  }
+  typesetMistakeNotebookMath();
   if (mistakePageIndicator) mistakePageIndicator.textContent = `${currentIndex + 1} / ${items.length}`;
   if (mistakePrevBtn) mistakePrevBtn.disabled = currentIndex <= 0;
   if (mistakeNextBtn) mistakeNextBtn.disabled = currentIndex < 0 || currentIndex >= items.length - 1;
 }
 
+function normalizeMistakeNotebookMarkdown(markdown = '') {
+  return String(markdown || '')
+    .replace(/\\\\\(/g, '\\(')
+    .replace(/\\\\\)/g, '\\)')
+    .replace(/\\\\\[/g, '\\[')
+    .replace(/\\\\\]/g, '\\]')
+    .replace(/\\\\delta/g, '\\delta')
+    .replace(/\\\\omega/g, '\\omega')
+    .replace(/\\\\text/g, '\\text')
+    .replace(/\\\\frac/g, '\\frac')
+    .replace(/\\\\sin/g, '\\sin')
+    .replace(/\\\\cos/g, '\\cos')
+    .replace(/\\\\cdot/g, '\\cdot')
+    .replace(/\\\\times/g, '\\times');
+}
+
+function typesetMistakeNotebookMath() {
+  const targets = [mistakeDraftNotesOutput, mistakeAiAnswer, mistakeTextPreview].filter(Boolean);
+  if (!targets.length || !window.MathJax || !window.MathJax.typesetPromise) return;
+  window.MathJax.typesetPromise(targets).catch(() => {});
+}
+
+const MISTAKE_NOTE_SPLIT_STORAGE_KEY = 'aquariusMistakeNoteSplit.v1';
+
+function clampMistakeNoteSplit(value) {
+  if (value === null || value === undefined || value === '') return 0.5;
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0.5;
+  return Math.min(0.72, Math.max(0.28, numeric));
+}
+
+function applyMistakeNoteSplit(columns, ratio) {
+  if (!columns) return;
+  const nextRatio = clampMistakeNoteSplit(ratio);
+  const topRatio = Math.round(nextRatio * 1000) / 1000;
+  const bottomRatio = Math.round((1 - topRatio) * 1000) / 1000;
+  columns.style.setProperty('--mistake-note-top', `${topRatio}fr`);
+  columns.style.setProperty('--mistake-note-bottom', `${bottomRatio}fr`);
+  columns.dataset.splitRatio = String(topRatio);
+  if (mistakeNoteResizer) {
+    mistakeNoteResizer.setAttribute('aria-valuemin', '28');
+    mistakeNoteResizer.setAttribute('aria-valuemax', '72');
+    mistakeNoteResizer.setAttribute('aria-valuenow', String(Math.round(topRatio * 100)));
+  }
+}
+
+function setupMistakeNoteResizer() {
+  if (!mistakeNoteResizer) return;
+  const columns = mistakeNoteResizer.closest('.mistake-note-columns');
+  if (!columns || columns.dataset.resizerReady === 'true') return;
+  columns.dataset.resizerReady = 'true';
+
+  let storedRatio = 0.5;
+  try {
+    storedRatio = clampMistakeNoteSplit(localStorage.getItem(MISTAKE_NOTE_SPLIT_STORAGE_KEY));
+  } catch (_) {
+    storedRatio = 0.5;
+  }
+  applyMistakeNoteSplit(columns, storedRatio);
+
+  const saveRatio = ratio => {
+    try {
+      localStorage.setItem(MISTAKE_NOTE_SPLIT_STORAGE_KEY, String(clampMistakeNoteSplit(ratio)));
+    } catch (_) {}
+  };
+
+  const updateFromClientY = clientY => {
+    const rect = columns.getBoundingClientRect();
+    if (!rect.height) return;
+    const ratio = clampMistakeNoteSplit((clientY - rect.top) / rect.height);
+    applyMistakeNoteSplit(columns, ratio);
+    saveRatio(ratio);
+  };
+
+  mistakeNoteResizer.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    mistakeNoteResizer.classList.add('is-dragging');
+    mistakeNoteResizer.setPointerCapture(event.pointerId);
+    updateFromClientY(event.clientY);
+  });
+
+  mistakeNoteResizer.addEventListener('pointermove', event => {
+    if (!mistakeNoteResizer.classList.contains('is-dragging')) return;
+    updateFromClientY(event.clientY);
+  });
+
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => {
+    mistakeNoteResizer.addEventListener(type, () => {
+      mistakeNoteResizer.classList.remove('is-dragging');
+    });
+  });
+
+  mistakeNoteResizer.addEventListener('dblclick', () => {
+    applyMistakeNoteSplit(columns, 0.5);
+    saveRatio(0.5);
+  });
+
+  mistakeNoteResizer.addEventListener('keydown', event => {
+    if (!['ArrowUp', 'ArrowDown', 'Home'].includes(event.key)) return;
+    event.preventDefault();
+    const currentRatio = clampMistakeNoteSplit(columns.dataset.splitRatio);
+    const nextRatio = event.key === 'Home'
+      ? 0.5
+      : currentRatio + (event.key === 'ArrowUp' ? -0.04 : 0.04);
+    applyMistakeNoteSplit(columns, nextRatio);
+    saveRatio(nextRatio);
+  });
+}
+
 function bindMistakeNotebookControls() {
+  setupMistakeNoteResizer();
+
   if (mistakeImageInput) {
     mistakeImageInput.addEventListener('change', async () => {
       const file = mistakeImageInput.files && mistakeImageInput.files[0];
@@ -2018,7 +2145,14 @@ function bindMistakeNotebookControls() {
     el.addEventListener('input', () => {
       const current = getCurrentMistake();
       if (!current) return;
-      updateMistakeItem(current.id, { [field]: el.value });
+      const patch = { [field]: el.value };
+      if (field === 'tags') {
+        const primaryTag = getPrimaryMistakeTag(el.value);
+        if (primaryTag && (!current.title || isDefaultMistakeTitle(current.title))) {
+          patch.title = primaryTag;
+        }
+      }
+      updateMistakeItem(current.id, patch);
       if (field === 'title' || field === 'tags') renderMistakeNotebook();
     });
   });
@@ -2924,6 +3058,7 @@ const mistakeTagsInput = document.getElementById('mistakeTagsInput');
 const mistakeNotesInput = document.getElementById('mistakeNotesInput');
 const mistakeNoteImageInput = document.getElementById('mistakeNoteImageInput');
 const mistakeNoteImages = document.getElementById('mistakeNoteImages');
+const mistakeNoteResizer = document.getElementById('mistakeNoteResizer');
 const mistakeDraftNotesOutput = document.getElementById('mistakeDraftNotesOutput');
 const mistakeImagePreview = document.getElementById('mistakeImagePreview');
 const mistakeTextPreview = document.getElementById('mistakeTextPreview');
@@ -14352,14 +14487,20 @@ function markdownToHtml(md) {
   }
   const lines = text.replace(/\r/g, '').split('\n');
   let html = '';
-  let inList = false;
+  let listTag = '';
   let inCode = false;
   let inMath = false;
   let codeBuf = [];
   let mathBuf = [];
 
   const flushList = () => {
-    if (inList) { html += '</ul>'; inList = false; }
+    if (listTag) { html += `</${listTag}>`; listTag = ''; }
+  };
+  const ensureList = (tag) => {
+    if (listTag === tag) return;
+    flushList();
+    html += `<${tag}>`;
+    listTag = tag;
   };
   const flushCode = () => {
     if (inCode) {
@@ -14439,8 +14580,14 @@ $$</div>`;
     }
 
     if (/^[-*+]\s+/.test(t)) {
-      if (!inList) { html += '<ul>'; inList = true; }
+      ensureList('ul');
       html += `<li>${inlineFormat(t.replace(/^[-*+]\s+/, ''))}</li>`;
+      continue;
+    }
+
+    if (/^\d+[.)]\s+/.test(t)) {
+      ensureList('ol');
+      html += `<li>${inlineFormat(t.replace(/^\d+[.)]\s+/, ''))}</li>`;
       continue;
     }
 
@@ -17170,6 +17317,11 @@ const homeModeToggleBtn = document.getElementById('homeModeToggleBtn');
 const homeModeMenu = document.getElementById('homeModeMenu');
 const homeModeCurrentText = document.getElementById('homeModeCurrentText');
 const homeModeCurrentIcon = document.getElementById('homeModeCurrentIcon');
+const followupModeToggleBtn = document.getElementById('followupModeToggleBtn');
+const followupModeMenu = document.getElementById('followupModeMenu');
+const followupModeCurrentText = document.getElementById('followupModeCurrentText');
+const followupModeCurrentIcon = document.getElementById('followupModeCurrentIcon');
+const webSearchToggleBtnFollowup = document.getElementById('webSearchToggleBtnFollowup');
 const homeModeSequence = ['fast', 'balanced', 'detailed'];
 const homeModeCopy = {
   fast: { label: 'Fast', iconClass: 'icon-fast', phClass: 'ph-bold ph-lightning' },
@@ -17186,9 +17338,25 @@ function syncHomeModeToggle() {
     homeModeCurrentIcon.className = `home-mode-icon ${mode.iconClass}`;
     homeModeCurrentIcon.innerHTML = `<i class="${mode.phClass}"></i>`;
   }
+  if (followupModeCurrentText) followupModeCurrentText.textContent = mode.label;
+  if (followupModeCurrentIcon) {
+    followupModeCurrentIcon.className = `followup-mode-icon ${mode.iconClass}`;
+    followupModeCurrentIcon.innerHTML = `<i class="${mode.phClass}"></i>`;
+  }
   homeModeMenu?.querySelectorAll('.home-mode-option').forEach(option => {
     option.classList.toggle('selected', option.dataset.homeMode === value);
   });
+  followupModeMenu?.querySelectorAll('.followup-mode-option').forEach(option => {
+    option.classList.toggle('selected', option.dataset.homeMode === value);
+  });
+}
+
+function syncFollowupWebToggle() {
+  if (!webSearchToggleBtnFollowup || !webSearchToggleBtnMain) return;
+  const isActive = webSearchToggleBtnMain.classList.contains('active');
+  webSearchToggleBtnFollowup.classList.toggle('active', isActive);
+  webSearchToggleBtnFollowup.title = isActive ? 'Web Search: ON' : 'Web Search: OFF';
+  webSearchToggleBtnFollowup.setAttribute('aria-pressed', isActive ? 'true' : 'false');
 }
 
 if (homeModeToggleBtn && homeModeMenu && answerLengthToggleMain) {
@@ -17222,9 +17390,45 @@ if (webSearchToggleBtnMain) {
   webSearchToggleBtnMain.addEventListener('click', () => {
     webSearchToggleBtnMain.classList.toggle('active');
     webSearchToggleBtnMain.style.color = webSearchToggleBtnMain.classList.contains('active') ? '#2563EB' : '#94A3B8';
+    syncFollowupWebToggle();
   });
   webSearchToggleBtnMain.classList.add('active');
   webSearchToggleBtnMain.style.color = '#2563EB';
+  syncFollowupWebToggle();
+}
+
+if (followupModeToggleBtn && followupModeMenu && answerLengthToggleMain) {
+  followupModeToggleBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const isOpen = followupModeMenu.classList.toggle('show');
+    followupModeToggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+  followupModeMenu.querySelectorAll('.followup-mode-option').forEach(option => {
+    option.addEventListener('click', (event) => {
+      event.stopPropagation();
+      answerLengthToggleMain.value = homeModeSequence.includes(option.dataset.homeMode)
+        ? option.dataset.homeMode
+        : 'balanced';
+      answerLengthToggleMain.dispatchEvent(new Event('change', { bubbles: true }));
+      syncHomeModeToggle();
+      followupModeMenu.classList.remove('show');
+      followupModeToggleBtn.setAttribute('aria-expanded', 'false');
+    });
+  });
+  document.addEventListener('click', (event) => {
+    if (!followupModeMenu.contains(event.target) && !followupModeToggleBtn.contains(event.target)) {
+      followupModeMenu.classList.remove('show');
+      followupModeToggleBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
+if (webSearchToggleBtnFollowup && webSearchToggleBtnMain) {
+  webSearchToggleBtnFollowup.addEventListener('click', () => {
+    webSearchToggleBtnMain.click();
+    syncFollowupWebToggle();
+  });
+  syncFollowupWebToggle();
 }
 
 function syncLearnNetworkToggle() {
