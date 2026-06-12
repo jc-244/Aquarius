@@ -1256,20 +1256,28 @@ function normalizeQuizProfile(quiz = {}) {
     return next;
 }
 
+const B8_FORMULA_APPENDIX_MARKDOWN = [
+    '## B.8 Appendix: Useful Mathematical Formulas',
+    '',
+    'This appendix is a compact formula reference. Use it as the lookup sheet for the algebra, series, calculus, and trigonometric identities that appear throughout the earlier background sections.',
+    '',
+    'Read it by formula family, not from top to bottom like a proof. First identify the kind of move you need: complex-number conversion, summation, Taylor/Maclaurin expansion, power series, trig simplification, derivative, integral, limit rule, or polynomial equation formula.',
+    '',
+    'The main exam trap is sign and condition copying. Check the plus/minus signs, whether a formula assumes a nonzero denominator, and whether the variable is in radians. For worked examples, connect these formulas back to B.1 complex numbers, B.2 sinusoids, and B.5 partial fractions.',
+    '',
+    'Switch to the **Textbook** tab for the full appendix pages.'
+].join('\n');
+
+function isB8FamilySection(sectionId = '', sectionTitle = '') {
+    return /\bB\.8\b/i.test(compactWhitespace(`${sectionId} ${sectionTitle}`));
+}
+
 function getB8FormulaAppendix(sectionId = '', sectionTitle = '') {
     const text = compactWhitespace(`${sectionId} ${sectionTitle}`);
-    if (!/B\.8\b/i.test(text)) return null;
-    return [
-        '## B.8 Appendix: Useful Mathematical Formulas',
-        '',
-        'This appendix is a compact formula reference. Use it as the lookup sheet for the algebra, series, calculus, and trigonometric identities that appear throughout the earlier background sections.',
-        '',
-        'Read it by formula family, not from top to bottom like a proof. First identify the kind of move you need: complex-number conversion, summation, Taylor/Maclaurin expansion, power series, trig simplification, derivative, integral, limit rule, or polynomial equation formula.',
-        '',
-        'The main exam trap is sign and condition copying. Check the plus/minus signs, whether a formula assumes a nonzero denominator, and whether the variable is in radians. For worked examples, connect these formulas back to B.1 complex numbers, B.2 sinusoids, and B.5 partial fractions.',
-        '',
-        'Switch to the **Textbook** tab for the full appendix pages.'
-    ].join('\n');
+    // Parent "B.8 Appendix" only — subtopics (B.8-1..B.8-10) have real cached
+    // lessons and must NOT be shadowed by this static reference page.
+    if (!/B\.8\b(?!-\d)/i.test(text)) return null;
+    return B8_FORMULA_APPENDIX_MARKDOWN;
 }
 
 function buildLessonCacheKey(_memory, bookSource = 'old', cacheVariant = 'lesson') {
@@ -1391,7 +1399,9 @@ function stripLegacyGeneratedImageBlocks(markdown) {
 }
 
 function readLegacyLessonCacheFallback(sectionId, memory, bookSource = 'old') {
-    if (!memory || !memory.quiz) return null;
+    // Anonymous requests (memory=null, the /api/section default) still get the
+    // best generic legacy lesson: scoreLegacyLessonCacheFile defaults to the
+    // standard track via normalizeQuizProfile({}).
     const normId = normalizeSectionId(sectionId);
     const dir = path.join(LESSON_CACHE_DIR, normId);
     if (!fs.existsSync(dir)) return null;
@@ -5991,6 +6001,25 @@ const server = http.createServer(async (req, res) => {
                     console.warn(`[SECTION] Cache for ${sectionId} is stale or invalid under ${LESSON_CACHE_VERSION}; treating as miss.`);
                 }
                 console.log(`[SECTION] Cache miss for ${sectionId} under ${LESSON_CACHE_VERSION}; runtime generation disabled.`);
+                if (isB8FamilySection(sectionId, sectionTitle)) {
+                    // B.8 subtopic with no cached lesson yet (e.g. B.8-5): keep
+                    // the appendix reference page instead of a dead-end miss,
+                    // until pregen backfills its real lesson.
+                    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({
+                        sectionId,
+                        sectionTitle,
+                        lesson: B8_FORMULA_APPENDIX_MARKDOWN,
+                        cached: true,
+                        formulaAppendix: true,
+                        bookPages: bookPages.map(p => ({
+                            page: p.page, image: p.image,
+                            subsection: p.subsection, title: p.title, summary: p.summary
+                        })),
+                        webSources: []
+                    }));
+                    return;
+                }
                 res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
                 res.end(JSON.stringify({
                     sectionId,

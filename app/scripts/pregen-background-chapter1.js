@@ -49,13 +49,15 @@ function makeTasks() {
   const tasks = [];
   for (const chapter of syllabus) {
     for (const section of chapter.sections) {
-      if (/^B\.8\b/i.test(section.title)) continue;
+      // Skip only the parent B.8 appendix page (static reference, never
+      // generated). Subtopics B.8-1..B.8-10 ARE pregenerated as real lessons.
+      if (/^B\.8\b(?!-\d)/i.test(section.title)) continue;
       const hasSubs = Array.isArray(section.subsections) && section.subsections.length > 0;
       if (!hasSubs) {
         tasks.push({ sectionId: section.title, sectionTitle: section.title, cacheVariant: 'lesson' });
       }
       for (const sub of section.subsections || []) {
-        if (/^B\.8\b/i.test(sub)) continue;
+        if (/^B\.8\b(?!-\d)/i.test(sub)) continue;
         tasks.push({ sectionId: sub, sectionTitle: sub, cacheVariant: 'lesson' });
       }
     }

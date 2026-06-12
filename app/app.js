@@ -3761,7 +3761,9 @@ const B8_TEXTBOOK_ONLY_MARKDOWN = [
 ].join('\n');
 
 function isB8TextbookOnlySection(sectionId = '', sectionTitle = '') {
-  return /\bB\.8\b/i.test(`${sectionId || ''} ${sectionTitle || ''}`);
+  // Parent "B.8 Appendix" only — subtopics (B.8-1..B.8-10) are real lessons
+  // served from cache; forcing the appendix blurb on them hides their content.
+  return /\bB\.8\b(?!-\d)/i.test(`${sectionId || ''} ${sectionTitle || ''}`);
 }
 
 function isB73VectorOperationsSection(sectionId = '', sectionTitle = '') {

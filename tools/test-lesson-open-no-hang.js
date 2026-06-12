@@ -11,6 +11,10 @@
  *   with no SECTION_PREVIEWS_NEW entry, so getSectionPreview() returns null
  *   and openLearnMode takes the intro-fallback branch).
  *
+ * Also guards the second B.8 regression (issue #6, fixed same day): subtopic
+ * cards must render their OWN cached lesson, not the parent's generic
+ * "compact formula reference" appendix page.
+ *
  * Usage: node tools/test-lesson-open-no-hang.js
  * Exits 0 on pass, 1 on fail. Needs playwright (devDependency) + chromium.
  */
@@ -21,9 +25,12 @@ const { chromium } = require('playwright');
 const PORT = Number(process.env.TUTOR_TEST_PORT || 9123);
 const BASE = `http://127.0.0.1:${PORT}`;
 const SUBTOPIC = process.env.TUTOR_TEST_SUBTOPIC || 'B.8-2 Complex Numbers';
-// Phrase unique to the B.8 appendix lesson markdown — never present in the
+// Phrase unique to the subtopic's own cached lesson — never present in the
 // chapter-overview HTML, so it cannot produce a false pass.
-const LESSON_MARKER = 'compact formula reference';
+const LESSON_MARKER = (process.env.TUTOR_TEST_MARKER || 'euler').toLowerCase();
+// The parent appendix blurb. Seeing it on a SUBTOPIC means the B.8
+// textbook-only override regex regressed to swallowing B.8-N again.
+const FORBIDDEN_MARKER = 'compact formula reference';
 const LESSON_WAIT_MS = 25000;
 
 function waitForHealth(timeoutMs = 15000) {
@@ -100,8 +107,8 @@ function waitForHealth(timeoutMs = 15000) {
         }
         if (!entered) throw new Error('subtopic click never entered lesson mode (no [openLearnMode] log)');
 
-        // The lesson pane must leave "Preparing lesson..." and show the real
-        // B.8 appendix lesson.
+        // The lesson pane must leave "Preparing lesson..." and show the
+        // subtopic's own lesson.
         const content = page.locator('#learnExplainContent');
         let lastText = '';
         const deadline = Date.now() + LESSON_WAIT_MS;
@@ -116,7 +123,11 @@ function waitForHealth(timeoutMs = 15000) {
             const stuck = lastText.includes('Preparing lesson...');
             failure = stuck
                 ? `HANG REPRODUCED: lesson pane still shows "Preparing lesson..." after ${LESSON_WAIT_MS / 1000}s for "${SUBTOPIC}"`
-                : `lesson pane never rendered the B.8 appendix lesson. Last content: ${JSON.stringify(lastText.slice(0, 200))}`;
+                : lastText.toLowerCase().includes(FORBIDDEN_MARKER)
+                    ? `APPENDIX REGRESSION: subtopic "${SUBTOPIC}" rendered the parent's generic appendix page instead of its own lesson`
+                    : `lesson pane never rendered the subtopic lesson. Last content: ${JSON.stringify(lastText.slice(0, 200))}`;
+        } else if (lastText.toLowerCase().includes(FORBIDDEN_MARKER)) {
+            failure = `APPENDIX REGRESSION: subtopic "${SUBTOPIC}" lesson also contains the parent appendix blurb`;
         }
     } catch (err) {
         failure = `test error: ${err.message}`;
