@@ -24,7 +24,7 @@ def norm(section):
     return s
 
 def cache_path(section):
-    return CACHE_ROOT / norm(section) / 'new__track:standard|math:calculus_ok.v20.en.md'
+    return CACHE_ROOT / norm(section) / 'new__track=standard~math=calculus_ok.v20.en.md'
 
 def post(section):
     body={

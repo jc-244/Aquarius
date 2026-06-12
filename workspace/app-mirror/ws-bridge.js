@@ -1228,6 +1228,9 @@ function writeLessonCache(sectionId, memory, lesson, bookSource = 'old', cacheVa
 }
 
 function scoreLegacyLessonCacheFile(fileName, memory, bookSource = 'old') {
+    // On disk, legacy cache names use '=' for ':' and '~' for '|' (Windows-safe);
+    // decode so the substring patterns below match the original key format.
+    fileName = String(fileName || '').replace(/=/g, ':').replace(/~/g, '|');
     if (!fileName || !fileName.endsWith('.en.md')) return -Infinity;
     if (fileName.includes(`.${LESSON_CACHE_VERSION}.`)) return -Infinity;
 
