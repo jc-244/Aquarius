@@ -1,0 +1,109 @@
+%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6InJlYWN0X2RlbW8iLCJyYXRpb25hbGUiOiJUaW1lIHNoaWZ0aW5nIGlzIGVhc2llc3QgdG8gbWlzdW5kZXJzdGFuZCB3aGVuIHN0dWRlbnRzIG9ubHkgbWVtb3JpemUgcG93ZXJzIG9mIHouIEEgUmVhY3QgKyBDYW52YXMgZGVtbyBzaG91bGQgbGV0IHN0dWRlbnRzIG1vdmUgYSBkaXNjcmV0ZS10aW1lIHNpZ25hbCBsZWZ0IGFuZCByaWdodCBhbmQgdG9nZ2xlIHRoZSB1bml0LXN0ZXAgZ2F0ZSwgc28gdGhleSBjYW4gc2VlIHdoeSBzb21lIGZvcm11bGFzIGNyZWF0ZSBvbmx5IGEgei1wb3dlciBmYWN0b3Igd2hpbGUgb3RoZXJzIGNyZWF0ZSBjb3JyZWN0aW9uIHRlcm1zLiIsImNyYW0iOiJVc2UgdGhlIGRlbW8gdG8gbWVtb3JpemUgdGhlIGV4YW0gdHJpZ2dlcjogc2hpZnRlZCBzdGVwIHdpdGggc2hpZnRlZCBzaWduYWwgZ2l2ZXMgb25seSB6IHBvd2VyOyB1bnNoaWZ0ZWQgdVtuXSBjcmVhdGVzIGV4dHJhIG9yIG1pc3Npbmcgc2FtcGxlcy4iLCJzdGFuZGFyZCI6IlVzZSB0aGUgZGVtbyB0byBjb25uZWN0IGVhY2ggZm9ybXVsYSB0byB3aGF0IGhhcHBlbnMgdG8gc3RlbXMgb24gdGhlIG4tYXhpcyBhZnRlciBkZWxheSBvciBhZHZhbmNlLiIsInRvcF9zY29yZSI6IlVzZSB0aGUgZGVtbyB0byBpbnNwZWN0IGVkZ2Ugc2FtcGxlcyBuZWFyIG4gPSAwLCBiZWNhdXNlIHRob3NlIHNhbXBsZXMgYXJlIGV4YWN0bHkgd2hlcmUgY29ycmVjdGlvbiB0ZXJtcyBjb21lIGZyb20uIn0=" style="display:none;"></div>%%KC_END%%
+# Time-Shifting Properties
+
+> **Section Objective:** Learn how time shifts of discrete-time signals change their z-transforms, especially when unit-step gates move or do not move with the signal.
+
+## Concepts In This Section
+
+- Right shift with shifted unit step
+- Right shift with unshifted unit step
+- Left shift with unshifted unit step
+- Rewriting shifted finite-duration signals
+
+%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="interactive_demo" data-teaching-role="concept_anchor" data-visual-use-b64="eyJjcmFtIjoiRm9jdXMgb24gdGhlIGdhdGUgdG9nZ2xlOiBzaGlmdGVkIGdhdGUgbWVhbnMgcHVyZSB6LXBvd2VyOyB1bnNoaWZ0ZWQgZ2F0ZSBtZWFucyBjb3JyZWN0aW9uIHRlcm0uIiwic3RhbmRhcmQiOiJEcmFnIHRoZSBzaGlmdCBzbGlkZXIgYW5kIGNvbXBhcmUgd2hpY2ggc2FtcGxlcyByZW1haW4gdmlzaWJsZSBmb3IgbiA+PSAwLiIsInRvcF9zY29yZSI6Ikluc3BlY3Qgc2FtcGxlcyBjcm9zc2luZyBuID0gMCBhbmQgcHJlZGljdCB0aGUgZXhhY3QgY29ycmVjdGlvbiB0ZXJtIGJlZm9yZSByZXZlYWxpbmcgaXQuIn0=" style="display:none;"></div><div class="kc-interactive-demo" data-demo-b64="eyJ0eXBlIjoiaW50ZXJhY3RpdmVfZGVtbyIsInRpdGxlIjoiU2hpZnQgdGhlIFNlcXVlbmNlLCBUaGVuIFdhdGNoIHRoZSB6LVRyYW5zZm9ybSBSdWxlIENoYW5nZSIsInRlYWNoaW5nX3JvbGUiOiJjb25jZXB0X2FuY2hvciIsIm1vZGVfc3BlY2lmaWNfdmlzdWFsX3VzZSI6eyJjcmFtIjoiRm9jdXMgb24gdGhlIGdhdGUgdG9nZ2xlOiBzaGlmdGVkIGdhdGUgbWVhbnMgcHVyZSB6LXBvd2VyOyB1bnNoaWZ0ZWQgZ2F0ZSBtZWFucyBjb3JyZWN0aW9uIHRlcm0uIiwic3RhbmRhcmQiOiJEcmFnIHRoZSBzaGlmdCBzbGlkZXIgYW5kIGNvbXBhcmUgd2hpY2ggc2FtcGxlcyByZW1haW4gdmlzaWJsZSBmb3IgbiA+PSAwLiIsInRvcF9zY29yZSI6Ikluc3BlY3Qgc2FtcGxlcyBjcm9zc2luZyBuID0gMCBhbmQgcHJlZGljdCB0aGUgZXhhY3QgY29ycmVjdGlvbiB0ZXJtIGJlZm9yZSByZXZlYWxpbmcgaXQuIn0sImRlbW9fc3BlYyI6eyJ0b29sIjoicmVhY3RfY2FudmFzX2RlbW8iLCJsYXlvdXQiOiJUd28gc3RhY2tlZCBzdGVtIHBsb3RzIG9uIGEgd2hpdGUgYmFja2dyb3VuZC4gVG9wIHBsb3Qgc2hvd3Mgb3JpZ2luYWwgeFtuXS4gQm90dG9tIHBsb3Qgc2hvd3MgdGhlIHRyYW5zZm9ybWVkIHNlcXVlbmNlLiIsImNvbnRyb2xzIjpbeyJuYW1lIjoic2hpZnRfbSIsInR5cGUiOiJpbnRlZ2VyX3NsaWRlciIsInJhbmdlIjpbLTUsNV0sImRlZmF1bHQiOjEsImxhYmVsIjoiU2hpZnQgYW1vdW50IG0ifSx7Im5hbWUiOiJtb2RlIiwidHlwZSI6InNlZ21lbnRlZF9jb250cm9sIiwib3B0aW9ucyI6WyJ4W24tbV11W24tbV0iLCJ4W24tbV11W25dIiwieFtuK21ddVtuXSJdLCJkZWZhdWx0IjoieFtuLW1ddVtuLW1dIn0seyJuYW1lIjoic2hvd19jb3JyZWN0aW9uX3NhbXBsZXMiLCJ0eXBlIjoidG9nZ2xlIiwiZGVmYXVsdCI6dHJ1ZSwibGFiZWwiOiJIaWdobGlnaHQgc2FtcGxlcyB0aGF0IGNhdXNlIGNvcnJlY3Rpb24gdGVybXMifV0sInZpc3VhbF9iZWhhdmlvciI6IlVzZSBuYXZ5IHN0ZW1zIGZvciBzYW1wbGVzIGluY2x1ZGVkIGluIHRoZSB0cmFuc2Zvcm0uIFVzZSBtdXRlZCBncmF5IHN0ZW1zIGZvciBzYW1wbGVzIG91dHNpZGUgbiA+PSAwLiBVc2UgbXV0ZWQgcmVkIGNpcmNsZXMgYXJvdW5kIHNhbXBsZXMgbmVhciBuID0gMCB0aGF0IGNyZWF0ZSBhZGRlZCBvciBzdWJ0cmFjdGVkIGNvcnJlY3Rpb24gdGVybXMuIERpc3BsYXkgdGhlIG1hdGNoaW5nIGZvcm11bGEgdHJpZ2dlciBiZWxvdyB0aGUgcGxvdCwgYnV0IGRvIG5vdCBkaXNwbGF5IGEgZnVsbCBkZXJpdmF0aW9uLiIsInNhbXBsZV9zZXF1ZW5jZSI6IlVzZSBhIHNpbXBsZSBub256ZXJvIHNlcXVlbmNlIG92ZXIgbiA9IC00IHRvIDYgc28gdGhhdCB4Wy0xXSwgeFstMl0sIHhbMF0sIGFuZCB4WzFdIGNhbiBiZSB2aXNpYmx5IGRpZmZlcmVudC4iLCJzdHVkZW50X3Rhc2tfcHJvbXB0IjoiQmVmb3JlIHJldmVhbGluZyB0aGUgZm9ybXVsYSwgYXNrOiAnRGlkIHRoZSB1bml0IHN0ZXAgbW92ZSB3aXRoIHRoZSBzaWduYWw/IFdoaWNoIHNhbXBsZXMgY3Jvc3NlZCB0aGUgbiA9IDAgYm91bmRhcnk/JyJ9LCJjb250ZW50IjoiVGhlIG9uZS1zaWRlZCB6LXRyYW5zZm9ybSBvbmx5IGNvdW50cyBzYW1wbGVzIGF0IFxcKG4gXFxnZXEgMFxcKS4gV2hlbiB5b3Ugc2hpZnQgYSBzZXF1ZW5jZSwgdGhlIGtleSBxdWVzdGlvbiBpczogKipkaWQgdGhlIHVuaXQtc3RlcCBnYXRlIG1vdmUgd2l0aCB0aGUgc2lnbmFsPyoqXG5cbklmIHRoZSBnYXRlIHNoaWZ0cyB3aXRoIHRoZSBzaWduYWwsIHRoZSB0cmFuc2Zvcm0gc2hhcGUgaXMgcHJlc2VydmVkIGFuZCB5b3UgZ2V0IG9ubHkgYSBwb3dlciBvZiBcXCh6XFwpLiBJZiB0aGUgZ2F0ZSBzdGF5cyBmaXhlZCBhdCBcXCh1W25dXFwpLCBzYW1wbGVzIGNyb3NzIHRoZSBcXChuID0gMFxcKSBib3VuZGFyeSBhbmQgY3JlYXRlIGNvcnJlY3Rpb24gdGVybXMuIFVzZSB0aGUgY29udHJvbHMgYWJvdmUgdG8gc2VlIGV4YWN0bHkgd2hpY2ggc2FtcGxlcyBhcmUgcmVzcG9uc2libGUuIn0="></div>%%KC_END%%
+
+## 1. One-sample right shift with the gate shifted too
+
+Delaying **both** \(x[n]\) and \(u[n]\) by one sample moves the entire causal sequence one step to the right. Because no sample crosses the \(n = 0\) boundary, the z-transform is simply multiplied by \(z^{-1}\) — no correction term appears.
+
+**Symbol guide:**
+- \(x[n]\) — original sequence; \(X[z]\) — its one-sided z-transform
+- \(u[n]\) — unit step gate; \(z^{-1}\) — one-sample delay factor
+
+**When to use:** The expression is exactly \(x[n-1]u[n-1]\) — both brackets contain \(n-1\).
+
+**Exam trigger:** Both brackets shift together.
+
+**Common misuse:** Applying this to \(x[n-1]u[n]\), where the gate did **not** move — that case requires a correction term (see Eq. (5.14)).
+
+**Minimal example:** Since \(u[n] \Longleftrightarrow \dfrac{z}{z-1}\), it follows that \(u[n-1] \Longleftrightarrow z^{-1}\cdot\dfrac{z}{z-1} = \dfrac{1}{z-1}\).
+
+$$x[n-1]u[n-1]\Longleftrightarrow z^{-1}X[z]$$
+
+## 2. Right shift with the gate not shifted
+
+This is the general \(m\)-sample version of the pure delay rule. Here \(m\) is a positive integer, and the unit step **must shift by the same \(m\)**.
+
+> **Key rule:** Same delay in the signal and the step means no boundary correction term.
+
+**When to use:** Expressions like \(x[n-3]u[n-3]\) or \((n-6)u[n-6]\) after rewriting the signal in shifted form.
+
+**Common mistake:** Seeing \(u[n-m]\) and forgetting that the signal inside must also be written as \(x[n-m]\), not as \(x[n]\) or \(n\). If the signal is written as \(nu[n-m]\), a rewrite is required before this property applies.
+
+$$x[n-m]u[n-m]\Longleftrightarrow z^{-m}X[z]$$
+
+## 3. Left shift: advance and subtract skipped samples
+
+\(x[n-1]u[n]\) is **not** the same as \(x[n-1]u[n-1]\). The unshifted gate \(u[n]\) keeps the window open at \(n = 0\). After the one-sample delay, the value that lands at \(n = 0\) is \(x[-1]\) — a sample from the original sequence that was previously at negative time. The one-sided z-transform now sees this extra sample, so it must be added as a correction term.
+
+**Symbol guide:**
+- \(x[-1]\) — the original sequence value at \(n = -1\), which becomes visible at \(n = 0\) after the delay
+- The rest of the transform still contributes \(z^{-1}X[z]\)
+
+**When to use:** The signal contains \(n-1\) but the step is still \(u[n]\).
+
+**Exam trigger:** Shift appears in \(x[n-1]\) but **not** in \(u[n]\).
+
+**Common misuse:** Writing only \(z^{-1}X[z]\) and losing the boundary sample.
+
+**Concrete check:** If \(x[-1] = 4\), the transform is \(z^{-1}X[z] + 4\).
+
+$$x[n-1]u[n]\Longleftrightarrow z^{-1}X[z]+x[-1]$$
+
+## 4. Exam rewrite pattern: make the shifted part match the property
+
+Writing \(x[n+m]u[n]\) advances the sequence left by \(m\) samples. The main factor is \(z^m\) (a positive power because the shift is to the left). However, advancing the sequence pushes the first \(m\) original samples — \(x[0]\) through \(x[m-1]\) — past the left edge of the one-sided window. Those samples were counted in \(X[z]\) but are no longer present in the advanced sequence, so they must be **subtracted**.
+
+**Symbol guide:**
+- \(m\) — positive integer advance amount
+- \(X[z]\) — one-sided z-transform of the original \(x[n]u[n]\)
+- Summation — correction for the \(m\) removed beginning samples
+
+**When to use:** The expression is \(x[n+m]u[n]\) with a **plus** sign inside.
+
+**Exam trigger:** Plus sign inside \(x[n+m]\) with \(u[n]\).
+
+**Common misuse:** Writing \(z^mX[z]\) without subtracting the missing initial samples.
+
+**\(m = 1\) mini-case:** \(x[n+1]u[n] \Longleftrightarrow zX[z] - zx[0]\).
+
+$$x[n+m]u[n]\Longleftrightarrow z^mX[z]-z^m\sum_{n=0}^{m-1}x[n]z^{-n}$$
+
+## 4. Exam rewrite pattern: make the shifted part match the property
+
+A term like \(nu[n-6]\) cannot directly use Eq. (5.13), because the pure right-shift rule requires the signal to be written as a function of \((n-6)\), not of \(n\).
+
+The key move is to **split \(n\) into \((n-6)+6\)**:
+
+$$nu[n-6] = (n-6+6)\,u[n-6] = (n-6)\,u[n-6] + 6\,u[n-6]$$
+
+Now each piece matches a known rule:
+- \((n-6)u[n-6]\) — pure delay form, apply Eq. (5.13) directly.
+- \(6\,u[n-6]\) — a delayed step scaled by 6, also handled by Eq. (5.13).
+
+**Exam trigger:** A finite-duration ramp or gate pulse that begins at \(n = m\) rather than \(n = 0\).
+
+**Common mistake:** Treating \(nu[n-m]\) as if it were automatically \(x[n-m]u[n-m]\) without rewriting. The signal part must be expressed in terms of \((n-m)\) before the property applies.
+
+---
+**📌 Key Takeaways**
+- **Eq. (5.12):** \(x[n-1]u[n-1]\Longleftrightarrow z^{-1}X[z]\) — both signal and gate shift together; no correction term.
+- **Eq. (5.13):** \(x[n-m]u[n-m]\Longleftrightarrow z^{-m}X[z]\) — general pure right-shift rule; same delay in signal and step.
+- **Eq. (5.14):** \(x[n-1]u[n]\Longleftrightarrow z^{-1}X[z]+x[-1]\) — gate stays at \(u[n]\); boundary sample \(x[-1]\) is added.
+- **Eq. (5.16):** \(x[n+m]u[n]\Longleftrightarrow z^mX[z]-z^m\sum_{n=0}^{m-1}x[n]z^{-n}\) — left shift advances by \(m\); subtract the first \(m\) original samples.
+- Correction terms come from samples crossing the \(n = 0\) boundary.
+- Rewrite trick: \(nu[n-m] = (n-m)u[n-m] + m\,u[n-m]\) so each piece matches a known property.
+
+*Next, use the same property mindset to study z-domain scaling.*
+
+%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NywicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo2LCJtYXgiOjh9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6InB1cmVfcmlnaHRfc2hpZnQiLCJsYWJlbCI6IlJpZ2h0IHNoaWZ0IHdpdGggc2hpZnRlZCB1bml0IHN0ZXAiLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJwdXJlX3JpZ2h0X3NoaWZ0X3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJJZiBcXCh4W25ddVtuXVxcTG9uZ2xlZnRyaWdodGFycm93IFhbel1cXCksIHdoYXQgaXMgdGhlIHotdHJhbnNmb3JtIG9mIFxcKHhbbi0zXXVbbi0zXVxcKT8iLCJvcHRpb25zIjpbIkEuIFxcKHpeey0zfVhbel1cXCkiLCJCLiBcXCh6XjNYW3pdXFwpIiwiQy4gXFwoel57LTN9WFt6XSt4Wy0zXVxcKSIsIkQuIFxcKFhbei0zXVxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkEiLCJleHBsYW5hdGlvbiI6IkJvdGggdGhlIHNpZ25hbCBhbmQgdGhlIHVuaXQgc3RlcCBhcmUgZGVsYXllZCBieSAzLCBzbyB0aGlzIGlzIHRoZSBwdXJlIHJpZ2h0LXNoaWZ0IHJ1bGUgKEVxLiAoNS4xMykpOiBtdWx0aXBseSBieSBcXCh6XnstM31cXCkuIE5vIGNvcnJlY3Rpb24gdGVybSBhcHBlYXJzIGJlY2F1c2UgdGhlIGdhdGUgbW92ZWQgd2l0aCB0aGUgc2lnbmFsLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQiI6IkEgcmlnaHQgc2hpZnQgcHJvZHVjZXMgXFwoel57LW19XFwpLCBub3QgXFwoel5tXFwpLiBQb3NpdGl2ZSBwb3dlcnMgb2YgXFwoelxcKSBjb3JyZXNwb25kIHRvIGxlZnQgc2hpZnRzIChhZHZhbmNlcykuIiwiQyI6IlRoZSBleHRyYSBzYW1wbGUgdGVybSBhcHBlYXJzIG9ubHkgd2hlbiB0aGUgZ2F0ZSBpcyBcXCh1W25dXFwpIGFuZCBkb2VzIG5vdCBzaGlmdC4gSGVyZSB0aGUgZ2F0ZSBzaGlmdGVkIHRvIFxcKHVbbi0zXVxcKS4iLCJEIjoiVGltZSBzaGlmdGluZyBkb2VzIG5vdCByZXBsYWNlIFxcKHpcXCkgYnkgXFwoelxcKSBtaW51cyBhIGNvbnN0YW50LiBUaGF0IHdvdWxkIGJlIGEgZnJlcXVlbmN5LWRvbWFpbiBzaGlmdCwgbm90IGEgdGltZSBzaGlmdC4ifSwiaGludCI6IkNoZWNrIHdoZXRoZXIgdGhlIHVuaXQgc3RlcCBtb3ZlZCBieSB0aGUgc2FtZSBhbW91bnQgYXMgdGhlIHNpZ25hbC4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9LHsiaWQiOiJwdXJlX3JpZ2h0X3NoaWZ0X3EyIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJXaGljaCBleHByZXNzaW9uIGlzIHRoZSBjbGVhbmVzdCBtYXRjaCBmb3IgRXEuICg1LjEzKSwgXFwoeFtuLW1ddVtuLW1dXFxMb25nbGVmdHJpZ2h0YXJyb3cgel57LW19WFt6XVxcKT8iLCJvcHRpb25zIjpbIkEuIFxcKChuLTQpdVtuLTRdXFwpIiwiQi4gXFwobnVbbi00XVxcKSIsIkMuIFxcKHhbbi00XXVbbl1cXCkiLCJELiBcXCh4W24rNF11W25dXFwpIl0sImNvcnJlY3Rfb3B0aW9uIjoiQSIsImV4cGxhbmF0aW9uIjoiXFwoKG4tNCl1W24tNF1cXCkgaGFzIHRoZSBzYW1lIGRlbGF5IGluc2lkZSB0aGUgc2lnbmFsIGV4cHJlc3Npb24gYW5kIHRoZSB1bml0IHN0ZXAsIHNvIGl0IG1hdGNoZXMgdGhlIHB1cmUgcmlnaHQtc2hpZnQgZm9ybSBleGFjdGx5LiBObyByZXdyaXRlIG9yIGNvcnJlY3Rpb24gaXMgbmVlZGVkLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQiI6IlRoZSBnYXRlIGlzIGRlbGF5ZWQgdG8gXFwodVtuLTRdXFwpLCBidXQgdGhlIHNpZ25hbCBpcyBzdGlsbCB3cml0dGVuIGFzIFxcKG5cXCksIG5vdCBcXCgobi00KVxcKS4gQSByZXdyaXRlIGlzIHJlcXVpcmVkIGJlZm9yZSBFcS4gKDUuMTMpIGFwcGxpZXMuIiwiQyI6IlRoZSBzaWduYWwgaXMgZGVsYXllZCwgYnV0IHRoZSBnYXRlIGlzIG5vdCBkZWxheWVkLiBUaGlzIG1hdGNoZXMgRXEuICg1LjE0KSwgd2hpY2ggcmVxdWlyZXMgYSBjb3JyZWN0aW9uIHRlcm0uIiwiRCI6IlRoaXMgaXMgYSBsZWZ0IHNoaWZ0IChhZHZhbmNlKSwgbm90IGEgcmlnaHQgc2hpZnQuIEl0IG1hdGNoZXMgRXEuICg1LjE2KS4ifSwiaGludCI6IlRoZSBpbnNpZGUgZXhwcmVzc2lvbiBhbmQgdGhlIHVuaXQgc3RlcCBtdXN0IG1vdmUgdG9nZXRoZXIgYnkgdGhlIHNhbWUgYW1vdW50LiIsIm5lZWRzX3Zpc3VhbCI6dHJ1ZSwidmlzdWFsX3R5cGUiOiJzdHJ1Y3R1cmVfY29tcGFyaXNvbl9jaGVjayIsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX1dfSx7ImlkIjoicmlnaHRfc2hpZnRfdW5zaGlmdGVkX2dhdGUiLCJsYWJlbCI6IlJpZ2h0IHNoaWZ0IHdpdGggdW5zaGlmdGVkIHVbbl0iLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJ1bnNoaWZ0ZWRfZ2F0ZV9xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiSWYgXFwoeFtuXXVbbl1cXExvbmdsZWZ0cmlnaHRhcnJvdyBYW3pdXFwpIGFuZCBcXCh4Wy0xXT01XFwpLCB3aGF0IGlzIHRoZSB6LXRyYW5zZm9ybSBvZiBcXCh4W24tMV11W25dXFwpPyIsIm9wdGlvbnMiOlsiQS4gXFwoel57LTF9WFt6XVxcKSIsIkIuIFxcKHpYW3pdLTV6XFwpIiwiQy4gXFwoel57LTF9WFt6XSs1XFwpIiwiRC4gXFwoel57LTF9KFhbel0rNSlcXCkiXSwiY29ycmVjdF9vcHRpb24iOiJDIiwiZXhwbGFuYXRpb24iOiJCZWNhdXNlIHRoZSBnYXRlIHJlbWFpbnMgXFwodVtuXVxcKSwgdGhlIHNhbXBsZSBcXCh4Wy0xXVxcKSBiZWNvbWVzIHZpc2libGUgYXQgXFwobiA9IDBcXCkgYWZ0ZXIgdGhlIGRlbGF5LiBFcS4gKDUuMTQpIGdpdmVzIFxcKHpeey0xfVhbel0reFstMV0gPSB6XnstMX1YW3pdKzVcXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhpcyBpZ25vcmVzIHRoZSBleHRyYSBib3VuZGFyeSBzYW1wbGUgY2F1c2VkIGJ5IHRoZSB1bnNoaWZ0ZWQgZ2F0ZS4gSXQgd291bGQgYmUgY29ycmVjdCBvbmx5IGlmIHRoZSBnYXRlIGFsc28gc2hpZnRlZCB0byBcXCh1W24tMV1cXCkuIiwiQiI6IlRoYXQgcmVzZW1ibGVzIGFuIGFkdmFuY2UgKGxlZnQtc2hpZnQpIHJ1bGUsIG5vdCBhIHJpZ2h0IHNoaWZ0IHdpdGggXFwodVtuXVxcKS4iLCJEIjoiVGhlIGNvcnJlY3Rpb24gdGVybSBcXCh4Wy0xXVxcKSBpcyBhZGRlZCBvdXRzaWRlIHRoZSBcXCh6XnstMX1cXCkgZmFjdG9yLCBub3QgaW5zaWRlIGl0LiBFcS4gKDUuMTQpIGlzIFxcKHpeey0xfVhbel0reFstMV1cXCksIG5vdCBcXCh6XnstMX0oWFt6XSt4Wy0xXSlcXCkuIn0sImhpbnQiOiJMb29rIGF0IHRoZSBzYW1wbGUgdGhhdCBsYW5kcyBhdCBcXChuID0gMFxcKSBhZnRlciB0aGUgb25lLXNhbXBsZSBkZWxheS4iLCJuZWVkc192aXN1YWwiOnRydWUsInZpc3VhbF90eXBlIjoiaW50ZXJhY3RpdmVfZGVtb19zbmFwc2hvdCIsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX0seyJpZCI6InVuc2hpZnRlZF9nYXRlX3EyIiwidHlwZSI6InNob3J0X2Fuc3dlciIsInN0ZW0iOiJBIGNsYXNzbWF0ZSBzYXlzIFxcKHhbbi0xXXVbbl1cXCkgYW5kIFxcKHhbbi0xXXVbbi0xXVxcKSBtdXN0IGhhdmUgdGhlIHNhbWUgei10cmFuc2Zvcm0gYmVjYXVzZSBib3RoIGNvbnRhaW4gXFwoeFtuLTFdXFwpLiBXaHkgaXMgdGhhdCB3cm9uZz8iLCJpZGVhbF9hbnN3ZXIiOiJcXCh4W24tMV11W25dXFwpIGtlZXBzIHRoZSBnYXRlIGF0IFxcKG4gPSAwXFwpLCBzbyBpdCBpbmNsdWRlcyB0aGUgYm91bmRhcnkgc2FtcGxlIFxcKHhbLTFdXFwpIGF0IFxcKG4gPSAwXFwpLiBcXCh4W24tMV11W24tMV1cXCkgc3RhcnRzIG9uZSBzYW1wbGUgbGF0ZXIgYW5kIGRvZXMgbm90IGluY2x1ZGUgdGhhdCBleHRyYSBzYW1wbGUuIFRoZXJlZm9yZSB0aGVpciB0cmFuc2Zvcm1zIGRpZmZlciBieSBcXCh4Wy0xXVxcKTogdGhlIGZpcnN0IGdpdmVzIFxcKHpeey0xfVhbel0reFstMV1cXCkgYW5kIHRoZSBzZWNvbmQgZ2l2ZXMgXFwoel57LTF9WFt6XVxcKS4iLCJncmFkaW5nX3J1YnJpYyI6WyJNdXN0IGlkZW50aWZ5IHRoYXQgdGhlIHVuaXQgc3RlcHMgYXJlIGRpZmZlcmVudCAob25lIGlzIFxcKHVbbl1cXCksIHRoZSBvdGhlciBpcyBcXCh1W24tMV1cXCkpLiIsIk11c3QgbWVudGlvbiB0aGUgYm91bmRhcnkgc2FtcGxlIFxcKHhbLTFdXFwpIGFuZCBleHBsYWluIHdoeSBpdCBhcHBlYXJzLiIsIk11c3Qgc3RhdGUgdGhhdCB0aGUgdHJhbnNmb3JtIGRpZmZlcmVuY2UgaXMgdGhlIGV4dHJhIHRlcm0gXFwoeFstMV1cXCkuIl0sImV4cGxhbmF0aW9uIjoiVGhpcyBjaGVja3Mgd2hldGhlciB0aGUgc3R1ZGVudCB1bmRlcnN0YW5kcyB0aGUgYm91bmRhcnktc2FtcGxlIGNvcnJlY3Rpb24gcmF0aGVyIHRoYW4gbWVtb3JpemluZyBvbmx5IHBvd2VycyBvZiBcXCh6XFwpLiBUaGUgc2lnbmFsIFxcKHhbbi0xXVxcKSBpcyB0aGUgc2FtZSBpbiBib3RoIGV4cHJlc3Npb25zOyB0aGUgZGlmZmVyZW5jZSBpcyBlbnRpcmVseSBpbiB3aGljaCBzYW1wbGVzIHRoZSBnYXRlIGFsbG93cyB0aHJvdWdoLiIsImhpbnQiOiJDb21wYXJlIHdoaWNoIGV4cHJlc3Npb24gaGFzIGEgbm9uemVybyB2YWx1ZSBhdCBcXChuID0gMFxcKSBhZnRlciB0aGUgZGVsYXkuIiwibmVlZHNfdmlzdWFsIjp0cnVlLCJ2aXN1YWxfdHlwZSI6Indyb25nX3ZzX3JpZ2h0X3Zpc3VhbF9jaGVjayIsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX1dfSx7ImlkIjoibGVmdF9zaGlmdF9jb3JyZWN0aW9uIiwibGFiZWwiOiJMZWZ0IHNoaWZ0IHdpdGggc2tpcHBlZCBpbml0aWFsIHNhbXBsZXMiLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJsZWZ0X3NoaWZ0X3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJVc2luZyBFcS4gKDUuMTYpLCB3aGF0IGlzIHRoZSB0cmFuc2Zvcm0gb2YgXFwoeFtuKzJddVtuXVxcKT8iLCJvcHRpb25zIjpbIkEuIFxcKHpeMlhbel0tel4yeFswXS16eFsxXVxcKSIsIkIuIFxcKHpeey0yfVhbel0reFstMV0reFstMl1cXCkiLCJDLiBcXCh6XjJYW3pdXFwpIiwiRC4gXFwoel57LTJ9WFt6XVxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkEiLCJleHBsYW5hdGlvbiI6IkZvciBcXChtID0gMlxcKSwgRXEuICg1LjE2KSBnaXZlcyBcXCh6XjJYW3pdIC0gel4yXFxzdW1fe249MH1eezF9eFtuXXpeey1ufSA9IHpeMlhbel0gLSB6XjIoeFswXSArIHhbMV16XnstMX0pID0gel4yWFt6XSAtIHpeMnhbMF0gLSB6eFsxXVxcKS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkIiOiJUaGF0IGlzIGEgcmlnaHQtc2hpZnQgY29ycmVjdGlvbiBwYXR0ZXJuIGludm9sdmluZyBuZWdhdGl2ZS10aW1lIHNhbXBsZXMsIG5vdCBhIGxlZnQtc2hpZnQgZm9ybXVsYS4iLCJDIjoiVGhpcyBpZ25vcmVzIHRoZSBza2lwcGVkIGluaXRpYWwgc2FtcGxlcyBcXCh4WzBdXFwpIGFuZCBcXCh4WzFdXFwpLCB3aGljaCBtdXN0IGJlIHN1YnRyYWN0ZWQuIiwiRCI6IlRoZSBzaWduIG9mIHRoZSBzaGlmdCBpcyB3cm9uZy4gXFwoeFtuKzJdXFwpIGlzIGFuIGFkdmFuY2UgKGxlZnQgc2hpZnQpLCBzbyB0aGUgbWFpbiBmYWN0b3IgaXMgXFwoel4yXFwpLCBub3QgXFwoel57LTJ9XFwpLiJ9LCJoaW50IjoiQSBwbHVzIHNpZ24gaW5zaWRlIFxcKHhbbisyXVxcKSBtZWFucyBhZHZhbmNlLiBFeHBhbmQgdGhlIHN1bW1hdGlvbiBmb3IgXFwobiA9IDBcXCkgYW5kIFxcKG4gPSAxXFwpLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX0seyJpZCI6ImxlZnRfc2hpZnRfcTIiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IkluIHRoZSBpbnRlcmFjdGl2ZSBkZW1vLCBzZXQgdGhlIG1vZGUgdG8gXFwoeFtuK21ddVtuXVxcKSBhbmQgaW5jcmVhc2UgXFwobVxcKSBmcm9tIDEgdG8gMy4gV2hhdCBoYXBwZW5zIHRvIHRoZSBjb3JyZWN0aW9uIHRlcm0/Iiwib3B0aW9ucyI6WyJBLiBJdCBzdWJ0cmFjdHMgbW9yZSBiZWdpbm5pbmcgc2FtcGxlczogXFwoeFswXVxcKSwgdGhlbiBcXCh4WzBdLHhbMV1cXCksIHRoZW4gXFwoeFswXSx4WzFdLHhbMl1cXCkuIiwiQi4gSXQgYWRkcyBuZWdhdGl2ZS10aW1lIHNhbXBsZXMgXFwoeFstMV0seFstMl0seFstM11cXCkuIiwiQy4gSXQgZGlzYXBwZWFycyBiZWNhdXNlIGxlZnQgc2hpZnQgaXMgb25seSBtdWx0aXBsaWNhdGlvbiBieSBcXCh6Xm1cXCkuIiwiRC4gSXQgY2hhbmdlcyBcXChYW3pdXFwpIGludG8gXFwoWFt6LW1dXFwpLiJdLCJjb3JyZWN0X29wdGlvbiI6IkEiLCJleHBsYW5hdGlvbiI6IkFkdmFuY2luZyB0aGUgc2VxdWVuY2UgYnkgXFwobVxcKSBza2lwcyB0aGUgZmlyc3QgXFwobVxcKSBvcmlnaW5hbCBzYW1wbGVzLiBFcS4gKDUuMTYpIHN1YnRyYWN0cyB0aGUgc2FtcGxlcyBmcm9tIFxcKG4gPSAwXFwpIHRvIFxcKG4gPSBtLTFcXCksIHNvIGFzIFxcKG1cXCkgZ3Jvd3MsIG1vcmUgYmVnaW5uaW5nIHNhbXBsZXMgYXJlIHN1YnRyYWN0ZWQuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJCIjoiTmVnYXRpdmUtdGltZSBzYW1wbGVzIGFyZSBhc3NvY2lhdGVkIHdpdGggdGhlIHJpZ2h0LXNoaWZ0IGZvcm11bGEgdW5kZXIgYW4gdW5zaGlmdGVkIGdhdGUgKEVxLiAoNS4xNCkpLCBub3Qgd2l0aCB0aGlzIGxlZnQtc2hpZnQgZm9ybXVsYS4iLCJDIjoiVGhlIGNvcnJlY3Rpb24gdGVybSBpcyBlc3NlbnRpYWwgdW5sZXNzIGFsbCBza2lwcGVkIHNhbXBsZXMgaGFwcGVuIHRvIGJlIHplcm8uIiwiRCI6IlRpbWUgc2hpZnRpbmcgZG9lcyBub3QgcmVwbGFjZSBcXCh6XFwpIGJ5IFxcKHogLSBtXFwpLiBUaGF0IHdvdWxkIGJlIGEgei1kb21haW4gdHJhbnNsYXRpb24sIG5vdCBhIHRpbWUgc2hpZnQuIn0sImhpbnQiOiJXYXRjaCB3aGljaCBvcmlnaW5hbCBzYW1wbGVzIHBhc3MgbGVmdCBvZiB0aGUgXFwobiA9IDBcXCkgYm91bmRhcnkgYXMgXFwobVxcKSBpbmNyZWFzZXMuIiwibmVlZHNfdmlzdWFsIjp0cnVlLCJ2aXN1YWxfdHlwZSI6ImRlbW9fb2JzZXJ2YXRpb25fY2hlY2siLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9XX0seyJpZCI6ImV4YW1fcmV3cml0ZV9wYXR0ZXJuIiwibGFiZWwiOiJSZXdyaXRpbmcgc2hpZnRlZCBmaW5pdGUtZHVyYXRpb24gc2lnbmFscyIsImltcG9ydGFuY2UiOiJtZWRpdW0iLCJleGFtX3dlaWdodCI6ImhpZ2giLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjF9LCJxdWVzdGlvbnMiOlt7ImlkIjoicmV3cml0ZV9xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiV2h5IHNob3VsZCBcXChudVtuLTZdXFwpIGJlIHJld3JpdHRlbiBiZWZvcmUgYXBwbHlpbmcgdGhlIHB1cmUgcmlnaHQtc2hpZnQgcHJvcGVydHk/Iiwib3B0aW9ucyI6WyJBLiBCZWNhdXNlIEVxLiAoNS4xMykgbmVlZHMgdGhlIHNpZ25hbCBwYXJ0IHRvIGJlIHdyaXR0ZW4gaW4gc2hpZnRlZCBmb3JtLCBzdWNoIGFzIFxcKChuLTYpdVtuLTZdXFwpLiIsIkIuIEJlY2F1c2UgXFwodVtuLTZdXFwpIGNhbm5vdCBiZSB0cmFuc2Zvcm1lZCBieSBhbnkgei10cmFuc2Zvcm0gcnVsZS4iLCJDLiBCZWNhdXNlIGV2ZXJ5IGRlbGF5ZWQgc2lnbmFsIG11c3QgYmUgY29udmVydGVkIGludG8gYSBsZWZ0IHNoaWZ0IGZpcnN0LiIsIkQuIEJlY2F1c2Ugei10cmFuc2Zvcm0gcnVsZXMgb25seSB3b3JrIGZvciBpbXB1bHNlcy4iXSwiY29ycmVjdF9vcHRpb24iOiJBIiwiZXhwbGFuYXRpb24iOiJFcS4gKDUuMTMpIGFwcGxpZXMgY2xlYW5seSB3aGVuIHRoZSBleHByZXNzaW9uIGlzIHdyaXR0ZW4gYXMgYSBkZWxheWVkIHZlcnNpb24gb2YgYSBrbm93biBjYXVzYWwgc2VxdWVuY2UuIFxcKG51W24tNl1cXCkgbXVzdCBiZSByZXdyaXR0ZW4gYXMgXFwoKG4tNil1W24tNl0gKyA2dVtuLTZdXFwpIHNvIHRoYXQgZWFjaCBwaWVjZSBpcyBpbiB0aGUgZm9ybSBcXCh4W24tbV11W24tbV1cXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJCIjoiXFwodVtuLTZdXFwpIGNhbiBiZSB0cmFuc2Zvcm1lZCB1c2luZyB0aGUgcmlnaHQtc2hpZnQgcHJvcGVydHkuIFRoZSBpc3N1ZSBpcyB3aXRoIHRoZSBzaWduYWwgcGFydCBcXChuXFwpLCBub3QgdGhlIGdhdGUuIiwiQyI6IkEgZGVsYXkgc2hvdWxkIG5vdCBiZSBjb252ZXJ0ZWQgaW50byBhbiBhZHZhbmNlLiBUaGUgcmV3cml0ZSBrZWVwcyBpdCBhcyBhIHJpZ2h0IHNoaWZ0LiIsIkQiOiJUaGUgei10cmFuc2Zvcm0gYXBwbGllcyB0byBtYW55IGRpc2NyZXRlLXRpbWUgc2VxdWVuY2VzLCBub3Qgb25seSBpbXB1bHNlcy4ifSwiaGludCI6IkFzayB3aGV0aGVyIHRoZSBleHByZXNzaW9uIGxvb2tzIGxpa2Ugc29tZXRoaW5nIGV2YWx1YXRlZCBhdCBcXChuIC0gNlxcKS4gVGhlIHNpZ25hbCBwYXJ0IFxcKG5cXCkgaXMgbm90IHRoZSBzYW1lIGFzIFxcKChuLTYpXFwpLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9XX1dfQ==" style="display:none;"></div>%%KC_END%%

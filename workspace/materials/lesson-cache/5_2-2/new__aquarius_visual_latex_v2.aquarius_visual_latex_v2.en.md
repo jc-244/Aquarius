@@ -1,0 +1,89 @@
+%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6InJlYWN0X2RlbW8iLCJyYXRpb25hbGUiOiJUaGlzIHNlY3Rpb24gaXMgc3ltYm9saWMgYW5kIHBhcmFtZXRlci1kcml2ZW46IHRoZSBrZXkgaWRlYSBpcyBub3QgYSBzdGF0aWMgcGljdHVyZSBidXQgd2hhdCBjaGFuZ2VzIHdoZW4gZ2FtbWEgY2hhbmdlcy4gQSBSZWFjdCArIENhbnZhcyBkZW1vIHNob3VsZCBsZXQgc3R1ZGVudHMgdmFyeSBnYW1tYSBhbmQgd2F0Y2ggdGhlIHRpbWUtZG9tYWluIHNlcXVlbmNlIGJlY29tZSBleHBvbmVudGlhbGx5IHdlaWdodGVkIHdoaWxlIHRoZSB0cmFuc2Zvcm0gY2hhbmdlcyBieSByZXBsYWNpbmcgeiB3aXRoIHovZ2FtbWEuIE5vIHRleHRib29rIGZpZ3VyZSBpcyBhdmFpbGFibGUsIGFuZCBubyBXaWtpcGVkaWEvV2lraW1lZGlhIHJlZmVyZW5jZSB2aXN1YWwgaXMgYXBwcm9wcmlhdGUgZm9yIHRoaXMgZXhhY3Qgei10cmFuc2Zvcm0gcHJvcGVydHkuIiwiY3JhbSI6IlVzZSB0aGUgZGVtbyB0byBtZW1vcml6ZSB0aGUgZXhhbSB0cmlnZ2VyOiBnYW1tYV5uIGluIHRpbWUgbWVhbnMgcmVwbGFjZSB6IGJ5IHovZ2FtbWEuIiwic3RhbmRhcmQiOiJVc2UgdGhlIGRlbW8gdG8gY29ubmVjdCB0aGUgdGltZS1kb21haW4gZXhwb25lbnRpYWwgd2VpZ2h0aW5nIHdpdGggdGhlIHotZG9tYWluIGFyZ3VtZW50IHN1YnN0aXR1dGlvbi4iLCJ0b3Bfc2NvcmUiOiJVc2UgdGhlIGRlbW8gdG8gZXhwb3NlIHRyYXBzOiBYKHovZ2FtbWEpIGlzIG5vdCBnYW1tYSBYKHopLCBhbmQgZ2FtbWEgbW9kaWZpZXMgcG9sZXMgdGhyb3VnaCBhcmd1bWVudCBzY2FsaW5nLiJ9" style="display:none;"></div>%%KC_END%%
+# z-Domain Scaling Property (Multiplication by \(\gamma^n\))
+
+> **Section Objective:** Learn how multiplying a right-sided discrete-time signal by \(\gamma^n\) changes its z-transform.
+
+---
+
+## Concepts In This Section
+
+- z-domain scaling property
+- argument replacement \(z/\gamma\)
+- summation proof
+- using the property from known transform pairs
+
+## 1. The Scaling Property
+
+When a known right-sided sequence \(x[n]u[n]\) is multiplied by an exponential \(\gamma^n\), you do not need to recompute the z-transform from scratch.
+
+### EXAM TRIGGER
+
+The moment you see \(\gamma^n\) multiplying the entire time-domain sequence, apply the scaling property.
+
+The key operation is **argument substitution**: take the original transform \(X[z]\) and feed it \(z/\gamma\) instead of \(z\). The shape of \(X[\cdot]\) stays the same — only its input changes.
+
+#### Important
+
+This is not amplitude scaling. Do not multiply \(X[z]\) by \(\gamma\). The operation replaces the argument \(z\) with \(z/\gamma\) inside \(X\).
+
+## 2. Why the replacement is z/gamma
+
+**Core formula (5.17) — five things to know:**
+
+- **\(\gamma\)** is the exponential multiplier applied sample-by-sample in the time domain.
+- **\(x[n]u[n]\)** is the original right-sided sequence whose z-transform \(X[z]\) is already known.
+- **\(X[z]\)** is the z-transform of the base sequence before any exponential weighting.
+- **When to use it:** the moment \(\gamma^n\) multiplies the entire signal, replace \(z\) by \(z/\gamma\) inside \(X\).
+- **Common misuse:** writing \(\gamma X[z]\) or \(X[\gamma z]\) — both are wrong. The correct substitution is \(X[z/\gamma]\).
+
+$$\gamma^n x[n]u[n]\Longleftrightarrow X\left[\frac{z}{\gamma}\right]$$
+
+%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="interactive_demo" data-teaching-role="concept_anchor" data-visual-use-b64="eyJjcmFtIjoiRHJhZyB0aGUgZ2FtbWEgc2xpZGVyIGFuZCByZXBlYXQgdGhlIHJ1bGUgYWxvdWQ6IGdhbW1hXm4gaW4gdGltZSBiZWNvbWVzIHovZ2FtbWEgaW5zaWRlIFguIiwic3RhbmRhcmQiOiJXYXRjaCBob3cgZWFjaCB0aW1lLWRvbWFpbiBzYW1wbGUgaXMgcmV3ZWlnaHRlZCB3aGlsZSB0aGUgdHJhbnNmb3JtIGV4cHJlc3Npb24gY2hhbmdlcyBieSBhcmd1bWVudCByZXBsYWNlbWVudC4iLCJ0b3Bfc2NvcmUiOiJVc2UgdGhlIHdyb25nLWZvcm0gdG9nZ2xlIHRvIGNvbXBhcmUgWFt6L2dhbW1hXSwgWFtnYW1tYSB6XSwgYW5kIGdhbW1hIFhbel0gc2lkZSBieSBzaWRlLiJ9" style="display:none;"></div><div class="kc-interactive-demo" data-demo-b64="eyJ0eXBlIjoiaW50ZXJhY3RpdmVfZGVtbyIsInRlYWNoaW5nX3JvbGUiOiJjb25jZXB0X2FuY2hvciIsIm1vZGVfc3BlY2lmaWNfdmlzdWFsX3VzZSI6eyJjcmFtIjoiRHJhZyB0aGUgZ2FtbWEgc2xpZGVyIGFuZCByZXBlYXQgdGhlIHJ1bGUgYWxvdWQ6IGdhbW1hXm4gaW4gdGltZSBiZWNvbWVzIHovZ2FtbWEgaW5zaWRlIFguIiwic3RhbmRhcmQiOiJXYXRjaCBob3cgZWFjaCB0aW1lLWRvbWFpbiBzYW1wbGUgaXMgcmV3ZWlnaHRlZCB3aGlsZSB0aGUgdHJhbnNmb3JtIGV4cHJlc3Npb24gY2hhbmdlcyBieSBhcmd1bWVudCByZXBsYWNlbWVudC4iLCJ0b3Bfc2NvcmUiOiJVc2UgdGhlIHdyb25nLWZvcm0gdG9nZ2xlIHRvIGNvbXBhcmUgWFt6L2dhbW1hXSwgWFtnYW1tYSB6XSwgYW5kIGdhbW1hIFhbel0gc2lkZSBieSBzaWRlLiJ9LCJ0aXRsZSI6Ik11bHRpcGx5aW5nIGJ5IFxcKFxcZ2FtbWFeblxcKSBtZWFucyByZXBsYWNpbmcgXFwoelxcKSBieSBcXCh6L1xcZ2FtbWFcXCkiLCJzcGVjIjp7ImZyYW1ld29yayI6InJlYWN0X2NhbnZhcyIsImJhc2Vfc2VxdWVuY2UiOnsiZm9ybXVsYSI6Inhbbl0gPSBhXm4gdVtuXSIsImEiOjAuNiwibl9yYW5nZSI6WzAsMTJdfSwiY29udHJvbHMiOlt7ImlkIjoiZ2FtbWFfc2xpZGVyIiwibGFiZWwiOiJcXChcXGdhbW1hXFwpIiwidHlwZSI6InNsaWRlciIsIm1pbiI6MC4yLCJtYXgiOjEuOCwic3RlcCI6MC4wNSwiZGVmYXVsdCI6MX1dLCJwYW5lbHMiOlt7ImlkIjoidGltZV9kb21haW4iLCJ0aXRsZSI6IlRpbWUgRG9tYWluIiwiY29udGVudCI6IlN0ZW0gcGxvdCBmb3Igbj0wIHRvIDEyLiBHcmF5IHN0ZW1zOiBiYXNlIHNlcXVlbmNlIHhbbl0gPSAoMC42KV5uLiBOYXZ5IHN0ZW1zOiBzY2FsZWQgc2VxdWVuY2UgZ2FtbWFebiB4W25dID0gKGdhbW1hICogMC42KV5uLiBCb3RoIHBsb3R0ZWQgdG9nZXRoZXIgc28gdGhlIHN0dWRlbnQgc2VlcyB0aGUgZXhwb25lbnRpYWwgcmV3ZWlnaHRpbmcgZGlyZWN0bHkuIn0seyJpZCI6InpfZG9tYWluIiwidGl0bGUiOiJaLURvbWFpbiIsImNvbnRlbnQiOiJUZXh0IGRpc3BsYXkgdXBkYXRlZCBsaXZlLiBTaG93IHRocmVlIGxpbmVzOiAoMSkgQmFzZSB0cmFuc2Zvcm06IFhbel0gPSAxIC8gKDEgLSAwLjYgel57LTF9KS4gKDIpIFNjYWxlZCB0cmFuc2Zvcm06IFhbei9nYW1tYV0gPSAxIC8gKDEgLSAwLjYgZ2FtbWEgel57LTF9KS4gKDMpIEVmZmVjdGl2ZSBwb2xlIGxvY2F0aW9uOiBwb2xlID0gMC42ICogZ2FtbWEgKHNob3duIGFzIGEgZGVjaW1hbCB1cGRhdGVkIGJ5IHRoZSBzbGlkZXIpLiJ9XSwid2FybmluZ19saW5lIjp7ImNvbG9yIjoibXV0ZWRfcmVkIiwidGV4dCI6IkRvIG5vdCBtdWx0aXBseSBYW3pdIGJ5IFxcKFxcZ2FtbWFcXCkuIFJlcGxhY2UgdGhlIGFyZ3VtZW50IFxcKHpcXCkgYnkgXFwoei9cXGdhbW1hXFwpLiJ9LCJ3cm9uZ19mb3JtX3RvZ2dsZSI6eyJlbmFibGVkIjp0cnVlLCJvcHRpb25zIjpbIlhbei9cXGdhbW1hXSAoY29ycmVjdCkiLCJYW1xcZ2FtbWEgel0gKHdyb25nIGRpcmVjdGlvbikiLCJcXGdhbW1hIFhbel0gKHdyb25nIOKAlCBvdXRzaWRlIG11bHRpcGxpZXIpIl19LCJzdHlsZSI6ImNsZWFuLCBubyBkZWNvcmF0aXZlIGFuaW1hdGlvbiwgYWNhZGVtaWMgcGFsZXR0ZSwgbmF2eSAvIG11dGVkIHRlYWwgLyBzb2Z0IGdyYXkifX0="></div>%%KC_END%%
+
+## 3. Fast use from a known transform pair
+
+Start from the definition of the z-transform applied to \(\gamma^n x[n]u[n]\):
+
+$$\sum_{n=0}^{\infty} \gamma^n x[n]\, z^{-n}$$
+
+Inside the sum, the factor \(\gamma^n z^{-n}\) can be rewritten as a single power:
+
+$$\gamma^n z^{-n} = \left(\frac{z}{\gamma}\right)^{-n}$$
+
+Once you make that substitution, the entire summation has exactly the same form as the original definition of \(X[z]\) — except every \(z\) has been replaced by \(z/\gamma\). This is why the property changes the **input** of \(X\) rather than multiplying \(X\) by a constant: the exponential \(\gamma^n\) merges with \(z^{-n}\) inside the sum and shifts the argument.
+
+$$\mathcal{Z}\{\gamma^n x[n]u[n]\}=\sum_{n=0}^{\infty}x[n]\left(\frac{z}{\gamma}\right)^{-n}$$
+*After the rewrite \(\gamma^n z^{-n} = (z/\gamma)^{-n}\), the summation is identical in structure to the original definition of \(X[z]\) — with \(z/\gamma\) playing the role of \(z\). This is exactly \(X[z/\gamma]\).
+
+The lower limit \(n=0\) appears because \(u[n]\) makes the sequence right-sided, so all terms with \(n < 0\) vanish.*
+
+## 3. Fast Use from a Known Transform Pair
+
+**Known pair:**
+
+$$a^n u[n] \Longleftrightarrow \frac{1}{1 - a z^{-1}}$$
+
+**Goal:** find the z-transform of \(\gamma^n a^n u[n]\).
+
+**Shortcut:** recognize \(\gamma^n a^n u[n] = \gamma^n \cdot x[n]u[n]\) where \(x[n]=a^n\). Apply the scaling property directly — no new summation needed.
+
+Replace every \(z\) in the known transform by \(z/\gamma\):
+
+$$X\!\left[\frac{z}{\gamma}\right] = \frac{1}{1 - a\left(\frac{z}{\gamma}\right)^{-1} \cdot z^{-1}} = \frac{1}{1 - a\gamma\, z^{-1}}$$
+
+So \(\gamma^n a^n u[n] \Longleftrightarrow \dfrac{1}{1 - a\gamma\, z^{-1}}\).
+
+### EXAM TIP
+
+When the original transform contains \(z^{-1}\), replacing \(z\) by \(z/\gamma\) turns every \(z^{-1}\) into \(\gamma z^{-1}\). The pole moves from \(a\) to \(a\gamma\).
+
+---
+**📌 Key Takeaways**
+- (5.17) \(\gamma^n x[n]u[n]\Longleftrightarrow X\left[\frac{z}{\gamma}\right]\) — multiplying a right-sided sequence by \(\gamma^n\) replaces the z-transform argument \(z\) with \(z/\gamma\).
+- The exam trigger is a full time-domain multiplication by \(\gamma^n\) applied to the entire sequence \(x[n]u[n]\).
+- The proof works because \(\gamma^n z^{-n}=\left(\frac{z}{\gamma}\right)^{-n}\), so the summation collapses back to the original transform definition evaluated at \(z/\gamma\).
+- The answer is **not** \(\gamma X[z]\) (wrong: outside multiplier) and **not** \(X[\gamma z]\) (wrong: inverted direction) — the only correct form is \(X[z/\gamma]\).
+
+*Next, z-domain differentiation will connect multiplication by \(n\) in time to differentiation in the z-domain.*
+
+%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NiwicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo1LCJtYXgiOjd9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6InNjYWxpbmdfcHJvcGVydHlfc3RhdGVtZW50IiwibGFiZWwiOiJDb3JlIHotZG9tYWluIHNjYWxpbmcgcHJvcGVydHkiLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJrcDFfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IklmIFxcKHhbbl11W25dXFxMb25nbGVmdHJpZ2h0YXJyb3cgWFt6XVxcKSwgd2hhdCBpcyB0aGUgei10cmFuc2Zvcm0gb2YgXFwoXFxnYW1tYV5uIHhbbl11W25dXFwpPyIsIm9wdGlvbnMiOlsiQS4gXFwoXFxnYW1tYSBYW3pdXFwpIiwiQi4gXFwoWFtcXGdhbW1hIHpdXFwpIiwiQy4gXFwoWFxcbGVmdFtcXGZyYWN7en17XFxnYW1tYX1cXHJpZ2h0XVxcKSIsIkQuIFxcKFxcZnJhY3sxfXtcXGdhbW1hfVhbel1cXCkiXSwiY29ycmVjdF9vcHRpb24iOiJDIiwiZXhwbGFuYXRpb24iOiJUaGUgc2NhbGluZyBwcm9wZXJ0eSBzYXlzIG11bHRpcGxpY2F0aW9uIGJ5IFxcKFxcZ2FtbWFeblxcKSBpbiB0aW1lIHJlcGxhY2VzIHRoZSBhcmd1bWVudCBcXCh6XFwpIGJ5IFxcKHovXFxnYW1tYVxcKSBpbnNpZGUgdGhlIG9yaWdpbmFsIHRyYW5zZm9ybS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJUaGlzIHRyZWF0cyBcXChcXGdhbW1hXm5cXCkgbGlrZSBhIGNvbnN0YW50IG11bHRpcGxpZXIsIGJ1dCBpdCBkZXBlbmRzIG9uIFxcKG5cXCkuIiwiQiI6IlRoZSByZXBsYWNlbWVudCBpcyBcXCh6L1xcZ2FtbWFcXCksIG5vdCBcXChcXGdhbW1hIHpcXCkuIiwiRCI6Ik5vIG91dHNpZGUgZmFjdG9yIFxcKDEvXFxnYW1tYVxcKSBhcHBlYXJzIGluIHRoaXMgcHJvcGVydHkuIn0sImhpbnQiOiJMb29rIGZvciBhbiBhcmd1bWVudCBzdWJzdGl0dXRpb24gaW5zaWRlIFxcKFhbXFxjZG90XVxcKSwgbm90IGFuIG91dHNpZGUgbXVsdGlwbGllci4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9LHsiaWQiOiJrcDFfcTIiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IldoaWNoIGV4YW0gcGF0dGVybiBzaG91bGQgdHJpZ2dlciBFcS4gKDUuMTcpPyIsIm9wdGlvbnMiOlsiQS4gVGhlIHNpZ25hbCBpcyBkZWxheWVkIGJ5IFxcKG5fMFxcKSIsIkIuIFRoZSBlbnRpcmUgc2VxdWVuY2UgaXMgbXVsdGlwbGllZCBieSBcXChcXGdhbW1hXm5cXCkiLCJDLiBUaGUgdHJhbnNmb3JtIGlzIG11bHRpcGxpZWQgYnkgXFwoelxcKSIsIkQuIFRoZSB0aW1lIGluZGV4IGlzIHJldmVyc2VkIGZyb20gXFwoblxcKSB0byBcXCgtblxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6IkVxLiAoNS4xNykgaXMgc3BlY2lmaWNhbGx5IGZvciBleHBvbmVudGlhbCBtdWx0aXBsaWNhdGlvbiBpbiB0aW1lOiBcXChcXGdhbW1hXm4geFtuXXVbbl1cXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiQSBkZWxheSB1c2VzIGEgdGltZS1zaGlmdCBwcm9wZXJ0eSwgbm90IHRoaXMgc2NhbGluZyBwcm9wZXJ0eS4iLCJDIjoiTXVsdGlwbGljYXRpb24gYnkgXFwoelxcKSBpbiB0aGUgdHJhbnNmb3JtIGRvbWFpbiBpcyBhIGRpZmZlcmVudCBvcGVyYXRpb24uIiwiRCI6IlRpbWUgcmV2ZXJzYWwgYmVsb25ncyB0byBhIHNlcGFyYXRlIHByb3BlcnR5LiJ9LCJoaW50IjoiVGhlIHZpc2libGUgdHJpZ2dlciBpcyBcXChcXGdhbW1hXm5cXCkgbXVsdGlwbHlpbmcgdGhlIHNlcXVlbmNlLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX1dfSx7ImlkIjoicHJvb2Zfc3Vic3RpdHV0aW9uIiwibGFiZWwiOiJXaHkgeiBiZWNvbWVzIHovZ2FtbWEiLCJpbXBvcnRhbmNlIjoibWVkaXVtIiwiZXhhbV93ZWlnaHQiOiJtZWRpdW0iLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjF9LCJxdWVzdGlvbnMiOlt7ImlkIjoia3AyX3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJJbiB0aGUgcHJvb2YsIHdoaWNoIHJld3JpdGUgZXhwbGFpbnMgd2h5IFxcKHpcXCkgaXMgcmVwbGFjZWQgYnkgXFwoei9cXGdhbW1hXFwpPyIsIm9wdGlvbnMiOlsiQS4gXFwoXFxnYW1tYV5uIHpeey1ufT1cXGxlZnQoXFxmcmFje3p9e1xcZ2FtbWF9XFxyaWdodCleey1ufVxcKSIsIkIuIFxcKFxcZ2FtbWFebiB6Xnstbn09XFxsZWZ0KFxcZ2FtbWEgelxccmlnaHQpXnstbn1cXCkiLCJDLiBcXChcXGdhbW1hXm4gel57LW59PVxcZ2FtbWEgel57LW59XFwpIiwiRC4gXFwoXFxnYW1tYV5uIHpeey1ufT16XnstXFxnYW1tYSBufVxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkEiLCJleHBsYW5hdGlvbiI6IlNpbmNlIFxcKFxcbGVmdCh6L1xcZ2FtbWFcXHJpZ2h0KV57LW59PXpeey1ufVxcZ2FtbWFeblxcKSwgdGhlIHN1bW1hdGlvbiBiZWNvbWVzIHRoZSBvcmlnaW5hbCB0cmFuc2Zvcm0gZXZhbHVhdGVkIGF0IFxcKHovXFxnYW1tYVxcKS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkIiOiJcXCgoXFxnYW1tYSB6KV57LW59PVxcZ2FtbWFeey1ufXpeey1ufVxcKSwgd2hpY2ggaGFzIHRoZSBvcHBvc2l0ZSBnYW1tYSBwb3dlci4iLCJDIjoiXFwoXFxnYW1tYV5uXFwpIGNhbm5vdCBiZSByZWR1Y2VkIHRvIFxcKFxcZ2FtbWFcXCkgdW5sZXNzIFxcKG49MVxcKS4iLCJEIjoiVGhlIGV4cG9uZW50IG9mIFxcKHpcXCkgZG9lcyBub3QgYmVjb21lIFxcKC1cXGdhbW1hIG5cXCkuIn0sImhpbnQiOiJFeHBhbmQgXFwoKHovXFxnYW1tYSleey1ufVxcKSBhbmQgY2hlY2sgd2hldGhlciBpdCBtYXRjaGVzIFxcKFxcZ2FtbWFebiB6Xnstbn1cXCkuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50IjpmYWxzZX1dfSx7ImlkIjoidXNpbmdfa25vd25fcGFpcnMiLCJsYWJlbCI6IkFwcGx5aW5nIHRoZSBwcm9wZXJ0eSB0byBrbm93biB0cmFuc2Zvcm0gcGFpcnMiLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJrcDNfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IkdpdmVuIFxcKGFebiB1W25dXFxMb25nbGVmdHJpZ2h0YXJyb3cgXFxmcmFjezF9ezEtYSB6XnstMX19XFwpLCB3aGF0IGlzIHRoZSB6LXRyYW5zZm9ybSBvZiBcXChcXGdhbW1hXm4gYV5uIHVbbl1cXCk/Iiwib3B0aW9ucyI6WyJBLiBcXChcXGZyYWN7XFxnYW1tYX17MS1hIHpeey0xfX1cXCkiLCJCLiBcXChcXGZyYWN7MX17MS1hXFxnYW1tYSB6XnstMX19XFwpIiwiQy4gXFwoXFxmcmFjezF9ezEtYVxcZ2FtbWFeey0xfSB6XnstMX19XFwpIiwiRC4gXFwoXFxmcmFjezF9ezEtXFxnYW1tYSB6XnstMX19XFwpIl0sImNvcnJlY3Rfb3B0aW9uIjoiQiIsImV4cGxhbmF0aW9uIjoiVXNlIFxcKFhbei9cXGdhbW1hXVxcKS4gU2luY2UgXFwoKHovXFxnYW1tYSleey0xfT1cXGdhbW1hIHpeey0xfVxcKSwgdGhlIGRlbm9taW5hdG9yIGJlY29tZXMgXFwoMS1hXFxnYW1tYSB6XnstMX1cXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhpcyBpbmNvcnJlY3RseSBwdXRzIFxcKFxcZ2FtbWFcXCkgb3V0c2lkZSB0aGUgdHJhbnNmb3JtIGFzIGEgY29uc3RhbnQgbXVsdGlwbGllci4iLCJDIjoiVGhlIHN1YnN0aXR1dGlvbiBnaXZlcyBcXCgoei9cXGdhbW1hKV57LTF9PVxcZ2FtbWEgel57LTF9XFwpLCBub3QgXFwoXFxnYW1tYV57LTF9el57LTF9XFwpLiIsIkQiOiJUaGlzIGRyb3BzIHRoZSBvcmlnaW5hbCBwYXJhbWV0ZXIgXFwoYVxcKSBlbnRpcmVseS4ifSwiaGludCI6IlJlcGxhY2UgZXZlcnkgXFwoelxcKSBpbiB0aGUgb3JpZ2luYWwgdHJhbnNmb3JtIGJ5IFxcKHovXFxnYW1tYVxcKSwgdGhlbiBzaW1wbGlmeSBcXCgoei9cXGdhbW1hKV57LTF9XFwpLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX0seyJpZCI6ImtwM19xMiIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiQSBzdHVkZW50IHNheXM6ICdCZWNhdXNlIFxcKFxcZ2FtbWFeblxcKSBpcyBtdWx0aXBsaWVkIGluIHRpbWUsIHRoZSBuZXcgdHJhbnNmb3JtIGlzIFxcKFxcZ2FtbWEgWFt6XVxcKS4nIFdoeSBpcyB0aGlzIHdyb25nPyIsIm9wdGlvbnMiOlsiQS4gXFwoXFxnYW1tYV5uXFwpIGlzIG5vdCBhIGNvbnN0YW50IG11bHRpcGxpZXI7IGl0IGNoYW5nZXMgd2l0aCBcXChuXFwpLiIsIkIuIFRoZSB6LXRyYW5zZm9ybSBjYW5ub3QgaGFuZGxlIGV4cG9uZW50aWFscy4iLCJDLiBcXCh1W25dXFwpIGRpc2FwcGVhcnMgYWZ0ZXIgc2NhbGluZy4iLCJELiBUaGUgcHJvcGVydHkgb25seSB3b3JrcyB3aGVuIFxcKFxcZ2FtbWE9MVxcKS4iXSwiY29ycmVjdF9vcHRpb24iOiJBIiwiZXhwbGFuYXRpb24iOiJcXChcXGdhbW1hXm5cXCkgZGVwZW5kcyBvbiB0aGUgc2FtcGxlIGluZGV4IFxcKG5cXCksIHNvIGl0IGNvbWJpbmVzIHdpdGggXFwoel57LW59XFwpIGluc2lkZSB0aGUgc3VtbWF0aW9uIGFuZCBjYXVzZXMgYXJndW1lbnQgcmVwbGFjZW1lbnQsIG5vdCBhbiBvdXRzaWRlIG11bHRpcGxpY2F0aW9uLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQiI6IlRoZSB6LXRyYW5zZm9ybSBoYW5kbGVzIGV4cG9uZW50aWFscyB2ZXJ5IG5hdHVyYWxseSDigJQgdGhhdCBpcyBwcmVjaXNlbHkgd2hhdCB0aGlzIHByb3BlcnR5IGV4cGxvaXRzLiIsIkMiOiJUaGUgcmlnaHQtc2lkZWQgZmFjdG9yIFxcKHVbbl1cXCkgcmVtYWlucyBwYXJ0IG9mIHRoZSBzaWduYWwgYWZ0ZXIgc2NhbGluZy4iLCJEIjoiVGhlIHByb3BlcnR5IGlzIHVzZWZ1bCBwcmVjaXNlbHkgYmVjYXVzZSBcXChcXGdhbW1hXFwpIGNhbiB0YWtlIGFueSBub256ZXJvIHZhbHVlLiJ9LCJoaW50IjoiQXNrIHdoZXRoZXIgXFwoXFxnYW1tYV5uXFwpIGhhcyB0aGUgc2FtZSB2YWx1ZSBmb3IgZXZlcnkgXFwoblxcKS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9XX0seyJpZCI6ImRlbW9faW50ZXJwcmV0YXRpb24iLCJsYWJlbCI6IkludGVycHJldGluZyBnYW1tYSBhcyBhIHBhcmFtZXRlciBjaGFuZ2UiLCJpbXBvcnRhbmNlIjoibWVkaXVtIiwiZXhhbV93ZWlnaHQiOiJtZWRpdW0iLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjF9LCJxdWVzdGlvbnMiOlt7ImlkIjoia3A0X3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJPYnNlcnZlIHRoZSBkZW1vIHdpdGggYmFzZSBcXChhPTAuNlxcKS4gV2hlbiBcXChcXGdhbW1hXFwpIGlzIGluY3JlYXNlZCBmcm9tIFxcKDEuMFxcKSB0byBcXCgxLjVcXCksIHdoYXQgaGFwcGVucyB0byB0aGUgZWZmZWN0aXZlIGV4cG9uZW50aWFsIGZhY3RvciBpbiBcXChcXGdhbW1hXm4gYV5uIHVbbl1cXCk/Iiwib3B0aW9ucyI6WyJBLiBJdCBiZWNvbWVzIFxcKDAuNi8xLjU9MC40XFwpIiwiQi4gSXQgYmVjb21lcyBcXCgwLjZcXGNkb3QxLjU9MC45XFwpIiwiQy4gSXQgcmVtYWlucyBcXCgwLjZcXCkiLCJELiBJdCBiZWNvbWVzIFxcKDEuNS0wLjY9MC45XFwpLCBzbyBzdWJ0cmFjdGlvbiBpcyB0aGUgcmVhc29uIl0sImNvcnJlY3Rfb3B0aW9uIjoiQiIsImV4cGxhbmF0aW9uIjoiXFwoXFxnYW1tYV5uIGFebj0oXFxnYW1tYSBhKV5uXFwpLCBzbyB0aGUgZWZmZWN0aXZlIGV4cG9uZW50aWFsIGZhY3RvciBpcyBcXChcXGdhbW1hIGE9MS41XFx0aW1lczAuNj0wLjlcXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhpcyBkaXZpZGVzIGJ5IFxcKFxcZ2FtbWFcXCkgaW4gdGhlIHRpbWUtZG9tYWluIGZhY3Rvciwgd2hpY2ggaXMgbm90IHdoYXQgbXVsdGlwbGljYXRpb24gYnkgXFwoXFxnYW1tYV5uXFwpIGRvZXMuIiwiQyI6IlRoZSBiYXNlIHNlcXVlbmNlIGZhY3RvciBjaGFuZ2VzIGJlY2F1c2UgaXQgaXMgbXVsdGlwbGllZCBieSBcXChcXGdhbW1hXm5cXCkuIiwiRCI6IlRoZSBjb3JyZWN0IG9wZXJhdGlvbiBjb21iaW5pbmcgXFwoXFxnYW1tYV5uXFwpIGFuZCBcXChhXm5cXCkgaXMgbXVsdGlwbGljYXRpb24sIG5vdCBzdWJ0cmFjdGlvbi4ifSwiaGludCI6IkNvbWJpbmUgXFwoXFxnYW1tYV5uXFwpIGFuZCBcXChhXm5cXCkgYXMgYSBzaW5nbGUgZXhwb25lbnRpYWwgXFwoKFxcZ2FtbWEgYSleblxcKS4iLCJuZWVkc192aXN1YWwiOnRydWUsInZpc3VhbF90eXBlIjoiaW50ZXJhY3RpdmVfZGVtb19vYnNlcnZhdGlvbiIsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9XX1dfQ==" style="display:none;"></div>%%KC_END%%

@@ -1,0 +1,106 @@
+%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6Indpa2lfcmVmZXJlbmNlIiwicmF0aW9uYWxlIjoiVGhpcyBzZWN0aW9uIGlzIGEgY2hhcHRlciBzdW1tYXJ5LCBzbyB0aGUgYmVzdCB2aXN1YWwgc3VwcG9ydCBpcyBhIGNsZWFuIHotcGxhbmUgLyBwb2xlLXplcm8gLyByZWdpb24tb2YtY29udmVyZ2VuY2UgcmVmZXJlbmNlIGltYWdlIHRoYXQgdGllcyB0b2dldGhlciB6LXRyYW5zZm9ybSB0aGlua2luZywgUk9DIGRlcGVuZGVuY2UsIGFuZCBzeXN0ZW0gYmVoYXZpb3IuIFRoZSBPQ1IgY29udGFpbnMgbm8gdXNhYmxlIGNyb3BwZWQgdGV4dGJvb2sgZmlndXJlcywgYW5kIEdQVEltYWdlMiBpcyBub3QganVzdGlmaWVkIGJlY2F1c2Ugc3RhbmRhcmQgei10cmFuc2Zvcm0gdmlzdWFscyBhcmUgd2VsbCByZXByZXNlbnRlZCBieSBwdWJsaWMgcmVmZXJlbmNlIGRpYWdyYW1zLiIsImNyYW0iOiJVc2UgdGhlIHotcGxhbmUgdmlzdWFsIHRvIHJlY29nbml6ZSBST0MsIHBvbGVzLCBhbmQgdHJhbnNmZXItZnVuY3Rpb24gcXVlc3Rpb25zIHF1aWNrbHkuIiwic3RhbmRhcmQiOiJVc2UgdGhlIHZpc3VhbCBhcyBhIG1hcCBjb25uZWN0aW5nIGZvcm11bGFzLCBpbXB1bHNlIHJlc3BvbnNlLCBhbmQgYmlsYXRlcmFsIFJPQyBpbnRlcnByZXRhdGlvbi4iLCJ0b3Bfc2NvcmUiOiJVc2UgdGhlIHZpc3VhbCB0byBzZXBhcmF0ZSB1bmlsYXRlcmFsIHNob3J0Y3V0IHRoaW5raW5nIGZyb20gYmlsYXRlcmFsIFJPQy1kZXBlbmRlbnQgaW52ZXJzZS10cmFuc2Zvcm0gcmVhc29uaW5nLiJ9" style="display:none;"></div>%%KC_END%%
+# 5.11 Summary
+
+> **Section Objective:** Review the chapter tools for analyzing LTID systems with the z-transform.
+
+---
+
+## Concepts In This Section
+
+- z-transform algebra
+- Transfer function
+- Difference equation form
+- Exponential response
+- System realizations
+- Unilateral z-transform
+- Bilateral z-transform
+- Region of convergence (ROC)
+- Laplace-transform connection
+
+
+## 1. The z-transform turns LTID equations into algebra
+
+LTID difference equations are difficult to work with directly because they relate shifted samples of the input and output — computing \(y[n]\) requires knowing \(y[n-1]\), \(y[n-2]\), and so on recursively. The z-transform eliminates this difficulty by converting the difference equation into an algebraic equation in the complex variable \(z\).
+
+The strategy is to **solve in the transform domain, then interpret back in time.** Instead of recursively computing \(y[n]\) sample by sample, you take the z-transform of both \(x[n]\) and \(y[n]\), solve algebraically for \(Y[z]\), and then recover \(y[n]\) by inverting the transform.
+
+This algebraic approach is the foundation for everything in the chapter: the transfer function, the exponential-response property, and the realization forms all follow from treating z-domain equations as ordinary algebra.
+
+## 4. Causal shortcut, ROC, realizations, and the Laplace link
+
+**Transfer function definition** (zero initial conditions required).
+
+- \(X[z]\) is the z-transform of the input signal \(x[n]\).
+- \(Y[z]\) is the z-transform of the corresponding output signal \(y[n]\).
+- \(H[z]\) is the system transfer function — a property of the system, not of the input.
+
+Rearranging gives the equally important identity:
+
+$$Y[z] = H[z]\,X[z]$$
+
+**Use case:** When the system is LTID and all initial conditions are zero.
+
+**Exam trigger:** Wording like "find the output transform from the input and system function" signals direct use of \(Y[z] = H[z]X[z]\).
+
+**Common misuse:** Applying this formula while forgetting the zero-initial-condition requirement, or treating \(H[z]\) as a property of the input rather than of the system.
+
+$$H[z] = \frac{Y[z]}{X[z]}$$
+
+$$H[z] = \frac{P[z]}{Q[z]}$$
+***Source condition:** For an LTID system described by \(Q[E]\,y[n] = P[E]\,x[n]\), the transfer function is \(P[z]/Q[z]\).
+
+- \(P[z]\) comes from the **input-side** operator polynomial.
+- \(Q[z]\) comes from the **output-side** operator polynomial.
+
+**Minimal symbolic reminder:** If the difference equation places a polynomial on the input side and another on the output side, the input-side polynomial is always the numerator and the output-side polynomial is always the denominator. Do not invert them.
+
+**Use case:** Converting a difference-equation or operator-polynomial description directly into a transfer function.
+
+**Exam trigger:** A problem gives a difference equation or operator-polynomial form and asks for \(H[z]\).
+
+**Common misuse:** Swapping \(P[z]\) and \(Q[z]\), or including initial-condition terms inside \(H[z]\).*
+
+$$x[n] = z^n \;\Longrightarrow\; y[n] = H[z]\,z^n$$
+***Exponential-response property.**
+
+An everlasting exponential \(z^n\) passes through an LTID system without changing its fundamental exponential shape. The system only multiplies it by the scalar \(H[z]\).
+
+- \(x[n] = z^n\) is the input exponential.
+- \(y[n] = H[z]\,z^n\) is the output — the same exponential, scaled by \(H[z]\).
+- \(H[z]\) acts as the gain applied to that particular exponential component.
+
+**Use case:** Understanding why the z-transform decomposes signals into exponential components — each component passes through independently, scaled by \(H[z]\).
+
+**Exam trigger:** Wording like "response to \(z^n\)" or "eigenfunction of an LTID system."
+
+**Common misuse:** Thinking the output becomes \(H[z]\) alone. The exponential \(z^n\) remains present in the output; \(H[z]\) is the multiplier, not the full result.*
+
+## 4. Causal shortcut, ROC, realizations, and the Laplace link
+
+### UNILATERAL vs BILATERAL Z-TRANSFORM
+
+- **Unilateral z-transform:** Restricts attention to causal signals (\(n \geq 0\)). Because all signals are causal, the ROC is automatically the exterior of a circle and does not need to be tracked explicitly during analysis.
+- **Bilateral z-transform:** Handles both causal and noncausal signals. The inverse transform of \(X[z]\) is **not unique** without specifying the ROC — the same algebraic \(X[z]\) can correspond to different time-domain signals depending on which ROC is selected.
+
+### SYSTEM REALIZATIONS
+
+- LTID systems are built from three primitive elements: **scalar multipliers**, **adders**, and **unit delays**.
+- The chapter names four standard realization forms: **canonical**, **transposed canonical**, **cascade**, and **parallel**.
+- The discrete-time realization procedure mirrors continuous-time methods, with \(1/s\) replaced by \(1/z\).
+
+### LAPLACE-TRANSFORM CONNECTION
+
+- The z-transform is related to the Laplace transform by a change of variable.
+- This connection means that discrete-time system analysis with the z-transform parallels continuous-time analysis with the Laplace transform at the structural level.
+
+---
+**📌 Key Takeaways**
+- **Transfer function definition:** \(H[z] = Y[z]/X[z]\) under zero initial conditions; equivalently, \(Y[z] = H[z]\,X[z]\).
+- **From difference equation:** For \(Q[E]\,y[n] = P[E]\,x[n]\), the transfer function is \(H[z] = P[z]/Q[z]\) — input-side polynomial in the numerator, output-side in the denominator.
+- **Exponential response:** Input \(x[n] = z^n\) produces output \(y[n] = H[z]\,z^n\); the system scales the exponential by \(H[z]\) without changing its shape.
+- **Unilateral vs bilateral ROC:** The unilateral z-transform assumes causal signals and makes the ROC implicit; the bilateral z-transform requires the ROC to be specified because the same \(X[z]\) can correspond to different inverse transforms under different ROCs.
+- **Realization forms:** LTID systems can be implemented as canonical, transposed canonical, cascade, or parallel structures using multipliers, adders, and unit delays; the procedure mirrors continuous-time realization with \(1/s\) replaced by \(1/z\).
+
+*Next, use these summary formulas to attack the chapter problems efficiently.*
+
+%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NywicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo2LCJtYXgiOjh9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6InRyYW5zZmVyX2Z1bmN0aW9uX3plcm9faW5pdGlhbF9jb25kaXRpb25zIiwibGFiZWwiOiJUcmFuc2ZlciBmdW5jdGlvbiBhbmQgemVybyBpbml0aWFsIGNvbmRpdGlvbnMiLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJ0Zl9xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiRm9yIGFuIExUSUQgc3lzdGVtIHdpdGggYWxsIGluaXRpYWwgY29uZGl0aW9ucyB6ZXJvLCB3aGljaCBmb3JtdWxhIGNvcnJlY3RseSBkZWZpbmVzIHRoZSB0cmFuc2ZlciBmdW5jdGlvbj8iLCJvcHRpb25zIjpbIkEuIFxcKEhbel0gPSBYW3pdL1lbel1cXCkiLCJCLiBcXChIW3pdID0gWVt6XS9YW3pdXFwpIiwiQy4gXFwoSFt6XSA9IFhbel1cXCxZW3pdXFwpIiwiRC4gXFwoSFt6XSA9IFlbel0gLSBYW3pdXFwpIl0sImNvcnJlY3Rfb3B0aW9uIjoiQiIsImV4cGxhbmF0aW9uIjoiVGhlIHRyYW5zZmVyIGZ1bmN0aW9uIGlzIHRoZSByYXRpbyBvZiB0aGUgb3V0cHV0IHRyYW5zZm9ybSB0byB0aGUgaW5wdXQgdHJhbnNmb3JtIHVuZGVyIHplcm8gaW5pdGlhbCBjb25kaXRpb25zOiBcXChIW3pdID0gWVt6XS9YW3pdXFwpLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6IlRoaXMgcmV2ZXJzZXMgdGhlIHJhdGlvIOKAlCBpdCB3b3VsZCBnaXZlIHRoZSBpbnZlcnNlIG9mIHRoZSB0cmFuc2ZlciBmdW5jdGlvbi4iLCJDIjoiVGhlIHRyYW5zZmVyIGZ1bmN0aW9uIGlzIG5vdCB0aGUgcHJvZHVjdCBvZiBpbnB1dCBhbmQgb3V0cHV0IHRyYW5zZm9ybXMuIiwiRCI6IlRoZSB0cmFuc2ZlciBmdW5jdGlvbiBpcyBub3QgZm91bmQgYnkgc3VidHJhY3RpbmcgdHJhbnNmb3Jtcy4ifSwiaGludCI6IlRoaW5rOiBvdXRwdXQgZXF1YWxzIHN5c3RlbSB0aW1lcyBpbnB1dCwgc28gdGhlIHN5c3RlbSBpcyBvdXRwdXQgZGl2aWRlZCBieSBpbnB1dC4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9LHsiaWQiOiJ0Zl9xMiIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiSWYgXFwoWFt6XVxcKSBpcyB0aGUgaW5wdXQgdHJhbnNmb3JtIGFuZCBcXChIW3pdXFwpIGlzIHRoZSB0cmFuc2ZlciBmdW5jdGlvbiwgd2hhdCBpcyBcXChZW3pdXFwpIHdoZW4gYWxsIGluaXRpYWwgY29uZGl0aW9ucyBhcmUgemVybz8iLCJvcHRpb25zIjpbIkEuIFxcKFlbel0gPSBIW3pdXFwsWFt6XVxcKSIsIkIuIFxcKFlbel0gPSBIW3pdL1hbel1cXCkiLCJDLiBcXChZW3pdID0gWFt6XS9IW3pdXFwpIiwiRC4gXFwoWVt6XSA9IEhbel0gKyBYW3pdXFwpIl0sImNvcnJlY3Rfb3B0aW9uIjoiQSIsImV4cGxhbmF0aW9uIjoiUmVhcnJhbmdpbmcgXFwoSFt6XSA9IFlbel0vWFt6XVxcKSBnaXZlcyBcXChZW3pdID0gSFt6XVxcLFhbel1cXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJCIjoiVGhpcyBkaXZpZGVzIGJ5IHRoZSBpbnB1dCBpbnN0ZWFkIG9mIG11bHRpcGx5aW5nIGJ5IGl0LiIsIkMiOiJUaGlzIHRyZWF0cyB0aGUgc3lzdGVtIGZ1bmN0aW9uIGFzIGEgZGl2aXNvciBvZiB0aGUgaW5wdXQuIiwiRCI6IlN5c3RlbSByZXNwb25zZSBpbiB0aGUgei1kb21haW4gaXMgbXVsdGlwbGljYXRpb24sIG5vdCBhZGRpdGlvbi4ifSwiaGludCI6IlRoZSBzeXN0ZW0gZnVuY3Rpb24gbXVsdGlwbGllcyB0aGUgaW5wdXQgdHJhbnNmb3JtLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX1dfSx7ImlkIjoiZGlmZmVyZW5jZV9lcXVhdGlvbl90b190cmFuc2Zlcl9mdW5jdGlvbiIsImxhYmVsIjoiT3BlcmF0b3ItcG9seW5vbWlhbCBmb3JtIiwiaW1wb3J0YW5jZSI6ImhpZ2giLCJleGFtX3dlaWdodCI6ImhpZ2giLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjJ9LCJxdWVzdGlvbnMiOlt7ImlkIjoiZGVfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IkFuIExUSUQgc3lzdGVtIGlzIHdyaXR0ZW4gYXMgXFwoUVtFXVxcLHlbbl0gPSBQW0VdXFwseFtuXVxcKS4gV2hpY2ggdHJhbnNmZXIgZnVuY3Rpb24gbWF0Y2hlcyB0aGUgY2hhcHRlciBzdW1tYXJ5PyIsIm9wdGlvbnMiOlsiQS4gXFwoSFt6XSA9IFFbel0vUFt6XVxcKSIsIkIuIFxcKEhbel0gPSBQW3pdL1Fbel1cXCkiLCJDLiBcXChIW3pdID0gUFt6XVxcLFFbel1cXCkiLCJELiBcXChIW3pdID0gUFt6XSAtIFFbel1cXCkiXSwiY29ycmVjdF9vcHRpb24iOiJCIiwiZXhwbGFuYXRpb24iOiJUaGUgaW5wdXQtc2lkZSBwb2x5bm9taWFsIFxcKFBbel1cXCkgZ29lcyBpbiB0aGUgbnVtZXJhdG9yLCBhbmQgdGhlIG91dHB1dC1zaWRlIHBvbHlub21pYWwgXFwoUVt6XVxcKSBnb2VzIGluIHRoZSBkZW5vbWluYXRvci4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJUaGlzIHN3YXBzIG51bWVyYXRvciBhbmQgZGVub21pbmF0b3IuIiwiQyI6IlRoZSB0cmFuc2ZlciBmdW5jdGlvbiBpcyBhIHJhdGlvLCBub3QgYSBwcm9kdWN0LiIsIkQiOiJTdWJ0cmFjdGluZyB0aGUgcG9seW5vbWlhbHMgZG9lcyBub3QgcHJvZHVjZSB0aGUgdHJhbnNmZXIgZnVuY3Rpb24uIn0sImhpbnQiOiJPdXRwdXQtc2lkZSBvcGVyYXRvciBnb2VzIHVuZGVybmVhdGgg4oCUIGl0IGlzIHRoZSBkZW5vbWluYXRvci4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9XX0seyJpZCI6ImV4cG9uZW50aWFsX3Jlc3BvbnNlX3Byb3BlcnR5IiwibGFiZWwiOiJSZXNwb25zZSB0byB6Xm4iLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoibWVkaXVtIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoxfSwicXVlc3Rpb25zIjpbeyJpZCI6ImV4cF9xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiRm9yIGFuIExUSUQgc3lzdGVtLCB0aGUgcmVzcG9uc2UgdG8gdGhlIGV2ZXJsYXN0aW5nIGV4cG9uZW50aWFsIFxcKHhbbl0gPSB6Xm5cXCkgaXM6Iiwib3B0aW9ucyI6WyJBLiBcXCh5W25dID0gSFt6XVxcKSIsIkIuIFxcKHlbbl0gPSBIW3pdXFwsel5uXFwpIiwiQy4gXFwoeVtuXSA9IHpebi9IW3pdXFwpIiwiRC4gXFwoeVtuXSA9IEhbbl1cXCx6XFwpIl0sImNvcnJlY3Rfb3B0aW9uIjoiQiIsImV4cGxhbmF0aW9uIjoiVGhlIGV4cG9uZW50aWFsIHNoYXBlIFxcKHpeblxcKSByZW1haW5zIGluIHRoZSBvdXRwdXQsIGFuZCB0aGUgc3lzdGVtIG11bHRpcGxpZXMgaXQgYnkgXFwoSFt6XVxcKS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJUaGlzIGRyb3BzIHRoZSBleHBvbmVudGlhbCBjb21wb25lbnQgXFwoel5uXFwpIGZyb20gdGhlIG91dHB1dC4iLCJDIjoiVGhlIHN5c3RlbSByZXNwb25zZSBtdWx0aXBsaWVzIGJ5IFxcKEhbel1cXCksIG5vdCBkaXZpZGVzIGJ5IGl0LiIsIkQiOiJcXChIXFwpIGlzIGEgZnVuY3Rpb24gb2YgXFwoelxcKSwgbm90IG9mIFxcKG5cXCkuIn0sImhpbnQiOiJUaGUgc3lzdGVtIHNjYWxlcyB0aGUgZXhwb25lbnRpYWw7IGl0IGRvZXMgbm90IGVyYXNlIGl0LiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9XX0seyJpZCI6InVuaWxhdGVyYWxfYmlsYXRlcmFsX3JvYyIsImxhYmVsIjoiVW5pbGF0ZXJhbCB2cyBiaWxhdGVyYWwgei10cmFuc2Zvcm0gYW5kIFJPQyIsImltcG9ydGFuY2UiOiJoaWdoIiwiZXhhbV93ZWlnaHQiOiJoaWdoIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoyfSwicXVlc3Rpb25zIjpbeyJpZCI6InJvY19xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiV2hpY2ggc3RhdGVtZW50IGJlc3QgbWF0Y2hlcyB0aGUgY2hhcHRlciBzdW1tYXJ5PyIsIm9wdGlvbnMiOlsiQS4gSW4gdGhlIHVuaWxhdGVyYWwgei10cmFuc2Zvcm0sIHRoZSBST0MgaXMgY2VudHJhbCBiZWNhdXNlIHNpZ25hbHMgbWF5IGJlIG5vbmNhdXNhbC4iLCJCLiBJbiB0aGUgYmlsYXRlcmFsIHotdHJhbnNmb3JtLCB0aGUgaW52ZXJzZSB0cmFuc2Zvcm0gb2YgXFwoWFt6XVxcKSBjYW4gZGVwZW5kIG9uIHRoZSBST0MuIiwiQy4gVGhlIFJPQyBpcyBpcnJlbGV2YW50IGZvciBib3RoIHVuaWxhdGVyYWwgYW5kIGJpbGF0ZXJhbCB6LXRyYW5zZm9ybXMuIiwiRC4gVGhlIGJpbGF0ZXJhbCB6LXRyYW5zZm9ybSBvbmx5IHdvcmtzIGZvciBjYXVzYWwgc2lnbmFscy4iXSwiY29ycmVjdF9vcHRpb24iOiJCIiwiZXhwbGFuYXRpb24iOiJUaGUgYmlsYXRlcmFsIHotdHJhbnNmb3JtIGNhbiBoYW5kbGUgY2F1c2FsIGFuZCBub25jYXVzYWwgc2lnbmFscywgc28gdGhlIFJPQyBpcyBjcnVjaWFsIGZvciBkZXRlcm1pbmluZyB0aGUgY29ycmVjdCBpbnZlcnNlIHRyYW5zZm9ybS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJUaGUgdW5pbGF0ZXJhbCB0cmFuc2Zvcm0gaXMgcmVzdHJpY3RlZCB0byBjYXVzYWwgc2lnbmFscywgd2hpY2ggbWFrZXMgdGhlIFJPQyBpbXBsaWNpdCBhbmQgbm90IGEgY2VudHJhbCBjb25jZXJuIGR1cmluZyBhbmFseXNpcy4iLCJDIjoiVGhlIFJPQyBpcyBjcnVjaWFsIGZvciB0aGUgYmlsYXRlcmFsIHRyYW5zZm9ybS4iLCJEIjoiVGhlIGJpbGF0ZXJhbCB0cmFuc2Zvcm0gaGFuZGxlcyBib3RoIGNhdXNhbCBhbmQgbm9uY2F1c2FsIHNpZ25hbHMuIn0sImhpbnQiOiJBc2sgd2hpY2ggdHJhbnNmb3JtIGFsbG93cyBub25jYXVzYWwgc2lnbmFscyDigJQgdGhhdCBpcyB0aGUgb25lIHdoZXJlIFJPQyBtYXR0ZXJzLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX0seyJpZCI6InJvY19xMiIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiT2JzZXJ2ZSBhIHotcGxhbmUgZGlhZ3JhbSB3aXRoIHRoZSBzYW1lIGFsZ2VicmFpYyBcXChYW3pdXFwpIGJ1dCB0d28gZGlmZmVyZW50IHNoYWRlZCBST0NzLiBXaGF0IHNob3VsZCB5b3UgY29uY2x1ZGU/Iiwib3B0aW9ucyI6WyJBLiBUaGUgaW52ZXJzZSB0cmFuc2Zvcm0gbXVzdCBiZSB0aGUgc2FtZSBiZWNhdXNlIFxcKFhbel1cXCkgaXMgdGhlIHNhbWUuIiwiQi4gVGhlIGludmVyc2UgdHJhbnNmb3JtIG1heSBkaWZmZXIgYmVjYXVzZSB0aGUgUk9DIGRpZmZlcnMuIiwiQy4gVGhlIHRyYW5zZmVyIGZ1bmN0aW9uIG11c3QgYmUgemVyby4iLCJELiBUaGUgc3lzdGVtIGNhbm5vdCBiZSBMVElELiJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6IkZvciB0aGUgYmlsYXRlcmFsIHotdHJhbnNmb3JtLCB0aGUgUk9DIGlzIHBhcnQgb2YgdGhlIGluZm9ybWF0aW9uIG5lZWRlZCB0byBkZXRlcm1pbmUgdGhlIGludmVyc2UgdHJhbnNmb3JtLiBUaGUgc2FtZSBhbGdlYnJhaWMgXFwoWFt6XVxcKSB3aXRoIGRpZmZlcmVudCBST0NzIGNhbiBjb3JyZXNwb25kIHRvIGRpZmZlcmVudCB0aW1lLWRvbWFpbiBzaWduYWxzLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6IlRoaXMgaWdub3JlcyB0aGUgUk9DLCB3aGljaCBjYW4gY2hhbmdlIHRoZSBpbnZlcnNlIHRyYW5zZm9ybSBldmVuIHdoZW4gXFwoWFt6XVxcKSBpcyBhbGdlYnJhaWNhbGx5IGlkZW50aWNhbC4iLCJDIjoiRGlmZmVyZW50IFJPQ3MgZG8gbm90IGltcGx5IGEgemVybyB0cmFuc2ZlciBmdW5jdGlvbi4iLCJEIjoiUk9DIGRpZmZlcmVuY2VzIGRvIG5vdCBieSB0aGVtc2VsdmVzIG1lYW4gdGhlIHN5c3RlbSBpcyBub3QgTFRJRC4ifSwiaGludCI6IkluIGJpbGF0ZXJhbCB6LXRyYW5zZm9ybSBwcm9ibGVtcywgXFwoWFt6XVxcKSBhbG9uZSBpcyBub3QgYWx3YXlzIGVub3VnaCB0byBkZXRlcm1pbmUgdGhlIGludmVyc2UgdHJhbnNmb3JtLiIsIm5lZWRzX3Zpc3VhbCI6dHJ1ZSwidmlzdWFsX3R5cGUiOiJ3aWtpX3JlZmVyZW5jZV96X3BsYW5lX3JvYyIsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX1dfSx7ImlkIjoicmVhbGl6YXRpb25fZm9ybXNfYW5kX2xhcGxhY2VfbGluayIsImxhYmVsIjoiUmVhbGl6YXRpb25zIGFuZCBMYXBsYWNlLXRyYW5zZm9ybSBjb25uZWN0aW9uIiwiaW1wb3J0YW5jZSI6Im1lZGl1bSIsImV4YW1fd2VpZ2h0IjoibWVkaXVtIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoxfSwicXVlc3Rpb25zIjpbeyJpZCI6InJlYWxfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IldoaWNoIGxpc3QgY29udGFpbnMgb25seSByZWFsaXphdGlvbiBmb3JtcyBuYW1lZCBpbiB0aGUgY2hhcHRlciBzdW1tYXJ5PyIsIm9wdGlvbnMiOlsiQS4gY2Fub25pY2FsLCB0cmFuc3Bvc2VkIGNhbm9uaWNhbCwgY2FzY2FkZSwgcGFyYWxsZWwiLCJCLiByZWN1cnNpdmUsIHNpbnVzb2lkYWwsIEZvdXJpZXIsIHNhbXBsaW5nIiwiQy4gY2Fub25pY2FsLCBkZXJpdmF0aXZlLCBpbnRlZ3JhbCwgY29udm9sdXRpb24iLCJELiBwYXJhbGxlbCwgbm9ubGluZWFyLCBhZGFwdGl2ZSwgcmFuZG9tIl0sImNvcnJlY3Rfb3B0aW9uIjoiQSIsImV4cGxhbmF0aW9uIjoiVGhlIHN1bW1hcnkgbmFtZXMgY2Fub25pY2FsLCB0cmFuc3Bvc2VkIGNhbm9uaWNhbCwgY2FzY2FkZSwgYW5kIHBhcmFsbGVsIHJlYWxpemF0aW9ucyBhcyB0aGUgc3RhbmRhcmQgZGlzY3JldGUtdGltZSBpbXBsZW1lbnRhdGlvbiBzdHJ1Y3R1cmVzLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQiI6IlRoZXNlIGFyZSBzaWduYWwtcHJvY2Vzc2luZyB0ZXJtcywgYnV0IG5vdCB0aGUgcmVhbGl6YXRpb24tZm9ybSBsaXN0IGluIHRoZSBzdW1tYXJ5LiIsIkMiOiJEZXJpdmF0aXZlIGFuZCBpbnRlZ3JhbCBhcmUgbm90IGxpc3RlZCBhcyBkaXNjcmV0ZS10aW1lIHJlYWxpemF0aW9uIGZvcm1zIGhlcmUuIiwiRCI6Ik5vbmxpbmVhciwgYWRhcHRpdmUsIGFuZCByYW5kb20gYXJlIG5vdCB0aGUgbmFtZWQgcmVhbGl6YXRpb24gZm9ybXMuIn0sImhpbnQiOiJMb29rIGZvciB0aGUgZm91ciBzdHJ1Y3R1cmFsIGZvcm1zIGxpc3RlZCB0b2dldGhlciBpbiB0aGUgc3VtbWFyeS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOmZhbHNlfSx7ImlkIjoibGFwbGFjZV9xMSIsInR5cGUiOiJzaG9ydF9hbnN3ZXIiLCJzdGVtIjoiSW4gb25lIG9yIHR3byBzZW50ZW5jZXMsIGV4cGxhaW4gaG93IHRoZSBzdW1tYXJ5IGNvbm5lY3RzIGRpc2NyZXRlLXRpbWUgei10cmFuc2Zvcm0gYW5hbHlzaXMgdG8gY29udGludW91cy10aW1lIExhcGxhY2UtdHJhbnNmb3JtIGFuYWx5c2lzLiBEbyBub3QgaW52ZW50IGFuIGV4YWN0IGNoYW5nZS1vZi12YXJpYWJsZSBmb3JtdWxhLiIsImlkZWFsX2Fuc3dlciI6IlRoZSBzdW1tYXJ5IHN0YXRlcyB0aGF0IHRoZSB6LXRyYW5zZm9ybSBpcyByZWxhdGVkIHRvIHRoZSBMYXBsYWNlIHRyYW5zZm9ybSBieSBhIGNoYW5nZSBvZiB2YXJpYWJsZSwgc28gZGlzY3JldGUtdGltZSBzeXN0ZW0gYW5hbHlzaXMgcGFyYWxsZWxzIGNvbnRpbnVvdXMtdGltZSBhbmFseXNpcyBhdCB0aGUgc3RydWN0dXJhbCBsZXZlbC4gSXQgYWxzbyBub3RlcyB0aGF0IHRoZSByZWFsaXphdGlvbiBwcm9jZWR1cmUgZm9yIGRpc2NyZXRlLXRpbWUgc3lzdGVtcyBtaXJyb3JzIGNvbnRpbnVvdXMtdGltZSBtZXRob2RzLCB3aXRoIFxcKDEvc1xcKSByZXBsYWNlZCBieSBcXCgxL3pcXCkuIiwiZ3JhZGluZ19ydWJyaWMiOlsiTXVzdCBtZW50aW9uIHRoYXQgdGhlIHotdHJhbnNmb3JtIGlzIHJlbGF0ZWQgdG8gdGhlIExhcGxhY2UgdHJhbnNmb3JtIGJ5IGEgY2hhbmdlIG9mIHZhcmlhYmxlLiIsIk11c3QgbWVudGlvbiB0aGUgXFwoMS9zXFwpIHRvIFxcKDEvelxcKSByZXBsYWNlbWVudCBmb3IgdGhlIHJlYWxpemF0aW9uIHByb2NlZHVyZS4iLCJNdXN0IG5vdCBpbnZlbnQgb3IgcmVxdWlyZSBhbiBleGFjdCBmb3JtdWxhIG5vdCBwcm92aWRlZCBpbiB0aGUgc291cmNlIHRleHQuIl0sImV4cGxhbmF0aW9uIjoiVGhpcyBjaGVja3Mgd2hldGhlciB0aGUgc3R1ZGVudCB1bmRlcnN0YW5kcyB0aGUgc3VtbWFyeS1sZXZlbCBjb25uZWN0aW9uIHdpdGhvdXQgb3ZlcmNsYWltaW5nIGEgZm9ybXVsYSBub3Qgc2hvd24gaW4gdGhlIHNvdXJjZSB0ZXh0LiIsImhpbnQiOiJVc2UgdGhlIHdvcmRpbmcgZnJvbSB0aGUgc3VtbWFyeTogY2hhbmdlIG9mIHZhcmlhYmxlIGFuZCBcXCgxL3NcXCkgcmVwbGFjZWQgYnkgXFwoMS96XFwpLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9XX1dfQ==" style="display:none;"></div>%%KC_END%%

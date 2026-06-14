@@ -28,11 +28,6 @@ The symbol \(n\) is an integer index: \(\ldots, -2, -1, 0, 1, 2, \ldots\). The n
 
 $$x[n], \quad n \in \mathbb{Z}$$
 
-%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="web_reference_image" data-teaching-role="concept_anchor" data-visual-use-b64="eyJjcmFtIjoiVXNlIHRoZSB2ZXJ0aWNhbCBzdGVtcyBhcyB0aGUgZmFzdCByZWNvZ25pdGlvbiBjdWUgZm9yIGEgZGlzY3JldGUtdGltZSBzZXF1ZW5jZS4iLCJzdGFuZGFyZCI6IlVzZSB0aGUgZmlndXJlIHRvIGNvbm5lY3QgXFwoeFtuXVxcKSB3aXRoIGluZGV4ZWQgc2FtcGxlIHZhbHVlcy4iLCJ0b3Bfc2NvcmUiOiJVc2UgdGhlIHNlcGFyYXRlZCBzdGVtcyB0byBlbXBoYXNpemUgdGhhdCB0aGUgZ3JhcGggZG9lcyBub3QgaW1wbHkgdmFsdWVzIGJldHdlZW4gaW50ZWdlciBpbmRpY2VzLiJ9" style="display:none;"></div>%%KC_END%%
-![Wavelet](https://upload.wikimedia.org/wikipedia/commons/0/0d/Seismic_Wavelet.svg)
-*A stem plot of a discrete-time signal: each vertical stem marks one sample value at an integer index \(n\). Notice there are no values between the stems — the signal only exists at the marked integer positions.*
-%%KC_BLOCK%%<div class="kc-reference-source"><a href="https://upload.wikimedia.org/wikipedia/commons/0/0d/Seismic_Wavelet.svg" target="_blank" rel="noopener noreferrer">Reference image from Wikipedia</a></div>%%KC_END%%
-
 ## 2. A Discrete-Time System Processes a Sequence
 
 A discrete-time system takes an **input sequence** \(x[n]\) and produces an **output sequence** \(y[n]\). A digital computer is the most familiar example: it operates on numbers indexed by integers, not on a continuously varying signal.

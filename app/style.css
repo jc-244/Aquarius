@@ -10032,6 +10032,121 @@ body.learn-resizing .learn-resizer::before {
   width: 100%;
 }
 
+.interactive-demo-shell--lab .interactive-demo-grid {
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+}
+
+.interactive-demo-shell--lab .interactive-demo-controls {
+  align-self: stretch;
+}
+
+.interactive-demo-shell--lab .interactive-demo-stage {
+  min-height: 300px;
+}
+
+.interactive-demo-shell--lab .interactive-demo-canvas {
+  min-height: 260px;
+}
+
+.interactive-demo-grid--flow {
+  align-items: center;
+}
+
+.interactive-demo-flow-stage {
+  min-height: 260px;
+}
+
+.interactive-demo-flow {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(160px, 1fr) 56px minmax(180px, 1.15fr) 56px minmax(180px, 1fr);
+  min-width: 0;
+}
+
+.interactive-demo-flow-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(191, 219, 254, 0.95);
+  border-radius: 8px;
+  box-sizing: border-box;
+  color: #0f172a;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px;
+}
+
+.interactive-demo-flow-card strong,
+.interactive-demo-flow-card em,
+.interactive-demo-flow-card b,
+.interactive-demo-flow-card small {
+  display: block;
+}
+
+.interactive-demo-flow-card strong {
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+
+.interactive-demo-flow-card em {
+  color: #2563eb;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.interactive-demo-flow-card b {
+  color: #7c3aed;
+  font-size: 0.96rem;
+  font-weight: 850;
+}
+
+.interactive-demo-flow-card small {
+  color: #475569;
+  line-height: 1.45;
+}
+
+.interactive-demo-flow-card--domain {
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.98), rgba(255, 255, 255, 0.97));
+}
+
+.interactive-demo-flow-kicker {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.interactive-demo-flow-arrow {
+  align-items: center;
+  color: #2563eb;
+  display: flex;
+  font-size: 1.1rem;
+  font-weight: 900;
+  justify-content: center;
+}
+
+.interactive-demo-flow-arrow span {
+  align-items: center;
+  border: 2px solid rgba(191, 219, 254, 0.95);
+  border-radius: 999px;
+  display: inline-flex;
+  justify-content: center;
+  min-height: 42px;
+  min-width: 42px;
+  background: rgba(239, 246, 255, 0.9);
+}
+
+.interactive-demo-flow-canvas {
+  background: #fff;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  border-radius: 8px;
+  display: block;
+  margin-top: 4px;
+  max-width: 100%;
+  width: 100%;
+}
+
 .interactive-demo-readouts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -10079,6 +10194,10 @@ body.learn-resizing .learn-resizer::before {
   padding: 10px;
 }
 
+.interactive-demo-tabs--inline {
+  margin-bottom: 0;
+}
+
 .interactive-demo-tab,
 .interactive-demo-switch {
   background: #f8fafc;
@@ -10116,7 +10235,9 @@ body.learn-resizing .learn-resizer::before {
 
 @media (max-width: 760px) {
   .interactive-demo-grid,
-  .interactive-demo-readouts {
+  .interactive-demo-shell--lab .interactive-demo-grid,
+  .interactive-demo-readouts,
+  .interactive-demo-flow {
     grid-template-columns: 1fr;
   }
 }
@@ -47501,4 +47622,36 @@ body {
     height: auto !important;
     grid-template-rows: auto 12px auto !important;
   }
+}
+
+/* Learn split drag tune: honor the user's custom Q&A ratio after late layout locks. */
+#learnView#learnView #learnBody#learnBody.panel-normal:not(.chapter-overview-active):not(.chapter-overview-split-active):not(.chat-collapsed):not(.explain-collapsed) .learn-body-inner[data-custom-split="true"],
+#learnView#learnView #learnBody#learnBody:not([data-panel-focus]):not(.chapter-overview-active):not(.chapter-overview-split-active):not(.chat-collapsed):not(.explain-collapsed) .learn-body-inner[data-custom-split="true"] {
+  display: flex !important;
+  grid-template-columns: none !important;
+  gap: 0 !important;
+}
+
+#learnView#learnView #learnBody#learnBody.panel-normal:not(.chapter-overview-active):not(.chapter-overview-split-active):not(.chat-collapsed):not(.explain-collapsed) .learn-body-inner[data-custom-split="true"] #learnExplainCol,
+#learnView#learnView #learnBody#learnBody:not([data-panel-focus]):not(.chapter-overview-active):not(.chapter-overview-split-active):not(.chat-collapsed):not(.explain-collapsed) .learn-body-inner[data-custom-split="true"] #learnExplainCol {
+  flex: 0 0 var(--learn-explain-basis, 55%) !important;
+  flex-basis: var(--learn-explain-basis, 55%) !important;
+  width: var(--learn-explain-basis, 55%) !important;
+  min-width: 0 !important;
+  max-width: var(--learn-explain-basis, 55%) !important;
+}
+
+#learnView#learnView #learnBody#learnBody.panel-normal:not(.chapter-overview-active):not(.chapter-overview-split-active):not(.chat-collapsed):not(.explain-collapsed) .learn-body-inner[data-custom-split="true"] #learnChatCol,
+#learnView#learnView #learnBody#learnBody:not([data-panel-focus]):not(.chapter-overview-active):not(.chapter-overview-split-active):not(.chat-collapsed):not(.explain-collapsed) .learn-body-inner[data-custom-split="true"] #learnChatCol {
+  flex: 0 0 var(--learn-chat-basis, 45%) !important;
+  flex-basis: var(--learn-chat-basis, 45%) !important;
+  width: var(--learn-chat-basis, 45%) !important;
+  min-width: 0 !important;
+  max-width: var(--learn-chat-basis, 45%) !important;
+}
+
+body.learn-resizing #learnView #learnBody .learn-body-inner,
+body.learn-resizing #learnView #learnBody #learnExplainCol,
+body.learn-resizing #learnView #learnBody #learnChatCol {
+  transition: none !important;
 }

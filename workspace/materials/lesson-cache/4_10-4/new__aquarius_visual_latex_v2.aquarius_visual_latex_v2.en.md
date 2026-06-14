@@ -1,0 +1,121 @@
+%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6InJlYWN0X2RlbW8iLCJyYXRpb25hbGUiOiJUaGUga2V5IGlkZWEgaXMgbm90IGp1c3QgdGhlIHN0YXRpYyBwb2xlLXplcm8gcGxhY2VtZW50IGJ1dCBob3cgbW92aW5nIHRoZSBwb2xlcyBjbG9zZXIgdG8gdGhlIHplcm9zIGJ5IGluY3JlYXNpbmcgzrggY2hhbmdlcyB0aGUgd2lkdGggYW5kIHNoYXJwbmVzcyBvZiB0aGUgbm90Y2guIE5vIGNyb3BwZWQgdGV4dGJvb2sgZmlndXJlIGlzIGF2YWlsYWJsZSwgYW5kIGZ1bGwtcGFnZSBzY3JlZW5zaG90cyBzaG91bGQgbm90IGJlIHVzZWQuIEEgUmVhY3QgKyBDYW52YXMgZGVtbyBjYW4gc2hvdyB0aGUgcy1wbGFuZSBwb2xlLXplcm8gY29uZmlndXJhdGlvbiBhbmQgdGhlIGNvcnJlc3BvbmRpbmcgfEgoas+JKXwgY3VydmUgc2lkZSBieSBzaWRlIGFzIM64IGNoYW5nZXMuIiwiY3JhbSI6IlVzZSB0aGUgZGVtbyB0byBtZW1vcml6ZSB0aGUgdHJpZ2dlcjogemVyb3Mgb24gwrFqz4kwIGNyZWF0ZSB0aGUgbm90Y2g7IHBvbGVzIGNsb3NlciB0byB0aG9zZSB6ZXJvcyBjcmVhdGUgZmFzdGVyIHJlY292ZXJ5LiIsInN0YW5kYXJkIjoiVXNlIHRoZSBkZW1vIHRvIGNvbm5lY3QgcG9sZS16ZXJvIGdlb21ldHJ5IHRvIHRoZSBtYWduaXR1ZGUgcmVzcG9uc2UgZm9yIG9uZSByZXByZXNlbnRhdGl2ZSA2MCBIeiBub3RjaCBleGFtcGxlLiIsInRvcF9zY29yZSI6IlVzZSB0aGUgZGVtbyB0byBpbnNwZWN0IHRoZSBzdWJ0bGUgzrggdHJhZGVvZmY6IHRoZSBub3RjaCBzdGF5cyBhdCDPiTAsIGJ1dCByZWNvdmVyeSBzaGFycG5lc3MgY2hhbmdlcyBhcyBwb2xlcyBhcHByb2FjaCB0aGUgemVyb3MuIn0=" style="display:none;"></div>%%KC_END%%
+# Notch (Bandstop) Filters
+
+> **Section Objective:** Design a second-order notch filter by placing zeros and poles so one unwanted frequency is suppressed while nearby frequencies recover.
+
+---
+
+## Concepts In This Section
+
+- Ideal notch response
+- Zeros at the notch frequency
+- Pole placement on the \(\omega_0\) semicircle
+- \(\theta\) and notch sharpness
+- 60 Hz hum suppression example
+
+## 1. What a Notch Filter Does
+
+An ideal notch (bandstop) filter has **zero gain** over a narrow band centered at \(\omega_0\) and **unity gain** everywhere else. This is the complement of a bandpass filter: a bandpass keeps a band, while a notch removes one.
+
+An ideal notch would require infinitely many poles and zeros. This section studies a practical **second-order design** that achieves exactly zero gain at one target frequency.
+
+### CONCRETE EXAMPLE
+
+The classic application is **60 Hz hum** from power lines. The unwanted frequency is \(f_0 = 60\,\text{Hz}\), so the target angular frequency is:
+
+$$\omega_0 = 2\pi f_0 = 120\pi\,\text{rad/s}$$
+
+The filter must suppress this one frequency while leaving all other signal content intact.
+
+## 2. Where the poles go
+
+These are the **two zeros** of the second-order notch filter.
+
+- \(s\) is the complex frequency variable used in the Laplace domain.
+- \(j\omega\) is the imaginary axis — the axis along which the frequency response \(H(j\omega)\) is evaluated.
+- \(\omega_0\) is the notch frequency in rad/s.
+
+**When to use:** Whenever a problem asks for zero gain at one frequency \(\omega_0\), place zeros at \(s = \pm j\omega_0\).
+
+**Exam trigger:** "Suppress a sinusoid at \(f_0\)" means put zeros at \(s = \pm j2\pi f_0\).
+
+#### Common Misuse
+
+Placing zeros at \(s = \pm\omega_0\) on the **real axis** does NOT create a notch at \(\omega = \omega_0\). The frequency response is evaluated on the imaginary axis, so only imaginary-axis zeros produce zero gain at a real frequency.
+
+$$s = \pm j\omega_0$$
+
+%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="interactive_demo" data-teaching-role="concept_anchor" data-visual-use-b64="eyJjcmFtIjoiRHJhZyDOuCBhbmQgcmVtZW1iZXIgdGhlIHZpc3VhbCBydWxlOiBzYW1lIG5vdGNoIGxvY2F0aW9uLCBkaWZmZXJlbnQgcmVjb3Zlcnkgc2hhcnBuZXNzLiIsInN0YW5kYXJkIjoiVXNlIHRoZSBsaW5rZWQgcy1wbGFuZSBhbmQgbWFnbml0dWRlIHBsb3QgdG8gY29ubmVjdCBwb2xlLXplcm8gZGlzdGFuY2Ugd2l0aCB8SChqz4kpfC4iLCJ0b3Bfc2NvcmUiOiJDb21wYXJlIM64ID0gNjDCsCwgODDCsCwgYW5kIDg3wrAgYW5kIG5vdGljZSB0aGF0IHRoZSBub3RjaCBmcmVxdWVuY3kgZG9lcyBub3QgbW92ZS4ifQ==" style="display:none;"></div><div class="kc-interactive-demo" data-demo-b64="eyJ0eXBlIjoiaW50ZXJhY3RpdmVfZGVtbyIsInRlYWNoaW5nX3JvbGUiOiJjb25jZXB0X2FuY2hvciIsIm1vZGVfc3BlY2lmaWNfdmlzdWFsX3VzZSI6eyJjcmFtIjoiRHJhZyDOuCBhbmQgcmVtZW1iZXIgdGhlIHZpc3VhbCBydWxlOiBzYW1lIG5vdGNoIGxvY2F0aW9uLCBkaWZmZXJlbnQgcmVjb3Zlcnkgc2hhcnBuZXNzLiIsInN0YW5kYXJkIjoiVXNlIHRoZSBsaW5rZWQgcy1wbGFuZSBhbmQgbWFnbml0dWRlIHBsb3QgdG8gY29ubmVjdCBwb2xlLXplcm8gZGlzdGFuY2Ugd2l0aCB8SChqz4kpfC4iLCJ0b3Bfc2NvcmUiOiJDb21wYXJlIM64ID0gNjDCsCwgODDCsCwgYW5kIDg3wrAgYW5kIG5vdGljZSB0aGF0IHRoZSBub3RjaCBmcmVxdWVuY3kgZG9lcyBub3QgbW92ZS4ifSwidGl0bGUiOiJJbnRlcmFjdGl2ZSBOb3RjaCBGaWx0ZXI6IE1vdmUgzrggYW5kIFdhdGNoIHRoZSBOb3RjaCBTaGFycGVuIiwicHVycG9zZSI6IlNob3cgaG93IHRoZSBwb2xlIGFuZ2xlIM64IGNoYW5nZXMgdGhlIHJlY292ZXJ5IG9mIHRoZSBub3RjaCB3aGlsZSB6ZXJvcyByZW1haW4gZml4ZWQgYXQgwrFqz4nigoAuIiwiZGVtb19zcGVjIjp7InRlY2hub2xvZ3kiOiJSZWFjdCArIENhbnZhcyIsImxheW91dCI6IlR3byBzeW5jaHJvbml6ZWQgcGFuZWxzIHNpZGUgYnkgc2lkZS4gTGVmdCBwYW5lbDogcy1wbGFuZSB3aXRoIHJlYWwgYXhpcyBob3Jpem9udGFsIGFuZCBpbWFnaW5hcnkgYXhpcyB2ZXJ0aWNhbC4gWmVyb3Mgc2hvd24gYXMgb3BlbiBjaXJjbGVzIGZpeGVkIGF0ICtqz4nigoAgYW5kIOKIkmrPieKCgCBvbiB0aGUgaW1hZ2luYXJ5IGF4aXMuIFBvbGVzIHNob3duIGFzIMOXIG1hcmtzIGF0IOKIks+J4oKAY29zzrggwrEgas+J4oKAc2luzrggaW4gdGhlIGxlZnQgaGFsZi1wbGFuZS4gUmlnaHQgcGFuZWw6IG1hZ25pdHVkZSByZXNwb25zZSB8SChqz4kpfCB2ZXJzdXMgz4ksIHdpdGggYSB2aXNpYmxlIHplcm8gZGlwIGF0IM+J4oKAIGFuZCByZWNvdmVyeSBvbiBib3RoIHNpZGVzLiIsImNvbnRyb2xzIjpbeyJuYW1lIjoizrggc2xpZGVyIiwicmFuZ2UiOiI2MMKwIHRvIDg5wrAiLCJkZWZhdWx0IjoiNjDCsCIsImJlaGF2aW9yIjoiSW5jcmVhc2luZyDOuCBtb3ZlcyB0aGUgcG9sZXMgY2xvc2VyIHRvIHRoZSB6ZXJvcyBhbG9uZyB0aGUgc2VtaWNpcmNsZSBvZiByYWRpdXMgz4nigoAuIFRoZSBtYWduaXR1ZGUgcmVzcG9uc2UgcmVjb3ZlcnMgZmFzdGVyIGFyb3VuZCB0aGUgbm90Y2ggYXMgzrggaW5jcmVhc2VzLiJ9LHsibmFtZSI6ImZyZXF1ZW5jeSBtYXJrZXIiLCJyYW5nZSI6IjAgdG8gMs+J4oKAIiwiZGVmYXVsdCI6Is+J4oKAIiwiYmVoYXZpb3IiOiJEaXNwbGF5cyB0aGUgY3VycmVudCB8SChqz4kpfCB2YWx1ZSBhdCB0aGUgbWFya2VyIHBvc2l0aW9uLiBBdCDPieKCgCwgYWx3YXlzIHNob3dzIHxIKGrPieKCgCl8ID0gMCByZWdhcmRsZXNzIG9mIM64LiJ9XSwiZml4ZWRfcGFyYW1ldGVycyI6WyJVc2Ugbm9ybWFsaXplZCDPieKCgCA9IDEgZm9yIHRoZSBtYWluIGRlbW8gbGFiZWxzLiIsIkluY2x1ZGUgYW4gb3B0aW9uYWwgdG9nZ2xlIHNob3dpbmcgdGhlIDYwIEh6IGV4YW1wbGUgd2l0aCDPieKCgCA9IDEyMM+AIHJhZC9zLiJdLCJ3aGF0X3N0dWRlbnRzX3Nob3VsZF9ub3RpY2UiOlsiVGhlIHplcm9zIHN0YXkgZml4ZWQgYXQgwrFqz4nigoAgcmVnYXJkbGVzcyBvZiDOuC4iLCJUaGUgcG9sZXMgc3RheSBvbiBhIHNlbWljaXJjbGUgb2YgcmFkaXVzIM+J4oKAIGluIHRoZSBsZWZ0IGhhbGYtcGxhbmUuIiwiQXMgzrggYXBwcm9hY2hlcyA5MMKwLCB0aGUgcG9sZXMgYXBwcm9hY2ggdGhlIHplcm9zIGFuZCB0aGUgbWFnbml0dWRlIHJlc3BvbnNlIHJlY292ZXJzIGZhc3RlciBhd2F5IGZyb20gz4nigoAuIiwiQ2hhbmdpbmcgzrggY2hhbmdlcyBub3RjaCBzaGFycG5lc3MsIG5vdCB0aGUgbm90Y2ggY2VudGVyIGZyZXF1ZW5jeS4iXSwiYXZvaWQiOlsiRG8gbm90IHNob3cgZGVjb3JhdGl2ZSAzRCBzdXJmYWNlcy4iLCJEbyBub3QgdXNlIGRlbnNlIGxhYmVscyBvciBhIGZ1bGwgZGVyaXZhdGlvbiBpbnNpZGUgdGhlIGRlbW8uIiwiRG8gbm90IGltcGx5IHRoYXQgzrggY2hhbmdlcyDPieKCgC4iXX0sImNhcHRpb24iOiJEcmFnIHRoZSDOuCBzbGlkZXI6IHRoZSBub3RjaCBzdGF5cyBhdCDPieKCgCwgYnV0IHRoZSBnYWluIHJlY292ZXJ5IG9uIGVpdGhlciBzaWRlIHNoYXJwZW5zIGFzIM64IGFwcHJvYWNoZXMgOTDCsC4ifQ=="></div>%%KC_END%%
+
+## 2. Where the Poles Go
+
+A second-order notch filter uses **two zeros and two poles** — equal counts so that gain approaches unity as \(\omega \to \infty\).
+
+To also achieve **unity gain at DC** (\(\omega = 0\)), each pole must be the same distance from the origin as its corresponding zero. Since the zeros sit at radius \(\omega_0\) from the origin, the conjugate poles are placed on a **semicircle of radius \(\omega_0\)** in the left half-plane.
+
+### EXAMPLE
+
+For a 60 Hz notch, the semicircle radius is \(\omega_0 = 120\pi\,\text{rad/s}\). The poles lie somewhere on that semicircle, controlled by the angle \(\theta\).
+
+#### Stability Trap
+
+Poles closer to the zeros (larger \(\theta\)) sharpen the recovery, but the poles **must remain in the left half-plane** (\(\theta < 90°\)) for the filter to be stable. At \(\theta = 90°\), the poles would land on the imaginary axis — marginally stable and unusable in practice.
+
+$$s = -\omega_0\cos\theta \pm j\omega_0\sin\theta$$
+*This gives the **conjugate pole locations** for the second-order notch filter.
+
+- \(\theta\) is the pole angle measured from the negative real axis toward the imaginary axis.
+- \(-\omega_0\cos\theta\) is the negative real part, placing the poles in the left half-plane.
+- \(\pm j\omega_0\sin\theta\) are the imaginary parts, symmetric about the real axis.
+
+**When to use:** After placing zeros at \(\pm j\omega_0\), use this formula to choose stable poles on the radius-\(\omega_0\) semicircle.
+
+**Exam trigger:** If a problem asks how to make the notch narrower or sharper, adjust \(\theta\) — larger \(\theta\) means faster recovery.
+
+#### Common Misuse
+
+Thinking that larger \(\theta\) moves the notch frequency. It does not. \(\theta\) controls **recovery sharpness**, not \(\omega_0\). The notch center is fixed by the zeros.*
+
+$$H(s) = \frac{s^2 + \omega_0^2}{s^2 + 2\omega_0\cos\theta\,s + \omega_0^2}$$
+*This is the **second-order notch filter transfer function** built from the chosen zeros and poles.
+
+- **Numerator** \(s^2 + \omega_0^2\): comes from zeros at \(s = \pm j\omega_0\). When \(s = j\omega_0\), the numerator is \((j\omega_0)^2 + \omega_0^2 = 0\).
+- **Denominator** \(s^2 + 2\omega_0\cos\theta\,s + \omega_0^2\): comes from the conjugate pole pair.
+- \(\omega_0\): the suppressed angular frequency (e.g., \(120\pi\) for 60 Hz).
+- \(\theta\): the sharpness-control parameter.
+
+**When to use:** Use this form to design any notch centered at \(\omega_0\).
+
+**Exam trigger:** "Design a second-order notch filter" almost always means write this numerator-denominator structure.
+
+#### Common Misuse
+
+Forgetting the middle denominator term \(2\omega_0\cos\theta\,s\). Without it, you lose all control over pole location and the filter's recovery behavior.*
+
+$$|H(j\omega)| = \frac{|{-\omega^2 + \omega_0^2}|}{\sqrt{(-\omega^2 + \omega_0^2)^2 + (2\omega_0\omega\cos\theta)^2}}$$
+*This **magnitude response** is obtained by substituting \(s = j\omega\) into \(H(s)\).
+
+**Key reading:** At \(\omega = \omega_0\), the numerator \(|-\omega_0^2 + \omega_0^2| = 0\), so \(|H(j\omega_0)| = 0\) — the notch.
+
+- \(\omega\): the running input frequency in rad/s.
+- \(\omega_0\): the notch center frequency.
+- \(\theta\): controls how quickly the denominator grows away from \(\omega_0\), i.e., recovery sharpness.
+
+**When to use:** Use this formula to compute or sketch the amplitude response at any frequency.
+
+**Exam trigger:** Questions asking for \(|H(j\omega)|\), notch depth, or the effect of \(\theta\) on the response shape.
+
+#### Common Misuse
+
+Plugging in \(f\) in Hz directly. Always convert first: \(\omega = 2\pi f\). The formula requires angular frequency in rad/s.*
+
+---
+**📌 Key Takeaways**
+- Zeros at \(s = \pm j\omega_0\) force \(|H(j\omega_0)| = 0\); placing them on the real axis does not create a notch.
+- Poles at \(s = -\omega_0\cos\theta \pm j\omega_0\sin\theta\) lie on the radius-\(\omega_0\) semicircle, giving unity gain at DC and \(\infty\).
+- Transfer function: \(H(s) = \dfrac{s^2 + \omega_0^2}{s^2 + 2\omega_0\cos\theta\,s + \omega_0^2}\); larger \(\theta\) (closer to \(90°\)) gives faster gain recovery without moving the notch.
+- Magnitude fact: \(|H(j\omega_0)| = 0\) always; \(\theta\) changes recovery sharpness, not the notch center frequency \(\omega_0\).
+
+*Next, use the same pole-zero distance logic to classify filter responses directly from pole-zero plots.*
+
+%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NywicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo2LCJtYXgiOjh9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6Im5vdGNoX2ZpbHRlcl9nb2FsIiwibGFiZWwiOiJQdXJwb3NlIGFuZCBmcmVxdWVuY3kgdGFyZ2V0IG9mIGEgbm90Y2ggZmlsdGVyIiwiaW1wb3J0YW5jZSI6ImhpZ2giLCJleGFtX3dlaWdodCI6ImhpZ2giLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjF9LCJxdWVzdGlvbnMiOlt7ImlkIjoia3AxX3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJBIHJlY2VpdmVyIGhhcyB1bndhbnRlZCA2MCBIeiBodW0uIEZvciBhIG5vdGNoLWZpbHRlciBkZXNpZ24sIHdoYXQgYW5ndWxhciBub3RjaCBmcmVxdWVuY3kgc2hvdWxkIGJlIHVzZWQ/Iiwib3B0aW9ucyI6WyJBLiBcXChcXG9tZWdhXzAgPSA2MFxcLFxcdGV4dHtyYWQvc31cXCkiLCJCLiBcXChcXG9tZWdhXzAgPSAxMjBcXHBpXFwsXFx0ZXh0e3JhZC9zfVxcKSIsIkMuIFxcKFxcb21lZ2FfMCA9IDMwXFxwaVxcLFxcdGV4dHtyYWQvc31cXCkiLCJELiBcXChcXG9tZWdhXzAgPSAyXFxwaS82MFxcLFxcdGV4dHtyYWQvc31cXCkiXSwiY29ycmVjdF9vcHRpb24iOiJCIiwiZXhwbGFuYXRpb24iOiJBbmd1bGFyIGZyZXF1ZW5jeSBpcyBcXChcXG9tZWdhXzAgPSAyXFxwaSBmXzBcXCkuIEZvciBcXChmXzAgPSA2MFxcLFxcdGV4dHtIen1cXCksIFxcKFxcb21lZ2FfMCA9IDEyMFxccGlcXCxcXHRleHR7cmFkL3N9XFwpLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6IlRoaXMgaW5jb3JyZWN0bHkgdHJlYXRzIGZyZXF1ZW5jeSBpbiBIeiBhcyBhbmd1bGFyIGZyZXF1ZW5jeSBpbiByYWQvcy4iLCJDIjoiVGhpcyB1c2VzIHRoZSB3cm9uZyBjb252ZXJzaW9uIGZhY3Rvci4iLCJEIjoiVGhpcyBpbnZlcnRzIHRoZSBjb252ZXJzaW9uIGluc3RlYWQgb2YgbXVsdGlwbHlpbmcgYnkgXFwoMlxccGlcXCkuIn0sImhpbnQiOiJDb252ZXJ0IEh6IHRvIHJhZC9zIHVzaW5nIFxcKFxcb21lZ2EgPSAyXFxwaSBmXFwpLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9XX0seyJpZCI6Inplcm9fcGxhY2VtZW50IiwibGFiZWwiOiJaZXJvcyBhdCDCsWrPieKCgCBjcmVhdGUgdGhlIG5vdGNoIiwiaW1wb3J0YW5jZSI6ImhpZ2giLCJleGFtX3dlaWdodCI6ImhpZ2giLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjJ9LCJxdWVzdGlvbnMiOlt7ImlkIjoia3AyX3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJUbyBmb3JjZSB6ZXJvIGdhaW4gYXQgXFwoXFxvbWVnYSA9IFxcb21lZ2FfMFxcKSwgd2hlcmUgc2hvdWxkIHRoZSB6ZXJvcyBvZiBhIHNlY29uZC1vcmRlciBub3RjaCBmaWx0ZXIgYmUgcGxhY2VkPyIsIm9wdGlvbnMiOlsiQS4gQXQgXFwocyA9IFxccG0galxcb21lZ2FfMFxcKSIsIkIuIEF0IFxcKHMgPSBcXHBtXFxvbWVnYV8wXFwpIiwiQy4gQXQgXFwocyA9IC1cXG9tZWdhXzAgXFxwbSBqMFxcKSIsIkQuIEF0IFxcKHMgPSAwXFwpIHR3aWNlIl0sImNvcnJlY3Rfb3B0aW9uIjoiQSIsImV4cGxhbmF0aW9uIjoiVGhlIGZyZXF1ZW5jeSByZXNwb25zZSBpcyBldmFsdWF0ZWQgb24gdGhlIFxcKGpcXG9tZWdhXFwpIGF4aXMsIHNvIHplcm9zIGF0IFxcKFxccG0galxcb21lZ2FfMFxcKSBtYWtlIHRoZSByZXNwb25zZSB2YW5pc2ggYXQgdGhlIHRhcmdldCBmcmVxdWVuY3kuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJCIjoiVGhlc2UgYXJlIHJlYWwtYXhpcyBsb2NhdGlvbnMsIG5vdCBwb2ludHMgb24gdGhlIGZyZXF1ZW5jeS1yZXNwb25zZSBheGlzIGF0IFxcKFxccG0galxcb21lZ2FfMFxcKS4iLCJDIjoiVGhlc2UgYXJlIGxlZnQtaGFsZi1wbGFuZSByZWFsIGxvY2F0aW9ucywgbm90IHRoZSB0YXJnZXQgaW1hZ2luYXJ5LWF4aXMgemVyb3MuIiwiRCI6Ilplcm9zIGF0IHRoZSBvcmlnaW4gc3VwcHJlc3MgREMsIG5vdCBcXChcXG9tZWdhXzBcXCkuIn0sImhpbnQiOiJUaGUgZnJlcXVlbmN5LXJlc3BvbnNlIGF4aXMgaXMgdGhlIGltYWdpbmFyeSBheGlzOiBcXChzID0galxcb21lZ2FcXCkuIiwibmVlZHNfdmlzdWFsIjp0cnVlLCJ2aXN1YWxfdHlwZSI6InNfcGxhbmVfemVyb19sb2NhdGlvbl9jaGVjayIsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX0seyJpZCI6ImtwMl9xMiIsInR5cGUiOiJzaG9ydF9hbnN3ZXIiLCJzdGVtIjoiQSBjbGFzc21hdGUgcGxhY2VzIHplcm9zIGF0IFxcKHMgPSBcXHBtXFxvbWVnYV8wXFwpIHRvIHN1cHByZXNzIGZyZXF1ZW5jeSBcXChcXG9tZWdhXzBcXCkuIEV4cGxhaW4gd2h5IHRoaXMgaXMgd3JvbmcuIiwiaWRlYWxfYW5zd2VyIjoiVGhlIGZyZXF1ZW5jeSByZXNwb25zZSBpcyBldmFsdWF0ZWQgb24gdGhlIGltYWdpbmFyeSBheGlzIFxcKHMgPSBqXFxvbWVnYVxcKS4gVG8gbWFrZSB0aGUgZ2FpbiB6ZXJvIGF0IFxcKFxcb21lZ2FfMFxcKSwgdGhlIHplcm9zIG11c3QgbGllIGF0IFxcKHMgPSBcXHBtIGpcXG9tZWdhXzBcXCksIG5vdCBvbiB0aGUgcmVhbCBheGlzIGF0IFxcKFxccG1cXG9tZWdhXzBcXCkuIiwiZ3JhZGluZ19ydWJyaWMiOlsiTXVzdCBtZW50aW9uIHRoZSBmcmVxdWVuY3ktcmVzcG9uc2UgYXhpcyBcXChzID0galxcb21lZ2FcXCkiLCJNdXN0IGlkZW50aWZ5IHRoZSBjb3JyZWN0IHplcm9zIFxcKHMgPSBcXHBtIGpcXG9tZWdhXzBcXCkiLCJNdXN0IGV4cGxhaW4gdGhhdCBcXChcXHBtXFxvbWVnYV8wXFwpIGFyZSByZWFsLWF4aXMgbG9jYXRpb25zIl0sImV4cGxhbmF0aW9uIjoiVGhpcyBjaGVja3Mgd2hldGhlciB0aGUgc3R1ZGVudCB1bmRlcnN0YW5kcyB0aGUgZ2VvbWV0cnksIG5vdCBqdXN0IHRoZSBzeW1ib2wgcGF0dGVybi4iLCJoaW50IjoiQXNrIHdoaWNoIGF4aXMgY29udGFpbnMgdGhlIHBvaW50cyB1c2VkIGZvciBcXChIKGpcXG9tZWdhKVxcKS4iLCJuZWVkc192aXN1YWwiOnRydWUsInZpc3VhbF90eXBlIjoid3JvbmdfdnNfcmlnaHRfc19wbGFuZV9jaGVjayIsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX1dfSx7ImlkIjoicG9sZV9wbGFjZW1lbnRfYW5kX3RoZXRhIiwibGFiZWwiOiJQb2xlIHBsYWNlbWVudCBjb250cm9scyBub3RjaCBzaGFycG5lc3MiLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJrcDNfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IkZvciB0aGUgcG9sZSBsb2NhdGlvbnMgXFwocyA9IC1cXG9tZWdhXzBcXGNvc1xcdGhldGEgXFxwbSBqXFxvbWVnYV8wXFxzaW5cXHRoZXRhXFwpLCB3aGF0IGhhcHBlbnMgYXMgXFwoXFx0aGV0YVxcKSBtb3ZlcyBjbG9zZXIgdG8gXFwoOTDCsFxcKT8iLCJvcHRpb25zIjpbIkEuIFRoZSBwb2xlcyBtb3ZlIGNsb3NlciB0byB0aGUgemVyb3MgYW5kIGdhaW4gcmVjb3ZlcnMgZmFzdGVyIGFyb3VuZCB0aGUgbm90Y2guIiwiQi4gVGhlIG5vdGNoIGZyZXF1ZW5jeSBtb3ZlcyBmcm9tIFxcKFxcb21lZ2FfMFxcKSB0byB6ZXJvLiIsIkMuIFRoZSB6ZXJvcyBtb3ZlIGludG8gdGhlIGxlZnQgaGFsZi1wbGFuZS4iLCJELiBUaGUgZmlsdGVyIGJlY29tZXMgYW4gaWRlYWwgbm90Y2ggb3ZlciBhIGZpbml0ZSBiYW5kLiJdLCJjb3JyZWN0X29wdGlvbiI6IkEiLCJleHBsYW5hdGlvbiI6IkluY3JlYXNpbmcgXFwoXFx0aGV0YVxcKSB0b3dhcmQgXFwoOTDCsFxcKSBtb3ZlcyB0aGUgcG9sZXMgY2xvc2VyIHRvIFxcKFxccG0galxcb21lZ2FfMFxcKSwgd2hpY2ggc2hhcnBlbnMgdGhlIHJlY292ZXJ5IGFyb3VuZCB0aGUgbm90Y2guIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJCIjoiXFwoXFxvbWVnYV8wXFwpIGlzIHNldCBieSB0aGUgemVybyBsb2NhdGlvbnM7IGNoYW5naW5nIFxcKFxcdGhldGFcXCkgZG9lcyBub3QgbW92ZSB0aGUgbm90Y2ggY2VudGVyLiIsIkMiOiJUaGUgemVyb3MgcmVtYWluIGZpeGVkIGF0IFxcKFxccG0galxcb21lZ2FfMFxcKS4iLCJEIjoiQSBmaW5pdGUtb3JkZXIgcHJhY3RpY2FsIGZpbHRlciBjYW5ub3QgcmVhbGl6ZSBhbiBpZGVhbCB6ZXJvLWdhaW4gYmFuZC4ifSwiaGludCI6IkluIHRoZSBkZW1vLCB3YXRjaCB0aGUgcG9sZSBtYXJrcywgbm90IHRoZSB6ZXJvIG1hcmtzLiIsIm5lZWRzX3Zpc3VhbCI6dHJ1ZSwidmlzdWFsX3R5cGUiOiJkZW1vX29ic2VydmF0aW9uX2NoZWNrIiwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfSx7ImlkIjoia3AzX3EyIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJXaHkgYXJlIHRoZSBwb2xlcyBwbGFjZWQgb24gYSBzZW1pY2lyY2xlIG9mIHJhZGl1cyBcXChcXG9tZWdhXzBcXCkgaW4gdGhpcyBzZWNvbmQtb3JkZXIgbm90Y2ggZGVzaWduPyIsIm9wdGlvbnMiOlsiQS4gVG8gbWFrZSB0aGUgcG9sZSBkaXN0YW5jZXMgZnJvbSB0aGUgb3JpZ2luIG1hdGNoIHRoZSB6ZXJvIGRpc3RhbmNlcywgc3VwcG9ydGluZyB1bml0eSBnYWluIGF0IFxcKFxcb21lZ2EgPSAwXFwpLiIsIkIuIFRvIG1vdmUgdGhlIG5vdGNoIGZyZXF1ZW5jeSBhd2F5IGZyb20gXFwoXFxvbWVnYV8wXFwpLiIsIkMuIFRvIG1ha2UgdGhlIG51bWJlciBvZiBwb2xlcyBncmVhdGVyIHRoYW4gdGhlIG51bWJlciBvZiB6ZXJvcy4iLCJELiBUbyBwdXQgYWxsIHBvbGVzIGRpcmVjdGx5IG9uIHRoZSBpbWFnaW5hcnkgYXhpcy4iXSwiY29ycmVjdF9vcHRpb24iOiJBIiwiZXhwbGFuYXRpb24iOiJUaGUgemVyb3MgYXJlIGRpc3RhbmNlIFxcKFxcb21lZ2FfMFxcKSBmcm9tIHRoZSBvcmlnaW4sIHNvIHRoZSBwb2xlcyBhcmUgYWxzbyBwbGFjZWQgYXQgcmFkaXVzIFxcKFxcb21lZ2FfMFxcKSB0byBzYXRpc2Z5IHRoZSBEQyBnYWluIGNvbmRpdGlvbi4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkIiOiJUaGUgbm90Y2ggZnJlcXVlbmN5IGlzIGZpeGVkIGJ5IHRoZSB6ZXJvcyBhdCBcXChcXHBtIGpcXG9tZWdhXzBcXCkuIiwiQyI6IlRoZSBkZXNpZ24gdXNlcyB0aGUgc2FtZSBudW1iZXIgb2YgcG9sZXMgYW5kIHplcm9zLiIsIkQiOiJQb2xlcyBvbiB0aGUgaW1hZ2luYXJ5IGF4aXMgd291bGQgY3JlYXRlIG1hcmdpbmFsIHN0YWJpbGl0eSBpc3N1ZXM7IHRoZSBwb2xlcyBhcmUgaW4gdGhlIGxlZnQgaGFsZi1wbGFuZS4ifSwiaGludCI6IkNvbXBhcmUgZGlzdGFuY2VzIGZyb20gdGhlIG9yaWdpbiBmb3IgYm90aCBwb2xlcyBhbmQgemVyb3MuIiwibmVlZHNfdmlzdWFsIjp0cnVlLCJ2aXN1YWxfdHlwZSI6InNfcGxhbmVfcmFkaXVzX2NoZWNrIiwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfV19LHsiaWQiOiJ0cmFuc2Zlcl9mdW5jdGlvbl9yZWNvZ25pdGlvbiIsImxhYmVsIjoiUmVjb2duaXppbmcgdGhlIHNlY29uZC1vcmRlciBub3RjaCB0cmFuc2ZlciBmdW5jdGlvbiIsImltcG9ydGFuY2UiOiJoaWdoIiwiZXhhbV93ZWlnaHQiOiJoaWdoIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoxfSwicXVlc3Rpb25zIjpbeyJpZCI6ImtwNF9xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiV2hpY2ggdHJhbnNmZXIgZnVuY3Rpb24gbWF0Y2hlcyB0aGUgc2Vjb25kLW9yZGVyIG5vdGNoIGRlc2lnbiBmcm9tIHRoaXMgc2VjdGlvbj8iLCJvcHRpb25zIjpbIkEuIFxcKEgocykgPSBcXGRmcmFje3NeMiArIFxcb21lZ2FfMF4yfXtzXjIgKyAyXFxvbWVnYV8wXFxjb3NcXHRoZXRhXFwscyArIFxcb21lZ2FfMF4yfVxcKSIsIkIuIFxcKEgocykgPSBcXGRmcmFje3MgKyBcXG9tZWdhXzB9e3NeMiArIDJcXG9tZWdhXzBcXGNvc1xcdGhldGFcXCxzICsgXFxvbWVnYV8wXjJ9XFwpIiwiQy4gXFwoSChzKSA9IFxcZGZyYWN7c14yfXtzXjIgKyBcXG9tZWdhXzBeMn1cXCkiLCJELiBcXChIKHMpID0gXFxkZnJhY3syXFxvbWVnYV8wXFxjb3NcXHRoZXRhXFwsc317c14yICsgXFxvbWVnYV8wXjJ9XFwpIl0sImNvcnJlY3Rfb3B0aW9uIjoiQSIsImV4cGxhbmF0aW9uIjoiVGhlIG51bWVyYXRvciBcXChzXjIgKyBcXG9tZWdhXzBeMlxcKSBjcmVhdGVzIHplcm9zIGF0IFxcKFxccG0galxcb21lZ2FfMFxcKSwgYW5kIHRoZSBkZW5vbWluYXRvciBjb250YWlucyB0aGUgcG9sZS1jb250cm9sIHRlcm0gXFwoMlxcb21lZ2FfMFxcY29zXFx0aGV0YVxcLHNcXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJCIjoiVGhpcyBudW1lcmF0b3IgZG9lcyBub3QgY3JlYXRlIGNvbmp1Z2F0ZSB6ZXJvcyBhdCBcXChcXHBtIGpcXG9tZWdhXzBcXCkuIiwiQyI6IlRoaXMgZG9lcyBub3QgaW5jbHVkZSB0aGUgcG9sZS1wbGFjZW1lbnQgdGVybSBjb250cm9sbGVkIGJ5IFxcKFxcdGhldGFcXCkuIiwiRCI6IlRoaXMgbnVtZXJhdG9yIGlzIHplcm8gYXQgXFwocyA9IDBcXCksIG5vdCBhdCBcXChcXHBtIGpcXG9tZWdhXzBcXCkuIn0sImhpbnQiOiJUaGUgbnVtZXJhdG9yIG11c3QgdmFuaXNoIHdoZW4gXFwocyA9IGpcXG9tZWdhXzBcXCkuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50IjpmYWxzZX1dfSx7ImlkIjoibWFnbml0dWRlX3Jlc3BvbnNlIiwibGFiZWwiOiJSZWFkaW5nIHRoZSBtYWduaXR1ZGUgcmVzcG9uc2UiLCJpbXBvcnRhbmNlIjoibWVkaXVtIiwiZXhhbV93ZWlnaHQiOiJtZWRpdW0iLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjF9LCJxdWVzdGlvbnMiOlt7ImlkIjoia3A1X3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJVc2luZyB0aGUgbWFnbml0dWRlIGZvcm11bGEsIHdoYXQgaXMgXFwofEgoalxcb21lZ2FfMCl8XFwpIGZvciB0aGUgbm90Y2ggZmlsdGVyPyIsIm9wdGlvbnMiOlsiQS4gMCIsIkIuIDEiLCJDLiBcXChcXG9tZWdhXzBcXCkiLCJELiBJdCBkZXBlbmRzIG9ubHkgb24gdGhlIHNpZ24gb2YgXFwoXFx0aGV0YVxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkEiLCJleHBsYW5hdGlvbiI6IkF0IFxcKFxcb21lZ2EgPSBcXG9tZWdhXzBcXCksIHRoZSBudW1lcmF0b3IgdGVybSBcXCh8LVxcb21lZ2FfMF4yICsgXFxvbWVnYV8wXjJ8XFwpIGJlY29tZXMgemVybywgc28gdGhlIG1hZ25pdHVkZSBpcyB6ZXJvLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQiI6IlRoZSBnYWluIHJlY292ZXJzIHRvd2FyZCAxIGF3YXkgZnJvbSB0aGUgbm90Y2gsIG5vdCBhdCB0aGUgbm90Y2ggY2VudGVyLiIsIkMiOiJNYWduaXR1ZGUgaXMgZGltZW5zaW9ubGVzcyBoZXJlOyBpdCBpcyBub3QgZXF1YWwgdG8gdGhlIGFuZ3VsYXIgZnJlcXVlbmN5LiIsIkQiOiJcXChcXHRoZXRhXFwpIGFmZmVjdHMgcmVjb3Zlcnkgc2hhcnBuZXNzLCBidXQgdGhlIGdhaW4gYXQgXFwoXFxvbWVnYV8wXFwpIGlzIGFsd2F5cyB6ZXJvIGJlY2F1c2Ugb2YgdGhlIHplcm9zLiJ9LCJoaW50IjoiU3Vic3RpdHV0ZSBcXChcXG9tZWdhID0gXFxvbWVnYV8wXFwpIGludG8gdGhlIG51bWVyYXRvciBvZiB0aGUgbWFnbml0dWRlIGZvcm11bGEuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50IjpmYWxzZX1dfV19" style="display:none;"></div>%%KC_END%%

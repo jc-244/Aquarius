@@ -1,0 +1,127 @@
+%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6Indpa2lfcmVmZXJlbmNlIiwicmF0aW9uYWxlIjoiVGhpcyBpcyBhIGNoYXB0ZXIgc3VtbWFyeSwgc28gbW9zdCBjb25jZXB0cyBhcmUgYmVzdCByZXZpZXdlZCB0aHJvdWdoIGxvY2FsIGZvcm11bGFzIGFuZCBjb25jaXNlIGV4cGxhbmF0aW9uLiBUaGUgaGlnaGVzdC12YWx1ZSB2aXN1YWwgaXMgYSBzdGFuZGFyZCBmcmVxdWVuY3ktcmVzcG9uc2Ugb3IgQm9kZS1zdHlsZSBwbG90IGJlY2F1c2UgaXQgbWFrZXMgbWFnbml0dWRlIGdhaW4gYW5kIHBoYXNlIHNoaWZ0IHJlY29nbml6YWJsZSB3aXRob3V0IHVzaW5nIGEgbm9pc3kgZnVsbCB0ZXh0Ym9vayBwYWdlLiBObyBwcmVjaXNpb24tY3JvcHBlZCB0ZXh0Ym9vayBmaWd1cmVzIGFyZSBhdmFpbGFibGUsIGFuZCBHUFRJbWFnZTIgaXMgdW5uZWNlc3NhcnkgYmVjYXVzZSBhIHN0YW5kYXJkIHB1YmxpYyByZWZlcmVuY2UgdmlzdWFsIHNob3VsZCBleGlzdC4iLCJjcmFtIjoiVXNlIHRoZSB2aXN1YWwgdG8gcmVjb2duaXplIHRoYXQgbWFnbml0dWRlIGNvbnRyb2xzIGdhaW4gYW5kIHBoYXNlIGNvbnRyb2xzIHRpbWUgc2hpZnQgaW4gc2ludXNvaWRhbCBzdGVhZHktc3RhdGUgcXVlc3Rpb25zLiIsInN0YW5kYXJkIjoiVXNlIHRoZSB2aXN1YWwgdG8gY29ubmVjdCBIKGrPiSksIHxIKGrPiSl8LCBhbmQgcGhhc2UgcmVzcG9uc2UgdG8gb25lIGNsZWFuIGlucHV0LW91dHB1dCBzaW51c29pZCBleGFtcGxlLiIsInRvcF9zY29yZSI6IlVzZSB0aGUgdmlzdWFsIHRvIHNlcGFyYXRlIGFtcGxpdHVkZSByZXNwb25zZSwgcGhhc2UgcmVzcG9uc2UsIGFuZCBwb2xlLXplcm8gZmlsdGVyaW5nIGludHVpdGlvbiBzbyBzdHVkZW50cyBkbyBub3QgY29sbGFwc2UgdGhlbSBpbnRvIG9uZSBpZGVhLiJ9" style="display:none;"></div>%%KC_END%%
+# 4.13 Summary
+
+> **Section Objective:** Review the chapter's main tools for analyzing LTIC continuous-time systems using the Laplace transform.
+
+## Concepts In This Section
+
+- Laplace-transform analysis
+- Transfer function
+- Transformed circuits
+- Block diagrams and realizations
+- Frequency response
+- Unilateral vs bilateral Laplace transform
+- Region of convergence
+
+## 1. Laplace Analysis Turns LTIC System Equations into Algebra
+
+The chapter's central move is replacing integro-differential equations of **linear time-invariant continuous-time (LTIC)** systems with algebraic equations in the complex variable \(s\). Instead of solving a differential equation each time, you transform the input and system description, multiply, and invert.
+
+> **Scope:** This method applies to LTIC systems only. It does not generally extend to time-varying-parameter systems or nonlinear systems.
+
+The **transfer function** \(H(s)\) is an external input-output description of the system — analogous to the impulse response \(h(t)\) in the time domain.
+
+#### Minimal Example
+
+If you know \(X(s)\) and \(H(s)\), you can get \(Y(s)\) by multiplication instead of solving the differential equation again.
+
+## 2. Transformed circuits, block diagrams, and realizations
+
+**When to use:** This formula applies when all initial conditions are zero (zero-state response).
+
+- \(X(s)\): Laplace transform of the input signal
+- \(Y(s)\): Laplace transform of the output signal
+- \(H(s)\): transfer function of the LTIC system
+
+**Exam use case:** Given the input transform and the transfer function, multiply to find the output transform directly.
+
+**Common misuse:** Applying this formula when nonzero initial conditions contribute to the response. In that case, the initial-condition terms must be added separately.
+
+$$Y(s) = X(s)\,H(s)$$
+
+## 3. Frequency response tells what happens to sinusoids
+
+For an LTIC system described by \(Q(D)\,y(t) = P(D)\,x(t)\), replacing the differential operator \(D\) with \(s\) converts both sides into polynomials.
+
+- \(P(s)\): polynomial from the **input side** of the differential equation
+- \(Q(s)\): polynomial from the **output side** of the differential equation
+
+**Use case:** Extract the transfer function directly from a differential equation under zero-state conditions — replace \(D \to s\), then form the ratio \(Y(s)/X(s)\).
+
+**Common misuse:** Writing \(Q(s)/P(s)\) instead of \(P(s)/Q(s)\). Remember: the output-side polynomial goes in the denominator.
+
+$$H(s) = \frac{P(s)}{Q(s)}$$
+
+## 4. Unilateral vs bilateral Laplace transform
+
+Once signals are Laplace-transformed, circuit analysis becomes algebraic. Voltages and currents become \(s\)-domain quantities, resistors keep their values, capacitors become impedances \(1/(sC)\), and inductors become \(sL\). Nonzero initial conditions are represented by **equivalent sources** — they are not ignored.
+
+At the system level, large LTIC systems are modeled as **interconnected blocks**, each with a known input-output transfer function. This makes it straightforward to analyze cascades, feedback loops, and parallel combinations.
+
+**Realization** goes the other direction: given \(H(s)\), build a physical or simulated system using **scalar multipliers, adders, and integrators**. Common realization forms include:
+
+- **Canonic (direct) form**
+- **Cascade form** — factors \(H(s)\) into smaller subsystems in series
+- **Parallel form** — partial-fraction expansion, subsystems in parallel
+
+Every realization also has a **transpose** with the same transfer function.
+
+#### Minimal Example
+
+A cascade realization breaks \(H(s)\) into smaller factors and implements them one after another.
+
+## 3. Frequency Response Tells What Happens to Sinusoids
+
+For an LTIC system, an everlasting complex exponential input \(e^{j\omega t}\) produces an output that is the same exponential multiplied by \(H(j\omega)\). This is the **eigenfunction property** of LTIC systems.
+
+For a real sinusoidal input:
+
+- \(|H(j\omega)|\) is the **amplitude gain** — how much the amplitude is scaled
+- \(\angle H(j\omega)\) is the **phase shift** — how much the sinusoid is shifted in time
+
+### EXAM TRIGGER
+
+Phrases like "gain", "phase", "frequency response", or "input sinusoid" in a problem signal that you should evaluate \(H(j\omega)\) at the given frequency.
+
+### COMMON MISTAKE
+
+An LTIC system **cannot change the frequency** of a sinusoidal input. It changes amplitude and phase only. If your answer has a different output frequency, something is wrong.
+
+$$x(t) = \cos(\omega t) \;\Longrightarrow\; y(t) = |H(j\omega)|\cos\!\left(\omega t + \angle H(j\omega)\right)$$
+*This is the **sinusoidal steady-state response formula** for an LTIC system.
+
+- Input: unit-amplitude cosine at frequency \(\omega\)
+- Output: cosine at the **same frequency** \(\omega\), with amplitude scaled by \(|H(j\omega)|\) and phase shifted by \(\angle H(j\omega)\)
+
+**Use case:** Sinusoidal steady-state and filtering problems. Evaluate \(H(s)\) at \(s = j\omega\) to get the complex gain, then read off magnitude and angle.
+
+**Common misuse:** Writing a different frequency in the output. The output frequency is always the same as the input frequency for an LTIC system.*
+
+
+## 4. Unilateral vs Bilateral Laplace Transform
+
+Most practical signals and systems are **causal**, so the **unilateral Laplace transform** is usually sufficient. In this setting, the region of convergence is typically not central to the calculation — causality implicitly fixes the interpretation.
+
+The **bilateral Laplace transform** handles both causal and noncausal signals, but introduces an important complication:
+
+> The inverse bilateral Laplace transform is **not unique** unless the region of convergence (ROC) is specified.
+
+#### Near-Miss to Avoid
+
+The same algebraic expression \(X(s)\) can correspond to different time-domain signals \(x(t)\) if the ROC is different. For example, \(1/(s+1)\) with ROC \(\text{Re}(s) > -1\) gives a causal decaying exponential, while ROC \(\text{Re}(s) < -1\) gives a noncausal growing exponential.
+
+### EXAM TRIGGER
+
+If a problem mentions **noncausal signals** or asks about **uniqueness** of the inverse transform, you must specify or check the ROC.
+
+---
+**📌 Key Takeaways**
+- Laplace transform converts LTIC integro-differential equations into algebra; applies to LTIC systems only, not nonlinear or time-varying systems.
+- Zero-state output: \(Y(s) = X(s)\,H(s)\), where \(H(s) = P(s)/Q(s)\) from \(Q(D)y = P(D)x\) with \(D \to s\).
+- Sinusoidal steady-state: \(\cos(\omega t) \to |H(j\omega)|\cos(\omega t + \angle H(j\omega))\); LTIC systems change amplitude and phase, never frequency.
+- Transformed circuits replace signals with Laplace-domain quantities and elements with impedances; realizations use scalar multipliers, adders, and integrators in canonic, cascade, or parallel form.
+- Bilateral Laplace transform requires the ROC for a unique inverse; the same \(X(s)\) maps to different \(x(t)\) under different ROCs.
+
+*Next, use these formulas as a checklist when solving full LTIC system problems.*
+
+%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NywicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo2LCJtYXgiOjh9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6ImxhcGxhY2Vfc2NvcGUiLCJsYWJlbCI6IlNjb3BlIG9mIExhcGxhY2UtdHJhbnNmb3JtIGFuYWx5c2lzIGZvciBMVElDIHN5c3RlbXMiLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoibWVkaXVtIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoxfSwicXVlc3Rpb25zIjpbeyJpZCI6ImxhcGxhY2Vfc2NvcGVfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IldoYXQgaXMgdGhlIG1haW4gcmVhc29uIExhcGxhY2UtdHJhbnNmb3JtIGFuYWx5c2lzIGlzIHBvd2VyZnVsIGZvciBMVElDIGNvbnRpbnVvdXMtdGltZSBzeXN0ZW1zPyIsIm9wdGlvbnMiOlsiQS4gSXQgY2hhbmdlcyBhbGdlYnJhaWMgZXF1YXRpb25zIGludG8gZGlmZmVyZW50aWFsIGVxdWF0aW9ucy4iLCJCLiBJdCBjaGFuZ2VzIGludGVncm8tZGlmZmVyZW50aWFsIGVxdWF0aW9ucyBpbnRvIGFsZ2VicmFpYyBlcXVhdGlvbnMuIiwiQy4gSXQgbWFrZXMgbm9ubGluZWFyIHN5c3RlbXMgYmVoYXZlIGxpa2UgbGluZWFyIHN5c3RlbXMuIiwiRC4gSXQgcmVtb3ZlcyB0aGUgbmVlZCB0byBrbm93IHRoZSBpbnB1dCBzaWduYWwuIl0sImNvcnJlY3Rfb3B0aW9uIjoiQiIsImV4cGxhbmF0aW9uIjoiRm9yIExUSUMgc3lzdGVtcywgdGhlIExhcGxhY2UgdHJhbnNmb3JtIGNvbnZlcnRzIGRpZmZlcmVudGlhbCBhbmQgaW50ZWdyYWwgcmVsYXRpb25zaGlwcyBpbnRvIGFsZ2VicmFpYyByZWxhdGlvbnNoaXBzIGluIFxcKHNcXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhlIGRpcmVjdGlvbiBpcyByZXZlcnNlZDsgdGhlIHRyYW5zZm9ybSBzaW1wbGlmaWVzIGRpZmZlcmVudGlhbCBlcXVhdGlvbnMgaW50byBhbGdlYnJhaWMgZXF1YXRpb25zLiIsIkMiOiJUaGUgbWV0aG9kIGRvZXMgbm90IGdlbmVyYWxseSBtYWtlIG5vbmxpbmVhciBzeXN0ZW1zIGxpbmVhci4iLCJEIjoiVGhlIGlucHV0IHRyYW5zZm9ybSBcXChYKHMpXFwpIGlzIHN0aWxsIG5lZWRlZCB0byBjb21wdXRlIHRoZSBvdXRwdXQuIn0sImhpbnQiOiJBc2sgd2hhdCBoYXBwZW5zIHRvIGRlcml2YXRpdmVzIGFuZCBpbnRlZ3JhbHMgYWZ0ZXIgdHJhbnNmb3JtaW5nLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9XX0seyJpZCI6InRyYW5zZmVyX2Z1bmN0aW9uX3plcm9fc3RhdGUiLCJsYWJlbCI6IlRyYW5zZmVyIGZ1bmN0aW9uIGFzIHplcm8tc3RhdGUgaW5wdXQtb3V0cHV0IHJhdGlvIiwiaW1wb3J0YW5jZSI6ImhpZ2giLCJleGFtX3dlaWdodCI6ImhpZ2giLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjJ9LCJxdWVzdGlvbnMiOlt7ImlkIjoidHJhbnNmZXJfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IkZvciBhIHplcm8tc3RhdGUgTFRJQyBzeXN0ZW0gd2l0aCBpbnB1dCB0cmFuc2Zvcm0gXFwoWChzKVxcKSwgb3V0cHV0IHRyYW5zZm9ybSBcXChZKHMpXFwpLCBhbmQgdHJhbnNmZXIgZnVuY3Rpb24gXFwoSChzKVxcKSwgd2hpY2ggcmVsYXRpb25zaGlwIGlzIGNvcnJlY3Q/Iiwib3B0aW9ucyI6WyJBLiBcXChZKHMpID0gWChzKVxcLEgocylcXCkiLCJCLiBcXChYKHMpID0gWShzKVxcLEgocylcXCkiLCJDLiBcXChIKHMpID0gWChzKVxcLFkocylcXCkiLCJELiBcXChZKHMpID0gWChzKSArIEgocylcXCkiXSwiY29ycmVjdF9vcHRpb24iOiJBIiwiZXhwbGFuYXRpb24iOiJJbiB6ZXJvIHN0YXRlLCB0aGUgb3V0cHV0IHRyYW5zZm9ybSBlcXVhbHMgdGhlIGlucHV0IHRyYW5zZm9ybSBtdWx0aXBsaWVkIGJ5IHRoZSB0cmFuc2ZlciBmdW5jdGlvbjogXFwoWShzKSA9IFgocylcXCxIKHMpXFwpLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQiI6IlRoaXMgcmV2ZXJzZXMgdGhlIGlucHV0LW91dHB1dCByZWxhdGlvbnNoaXAuIiwiQyI6IlRoZSB0cmFuc2ZlciBmdW5jdGlvbiBpcyBub3QgdGhlIHByb2R1Y3Qgb2YgaW5wdXQgYW5kIG91dHB1dCB0cmFuc2Zvcm1zLiIsIkQiOiJUaGUgTGFwbGFjZS1kb21haW4gaW5wdXQtb3V0cHV0IHJlbGF0aW9uIGZvciBhbiBMVElDIHN5c3RlbSBpcyBtdWx0aXBsaWNhdGlvbiwgbm90IGFkZGl0aW9uLiJ9LCJoaW50IjoiVGhpbms6IG91dHB1dCBlcXVhbHMgaW5wdXQgcGFzc2VkIHRocm91Z2ggdGhlIHN5c3RlbS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9LHsiaWQiOiJ0cmFuc2Zlcl9xMiIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiQSBzeXN0ZW0gaXMgZGVzY3JpYmVkIGJ5IFxcKFEoRClcXCx5KHQpID0gUChEKVxcLHgodClcXCkuIFVuZGVyIHplcm8tc3RhdGUgY29uZGl0aW9ucywgd2hhdCBpcyBcXChIKHMpXFwpPyIsIm9wdGlvbnMiOlsiQS4gXFwoSChzKSA9IFEocykvUChzKVxcKSIsIkIuIFxcKEgocykgPSBQKHMpL1EocylcXCkiLCJDLiBcXChIKHMpID0gUChzKVxcLFEocylcXCkiLCJELiBcXChIKHMpID0gUChEKS9RKEQpXFwpIl0sImNvcnJlY3Rfb3B0aW9uIjoiQiIsImV4cGxhbmF0aW9uIjoiVGhlIHRyYW5zZmVyIGZ1bmN0aW9uIGlzIHRoZSBpbnB1dC1zaWRlIHBvbHlub21pYWwgZGl2aWRlZCBieSB0aGUgb3V0cHV0LXNpZGUgcG9seW5vbWlhbCBhZnRlciByZXBsYWNpbmcgXFwoRFxcKSBieSBcXChzXFwpOiBcXChIKHMpID0gUChzKS9RKHMpXFwpLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6IlRoaXMgcmV2ZXJzZXMgdGhlIGNvcnJlY3QgcmF0aW8uIiwiQyI6IlRoZSB0cmFuc2ZlciBmdW5jdGlvbiBpcyBhIHJhdGlvLCBub3QgYSBwcm9kdWN0LiIsIkQiOiJcXChIKHMpXFwpIG11c3QgYmUgZXhwcmVzc2VkIGFzIGEgZnVuY3Rpb24gb2YgXFwoc1xcKSwgbm90IFxcKERcXCkuIn0sImhpbnQiOiJUaGUgZXF1YXRpb24gaXMgXFwoUShEKXkodCkgPSBQKEQpeCh0KVxcKSwgc28gc29sdmUgZm9yIFxcKFkocykvWChzKVxcKS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9XX0seyJpZCI6InRyYW5zZm9ybWVkX2NpcmN1aXRfcmVhbGl6YXRpb24iLCJsYWJlbCI6IlRyYW5zZm9ybWVkIGNpcmN1aXRzIGFuZCByZWFsaXphdGlvbiBmb3JtcyIsImltcG9ydGFuY2UiOiJtZWRpdW0iLCJleGFtX3dlaWdodCI6Im1lZGl1bSIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6MX0sInF1ZXN0aW9ucyI6W3siaWQiOiJyZWFsaXphdGlvbl9xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiSW4gdGhlIHRyYW5zZm9ybWVkIGNpcmN1aXQgbWV0aG9kLCB3aGljaCBzdGF0ZW1lbnQgaXMgY29ycmVjdD8iLCJvcHRpb25zIjpbIkEuIFZvbHRhZ2VzIGFuZCBjdXJyZW50cyBhcmUgcmVwbGFjZWQgYnkgdGhlaXIgTGFwbGFjZSB0cmFuc2Zvcm1zLCBhbmQgZWxlbWVudHMgYnkgaW1wZWRhbmNlcyBvciBhZG1pdHRhbmNlcy4iLCJCLiBBbGwgY2FwYWNpdG9ycyBhbmQgaW5kdWN0b3JzIGRpc2FwcGVhciBmcm9tIHRoZSBjaXJjdWl0LiIsIkMuIEluaXRpYWwgY29uZGl0aW9ucyBhcmUgaWdub3JlZCBiZWNhdXNlIHRoZSBjaXJjdWl0IGlzIGluIHRoZSBcXChzXFwpLWRvbWFpbi4iLCJELiBUaGUgY2lyY3VpdCBtdXN0IGJlIG5vbmxpbmVhciBmb3IgdGhlIG1ldGhvZCB0byB3b3JrLiJdLCJjb3JyZWN0X29wdGlvbiI6IkEiLCJleHBsYW5hdGlvbiI6IlRoZSB0cmFuc2Zvcm1lZCBjaXJjdWl0IG1ldGhvZCByZXByZXNlbnRzIHNpZ25hbHMgYnkgTGFwbGFjZSB0cmFuc2Zvcm1zIGFuZCBlbGVtZW50cyBieSBpbXBlZGFuY2Ugb3IgYWRtaXR0YW5jZSBtb2RlbHMuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJCIjoiRW5lcmd5LXN0b3JhZ2UgZWxlbWVudHMgYXJlIHJlcHJlc2VudGVkIGluIHRyYW5zZm9ybWVkIGZvcm07IHRoZXkgZG8gbm90IHNpbXBseSBkaXNhcHBlYXIuIiwiQyI6IkluaXRpYWwgY29uZGl0aW9ucyBhcmUgcmVwcmVzZW50ZWQgYnkgZXF1aXZhbGVudCBzb3VyY2VzLCBub3QgaWdub3JlZC4iLCJEIjoiVGhlIG1ldGhvZCBpcyB1c2VkIGZvciBsaW5lYXIgY2lyY3VpdCBhbmQgc3lzdGVtIGFuYWx5c2lzLiJ9LCJoaW50IjoiUmVtZW1iZXIgdGhlIHBocmFzZTogYW5hbHl6ZSBpdCBhcyBpZiBpdCB3ZXJlIGEgcmVzaXN0aXZlIGNpcmN1aXQsIGJ1dCBpbiB0aGUgXFwoc1xcKS1kb21haW4uIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50IjpmYWxzZX0seyJpZCI6InJlYWxpemF0aW9uX3EyIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJXaGljaCBzZXQgb2YgYnVpbGRpbmcgYmxvY2tzIGNhbiByZWFsaXplIExUSUMgdHJhbnNmZXIgZnVuY3Rpb25zIGluIHRoaXMgY2hhcHRlcidzIGZyYW1ld29yaz8iLCJvcHRpb25zIjpbIkEuIFNjYWxhciBtdWx0aXBsaWVycywgYWRkZXJzLCBhbmQgaW50ZWdyYXRvcnMiLCJCLiBDb21wYXJhdG9ycywgY2xvY2tzLCBhbmQgZmxpcC1mbG9wcyIsIkMuIFF1YW50aXplcnMsIGVuY29kZXJzLCBhbmQgZGVjb2RlcnMiLCJELiBSYW5kb20gc291cmNlcywgc2FtcGxlcnMsIGFuZCBsaW1pdGVycyJdLCJjb3JyZWN0X29wdGlvbiI6IkEiLCJleHBsYW5hdGlvbiI6IkNvbnRpbnVvdXMtdGltZSBMVElDIHJlYWxpemF0aW9ucyBhcmUgc3ludGhlc2l6ZWQgZnJvbSBzY2FsYXIgbXVsdGlwbGllcnMsIGFkZGVycywgYW5kIGludGVncmF0b3JzLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQiI6IlRob3NlIGFyZSBhc3NvY2lhdGVkIHdpdGggZGlnaXRhbCBvciBzd2l0Y2hpbmcgbG9naWMsIG5vdCB0aGUgTFRJQyByZWFsaXphdGlvbiBibG9ja3MgZGVzY3JpYmVkIGhlcmUuIiwiQyI6IlRob3NlIGFyZSBzaWduYWwtY29udmVyc2lvbiBibG9ja3MsIG5vdCB0aGUgY2hhcHRlcidzIHJlYWxpemF0aW9uIHByaW1pdGl2ZXMuIiwiRCI6IlRob3NlIGRvIG5vdCBmb3JtIHRoZSBzdGFuZGFyZCByZWFsaXphdGlvbiBzZXQgZGVzY3JpYmVkIGluIHRoaXMgY2hhcHRlci4ifSwiaGludCI6IlRoaW5rIG9mIHRoZSBzdGFuZGFyZCBhbmFsb2cgc3lzdGVtIGJ1aWxkaW5nIGJsb2Nrcy4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOmZhbHNlfV19LHsiaWQiOiJmcmVxdWVuY3lfcmVzcG9uc2UiLCJsYWJlbCI6IkZyZXF1ZW5jeSByZXNwb25zZSwgZ2FpbiwgYW5kIHBoYXNlIiwiaW1wb3J0YW5jZSI6ImhpZ2giLCJleGFtX3dlaWdodCI6ImhpZ2giLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjJ9LCJxdWVzdGlvbnMiOlt7ImlkIjoiZnJlcXVlbmN5X3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJBIHVuaXQtYW1wbGl0dWRlIHNpbnVzb2lkIFxcKFxcY29zKFxcb21lZ2EgdClcXCkgaXMgYXBwbGllZCB0byBhbiBMVElDIHN5c3RlbS4gV2hhdCBjYW4gdGhlIHN5c3RlbSBjaGFuZ2UgaW4gdGhlIHN0ZWFkeS1zdGF0ZSBzaW51c29pZGFsIG91dHB1dD8iLCJvcHRpb25zIjpbIkEuIEFtcGxpdHVkZSBhbmQgcGhhc2UsIGJ1dCBub3QgdGhlIGZyZXF1ZW5jeSIsIkIuIEZyZXF1ZW5jeSBvbmx5IiwiQy4gRnJlcXVlbmN5IGFuZCB3YXZlZm9ybSB0eXBlLCBidXQgbm90IHBoYXNlIiwiRC4gVGhlIHN5c3RlbSBtdXN0IGFsd2F5cyBvdXRwdXQgemVybyJdLCJjb3JyZWN0X29wdGlvbiI6IkEiLCJleHBsYW5hdGlvbiI6IkZvciBhbiBMVElDIHN5c3RlbSwgYSBzaW51c29pZGFsIGlucHV0IHByb2R1Y2VzIGEgc2ludXNvaWQgYXQgdGhlIHNhbWUgZnJlcXVlbmN5LCB3aXRoIGFtcGxpdHVkZSBzY2FsZWQgYnkgXFwofEgoalxcb21lZ2EpfFxcKSBhbmQgcGhhc2Ugc2hpZnRlZCBieSBcXChcXGFuZ2xlIEgoalxcb21lZ2EpXFwpLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQiI6IlRoZSBvdXRwdXQgZnJlcXVlbmN5IHN0YXlzIHRoZSBzYW1lIGZvciBzaW51c29pZGFsIHN0ZWFkeS1zdGF0ZSByZXNwb25zZS4iLCJDIjoiVGhlIG91dHB1dCByZW1haW5zIHNpbnVzb2lkYWwgYXQgdGhlIHNhbWUgZnJlcXVlbmN5LiIsIkQiOiJUaGUgb3V0cHV0IGlzIHplcm8gb25seSBpZiB0aGUgZnJlcXVlbmN5IHJlc3BvbnNlIGlzIHplcm8gYXQgdGhhdCBzcGVjaWZpYyBmcmVxdWVuY3kuIn0sImhpbnQiOiJMVElDIHN5c3RlbXMgcHJlc2VydmUgc2ludXNvaWQgZnJlcXVlbmN5IGluIHN0ZWFkeSBzdGF0ZS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9LHsiaWQiOiJmcmVxdWVuY3lfcTJfdmlzdWFsIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJVc2luZyBhIG1hZ25pdHVkZS1hbmQtcGhhc2UgZnJlcXVlbmN5LXJlc3BvbnNlIHBsb3QsIHdoYXQgc2hvdWxkIHlvdSByZWFkIGZyb20gXFwofEgoalxcb21lZ2EpfFxcKSBhdCB0aGUgaW5wdXQgZnJlcXVlbmN5PyIsIm9wdGlvbnMiOlsiQS4gVGhlIG91dHB1dCBhbXBsaXR1ZGUgZ2FpbiBhdCB0aGF0IGZyZXF1ZW5jeSIsIkIuIFRoZSBvdXRwdXQgZnJlcXVlbmN5IGluIHJhZGlhbnMgcGVyIHNlY29uZCIsIkMuIFRoZSBpbml0aWFsIGNvbmRpdGlvbiBzb3VyY2UgdmFsdWUiLCJELiBUaGUgcmVnaW9uIG9mIGNvbnZlcmdlbmNlIl0sImNvcnJlY3Rfb3B0aW9uIjoiQSIsImV4cGxhbmF0aW9uIjoiXFwofEgoalxcb21lZ2EpfFxcKSBnaXZlcyB0aGUgYW1wbGl0dWRlIGdhaW4gZm9yIGEgc2ludXNvaWRhbCBpbnB1dCBhdCBmcmVxdWVuY3kgXFwoXFxvbWVnYVxcKS4gUmVhZGluZyBpdCBmcm9tIHRoZSBtYWduaXR1ZGUgY3VydmUgdGVsbHMgeW91IGhvdyBtdWNoIHRoZSBvdXRwdXQgYW1wbGl0dWRlIGlzIHNjYWxlZCByZWxhdGl2ZSB0byB0aGUgaW5wdXQuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJCIjoiVGhlIGlucHV0IGZyZXF1ZW5jeSBpcyBhbHJlYWR5IFxcKFxcb21lZ2FcXCk7IFxcKHxIKGpcXG9tZWdhKXxcXCkgZG9lcyBub3QgY2hhbmdlIGl0LiIsIkMiOiJJbml0aWFsIGNvbmRpdGlvbiBzb3VyY2VzIGJlbG9uZyB0byB0cmFuc2Zvcm1lZCBjaXJjdWl0IGFuYWx5c2lzLCBub3QgdGhlIGZyZXF1ZW5jeS1yZXNwb25zZSBtYWduaXR1ZGUgY3VydmUuIiwiRCI6IlJPQyBpcyBhIGJpbGF0ZXJhbCBMYXBsYWNlLXRyYW5zZm9ybSBpc3N1ZSwgbm90IHdoYXQgdGhlIG1hZ25pdHVkZSBjdXJ2ZSBkaXJlY3RseSByZWFkcy4ifSwiaGludCI6Ik1hZ25pdHVkZSByZXNwb25zZSBhbnN3ZXJzOiBob3cgbXVjaCBsYXJnZXIgb3Igc21hbGxlciBpcyB0aGUgb3V0cHV0IHNpbnVzb2lkPyIsIm5lZWRzX3Zpc3VhbCI6dHJ1ZSwidmlzdWFsX3R5cGUiOiJ3aWtpX3JlZmVyZW5jZV9mcmVxdWVuY3lfcmVzcG9uc2VfcGxvdCIsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX1dfSx7ImlkIjoidW5pbGF0ZXJhbF9iaWxhdGVyYWxfcm9jIiwibGFiZWwiOiJVbmlsYXRlcmFsIHZlcnN1cyBiaWxhdGVyYWwgTGFwbGFjZSB0cmFuc2Zvcm0gYW5kIFJPQyIsImltcG9ydGFuY2UiOiJoaWdoIiwiZXhhbV93ZWlnaHQiOiJoaWdoIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoyfSwicXVlc3Rpb25zIjpbeyJpZCI6InJvY19xMSIsInR5cGUiOiJzaG9ydF9hbnN3ZXIiLCJzdGVtIjoiV2h5IGlzIHRoZSByZWdpb24gb2YgY29udmVyZ2VuY2UgY3J1Y2lhbCBpbiB0aGUgYmlsYXRlcmFsIExhcGxhY2UgdHJhbnNmb3JtIGJ1dCB1c3VhbGx5IG5vdCBjZW50cmFsIGluIHVuaWxhdGVyYWwgY2F1c2FsLXNpZ25hbCBhbmFseXNpcz8iLCJpZGVhbF9hbnN3ZXIiOiJJbiB0aGUgYmlsYXRlcmFsIExhcGxhY2UgdHJhbnNmb3JtLCB0aGUgc2FtZSBhbGdlYnJhaWMgXFwoWChzKVxcKSBjYW4gY29ycmVzcG9uZCB0byBkaWZmZXJlbnQgdGltZS1kb21haW4gc2lnbmFscyBkZXBlbmRpbmcgb24gdGhlIFJPQywgc28gdGhlIGludmVyc2UgaXMgbm90IHVuaXF1ZSB3aXRob3V0IGl0LiBJbiB1bmlsYXRlcmFsIGFuYWx5c2lzIGZvciBjYXVzYWwgc2lnbmFscywgdGhlIGNhdXNhbCByZXN0cmljdGlvbiB1c3VhbGx5IGZpeGVzIHRoZSByZWxldmFudCBpbnRlcnByZXRhdGlvbiBhbmQgc2ltcGxpZmllcyB0aGUgYW5hbHlzaXMuIiwiZ3JhZGluZ19ydWJyaWMiOlsiU3RhdGVzIHRoYXQgYmlsYXRlcmFsIGludmVyc2UgdHJhbnNmb3JtcyBhcmUgbm90IHVuaXF1ZSB3aXRob3V0IHRoZSBST0MiLCJNZW50aW9ucyB0aGF0IGRpZmZlcmVudCBST0NzIGNhbiBpbXBseSBkaWZmZXJlbnQgdGltZS1kb21haW4gc2lnbmFscyIsIkV4cGxhaW5zIHRoYXQgdW5pbGF0ZXJhbCBhbmFseXNpcyBpcyByZXN0cmljdGVkIHRvIGNhdXNhbCBzaWduYWxzIiwiRG9lcyBub3QgY2xhaW0gdGhhdCBST0MgaXMgbWF0aGVtYXRpY2FsbHkgbWVhbmluZ2xlc3MiXSwiZXhwbGFuYXRpb24iOiJUaGlzIGNoZWNrcyB3aGV0aGVyIHRoZSBzdHVkZW50IHVuZGVyc3RhbmRzIFJPQyBhcyBhIHVuaXF1ZW5lc3MgY29uZGl0aW9uLCBub3QganVzdCBhIGRlY29yYXRpdmUgbGFiZWwuIiwiaGludCI6IkFzayB3aGV0aGVyIFxcKFgocylcXCkgYWxvbmUgYWx3YXlzIGRldGVybWluZXMgXFwoeCh0KVxcKSBpbiB0aGUgYmlsYXRlcmFsIHRyYW5zZm9ybS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9XX1dfQ==" style="display:none;"></div>%%KC_END%%

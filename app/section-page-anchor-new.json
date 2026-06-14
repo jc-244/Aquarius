@@ -11,6 +11,14 @@
     "page": "page-237",
     "startRatio": 0
   },
+  "4": {
+    "page": "page-330",
+    "startRatio": 0.108
+  },
+  "5": {
+    "page": "page-488",
+    "startRatio": 0.105
+  },
   "1.1": {
     "page": "page-064",
     "startRatio": 0.837
@@ -427,6 +435,330 @@
     "page": "page-301",
     "startRatio": 0.697
   },
+  "4.1": {
+    "page": "page-330",
+    "startRatio": 0.496
+  },
+  "4.1-1": {
+    "page": "page-338",
+    "startRatio": 0.082
+  },
+  "4.10": {
+    "page": "page-436",
+    "startRatio": 0.409
+  },
+  "4.10-1": {
+    "page": "page-436",
+    "startRatio": 0.521
+  },
+  "4.10-2": {
+    "page": "page-439",
+    "startRatio": 0.6
+  },
+  "4.10-3": {
+    "page": "page-441",
+    "startRatio": 0.165
+  },
+  "4.10-4": {
+    "page": "page-441",
+    "startRatio": 0.329
+  },
+  "4.10-5": {
+    "page": "page-444",
+    "startRatio": 0.084
+  },
+  "4.11": {
+    "page": "page-445",
+    "startRatio": 0.059
+  },
+  "4.11-1": {
+    "page": "page-451",
+    "startRatio": 0.285
+  },
+  "4.11-2": {
+    "page": "page-452",
+    "startRatio": 0.773
+  },
+  "4.12": {
+    "page": "page-455",
+    "startRatio": 0.059
+  },
+  "4.12-1": {
+    "page": "page-456",
+    "startRatio": 0.202
+  },
+  "4.12-2": {
+    "page": "page-459",
+    "startRatio": 0.667
+  },
+  "4.12-3": {
+    "page": "page-461",
+    "startRatio": 0.408
+  },
+  "4.12-4": {
+    "page": "page-463",
+    "startRatio": 0.673
+  },
+  "4.13": {
+    "page": "page-466",
+    "startRatio": 0.88
+  },
+  "4.2": {
+    "page": "page-349",
+    "startRatio": 0.061
+  },
+  "4.2-1": {
+    "page": "page-349",
+    "startRatio": 0.657
+  },
+  "4.2-2": {
+    "page": "page-353",
+    "startRatio": 0.322
+  },
+  "4.2-3": {
+    "page": "page-354",
+    "startRatio": 0.148
+  },
+  "4.2-4": {
+    "page": "page-356",
+    "startRatio": 0.423
+  },
+  "4.2-5": {
+    "page": "page-357",
+    "startRatio": 0.492
+  },
+  "4.2-6": {
+    "page": "page-357",
+    "startRatio": 0.82
+  },
+  "4.3": {
+    "page": "page-360",
+    "startRatio": 0.88
+  },
+  "4.3-1": {
+    "page": "page-363",
+    "startRatio": 0.707
+  },
+  "4.3-2": {
+    "page": "page-366",
+    "startRatio": 0.71
+  },
+  "4.3-3": {
+    "page": "page-371",
+    "startRatio": 0.144
+  },
+  "4.3-4": {
+    "page": "page-373",
+    "startRatio": 0.657
+  },
+  "4.4": {
+    "page": "page-373",
+    "startRatio": 0.061
+  },
+  "4.4-1": {
+    "page": "page-382",
+    "startRatio": 0.428
+  },
+  "4.5": {
+    "page": "page-386",
+    "startRatio": 0.103
+  },
+  "4.6": {
+    "page": "page-388",
+    "startRatio": 0.663
+  },
+  "4.6-1": {
+    "page": "page-389",
+    "startRatio": 0.255
+  },
+  "4.6-2": {
+    "page": "page-390",
+    "startRatio": 0.817
+  },
+  "4.6-3": {
+    "page": "page-393",
+    "startRatio": 0.842
+  },
+  "4.6-4": {
+    "page": "page-396",
+    "startRatio": 0.729
+  },
+  "4.6-5": {
+    "page": "page-399",
+    "startRatio": 0.09
+  },
+  "4.7": {
+    "page": "page-404",
+    "startRatio": 0.446
+  },
+  "4.7-1": {
+    "page": "page-406",
+    "startRatio": 0.858
+  },
+  "4.8": {
+    "page": "page-412",
+    "startRatio": 0.229
+  },
+  "4.8-1": {
+    "page": "page-418",
+    "startRatio": 0.534
+  },
+  "4.9": {
+    "page": "page-419",
+    "startRatio": 0.044
+  },
+  "4.9-1": {
+    "page": "page-422",
+    "startRatio": 0.189
+  },
+  "4.9-2": {
+    "page": "page-422",
+    "startRatio": 0.312
+  },
+  "4.9-3": {
+    "page": "page-424",
+    "startRatio": 0.095
+  },
+  "4.9-4": {
+    "page": "page-426",
+    "startRatio": 0.723
+  },
+  "4.9-5": {
+    "page": "page-435",
+    "startRatio": 0.88
+  },
+  "5.1": {
+    "page": "page-488",
+    "startRatio": 0.565
+  },
+  "5.1-1": {
+    "page": "page-495",
+    "startRatio": 0.465
+  },
+  "5.1-2": {
+    "page": "page-499",
+    "startRatio": 0.578
+  },
+  "5.10": {
+    "page": "page-565",
+    "startRatio": 0.041
+  },
+  "5.10-1": {
+    "page": "page-566",
+    "startRatio": 0.073
+  },
+  "5.10-2": {
+    "page": "page-567",
+    "startRatio": 0.541
+  },
+  "5.10-3": {
+    "page": "page-568",
+    "startRatio": 0.232
+  },
+  "5.10-4": {
+    "page": "page-569",
+    "startRatio": 0.278
+  },
+  "5.10-5": {
+    "page": "page-570",
+    "startRatio": 0.833
+  },
+  "5.10-6": {
+    "page": "page-571",
+    "startRatio": 0.269
+  },
+  "5.10-7": {
+    "page": "page-572",
+    "startRatio": 0.457
+  },
+  "5.10-8": {
+    "page": "page-572",
+    "startRatio": 0.768
+  },
+  "5.11": {
+    "page": "page-574",
+    "startRatio": 0.844
+  },
+  "5.2": {
+    "page": "page-501",
+    "startRatio": 0.054
+  },
+  "5.2-1": {
+    "page": "page-501",
+    "startRatio": 0.394
+  },
+  "5.2-2": {
+    "page": "page-505",
+    "startRatio": 0.548
+  },
+  "5.2-3": {
+    "page": "page-506",
+    "startRatio": 0.088
+  },
+  "5.2-4": {
+    "page": "page-506",
+    "startRatio": 0.684
+  },
+  "5.2-5": {
+    "page": "page-507",
+    "startRatio": 0.473
+  },
+  "5.3": {
+    "page": "page-510",
+    "startRatio": 0.108
+  },
+  "5.3-1": {
+    "page": "page-514",
+    "startRatio": 0.088
+  },
+  "5.3-2": {
+    "page": "page-518",
+    "startRatio": 0.474
+  },
+  "5.3-3": {
+    "page": "page-519",
+    "startRatio": 0.304
+  },
+  "5.4": {
+    "page": "page-519",
+    "startRatio": 0.054
+  },
+  "5.5": {
+    "page": "page-526",
+    "startRatio": 0.465
+  },
+  "5.5-1": {
+    "page": "page-532",
+    "startRatio": 0.88
+  },
+  "5.5-2": {
+    "page": "page-536",
+    "startRatio": 0.34
+  },
+  "5.6": {
+    "page": "page-538",
+    "startRatio": 0.65
+  },
+  "5.7": {
+    "page": "page-547",
+    "startRatio": 0.056
+  },
+  "5.8": {
+    "page": "page-554",
+    "startRatio": 0.323
+  },
+  "5.8-1": {
+    "page": "page-559",
+    "startRatio": 0.689
+  },
+  "5.8-2": {
+    "page": "page-560",
+    "startRatio": 0.783
+  },
+  "5.9": {
+    "page": "page-563",
+    "startRatio": 0.056
+  },
   "b": {
     "page": "page-001",
     "startRatio": 0.016
@@ -466,6 +798,10 @@
   "b.3-2": {
     "page": "page-022",
     "startRatio": 0.135
+  },
+  "b.4": {
+    "page": "page-023",
+    "startRatio": 0
   },
   "b.5": {
     "page": "page-025",
@@ -582,9 +918,5 @@
   "b.8-9": {
     "page": "page-058",
     "startRatio": 0.004
-  },
-  "b.4": {
-    "page": "page-023",
-    "startRatio": 0
   }
 }

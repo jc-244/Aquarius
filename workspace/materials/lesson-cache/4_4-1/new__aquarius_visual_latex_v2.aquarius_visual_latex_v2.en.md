@@ -1,0 +1,100 @@
+%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6Indpa2lfcmVmZXJlbmNlIiwicmF0aW9uYWxlIjoiVGhpcyBzZWN0aW9uIGlzIGNpcmN1aXQtdG9wb2xvZ3kgZHJpdmVuOiBzdHVkZW50cyBtdXN0IHJlY29nbml6ZSBvcCBhbXAgdGVybWluYWxzLCBmZWVkYmFjayByZXNpc3RvciBwbGFjZW1lbnQsIGFuZCB0aGUgU2FsbGVuLUtleSBzdHJ1Y3R1cmUuIFRoZSBPQ1IgcmVmZXJlbmNlcyB0ZXh0Ym9vayBGaWd1cmVzIDQuMTYgYW5kIDQuMTcsIGJ1dCBubyBjcm9wcGVkIGZpZ3VyZSBhc3NldHMgYXJlIGF2YWlsYWJsZSwgYW5kIGZ1bGwtcGFnZSBzY3JlZW5zaG90cyBhcmUgZm9yYmlkZGVuLiBVc2UgV2lraXBlZGlhL1dpa2ltZWRpYS1zdHlsZSBzdGF0aWMgcmVmZXJlbmNlIGNpcmN1aXQgdmlzdWFscyB3aGVyZSBwb3NzaWJsZSwgdGhlbiB0ZWFjaCB0aGUgZXhhY3QgdGV4dGJvb2sgZm9ybXVsYXMgd2l0aCBMYVRlWC4iLCJjcmFtIjoiVXNlIHZpc3VhbHMgdG8gbWFrZSBzdHVkZW50cyBpbnN0YW50bHkgcmVjb2duaXplIHRoZSBub25pbnZlcnRpbmcgYW1wbGlmaWVyIGFuZCBTYWxsZW4tS2V5IGV4YW0gc2V0dXAuIiwic3RhbmRhcmQiOiJVc2UgdmlzdWFscyB0byBjb25uZWN0IGVhY2ggY2lyY3VpdCBzeW1ib2wgdG8gdGhlIGdhaW4gZm9ybXVsYSBhbmQgdHJhbnNmZXItZnVuY3Rpb24gc2V0dXAuIiwidG9wX3Njb3JlIjoiVXNlIHZpc3VhbHMgdG8gaGlnaGxpZ2h0IHBvbGFyaXR5LCBmZWVkYmFjay1ub2RlIGFzc3VtcHRpb25zLCBhbmQgY29tbW9uIG1pc3Rha2VzIGluIGFjdGl2ZS1jaXJjdWl0IHRyYW5zZm9ybWVkIG5ldHdvcmtzLiJ9" style="display:none;"></div>%%KC_END%%
+# Analysis of Active Circuits
+
+> **Section Objective:** Learn how active circuits with op amps are analyzed by replacing the op amp with an equivalent model and then applying transformed-network methods.
+
+---
+
+## Concepts In This Section
+
+- ideal op amp model
+- noninverting amplifier gain
+- active-circuit equivalent source
+- Sallen-Key transfer-function setup
+- node-current equations
+
+
+## 1. Ideal Op Amp Model
+
+This equation is the textbook's mathematical model for the op amp. Here, \(A\) is the **open-loop gain** — a very large positive number, typically \(10^5\) to \(10^6\). The variable \(v_1\) is the differential input voltage as defined by the model's polarity convention, and \(v_2\) is the resulting output voltage.
+
+Practical op amps have very high input impedance and very low output impedance. The idealized analysis therefore treats input current as essentially zero and the output as an ideal controlled voltage source.
+
+### EXAM TRIGGER
+
+When an op amp appears inside a Laplace-domain circuit, **replace it with this mathematical model first**, then apply node or mesh analysis to the resulting equivalent circuit.
+
+### COMMON MISTAKE
+
+Do not blindly apply the minus sign without first checking the input polarity convention in the actual circuit. If the signal enters the noninverting terminal, the sign convention may differ from the raw model form.
+
+$$v_2 = -A\, v_1$$
+
+## 2. Noninverting Amplifier Gain
+
+This is the central result for the resistor-feedback op amp configuration. \(K\) is the **closed-loop voltage gain**, \(R_a\) is the resistor from the feedback node to the reference (ground) side, and \(R_b\) is the feedback resistor connecting the output back toward that node.
+
+**Short derivation idea:** Ideal op amp behavior gives negligible input current and negligible differential input voltage. This means the same current \(i_o\) flows through both resistors, so:
+
+$$v_1 = R_a\, i_o \quad \text{and} \quad v_2 = (R_b + R_a)\, i_o$$
+
+Dividing gives \(K = v_2/v_1 = 1 + R_b/R_a\).
+
+**Minimal example:** If \(R_b = 3R_a\), then \(K = 1 + 3 = 4\), so \(v_2 = 4v_1\).
+
+### COMMON MISTAKE
+
+Using \(R_a/R_b\) instead of \(R_b/R_a\), or forgetting the leading \(+1\). The noninverting gain is always \(\geq 1\) when \(R_b \geq 0\).
+
+$$v_2(t) = K\, v_1(t), \quad K = 1 + \frac{R_b}{R_a}$$
+
+%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="web_reference_image" data-teaching-role="exam_pattern_anchor" data-visual-use-b64="eyJjcmFtIjoiVXNlIHRoZSBwaWN0dXJlIHRvIHJlY29nbml6ZSBhIFNhbGxlbi1LZXkgZmlsdGVyIGJlZm9yZSBzdGFydGluZyBhbGdlYnJhLiIsInN0YW5kYXJkIjoiVXNlIHRoZSB0b3BvbG9neSB0byBpZGVudGlmeSBpbnB1dCwgb3V0cHV0LCBpbnRlcm1lZGlhdGUgbm9kZXMsIHJlc2lzdG9ycywgY2FwYWNpdG9ycywgYW5kIHRoZSBhbXBsaWZpZXIgYmxvY2suIiwidG9wX3Njb3JlIjoiVXNlIHRoZSB2aXN1YWwgdG8gZGlzdGluZ3Vpc2ggbm9kZSB2b2x0YWdlcyBcXChWX2EocylcXCksIFxcKFZfYihzKVxcKSwgYW5kIHRoZSBjb250cm9sbGVkIG91dHB1dCBcXChWX28ocykgPSBLIFZfYihzKVxcKS4ifQ==" style="display:none;"></div>%%KC_END%%
+![Active filter](https://upload.wikimedia.org/wikipedia/commons/e/ec/Sallen-Key_Highpass_Example.svg)
+*Sallen-Key high-pass filter topology: two resistors and two capacitors feed into a noninverting op amp stage. Use it as a topology cue for the active-circuit setup, then follow the textbook's exact node labels and component values.*
+%%KC_BLOCK%%<div class="kc-reference-source"><a href="https://upload.wikimedia.org/wikipedia/commons/e/ec/Sallen-Key_Highpass_Example.svg" target="_blank" rel="noopener noreferrer">Reference image from Wikipedia</a></div>%%KC_END%%
+
+## 3. Sallen-Key Transfer-Function Setup
+
+The goal of Example 4.20 is not a time-domain waveform — it is the **transfer function** relating output voltage to input voltage in the Laplace domain. Here \(V_i(s)\) is the Laplace transform of the input and \(V_o(s)\) is the Laplace transform of the output.
+
+**Required condition:** Assume all initial conditions are zero. With zero initial conditions, capacitors are represented purely by their impedance \(1/(Cs)\) or admittance \(Cs\) — no extra initial-condition sources appear.
+
+### EXAM TRIGGER
+
+Whenever a problem asks for a filter transfer function, immediately write output transform over input transform and work entirely in the \(s\)-domain.
+
+### COMMON MISTAKE
+
+Mixing \(v_o(t)/v_i(t)\) with \(V_o(s)/V_i(s)\). Transfer functions are Laplace-domain ratios, not time-domain ratios.
+
+$$H(s) = \frac{V_o(s)}{V_i(s)}$$
+
+## 4. Node-Current Equations in the Transformed Active Circuit
+
+At node \(a\), the capacitor current equals the **admittance** \(C_1 s\) multiplied by the voltage difference across the capacitor. The node voltages are:
+
+- \(V_a(s)\): voltage at node \(a\)
+- \(V_o(s)\): output voltage
+- \(V_b(s)\): voltage at the amplifier's noninverting input node
+- \(K\): closed-loop gain of the noninverting amplifier
+
+**Why the substitution \(V_o(s) = K V_b(s)\) is valid:** The op amp and its feedback resistors have been replaced by an equivalent controlled voltage source. Once that substitution is made, \([V_a - V_o]C_1 s\) becomes \([V_a - K V_b]C_1 s\) directly.
+
+Resistor currents at node \(a\) are found the same way: voltage difference divided by resistance.
+
+### COMMON MISTAKE
+
+Writing capacitor current as \([V_a(s) - V_o(s)]\,/\,(C_1 s)\) — that is the **impedance** form for voltage, not the current. Current equals voltage difference **multiplied** by admittance \(C_1 s\).
+
+$$I_{C_1}(s) = \bigl[V_a(s) - V_o(s)\bigr]C_1 s = \bigl[V_a(s) - K V_b(s)\bigr]C_1 s$$
+
+---
+**📌 Key Takeaways**
+- Op amp basic model: \(v_2 = -A\,v_1\), where \(A\) is the very large open-loop gain; check terminal polarity before applying the sign.
+- Noninverting amplifier: \(v_2(t) = K\,v_1(t)\) with \(K = 1 + R_b/R_a\); never drop the leading \(+1\) or reverse the ratio.
+- Transfer function definition: \(H(s) = V_o(s)/V_i(s)\); always work in the Laplace domain with zero initial conditions for filter problems.
+- Node-current rule: capacitor current \(I_{C_1}(s) = [V_a(s) - V_o(s)]\,C_1 s = [V_a(s) - K V_b(s)]\,C_1 s\); multiply by admittance \(C_1 s\), do not divide.
+
+*Next, these transformed-network ideas will be extended to more general circuit-analysis procedures.*
+
+%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NiwicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo1LCJtYXgiOjd9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6Im9wX2FtcF9tb2RlbCIsImxhYmVsIjoiSWRlYWwgb3AgYW1wIG1vZGVsIGFuZCBwb2xhcml0eSIsImltcG9ydGFuY2UiOiJoaWdoIiwiZXhhbV93ZWlnaHQiOiJoaWdoIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoyfSwicXVlc3Rpb25zIjpbeyJpZCI6Im9wYW1wX21vZGVsX3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJJbiB0aGUgdGV4dGJvb2sncyBiYXNpYyBvcCBhbXAgbW9kZWwsIHRoZSBvdXRwdXQgaXMgd3JpdHRlbiBhcyBcXCh2XzIgPSAtQVxcLHZfMVxcKS4gV2hhdCBkb2VzIFxcKEFcXCkgcmVwcmVzZW50PyIsIm9wdGlvbnMiOlsiQS4gVGhlIGZlZWRiYWNrIHJlc2lzdG9yIHJhdGlvIiwiQi4gVGhlIG9wZW4tbG9vcCBnYWluIG9mIHRoZSBvcCBhbXAiLCJDLiBUaGUgb3V0cHV0IHJlc2lzdGFuY2Ugb2YgdGhlIG9wIGFtcCIsIkQuIFRoZSBjYXBhY2l0b3IgYWRtaXR0YW5jZSBpbiB0aGUgdHJhbnNmb3JtZWQgY2lyY3VpdCJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6IlxcKEFcXCkgaXMgdGhlIG9wIGFtcCdzIHZlcnkgbGFyZ2Ugb3Blbi1sb29wIGdhaW4gaW4gdGhlIG1hdGhlbWF0aWNhbCBtb2RlbC4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJUaGUgZmVlZGJhY2sgcmVzaXN0b3IgcmF0aW8gYXBwZWFycyBsYXRlciBpbiB0aGUgY2xvc2VkLWxvb3AgZ2FpbiBcXChLXFwpLCBub3QgaW4gXFwoQVxcKS4iLCJDIjoiT3V0cHV0IHJlc2lzdGFuY2UgaXMgbW9kZWxlZCBhcyB2ZXJ5IGxvdywgYnV0IGl0IGlzIG5vdCBcXChBXFwpLiIsIkQiOiJDYXBhY2l0b3IgYWRtaXR0YW5jZSBpcyBcXChDIHNcXCksIG5vdCBcXChBXFwpLiJ9LCJoaW50IjoiVGhlIHRleHRib29rIHNheXMgXFwoQVxcKSBpcyB0eXBpY2FsbHkgdmVyeSBsYXJnZSwgYXJvdW5kIFxcKDEwXjVcXCkgdG8gXFwoMTBeNlxcKS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOmZhbHNlfSx7ImlkIjoib3BhbXBfbW9kZWxfcTIiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IkEgZGlhZ3JhbSBzaG93cyBhbiBvcCBhbXAgdHJpYW5nbGUgd2l0aCBwbHVzIGFuZCBtaW51cyBpbnB1dCB0ZXJtaW5hbHMuIFdoaWNoIHN0YXRlbWVudCBpcyB0aGUgc2FmZXN0IGV4YW0gcnVsZT8iLCJvcHRpb25zIjpbIkEuIFRoZSBvdXRwdXQgaXMgYWx3YXlzIG5lZ2F0aXZlIG5vIG1hdHRlciB3aGljaCB0ZXJtaW5hbCByZWNlaXZlcyB0aGUgaW5wdXQuIiwiQi4gVGhlIG91dHB1dCBwb2xhcml0eSBtdXN0IGJlIGludGVycHJldGVkIGZyb20gdGhlIG5vbmludmVydGluZyBhbmQgaW52ZXJ0aW5nIHRlcm1pbmFsIGxhYmVscy4iLCJDLiBUaGUgcGx1cyB0ZXJtaW5hbCBhbHdheXMgaGFzIHplcm8gdm9sdGFnZSBpbiBldmVyeSBjaXJjdWl0LiIsIkQuIFRoZSBtaW51cyB0ZXJtaW5hbCBhbHdheXMgY2FycmllcyBhbGwgdGhlIGlucHV0IGN1cnJlbnQuIl0sImNvcnJlY3Rfb3B0aW9uIjoiQiIsImV4cGxhbmF0aW9uIjoiVGhlIHNpZ24gZGVwZW5kcyBvbiBob3cgdGhlIGlucHV0IHZvbHRhZ2UgaXMgYXBwbGllZCByZWxhdGl2ZSB0byB0aGUgbGFiZWxlZCB0ZXJtaW5hbHMuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhlIHNpZ24gaXMgbm90IHVuaXZlcnNhbDsgdGhlIGNpcmN1aXQgcG9sYXJpdHkgY29udmVudGlvbiBtYXR0ZXJzLiIsIkMiOiJJZGVhbCBvcCBhbXAgYW5hbHlzaXMgbWF5IG1ha2UgYSBkaWZmZXJlbnRpYWwgdm9sdGFnZSBzbWFsbCwgYnV0IHRoZSBwbHVzIHRlcm1pbmFsIGlzIG5vdCBhbHdheXMgemVybyB2b2x0cy4iLCJEIjoiSWRlYWwgb3AgYW1wIGlucHV0IGN1cnJlbnQgaXMgZXNzZW50aWFsbHkgemVybywgbm90IGNvbmNlbnRyYXRlZCBpbiB0aGUgbWludXMgdGVybWluYWwuIn0sImhpbnQiOiJMb29rIGF0IHRoZSBwbHVzL21pbnVzIGxhYmVscyBiZWZvcmUgYXBwbHlpbmcgYSBzaWduLiIsIm5lZWRzX3Zpc3VhbCI6dHJ1ZSwidmlzdWFsX3R5cGUiOiJvcF9hbXBfdGVybWluYWxfbGFiZWxfY2hlY2siLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9XX0seyJpZCI6Im5vbmludmVydGluZ19nYWluIiwibGFiZWwiOiJOb25pbnZlcnRpbmcgYW1wbGlmaWVyIGdhaW4iLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJub25pbnZfZ2Fpbl9xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiRm9yIHRoZSBub25pbnZlcnRpbmcgYW1wbGlmaWVyIGluIHRoaXMgc2VjdGlvbiwgd2hpY2ggZ2FpbiBmb3JtdWxhIGlzIGNvcnJlY3Q/Iiwib3B0aW9ucyI6WyJBLiBcXChLID0gXFxkZnJhY3tSX2F9e1JfYn1cXCkiLCJCLiBcXChLID0gMSArIFxcZGZyYWN7Ul9ifXtSX2F9XFwpIiwiQy4gXFwoSyA9IDEgLSBcXGRmcmFje1JfYn17Ul9hfVxcKSIsIkQuIFxcKEsgPSBcXGRmcmFjezF9e1JfYSArIFJfYn1cXCkiXSwiY29ycmVjdF9vcHRpb24iOiJCIiwiZXhwbGFuYXRpb24iOiJUaGUgdGV4dGJvb2sgcmVzdWx0IGlzIFxcKHZfMih0KSA9IEtcXCx2XzEodClcXCksIHdoZXJlIFxcKEsgPSAxICsgUl9iL1JfYVxcKS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJUaGlzIHJldmVyc2VzIHRoZSByYXRpbyBhbmQgbWlzc2VzIHRoZSBcXCgrMVxcKS4iLCJDIjoiVGhlIG5vbmludmVydGluZyBjb25maWd1cmF0aW9uIGhhcyBhIHBvc2l0aXZlIGNsb3NlZC1sb29wIGdhaW4gaGVyZS4iLCJEIjoiVGhpcyBoYXMgdGhlIHdyb25nIHVuaXRzOyBnYWluIG11c3QgYmUgZGltZW5zaW9ubGVzcy4ifSwiaGludCI6Ik5vbmludmVydGluZyBnYWluIGlzIGxhcmdlciB0aGFuIDEgd2hlbiBcXChSX2IgPiAwXFwpLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9LHsiaWQiOiJub25pbnZfZ2Fpbl9xMiIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiSWYgXFwoUl9iID0gNFJfYVxcKSwgd2hhdCBpcyB0aGUgY2xvc2VkLWxvb3AgZ2FpbiBcXChLXFwpPyIsIm9wdGlvbnMiOlsiQS4gNCIsIkIuIDUiLCJDLiBcXCgxLzRcXCkiLCJELiBcXCgtNFxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6IlxcKEsgPSAxICsgUl9iL1JfYSA9IDEgKyA0ID0gNVxcKS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJUaGlzIGZvcmdldHMgdGhlIFxcKCsxXFwpIGluIHRoZSBub25pbnZlcnRpbmcgYW1wbGlmaWVyIGdhaW4uIiwiQyI6IlRoaXMgaW52ZXJ0cyB0aGUgcmVzaXN0b3IgcmF0aW8uIiwiRCI6IlRoZSBnYWluIGZvciB0aGlzIG5vbmludmVydGluZyBjb25maWd1cmF0aW9uIGlzIHBvc2l0aXZlLiJ9LCJoaW50IjoiRG8gbm90IGRyb3AgdGhlIGxlYWRpbmcgMS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9XX0seyJpZCI6InRyYW5zZmVyX2Z1bmN0aW9uX3NldHVwIiwibGFiZWwiOiJTYWxsZW4tS2V5IHRyYW5zZmVyLWZ1bmN0aW9uIHNldHVwIiwiaW1wb3J0YW5jZSI6ImhpZ2giLCJleGFtX3dlaWdodCI6Im1lZGl1bSIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6MX0sInF1ZXN0aW9ucyI6W3siaWQiOiJ0cmFuc2Zlcl9zZXR1cF9xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiSW4gRXhhbXBsZSA0LjIwLCB3aGF0IHRyYW5zZmVyIGZ1bmN0aW9uIGlzIHRoZSBhbmFseXNpcyB0cnlpbmcgdG8gZmluZD8iLCJvcHRpb25zIjpbIkEuIFxcKEgocykgPSBcXGRmcmFje1ZfaShzKX17Vl9vKHMpfVxcKSIsIkIuIFxcKEgocykgPSBcXGRmcmFje3Zfbyh0KX17dl9pKHQpfVxcKSIsIkMuIFxcKEgocykgPSBcXGRmcmFje1ZfbyhzKX17Vl9pKHMpfVxcKSIsIkQuIFxcKEgocykgPSBWX28ocykgLSBWX2kocylcXCkiXSwiY29ycmVjdF9vcHRpb24iOiJDIiwiZXhwbGFuYXRpb24iOiJUaGUgdHJhbnNmZXIgZnVuY3Rpb24gaXMgdGhlIExhcGxhY2UtZG9tYWluIG91dHB1dC10by1pbnB1dCByYXRpbzogXFwoSChzKSA9IFZfbyhzKS9WX2kocylcXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhpcyByZXZlcnNlcyBpbnB1dCBhbmQgb3V0cHV0LiIsIkIiOiJUaGlzIHVzZXMgdGltZS1kb21haW4gc2lnbmFscyBpbnN0ZWFkIG9mIExhcGxhY2UgdHJhbnNmb3Jtcy4iLCJEIjoiQSB0cmFuc2ZlciBmdW5jdGlvbiBpcyBhIHJhdGlvLCBub3QgYSBkaWZmZXJlbmNlLiJ9LCJoaW50IjoiVHJhbnNmZXIgZnVuY3Rpb24gbWVhbnMgb3V0cHV0IHRyYW5zZm9ybSBkaXZpZGVkIGJ5IGlucHV0IHRyYW5zZm9ybS4iLCJuZWVkc192aXN1YWwiOnRydWUsInZpc3VhbF90eXBlIjoic2FsbGVuX2tleV9pbnB1dF9vdXRwdXRfbGFiZWxfY2hlY2siLCJzYW1lX3BvaW50X3ZhcmlhbnQiOmZhbHNlfV19LHsiaWQiOiJub2RlX2N1cnJlbnRfZXF1YXRpb25zIiwibGFiZWwiOiJOb2RlLWN1cnJlbnQgZXF1YXRpb25zIGluIHRyYW5zZm9ybWVkIGFjdGl2ZSBjaXJjdWl0cyIsImltcG9ydGFuY2UiOiJoaWdoIiwiZXhhbV93ZWlnaHQiOiJoaWdoIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoyfSwicXVlc3Rpb25zIjpbeyJpZCI6Im5vZGVfY3VycmVudF9xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiQXQgbm9kZSBcXChhXFwpLCB3aHkgY2FuIHRoZSBjYXBhY2l0b3IgY3VycmVudCBiZSB3cml0dGVuIGFzIFxcKElfe0NfMX0ocykgPSBbVl9hKHMpIC0gSyBWX2IocyldXFwsQ18xIHNcXCk/Iiwib3B0aW9ucyI6WyJBLiBCZWNhdXNlIFxcKFZfbyhzKSA9IEsgVl9iKHMpXFwpIGFmdGVyIHJlcGxhY2luZyB0aGUgbm9uaW52ZXJ0aW5nIGFtcGxpZmllciBieSBpdHMgZXF1aXZhbGVudCBzb3VyY2UiLCJCLiBCZWNhdXNlIGNhcGFjaXRvcnMgYXJlIG9wZW4gY2lyY3VpdHMgaW4gZXZlcnkgTGFwbGFjZS1kb21haW4gcHJvYmxlbSIsIkMuIEJlY2F1c2UgXFwoVl9hKHMpID0gVl9iKHMpXFwpIGZvciBhbGwgYWN0aXZlIGNpcmN1aXRzIiwiRC4gQmVjYXVzZSByZXNpc3RvciBjdXJyZW50IGlzIGFsd2F5cyBtdWx0aXBsaWVkIGJ5IFxcKENfMSBzXFwpIl0sImNvcnJlY3Rfb3B0aW9uIjoiQSIsImV4cGxhbmF0aW9uIjoiVGhlIG9wIGFtcCBibG9jayBpcyByZXBsYWNlZCBieSB0aGUgZXF1aXZhbGVudCByZWxhdGlvbiBcXChWX28ocykgPSBLIFZfYihzKVxcKSwgc28gXFwoW1ZfYSAtIFZfb11cXCxDXzEgc1xcKSBiZWNvbWVzIFxcKFtWX2EgLSBLIFZfYl1cXCxDXzEgc1xcKS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkIiOiJXaXRoIHplcm8gaW5pdGlhbCBjb25kaXRpb25zLCBhIGNhcGFjaXRvciBpcyByZXByZXNlbnRlZCBieSBhZG1pdHRhbmNlIFxcKEMgc1xcKSBvciBpbXBlZGFuY2UgXFwoMS8oQ3MpXFwpLCBub3Qgc2ltcGx5IGlnbm9yZWQuIiwiQyI6IlRoZSBub2RlIHZvbHRhZ2VzIGFyZSB1bmtub3ducyBhbmQgYXJlIG5vdCBhdXRvbWF0aWNhbGx5IGVxdWFsLiIsIkQiOiJSZXNpc3RvciBjdXJyZW50IGlzIHZvbHRhZ2UgZGlmZmVyZW5jZSBkaXZpZGVkIGJ5IHJlc2lzdGFuY2UuIn0sImhpbnQiOiJGaXJzdCByZXBsYWNlIHRoZSBhY3RpdmUgYmxvY2s7IHRoZW4gd3JpdGUgdGhlIHBhc3NpdmUtZWxlbWVudCBjdXJyZW50LiIsIm5lZWRzX3Zpc3VhbCI6dHJ1ZSwidmlzdWFsX3R5cGUiOiJub2RlX2FfY2FwYWNpdG9yX2N1cnJlbnRfZGlyZWN0aW9uX2NoZWNrIiwic2FtZV9wb2ludF92YXJpYW50IjpmYWxzZX0seyJpZCI6Im5vZGVfY3VycmVudF9xMiIsInR5cGUiOiJzaG9ydF9hbnN3ZXIiLCJzdGVtIjoiQSBjbGFzc21hdGUgd3JpdGVzIHRoZSBjYXBhY2l0b3IgY3VycmVudCBhcyBcXChbVl9hKHMpIC0gVl9vKHMpXVxcLC9cXCwoQ18xIHMpXFwpLiBFeHBsYWluIHdoYXQgaXMgd3JvbmcgYW5kIHdyaXRlIHRoZSBjb3JyZWN0ZWQgZXhwcmVzc2lvbi4iLCJpZGVhbF9hbnN3ZXIiOiJJbiB0aGUgcy1kb21haW4sIGNhcGFjaXRvciBjdXJyZW50IGVxdWFscyBhZG1pdHRhbmNlIHRpbWVzIHZvbHRhZ2UgZGlmZmVyZW5jZS4gVGhlIGNhcGFjaXRvciBhZG1pdHRhbmNlIGlzIFxcKENfMSBzXFwpLCBzbyB0aGUgY29ycmVjdGVkIGV4cHJlc3Npb24gaXMgXFwoSV97Q18xfShzKSA9IFtWX2EocykgLSBWX28ocyldXFwsQ18xIHNcXCksIG9yIFxcKFtWX2EocykgLSBLIFZfYihzKV1cXCxDXzEgc1xcKSBhZnRlciBzdWJzdGl0dXRpbmcgXFwoVl9vKHMpID0gSyBWX2IocylcXCkuIiwiZ3JhZGluZ19ydWJyaWMiOlsiTXVzdCBpZGVudGlmeSB0aGF0IHRoZSBzdHVkZW50IHVzZWQgaW1wZWRhbmNlIGZvcm0gaW5jb3JyZWN0bHkgZm9yIGN1cnJlbnQuIiwiTXVzdCBzdGF0ZSB0aGF0IGNhcGFjaXRvciBhZG1pdHRhbmNlIGlzIFxcKENfMSBzXFwpLiIsIk11c3QgZ2l2ZSBcXChbVl9hKHMpIC0gVl9vKHMpXVxcLENfMSBzXFwpIGFzIHRoZSBjb3JyZWN0ZWQgZXhwcmVzc2lvbi4iLCJGdWxsIGNyZWRpdCBpZiB0aGUgYW5zd2VyIGFsc28gaW5jbHVkZXMgdGhlIHN1YnN0aXR1dGlvbiBcXChWX28ocykgPSBLIFZfYihzKVxcKS4iXSwiZXhwbGFuYXRpb24iOiJUaGlzIGNoZWNrcyB3aGV0aGVyIHRoZSBzdHVkZW50IGNhbiBkaXN0aW5ndWlzaCBtdWx0aXBseWluZyBieSBhZG1pdHRhbmNlIGZyb20gZGl2aWRpbmcgYnkgaW1wZWRhbmNlIGluIG5vZGUgYW5hbHlzaXMuIiwiaGludCI6IkZvciBub2RlIGVxdWF0aW9ucywgY3VycmVudCB1c3VhbGx5IGVxdWFscyB2b2x0YWdlIGRpZmZlcmVuY2UgdGltZXMgYWRtaXR0YW5jZS4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9XX1dfQ==" style="display:none;"></div>%%KC_END%%

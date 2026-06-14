@@ -5059,6 +5059,194 @@ const SECTION_PREVIEWS_NEW = {
 };
 // ── END SECTION_PREVIEWS_NEW ──
 
+Object.assign(SECTION_PREVIEWS_NEW, {
+  "3.1 Introduction": {
+    "en": "This opening section moves the course from continuous-time thinking into discrete-time signals. It sets up sequences, sample indexing, and the energy/power viewpoint you need before solving difference-equation systems.",
+    "emoji": "🔢",
+    "refs": 1
+  },
+  "3.2 Useful Signal Operations": {
+    "en": "Discrete-time signals can be shifted, reversed, and scaled, but the integer index makes each operation feel different from the continuous-time case. This section trains you to track samples without losing signs, offsets, or support intervals.",
+    "emoji": "↔️",
+    "refs": 1
+  },
+  "3.3 Some Useful Discrete-Time Signal Models": {
+    "en": "Impulse, step, exponential, sinusoidal, and complex-exponential sequences are the building blocks for discrete-time analysis. This section gives you the standard models that later become inputs, modes, and test signals for LTID systems.",
+    "emoji": "🧱",
+    "refs": 5
+  },
+  "3.4 Examples of Discrete-Time Systems": {
+    "en": "Discrete-time systems can delay, average, accumulate, difference, or filter a sequence. This section turns those operations into input-output rules, then classifies the systems so you know which analysis tools are allowed.",
+    "emoji": "⚙️",
+    "refs": 1
+  },
+  "3.5 Discrete-Time System Equations": {
+    "en": "Difference equations are the discrete-time counterpart of differential equations. This section shows how recursive rules generate outputs step by step and why initial conditions must be handled carefully.",
+    "emoji": "🧮",
+    "refs": 1
+  },
+  "3.6 System Response to Internal Conditions: The Zero-Input Response": {
+    "en": "The zero-input response explains what a discrete-time system does because of stored internal conditions alone. This section focuses on characteristic roots and natural modes before any external input is applied.",
+    "emoji": "🌱",
+    "refs": 1
+  },
+  "3.7 The Unit Impulse Response h[n]": {
+    "en": "The impulse response is the fingerprint of an LTID system. This section shows how one response, h[n], contains enough information to predict the output for any input through convolution.",
+    "emoji": "📍",
+    "refs": 1
+  },
+  "3.8 System Response to External Input: The Zero-State Response": {
+    "en": "The zero-state response is what the input alone contributes when the system starts from rest. This section builds the convolution-sum view and connects graphical shifting, summing, and interconnected systems.",
+    "emoji": "🔁",
+    "refs": 3
+  },
+  "3.9 System Stability": {
+    "en": "Stability asks whether bounded inputs and internal modes stay under control. This section compares BIBO and asymptotic stability, then links both ideas to impulse responses and characteristic roots.",
+    "emoji": "⚖️",
+    "refs": 3
+  },
+  "3.10 Intuitive Insights into System Behavior": {
+    "en": "This section builds quick visual intuition for discrete-time system behavior without solving every sample. It connects modes, resonance, impulse-response width, time constants, and pulse spreading.",
+    "emoji": "💡",
+    "refs": 1
+  },
+  "3.11 MATLAB: Discrete-Time Signals and Systems": {
+    "en": "This MATLAB section turns the discrete-time theory into computation. You will create stem plots, simulate filtering, write custom system functions, and verify convolution numerically.",
+    "emoji": "💻",
+    "refs": 4
+  },
+  "3.12 Appendix: Impulse Response for a Special Case": {
+    "en": "This appendix handles a special impulse-response derivation that is easy to skip but useful when roots or system equations take a particular form. It gives a compact reference for a case that often appears inside longer solutions.",
+    "emoji": "📎",
+    "refs": 1
+  },
+  "3.13 Summary": {
+    "en": "The summary ties together discrete-time signals, difference equations, impulse responses, convolution, and stability. Use it as a checklist for what you should be able to recognize and compute before moving to transforms.",
+    "emoji": "✅",
+    "refs": 1
+  },
+  "4.1 The Laplace Transform": {
+    "en": "The Laplace transform converts time-domain signals and system equations into algebraic expressions in the s-domain. This section introduces the transform pair, inverse transform idea, and why poles start to matter.",
+    "emoji": "🔭",
+    "refs": 1
+  },
+  "4.2 Some Properties of the Laplace Transform": {
+    "en": "Laplace-transform properties are the shortcuts that keep problems from becoming long integrals. This section covers shifting, differentiation, integration, scaling, and convolution rules you will use constantly.",
+    "emoji": "🧰",
+    "refs": 6
+  },
+  "4.3 Solution of Differential and Integro-Differential Equations": {
+    "en": "This section uses the Laplace transform to solve system equations with initial conditions, inputs, and feedback-like terms. It separates zero-input and zero-state thinking while making stability and inverse systems algebraic.",
+    "emoji": "🧩",
+    "refs": 4
+  },
+  "4.4 Analysis of Electrical Networks: The Transformed Network": {
+    "en": "Circuit elements become algebraic impedances and sources in the transformed network. This section shows how Laplace-domain circuit analysis turns differential equations into familiar network equations.",
+    "emoji": "🔌",
+    "refs": 1
+  },
+  "4.5 Block Diagrams": {
+    "en": "Block diagrams make system interconnections visible. This section teaches you to read cascades, sums, feedback loops, and equivalent transfer functions without getting lost in signal-flow notation.",
+    "emoji": "▣",
+    "refs": 1
+  },
+  "4.6 System Realization": {
+    "en": "A transfer function is not just a formula; it can be built as an actual system. This section develops direct, cascade, parallel, and transposed realizations so you can move between algebra and implementation.",
+    "emoji": "🏗️",
+    "refs": 5
+  },
+  "4.7 Application to Feedback and Controls": {
+    "en": "Feedback changes a system's poles, stability, and transient behavior. This section applies Laplace-domain tools to a control example where closed-loop structure matters more than the individual blocks.",
+    "emoji": "🎛️",
+    "refs": 1
+  },
+  "4.8 Frequency Response of an LTIC System": {
+    "en": "Frequency response explains how an LTIC system scales and shifts sinusoids in steady state. This section connects H(s) to H(jw) and prepares the bridge from transient analysis to filtering.",
+    "emoji": "📡",
+    "refs": 1
+  },
+  "4.9 Bode Plots": {
+    "en": "Bode plots turn a transfer function into magnitude and phase sketches. This section teaches the pole-zero building blocks, slopes, corner frequencies, and approximations that make frequency response readable by eye.",
+    "emoji": "📈",
+    "refs": 5
+  },
+  "4.10 Filter Design by Placement of Poles and Zeros of H(s)": {
+    "en": "Pole-zero placement is the design language of analog filters. This section shows how lowpass, bandpass, notch, and practical filter specifications emerge from where poles and zeros sit in the s-plane.",
+    "emoji": "🎚️",
+    "refs": 5
+  },
+  "4.11 The Bilateral Laplace Transform": {
+    "en": "The bilateral Laplace transform adds the region of convergence, which is essential for distinguishing signals with the same algebraic expression. This section connects ROC, causality, and system analysis.",
+    "emoji": "🌐",
+    "refs": 2
+  },
+  "4.12 MATLAB: Continuous-Time Filters": {
+    "en": "This MATLAB section makes continuous-time filter analysis concrete. You will evaluate frequency responses, design Butterworth and Chebyshev filters, and use cascaded second-order sections for cleaner implementation.",
+    "emoji": "💻",
+    "refs": 4
+  },
+  "4.13 Summary": {
+    "en": "The summary consolidates Laplace transforms, transformed circuits, transfer functions, realizations, feedback, Bode plots, and filter design. Use it to check whether you can move fluently between time, s-domain, and frequency views.",
+    "emoji": "✅",
+    "refs": 1
+  },
+  "5.1 The z-Transform": {
+    "en": "The z-transform is the discrete-time counterpart of the Laplace transform. This section introduces transform pairs, inverse methods, power series, and partial fractions for sequences.",
+    "emoji": "🔢",
+    "refs": 2
+  },
+  "5.2 Some Properties of the z-Transform": {
+    "en": "z-transform properties are the algebraic moves behind most discrete-time system solutions. This section covers shifting, scaling, differentiation, reversal, and convolution in the z-domain.",
+    "emoji": "🧰",
+    "refs": 5
+  },
+  "5.3 z-Transform Solution of Linear Difference Equations": {
+    "en": "Difference equations become algebraic equations after the z-transform. This section uses transfer functions, zero-state response, stability, and inverse systems to analyze LTID systems efficiently.",
+    "emoji": "🧩",
+    "refs": 3
+  },
+  "5.4 System Realization": {
+    "en": "Discrete-time transfer functions can be implemented as recursive structures. This section turns rational H(z) expressions into realizations that expose delays, gains, and feedback paths.",
+    "emoji": "🏗️",
+    "refs": 1
+  },
+  "5.5 Frequency Response of Discrete-Time Systems": {
+    "en": "Discrete-time frequency response is periodic, which makes sampling and aliasing unavoidable. This section explains H(e^jw), the repeated spectrum, and why sampling rate changes what frequencies mean.",
+    "emoji": "📡",
+    "refs": 2
+  },
+  "5.6 Frequency Response from Pole-Zero Locations": {
+    "en": "Pole-zero geometry lets you estimate magnitude and phase without expanding every formula. This section shows how locations in the z-plane shape peaks, notches, bandwidth, and stability intuition.",
+    "emoji": "🎯",
+    "refs": 1
+  },
+  "5.7 Digital Processing of Analog Signals": {
+    "en": "Digital processing of analog signals links the continuous world to sampled computation. This section follows the chain from sampling through discrete-time processing and back toward analog reconstruction.",
+    "emoji": "🔄",
+    "refs": 1
+  },
+  "5.8 The Bilateral z-Transform": {
+    "en": "The bilateral z-transform adds the region of convergence, making causality and stability visible in the z-plane. This section uses ROC logic to distinguish sequences and analyze LTID systems.",
+    "emoji": "🌐",
+    "refs": 2
+  },
+  "5.9 Connecting the Laplace and z-Transforms": {
+    "en": "This section links s-domain and z-domain thinking through sampling relationships. It explains how continuous-time poles map into discrete-time behavior and why the two transforms tell compatible stories.",
+    "emoji": "🔗",
+    "refs": 1
+  },
+  "5.10 MATLAB: Discrete-Time IIR Filters": {
+    "en": "This MATLAB section turns z-domain filter theory into working IIR designs. You will inspect pole-zero plots, transform analog filters, handle bilinear warping, and use second-order sections for numerical reliability.",
+    "emoji": "💻",
+    "refs": 8
+  },
+  "5.11 Summary": {
+    "en": "The summary gathers z-transforms, difference-equation solutions, realizations, frequency response, pole-zero geometry, sampling links, and IIR filter design. Use it as the checklist before moving deeper into Fourier analysis.",
+    "emoji": "✅",
+    "refs": 1
+  }
+});
+
 // ── Syllabus: OLD book (2nd Ed, scanned) ──────────────────────────────
 const syllabusDataOld = [
   {
@@ -7755,43 +7943,71 @@ function inferInteractiveDemoFamily(demo = {}) {
   const text = getInteractiveDemoText(demo).toLowerCase();
   const spec = getInteractiveDemoSpec(demo);
   const frame = String(spec.framework || demo.framework || '').toLowerCase();
+  const combinedText = `${title} ${text}`.toLowerCase();
+  const hasLaplaceFlowIntent = /\b(visual recipe|three[-\s]?box flow|time domain to s[-\s]?domain|s[-\s]?domain and back|laplace[-\s]?domain multiplication|transforming x\(t\)|multiply(?:ing)? by h\(s\)|inverse[-\s]?(?:laplace[-\s]?)?transform|x\(s\)\s*h\(s\)|y\(s\)\s*=\s*x\(s\)\s*h\(s\)|canonical transfer functions|ideal delay|ideal differentiator|ideal integrator)\b/i.test(combinedText);
+  const hasZTransformPropertyIntent = /\b(gamma\^n|multiplying by.*gamma|replacing.*z.*z\/gamma|reflect the sequence|invert z|z\/gamma|1\/z|z-transform property|time reversal property|exponential weighting)\b/i.test(combinedText);
+  const hasSinusoidalSystemIntent = /\b(causal sinusoid through a stable ltic system|sinusoid.*stable ltic|steady[-\s]?state sinusoid|amplitude.*phase.*sinusoid|h\(j\\?omega\))\b/i.test(combinedText);
+  const hasPoleRocIntent = /\b(roc|region of convergence|pole[-\s]?zero|poles?\s+and\s+zeros?|zeros?\s+and\s+poles?|root location|stability tester|stable pole|pole location|causal\s*\/\s*(?:right|outside)|anti[-\s]?causal\s*\/\s*(?:left|inside)|inside\s+the\s+unit\s+circle|outside\s+the\s+unit\s+circle)\b/i.test(combinedText);
+  const hasTransformRuleIntent = /\b(z[-\s]?transform|z[-\s]?domain|laplace|s[-\s]?domain|transfer function|h\[z\]|x\[z\]|y\[z\]|block diagram|realization|direct form|op[-\s]?amp|transform[-\s]?scale|time integration|running area|time scaling|delay factor|frequency shifting)\b/i.test(combinedText);
+
+  if (/\b(convol|sliding overlap|reverse.*shift.*multiply|overlap.*sum)\b/i.test(combinedText)) {
+    return 'convolution_lab';
+  }
+  if (hasSinusoidalSystemIntent || /\b(bode|frequency response|filter|lowpass|low[-\s]?pass|highpass|high[-\s]?pass|bandpass|band[-\s]?pass|notch|butterworth|chebyshev|ripple|cutoff|prewarp|frequency folding|phase reversal|unit circle.*frequency)\b/i.test(combinedText)) {
+    return 'frequency_response_lab';
+  }
+  if (hasLaplaceFlowIntent || hasZTransformPropertyIntent) {
+    return 'transform_rule_lab';
+  }
+  if (/\b(difference equation|recurrence|recursive|impulse response|h\[n\]|zero[-\s]?state|zero[-\s]?input|characteristic mode|resonance|mode matching|unit sample|delta selector|gamma\^n|a\^n)\b/i.test(combinedText) && !hasPoleRocIntent) {
+    return 'sequence_system_lab';
+  }
+  if (hasPoleRocIntent) {
+    return 'pole_zero_roc_lab';
+  }
+  if (hasTransformRuleIntent) {
+    return 'transform_rule_lab';
+  }
+  if (/\b(difference equation|recurrence|recursive|impulse response|h\[n\]|zero[-\s]?state|zero[-\s]?input|characteristic mode|resonance|mode matching)\b/i.test(combinedText)) {
+    return 'sequence_system_lab';
+  }
 
   if (demo.demo_type === 'matrix_multiplication_conformability'
-    || /matrix multiplication conformability|matrix size compatibility|inner dimensions|rows of a.*rows of b|product c = ab/i.test(title + ' ' + text)) {
+    || /matrix multiplication conformability|matrix size compatibility|inner dimensions|rows of a.*rows of b|product c = ab/i.test(combinedText)) {
     return 'matrix_conformability';
   }
-  if (/matrix size and entry locator|matrix entry locator|a_{ij}|row index|column index|entry locator/i.test(title + ' ' + text)) {
+  if (/matrix size and entry locator|matrix entry locator|a_{ij}|row index|column index|entry locator/i.test(combinedText)) {
     return 'matrix_locator';
   }
-  if (/point-by-point multiplication|point by point multiplication|sample-by-sample|element-by-element|vector orientation|dimension mismatch/i.test(title + ' ' + text)) {
+  if (/point-by-point multiplication|point by point multiplication|sample-by-sample|element-by-element|vector orientation|dimension mismatch/i.test(combinedText)) {
     return 'pointwise_multiplication';
   }
-  if (/watch energy grow but power settle|running energy|average power|energy vs power|energy signal|power signal|rectangular approximation of signal energy|classifier/i.test(title + ' ' + text)) {
+  if (/watch energy grow but power settle|running energy|average power|energy vs power|energy signal|power signal|rectangular approximation of signal energy|classifier/i.test(combinedText)) {
     return 'energy_power';
   }
-  if (/sampling a continuous-time signal|sampling time|quantizing amplitude|discrete-time|analog|digital|sample stems|sampled continuous-time/i.test(title + ' ' + text)) {
+  if (/sampling a continuous-time signal|sampling time|quantizing amplitude|discrete-time|analog|digital|sample stems|sampled continuous-time/i.test(combinedText)) {
     return 'sampling_quantization';
   }
-  if (/superposition|time-invariance|time invariance|causality|bibo|invertibility|recover the input|delay-then-system|system-then-delay|time-shift tester/i.test(title + ' ' + text)) {
+  if (/superposition|time-invariance|time invariance|causality|bibo|invertibility|recover the input|delay-then-system|system-then-delay|time-shift tester/i.test(combinedText)) {
     return 'system_property';
   }
-  if (/dc motor|parameter response|motor parameter|inertia|damping|drive strength|step response/i.test(title + ' ' + text)) {
+  if (/dc motor|parameter response|motor parameter|inertia|damping|drive strength|step response/i.test(combinedText)) {
     return 'parameter_response';
   }
-  if (/time constant|decay and growth controlled by a|exponential time constant|complex exponential|envelope-controlled sinusoid|decay|growth|e\^\(st\)|e\^st|sigma|omega|damped/i.test(title + ' ' + text)) {
+  if (/time constant|decay and growth controlled by a|exponential time constant|complex exponential|envelope-controlled sinusoid|decay|growth|e\^\(st\)|e\^st|sigma|omega|damped/i.test(combinedText)) {
     return 'exponential_envelope';
   }
-  if (/opposite rotations create sine and cosine|e\^\{?j\\?phi|e\^\{-j\\?phi|conjugate rotations/i.test(title + ' ' + text)) {
+  if (/opposite rotations create sine and cosine|e\^\{?j\\?phi|e\^\{-j\\?phi|conjugate rotations/i.test(combinedText)) {
     return 'opposite_rotations';
   }
-  if (/rotating vector|sine and cosine|phasor|complex plane|polar form|rectangular form|quadrant-safe phase|same frequency/i.test(title + ' ' + text) || frame.includes('react_canvas')) {
-    if (/complex plane|polar form|rectangular form/i.test(title + ' ' + text)) return 'complex_plane';
+  if (/rotating vector|sine and cosine|phasor|complex plane|polar form|rectangular form|quadrant-safe phase|same frequency/i.test(combinedText) || frame.includes('react_canvas')) {
+    if (/complex plane|polar form|rectangular form/i.test(combinedText)) return 'complex_plane';
     return 'sinusoid';
   }
-  if (/time scaling|mirror the signal|time reflection|shift-test|does the shift match|move and flip the unit step|explore y\(t\)\s*=\s*x\(at-b\)|explore g\(at\+b\)|y\(t\)\s*=\s*x\(at-b\)|unit step|window|landmark|periodicity|shift|reflection/i.test(title + ' ' + text)) {
+  if (/time scaling|mirror the signal|time reflection|shift-test|does the shift match|move and flip the unit step|explore y\(t\)\s*=\s*x\(at-b\)|explore g\(at\+b\)|y\(t\)\s*=\s*x\(at-b\)|unit step|window|landmark|periodicity|shift|reflection/i.test(combinedText)) {
     return 'signal_transform';
   }
-  if (/clearing fractions|repeated-factor|fraction expansion|term ladder|partial fractions|matrix locator|point-by-point/i.test(title + ' ' + text)) {
+  if (/clearing fractions|repeated-factor|fraction expansion|term ladder|partial fractions|matrix locator|point-by-point/i.test(combinedText)) {
     return 'algebra_brief';
   }
   return 'brief';
@@ -8366,10 +8582,17 @@ function hydrateChapterOneDemo(node, demo) {
 
 function hydrateInteractiveDemos(root) {
   if (!root) return;
+  const seenDemoKeys = new Set();
   root.querySelectorAll('.kc-interactive-demo').forEach((node) => {
     if (!node || node.dataset.hydrated === '1') return;
     const demo = parseBase64JsonAttr(node.dataset.demoB64 || node.getAttribute('data-demo-b64'));
     if (!demo) return;
+    const dedupKey = getInteractiveDemoDedupKey(demo);
+    if (dedupKey && seenDemoKeys.has(dedupKey)) {
+      node.remove();
+      return;
+    }
+    if (dedupKey) seenDemoKeys.add(dedupKey);
 
     const demoSpec = getInteractiveDemoSpec(demo);
     const family = inferInteractiveDemoFamily(demo);
@@ -9326,6 +9549,31 @@ function hydrateInteractiveDemos(root) {
       return;
     }
 
+    if (family === 'convolution_lab') {
+      renderConvolutionLabDemo(node, demo);
+      return;
+    }
+
+    if (family === 'pole_zero_roc_lab') {
+      renderPoleZeroRocLabDemo(node, demo);
+      return;
+    }
+
+    if (family === 'frequency_response_lab') {
+      renderFrequencyResponseLabDemo(node, demo);
+      return;
+    }
+
+    if (family === 'transform_rule_lab') {
+      renderTransformRuleLabDemo(node, demo);
+      return;
+    }
+
+    if (family === 'sequence_system_lab') {
+      renderSequenceSystemLabDemo(node, demo);
+      return;
+    }
+
     if (!isMatrixDemo) {
       renderBriefDemoFallback(node, demo, family);
       return;
@@ -9571,6 +9819,672 @@ function hydrateInteractiveDemos(root) {
     window.addEventListener('resize', rerender, { passive: true });
     render();
   });
+}
+
+function formatInteractiveDemoNumber(value, digits = 2) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return '0';
+  const clean = Math.abs(num) < 1e-9 ? 0 : num;
+  return Number(clean.toFixed(digits)).toString();
+}
+
+function getInteractiveDemoIntent(demo = '') {
+  return `${getInteractiveDemoTitle(demo, '')} ${getInteractiveDemoText(demo)}`.toLowerCase();
+}
+
+function getInteractiveDemoDedupKey(demo = {}) {
+  const spec = getInteractiveDemoSpec(demo);
+  const pieces = [
+    getInteractiveDemoTitle(demo, ''),
+    getInteractiveDemoSubtitle(demo),
+    demo.page_title,
+    demo.caption,
+    demo.student_prompt,
+    spec.title,
+    spec.description,
+    spec.note_below_demo,
+    spec.student_prompt,
+    JSON.stringify(spec.controls || demo.controls || []),
+    JSON.stringify(spec.canvas_elements || demo.canvas_elements || []),
+    JSON.stringify(spec.implementation_spec || demo.implementation_spec || {})
+  ];
+  return compactWhitespace(pieces.filter(Boolean).join(' ')).toLowerCase();
+}
+
+function isLaplaceFlowTransformDemo(demo = {}) {
+  const intent = getInteractiveDemoIntent(demo);
+  return /\b(visual recipe|three[-\s]?box flow|time domain to s[-\s]?domain|s[-\s]?domain and back|laplace[-\s]?domain multiplication|transforming x\(t\)|multiply(?:ing)? by h\(s\)|inverse[-\s]?(?:laplace[-\s]?)?transform|x\(s\)\s*h\(s\)|y\(s\)\s*=\s*x\(s\)\s*h\(s\)|ideal delay|ideal differentiator|ideal integrator)\b/i.test(intent);
+}
+
+function renderInteractiveLabShell(node, demo, modifier, bodyHtml = '') {
+  const title = getInteractiveDemoTitle(demo, 'Interactive demo');
+  const subtitle = getInteractiveDemoSubtitle(demo);
+  node.innerHTML = `
+    <section class="interactive-demo-shell interactive-demo-shell--lab interactive-demo-shell--${escapeHtml(modifier)}">
+      <div class="interactive-demo-head">
+        <div class="interactive-demo-title">${escapeHtml(title)}</div>
+        <div class="interactive-demo-subtitle">${escapeHtml(subtitle || 'Move the controls and connect the graph to the formula.')}</div>
+      </div>
+      ${bodyHtml}
+    </section>
+  `;
+  return node.querySelector('.interactive-demo-shell');
+}
+
+function renderLaplaceFlowTransformDemo(node, demo) {
+  const state = { input: 'slow', system: 'delay', delay: 2 };
+  const inputs = {
+    slow: { label: 'x(t) = e^(-2t)u(t)', x: 'X(s) = 1/(s + 2)', yBase: 'e^(-2t)u(t)', amp: 1, rate: 2 },
+    fast: { label: 'x(t) = 3e^(-5t)u(t)', x: 'X(s) = 3/(s + 5)', yBase: '3e^(-5t)u(t)', amp: 3, rate: 5 }
+  };
+  const systems = {
+    delay: { label: 'Ideal Delay', h: 'H(s) = e^(-sT)', y: () => `y(t) = x(t - ${formatInteractiveDemoNumber(state.delay, 1)})`, note: 'Delay multiplies the transform by e^(-sT); the shape is preserved and starts later.' },
+    differentiator: { label: 'Ideal Differentiator', h: 'H(s) = s', y: () => 'y(t) = dx(t)/dt', note: 'Differentiation is multiplication by s under zero initial conditions.' },
+    integrator: { label: 'Ideal Integrator', h: 'H(s) = 1/s', y: () => 'y(t) = integral from 0 to t of x(tau)d tau', note: 'Integration divides by s, so the output accumulates area over time.' }
+  };
+  renderInteractiveLabShell(node, demo, 'laplace-flow', `
+    <div class="interactive-demo-grid interactive-demo-grid--lab interactive-demo-grid--flow">
+      <div class="interactive-demo-controls">
+        <label class="interactive-demo-control">
+          <span class="interactive-demo-control-label">Input signal</span>
+          <select class="interactive-demo-select" data-flow-control="input">
+            <option value="slow">${escapeHtml(inputs.slow.label)}</option>
+            <option value="fast">${escapeHtml(inputs.fast.label)}</option>
+          </select>
+        </label>
+        <label class="interactive-demo-control">
+          <span class="interactive-demo-control-label">System H(s)</span>
+          <select class="interactive-demo-select" data-flow-control="system">
+            <option value="delay">${escapeHtml(systems.delay.label)}</option>
+            <option value="differentiator">${escapeHtml(systems.differentiator.label)}</option>
+            <option value="integrator">${escapeHtml(systems.integrator.label)}</option>
+          </select>
+        </label>
+        <label class="interactive-demo-control" data-delay-control>
+          <span class="interactive-demo-control-label">Delay T</span>
+          <div class="interactive-demo-slider-row"><input data-flow-control="delay" type="range" min="0" max="3" step="0.1" value="${state.delay}"><strong data-value="delay"></strong></div>
+        </label>
+      </div>
+      <div class="interactive-demo-stage interactive-demo-flow-stage">
+        <div class="interactive-demo-flow" aria-label="Laplace-domain zero-state flow">
+          <div class="interactive-demo-flow-card">
+            <span class="interactive-demo-flow-kicker">1. Time domain</span>
+            <strong data-flow-text="inputLabel"></strong>
+            <small>Start with the actual input signal.</small>
+          </div>
+          <div class="interactive-demo-flow-arrow">
+            <span>L</span>
+          </div>
+          <div class="interactive-demo-flow-card interactive-demo-flow-card--domain">
+            <span class="interactive-demo-flow-kicker">2. s-domain</span>
+            <strong data-flow-text="xFormula"></strong>
+            <em data-flow-text="hFormula"></em>
+            <b data-flow-text="yFormula"></b>
+          </div>
+          <div class="interactive-demo-flow-arrow">
+            <span>L^-1</span>
+          </div>
+          <div class="interactive-demo-flow-card">
+            <span class="interactive-demo-flow-kicker">3. Back to time</span>
+            <strong data-flow-text="outputFormula"></strong>
+            <small data-flow-text="outputNote"></small>
+            <canvas class="interactive-demo-flow-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="interactive-demo-readouts"></div>
+  `);
+  const canvas = node.querySelector('.interactive-demo-flow-canvas');
+  const ctx = canvas?.getContext?.('2d');
+  const readoutsEl = node.querySelector('.interactive-demo-readouts');
+  const drawSketch = () => {
+    if (!canvas || !ctx) return;
+    const dpr = Math.max(window.devicePixelRatio || 1, 1);
+    const width = Math.max(Math.floor(canvas.parentElement?.clientWidth || 0), 220);
+    const height = 112;
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+    canvas.style.width = '100%';
+    canvas.style.height = `${height}px`;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+    const left = 18;
+    const right = width - 14;
+    const baseY = height - 24;
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(left, baseY);
+    ctx.lineTo(right, baseY);
+    ctx.stroke();
+    ctx.strokeStyle = '#2563eb';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    const input = inputs[state.input];
+    for (let i = 0; i <= 120; i += 1) {
+      const t = i / 120 * 6;
+      let value;
+      if (state.system === 'integrator') {
+        value = 1 - Math.exp(-input.rate * t / 2.6);
+      } else if (state.system === 'differentiator') {
+        value = Math.exp(-input.rate * t / 3.4) * (1 - t * 0.22);
+      } else {
+        const shifted = Math.max(t - state.delay, 0);
+        value = t < state.delay ? 0 : Math.exp(-input.rate * shifted / 3.4);
+      }
+      const x = left + (right - left) * i / 120;
+      const y = baseY - Math.max(-0.5, Math.min(1.15, value)) * 58;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  };
+  const render = () => {
+    const input = inputs[state.input] || inputs.slow;
+    const system = systems[state.system] || systems.delay;
+    const yFormula = state.system === 'delay'
+      ? `Y(s) = ${input.x.replace(/^X\(s\)\s*=\s*/, '')} * e^(-s${formatInteractiveDemoNumber(state.delay, 1)})`
+      : `Y(s) = X(s) * ${system.h.replace(/^H\(s\)\s*=\s*/, '')}`;
+    const delayWrap = node.querySelector('[data-delay-control]');
+    if (delayWrap) delayWrap.hidden = state.system !== 'delay';
+    node.querySelector('[data-flow-text="inputLabel"]').textContent = input.label;
+    node.querySelector('[data-flow-text="xFormula"]').textContent = input.x;
+    node.querySelector('[data-flow-text="hFormula"]').textContent = system.h;
+    node.querySelector('[data-flow-text="yFormula"]').textContent = yFormula;
+    node.querySelector('[data-flow-text="outputFormula"]').textContent = system.y();
+    node.querySelector('[data-flow-text="outputNote"]').textContent = system.note;
+    const delayValue = node.querySelector('[data-value="delay"]');
+    if (delayValue) delayValue.textContent = formatInteractiveDemoNumber(state.delay, 1);
+    readoutsEl.innerHTML = `
+      <div class="interactive-demo-readout"><strong>Zero-state recipe:</strong> transform the input, multiply by the system transfer function, then invert the product.</div>
+      <div class="interactive-demo-readout"><strong>Important:</strong> the system action happens in the middle box as multiplication by H(s), not as pole/ROC selection.</div>
+    `;
+    drawSketch();
+  };
+  node.querySelectorAll('[data-flow-control]').forEach((input) => {
+    const key = input.dataset.flowControl;
+    const update = () => {
+      state[key] = input.type === 'range' ? Number(input.value) : input.value;
+      render();
+    };
+    input.addEventListener('input', update);
+    input.addEventListener('change', update);
+    update();
+  });
+  window.addEventListener('resize', render, { passive: true });
+}
+
+function drawDemoStemSeries(ctx, values, startIndex, toX, originY, scale, color, options = {}) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = options.lineWidth || 2.5;
+  values.forEach((value, i) => {
+    const n = startIndex + i;
+    const x = toX(n);
+    const y = originY - value * scale;
+    ctx.beginPath();
+    ctx.moveTo(x, originY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x, y, options.radius || 4, 0, Math.PI * 2);
+    ctx.fill();
+    if (options.labels && values.length <= 16) {
+      ctx.fillStyle = '#475569';
+      ctx.font = '600 11px Quicksand, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(n), x, originY + 18);
+      ctx.fillStyle = color;
+    }
+  });
+  ctx.restore();
+}
+
+function renderConvolutionLabDemo(node, demo) {
+  const state = { lengthA: 4, lengthB: 3, startA: 0, startB: 0, n: 2 };
+  renderInteractiveLabShell(node, demo, 'convolution', `
+    <div class="interactive-demo-grid interactive-demo-grid--lab">
+      <div class="interactive-demo-controls">
+        <label class="interactive-demo-control"><span class="interactive-demo-control-label">Length of x[n]</span><div class="interactive-demo-slider-row"><input data-control="lengthA" type="range" min="1" max="7" step="1" value="${state.lengthA}"><strong data-value="lengthA"></strong></div></label>
+        <label class="interactive-demo-control"><span class="interactive-demo-control-label">Length of h[n]</span><div class="interactive-demo-slider-row"><input data-control="lengthB" type="range" min="1" max="7" step="1" value="${state.lengthB}"><strong data-value="lengthB"></strong></div></label>
+        <label class="interactive-demo-control"><span class="interactive-demo-control-label">Start of x[n]</span><div class="interactive-demo-slider-row"><input data-control="startA" type="range" min="-5" max="5" step="1" value="${state.startA}"><strong data-value="startA"></strong></div></label>
+        <label class="interactive-demo-control"><span class="interactive-demo-control-label">Start of h[n]</span><div class="interactive-demo-slider-row"><input data-control="startB" type="range" min="-5" max="5" step="1" value="${state.startB}"><strong data-value="startB"></strong></div></label>
+        <label class="interactive-demo-control"><span class="interactive-demo-control-label">Inspect output y[n]</span><div class="interactive-demo-slider-row"><input data-control="n" type="range" min="-5" max="12" step="1" value="${state.n}"><strong data-value="n"></strong></div></label>
+      </div>
+      <div class="interactive-demo-stage"><canvas class="interactive-demo-canvas"></canvas></div>
+    </div>
+    <div class="interactive-demo-readouts"></div>
+  `);
+  const canvas = node.querySelector('.interactive-demo-canvas');
+  const ctx = canvas?.getContext?.('2d');
+  const readoutsEl = node.querySelector('.interactive-demo-readouts');
+  const inputs = node.querySelectorAll('[data-control]');
+
+  const convolve = (a, b) => {
+    const out = Array(a.length + b.length - 1).fill(0);
+    a.forEach((av, i) => b.forEach((bv, j) => { out[i + j] += av * bv; }));
+    return out;
+  };
+  const render = () => {
+    const x = Array.from({ length: state.lengthA }, (_, i) => i === 0 ? 1 : 1);
+    const h = Array.from({ length: state.lengthB }, (_, i) => state.lengthB - i);
+    const y = convolve(x, h);
+    const yStart = state.startA + state.startB;
+    state.n = Math.max(yStart, Math.min(yStart + y.length - 1, state.n));
+    const { width, height } = setupInteractiveDemoCanvas(canvas, ctx, 330, 360);
+    if (!width) return;
+    const minN = Math.min(state.startA, state.startB, yStart) - 1;
+    const maxN = Math.max(state.startA + x.length, state.startB + h.length, yStart + y.length) + 1;
+    const rowH = height / 3;
+    const maxVal = Math.max(...x, ...h, ...y, 1);
+    const drawRow = (label, values, start, row, color, highlightIndex = null) => {
+      ctx.save();
+      ctx.translate(0, rowH * (row - 1));
+      const axes = drawInteractiveDemoAxes(ctx, width, rowH, { minT: minN, maxT: maxN, originY: Math.round(rowH * 0.62), tickStep: 2, pad: 34 });
+      ctx.fillStyle = '#0f172a';
+      ctx.font = '700 13px Quicksand, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(label, 36, 20);
+      drawDemoStemSeries(ctx, values, start, axes.toX, axes.originY, (rowH * 0.43) / maxVal, color, { labels: row === 3 });
+      if (Number.isFinite(highlightIndex)) {
+        const xPos = axes.toX(highlightIndex);
+        ctx.strokeStyle = '#dc2626';
+        ctx.setLineDash([6, 5]);
+        ctx.beginPath();
+        ctx.moveTo(xPos, 18);
+        ctx.lineTo(xPos, rowH - 26);
+        ctx.stroke();
+      }
+      ctx.restore();
+    };
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = '#fffefa';
+    ctx.fillRect(0, 0, width, height);
+    drawRow('x[n]', x, state.startA, 1, '#2563eb');
+    drawRow('h[n]', h, state.startB, 2, '#0f766e');
+    drawRow('y[n] = x[n] * h[n]', y, yStart, 3, '#b45309', state.n);
+    const yValue = y[state.n - yStart] ?? 0;
+    const support = `${yStart} <= n <= ${yStart + y.length - 1}`;
+    readoutsEl.innerHTML = `
+      <div class="interactive-demo-readout"><strong>Support:</strong> ${escapeHtml(support)}. Changing either start index shifts the output support by the same amount.</div>
+      <div class="interactive-demo-readout"><strong>Current sample:</strong> \\(y[${state.n}] = ${formatInteractiveDemoNumber(yValue)}\\). The values come from overlap-and-sum, not pointwise multiplication.</div>
+    `;
+    if (typeof renderMathInElement === 'function') renderMathInElement(readoutsEl);
+  };
+  inputs.forEach((input) => {
+    const key = input.dataset.control;
+    const valueEl = node.querySelector(`[data-value="${key}"]`);
+    const update = () => {
+      state[key] = Number(input.value);
+      if (valueEl) valueEl.textContent = formatInteractiveDemoNumber(state[key], 0);
+      render();
+    };
+    input.addEventListener('input', update);
+    update();
+  });
+  window.addEventListener('resize', render, { passive: true });
+}
+
+function renderPoleZeroRocLabDemo(node, demo) {
+  const intent = getInteractiveDemoIntent(demo);
+  const titleIntent = getInteractiveDemoTitle(demo, '').toLowerCase();
+  const isZPlane = /\bz[-\s]?plane|z[-\s]?domain|unit circle|z[-\s]?transform|\bz\b/i.test(intent) && !/\blaplace|\bs-plane|\bs-domain|\bs\)/i.test(intent);
+  const state = { radius: isZPlane ? 0.72 : 1.1, angle: isZPlane ? 42 : 125, roc: /inside|anti/i.test(titleIntent) ? 'inside' : 'outside' };
+  renderInteractiveLabShell(node, demo, 'pole-zero', `
+    <div class="interactive-demo-grid interactive-demo-grid--lab">
+      <div class="interactive-demo-controls">
+        <label class="interactive-demo-control"><span class="interactive-demo-control-label">${isZPlane ? 'Pole radius |z|' : 'Pole distance from origin'}</span><div class="interactive-demo-slider-row"><input data-control="radius" type="range" min="0.2" max="1.6" step="0.01" value="${state.radius}"><strong data-value="radius"></strong></div></label>
+        <label class="interactive-demo-control"><span class="interactive-demo-control-label">Pole angle</span><div class="interactive-demo-slider-row"><input data-control="angle" type="range" min="-170" max="170" step="1" value="${state.angle}"><strong data-value="angle"></strong></div></label>
+        <div class="interactive-demo-tabs interactive-demo-tabs--inline">
+          <button type="button" data-roc="outside" class="interactive-demo-tab${state.roc === 'outside' ? ' is-active' : ''}">${isZPlane ? 'causal / outside' : 'causal / right side'}</button>
+          <button type="button" data-roc="inside" class="interactive-demo-tab${state.roc === 'inside' ? ' is-active' : ''}">${isZPlane ? 'anti-causal / inside' : 'anti-causal / left side'}</button>
+        </div>
+      </div>
+      <div class="interactive-demo-stage"><canvas class="interactive-demo-canvas"></canvas></div>
+    </div>
+    <div class="interactive-demo-readouts"></div>
+  `);
+  const canvas = node.querySelector('.interactive-demo-canvas');
+  const ctx = canvas?.getContext?.('2d');
+  const readoutsEl = node.querySelector('.interactive-demo-readouts');
+  const render = () => {
+    const { width, height } = setupInteractiveDemoCanvas(canvas, ctx, 330, 360);
+    if (!width) return;
+    const cx = Math.round(width * 0.52);
+    const cy = Math.round(height * 0.52);
+    const scale = Math.min(width, height) * 0.29;
+    const theta = state.angle * Math.PI / 180;
+    const px = cx + Math.cos(theta) * state.radius * scale;
+    const py = cy - Math.sin(theta) * state.radius * scale;
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = '#fffefa';
+    ctx.fillRect(0, 0, width, height);
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(34, cy);
+    ctx.lineTo(width - 34, cy);
+    ctx.moveTo(cx, 26);
+    ctx.lineTo(cx, height - 34);
+    ctx.stroke();
+    if (isZPlane) {
+      ctx.strokeStyle = '#94a3b8';
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.arc(cx, cy, scale, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = state.roc === 'outside' ? 'rgba(34,197,94,0.12)' : 'rgba(96,165,250,0.12)';
+      ctx.beginPath();
+      if (state.roc === 'outside') {
+        ctx.rect(0, 0, width, height);
+        ctx.arc(cx, cy, state.radius * scale, 0, Math.PI * 2, true);
+      } else {
+        ctx.arc(cx, cy, state.radius * scale, 0, Math.PI * 2);
+      }
+      ctx.fill('evenodd');
+    } else {
+      const boundaryX = px;
+      ctx.fillStyle = state.roc === 'outside' ? 'rgba(34,197,94,0.12)' : 'rgba(96,165,250,0.12)';
+      ctx.fillRect(state.roc === 'outside' ? boundaryX : 0, 0, state.roc === 'outside' ? width - boundaryX : boundaryX, height);
+      ctx.strokeStyle = '#64748b';
+      ctx.setLineDash([6, 5]);
+      ctx.beginPath();
+      ctx.moveTo(boundaryX, 24);
+      ctx.lineTo(boundaryX, height - 34);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.strokeStyle = '#2563eb';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(px, py);
+    ctx.stroke();
+    ctx.strokeStyle = '#dc2626';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(px - 8, py - 8);
+    ctx.lineTo(px + 8, py + 8);
+    ctx.moveTo(px + 8, py - 8);
+    ctx.lineTo(px - 8, py + 8);
+    ctx.stroke();
+    ctx.strokeStyle = '#0f766e';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(cx + 0.28 * scale, cy, 7, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '700 13px Quicksand, sans-serif';
+    ctx.fillText(isZPlane ? 'z-plane' : 's-plane sketch', 34, 28);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '600 12px Quicksand, sans-serif';
+    ctx.fillText(isZPlane ? 'unit circle' : 'real / imaginary axes', cx + scale + 10, cy - 10);
+    const sigma = Math.cos(theta) * state.radius;
+    const stable = isZPlane ? state.radius < 1 : sigma < 0;
+    const rocText = isZPlane
+      ? (state.roc === 'outside' ? `ROC: |z| > ${formatInteractiveDemoNumber(state.radius)}` : `ROC: |z| < ${formatInteractiveDemoNumber(state.radius)}`)
+      : (state.roc === 'outside' ? `ROC: Re{s} > ${formatInteractiveDemoNumber(sigma)}` : `ROC: Re{s} < ${formatInteractiveDemoNumber(sigma)}`);
+    readoutsEl.innerHTML = `
+      <div class="interactive-demo-readout"><strong>${isZPlane ? 'ROC' : 'Pole geometry'}:</strong> ${escapeHtml(rocText)}</div>
+      <div class="interactive-demo-readout"><strong>Stability cue:</strong> ${isZPlane ? (stable ? 'pole is inside the unit circle' : 'pole is outside the unit circle') : (stable ? 'left-half plane pole' : 'right-half plane pole')}.</div>
+    `;
+  };
+  node.querySelectorAll('[data-control]').forEach((input) => {
+    const key = input.dataset.control;
+    const valueEl = node.querySelector(`[data-value="${key}"]`);
+    const update = () => {
+      state[key] = Number(input.value);
+      if (valueEl) valueEl.textContent = key === 'angle' ? `${formatInteractiveDemoNumber(state[key], 0)}°` : formatInteractiveDemoNumber(state[key]);
+      render();
+    };
+    input.addEventListener('input', update);
+    update();
+  });
+  node.querySelectorAll('[data-roc]').forEach((button) => {
+    button.addEventListener('click', () => {
+      state.roc = button.dataset.roc;
+      node.querySelectorAll('[data-roc]').forEach((item) => item.classList.toggle('is-active', item === button));
+      render();
+    });
+  });
+  window.addEventListener('resize', render, { passive: true });
+}
+
+function renderFrequencyResponseLabDemo(node, demo) {
+  const intent = getInteractiveDemoIntent(demo);
+  const state = {
+    cutoff: /high/.test(intent) ? 0.38 : 0.55,
+    q: /butterworth/i.test(intent) ? 0.71 : /chebyshev|ripple/i.test(intent) ? 1.2 : 0.9,
+    ripple: /chebyshev|ripple/i.test(intent) ? 0.35 : 0.05
+  };
+  const type = /notch/.test(intent) ? 'notch' : /band/.test(intent) ? 'bandpass' : /high/.test(intent) ? 'highpass' : 'lowpass';
+  renderInteractiveLabShell(node, demo, 'frequency-response', `
+    <div class="interactive-demo-grid interactive-demo-grid--lab">
+      <div class="interactive-demo-controls">
+        <label class="interactive-demo-control"><span class="interactive-demo-control-label">Cutoff / center</span><div class="interactive-demo-slider-row"><input data-control="cutoff" type="range" min="0.1" max="0.9" step="0.01" value="${state.cutoff}"><strong data-value="cutoff"></strong></div></label>
+        <label class="interactive-demo-control"><span class="interactive-demo-control-label">Q / selectivity</span><div class="interactive-demo-slider-row"><input data-control="q" type="range" min="0.35" max="3" step="0.01" value="${state.q}"><strong data-value="q"></strong></div></label>
+        <label class="interactive-demo-control"><span class="interactive-demo-control-label">Ripple</span><div class="interactive-demo-slider-row"><input data-control="ripple" type="range" min="0" max="0.7" step="0.01" value="${state.ripple}"><strong data-value="ripple"></strong></div></label>
+      </div>
+      <div class="interactive-demo-stage"><canvas class="interactive-demo-canvas"></canvas></div>
+    </div>
+    <div class="interactive-demo-readouts"></div>
+  `);
+  const canvas = node.querySelector('.interactive-demo-canvas');
+  const ctx = canvas?.getContext?.('2d');
+  const readoutsEl = node.querySelector('.interactive-demo-readouts');
+  const response = (w) => {
+    const c = state.cutoff;
+    const q = state.q;
+    let base;
+    if (type === 'highpass') base = Math.pow(w / Math.max(c, 0.01), 2) / Math.sqrt(1 + Math.pow(w / Math.max(c, 0.01), 4));
+    else if (type === 'bandpass') base = Math.exp(-Math.pow((w - c) * q * 4, 2));
+    else if (type === 'notch') base = 1 - Math.exp(-Math.pow((w - c) * q * 5, 2));
+    else base = 1 / Math.sqrt(1 + Math.pow(w / Math.max(c, 0.01), 4));
+    return Math.max(0, Math.min(1.35, base * (1 + state.ripple * Math.sin(8 * Math.PI * w))));
+  };
+  const render = () => {
+    const { width, height } = setupInteractiveDemoCanvas(canvas, ctx, 300, 360);
+    if (!width) return;
+    const padL = 42, padR = 22, padT = 26, padB = 42;
+    const toX = (w) => padL + w * (width - padL - padR);
+    const toY = (mag) => height - padB - (Math.min(mag, 1.35) / 1.35) * (height - padT - padB);
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = '#fffefa';
+    ctx.fillRect(0, 0, width, height);
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padL, padT);
+    ctx.lineTo(padL, height - padB);
+    ctx.lineTo(width - padR, height - padB);
+    ctx.stroke();
+    ctx.strokeStyle = '#94a3b8';
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    ctx.moveTo(padL, toY(0.707));
+    ctx.lineTo(width - padR, toY(0.707));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = '#2563eb';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (let i = 0; i <= 180; i += 1) {
+      const w = i / 180;
+      const x = toX(w);
+      const y = toY(response(w));
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    const cx = toX(state.cutoff);
+    ctx.strokeStyle = '#dc2626';
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(cx, padT);
+    ctx.lineTo(cx, height - padB);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '700 13px Quicksand, sans-serif';
+    ctx.fillText(`Magnitude response (${type})`, padL, 20);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '600 12px Quicksand, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('normalized frequency', width / 2, height - 12);
+    ctx.save();
+    ctx.translate(15, height / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('|H|', 0, 0);
+    ctx.restore();
+    readoutsEl.innerHTML = `
+      <div class="interactive-demo-readout"><strong>Shape:</strong> ${escapeHtml(type)} response; Q controls transition sharpness/peaking.</div>
+      <div class="interactive-demo-readout"><strong>Exam cue:</strong> read the passband, transition band, stopband, and cutoff before doing algebra.</div>
+    `;
+  };
+  node.querySelectorAll('[data-control]').forEach((input) => {
+    const key = input.dataset.control;
+    const valueEl = node.querySelector(`[data-value="${key}"]`);
+    const update = () => {
+      state[key] = Number(input.value);
+      if (valueEl) valueEl.textContent = formatInteractiveDemoNumber(state[key]);
+      render();
+    };
+    input.addEventListener('input', update);
+    update();
+  });
+  window.addEventListener('resize', render, { passive: true });
+}
+
+function renderTransformRuleLabDemo(node, demo) {
+  if (isLaplaceFlowTransformDemo(demo)) {
+    renderLaplaceFlowTransformDemo(node, demo);
+    return;
+  }
+  const intent = getInteractiveDemoIntent(demo);
+  const isDelay = /delay|shift/.test(intent);
+  const isScale = /scal|prewarp|bilinear/.test(intent);
+  const state = { a: isScale ? 1.4 : 1, delay: isDelay ? 2 : 1 };
+  renderInteractiveLabShell(node, demo, 'transform-rule', `
+    <div class="interactive-demo-grid interactive-demo-grid--lab">
+      <div class="interactive-demo-controls">
+        <label class="interactive-demo-control"><span class="interactive-demo-control-label">Scale a</span><div class="interactive-demo-slider-row"><input data-control="a" type="range" min="0.4" max="2.5" step="0.05" value="${state.a}"><strong data-value="a"></strong></div></label>
+        <label class="interactive-demo-control"><span class="interactive-demo-control-label">Shift / delay</span><div class="interactive-demo-slider-row"><input data-control="delay" type="range" min="-4" max="4" step="1" value="${state.delay}"><strong data-value="delay"></strong></div></label>
+      </div>
+      <div class="interactive-demo-stage"><canvas class="interactive-demo-canvas"></canvas></div>
+    </div>
+    <div class="interactive-demo-readouts"></div>
+  `);
+  const canvas = node.querySelector('.interactive-demo-canvas');
+  const ctx = canvas?.getContext?.('2d');
+  const readoutsEl = node.querySelector('.interactive-demo-readouts');
+  const render = () => {
+    const { width, height } = setupInteractiveDemoCanvas(canvas, ctx, 280, 360);
+    if (!width) return;
+    const axes = drawInteractiveDemoAxes(ctx, width, height, { minT: -6, maxT: 6, originY: Math.round(height * 0.68), tickStep: 2, pad: 42 });
+    const toY = (v) => axes.originY - v * 70;
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i <= 240; i += 1) {
+      const t = -6 + i * 12 / 240;
+      const v = Math.exp(-Math.max(t, 0) * 0.65) * (t >= 0 ? 1 : 0);
+      const x = axes.toX(t);
+      const y = toY(v);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.strokeStyle = '#2563eb';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (let i = 0; i <= 240; i += 1) {
+      const t = -6 + i * 12 / 240;
+      const sourceT = state.a * (t - state.delay);
+      const v = Math.exp(-Math.max(sourceT, 0) * 0.65) * (sourceT >= 0 ? 1 : 0);
+      const x = axes.toX(t);
+      const y = toY(v);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '700 13px Quicksand, sans-serif';
+    ctx.fillText('gray: original    blue: transformed', 48, 28);
+    const factor = isScale ? `scale factor a = ${formatInteractiveDemoNumber(state.a)}` : `delay = ${formatInteractiveDemoNumber(state.delay, 0)}`;
+    readoutsEl.innerHTML = `
+      <div class="interactive-demo-readout"><strong>Current rule:</strong> ${escapeHtml(factor)}. The picture moves first; the transform-domain multiplier/substitution follows from that move.</div>
+      <div class="interactive-demo-readout"><strong>Do not memorize blindly:</strong> identify whether the operation is a shift, scaling, integration, or domain substitution before applying the formula.</div>
+    `;
+  };
+  node.querySelectorAll('[data-control]').forEach((input) => {
+    const key = input.dataset.control;
+    const valueEl = node.querySelector(`[data-value="${key}"]`);
+    const update = () => {
+      state[key] = Number(input.value);
+      if (valueEl) valueEl.textContent = formatInteractiveDemoNumber(state[key], key === 'delay' ? 0 : 2);
+      render();
+    };
+    input.addEventListener('input', update);
+    update();
+  });
+  window.addEventListener('resize', render, { passive: true });
+}
+
+function renderSequenceSystemLabDemo(node, demo) {
+  const intent = getInteractiveDemoIntent(demo);
+  const state = { pole: /resonance|mode/.test(intent) ? 0.9 : 0.65, input: 1 };
+  renderInteractiveLabShell(node, demo, 'sequence-system', `
+    <div class="interactive-demo-grid interactive-demo-grid--lab">
+      <div class="interactive-demo-controls">
+        <label class="interactive-demo-control"><span class="interactive-demo-control-label">System mode a</span><div class="interactive-demo-slider-row"><input data-control="pole" type="range" min="-0.95" max="0.95" step="0.01" value="${state.pole}"><strong data-value="pole"></strong></div></label>
+        <label class="interactive-demo-control"><span class="interactive-demo-control-label">Input strength</span><div class="interactive-demo-slider-row"><input data-control="input" type="range" min="0" max="2" step="0.05" value="${state.input}"><strong data-value="input"></strong></div></label>
+      </div>
+      <div class="interactive-demo-stage"><canvas class="interactive-demo-canvas"></canvas></div>
+    </div>
+    <div class="interactive-demo-readouts"></div>
+  `);
+  const canvas = node.querySelector('.interactive-demo-canvas');
+  const ctx = canvas?.getContext?.('2d');
+  const readoutsEl = node.querySelector('.interactive-demo-readouts');
+  const render = () => {
+    const impulse = Array.from({ length: 18 }, (_, n) => n === 0 ? state.input : 0);
+    const response = Array.from({ length: 18 }, (_, n) => state.input * Math.pow(state.pole, n));
+    const { width, height } = setupInteractiveDemoCanvas(canvas, ctx, 300, 360);
+    if (!width) return;
+    const rowH = height / 2;
+    const maxVal = Math.max(...response.map((v) => Math.abs(v)), state.input, 1);
+    const drawRow = (label, values, row, color) => {
+      ctx.save();
+      ctx.translate(0, rowH * (row - 1));
+      const axes = drawInteractiveDemoAxes(ctx, width, rowH, { minT: 0, maxT: 18, originY: Math.round(rowH * 0.62), tickStep: 3, pad: 36 });
+      ctx.fillStyle = '#0f172a';
+      ctx.font = '700 13px Quicksand, sans-serif';
+      ctx.fillText(label, 38, 22);
+      drawDemoStemSeries(ctx, values, 0, axes.toX, axes.originY, (rowH * 0.39) / maxVal, color, { labels: row === 2, radius: 3.5 });
+      ctx.restore();
+    };
+    drawRow('input impulse δ[n]', impulse, 1, '#2563eb');
+    drawRow('response h[n] = a^n u[n]', response, 2, '#0f766e');
+    const behavior = Math.abs(state.pole) < 0.7 ? 'fast decay' : Math.abs(state.pole) < 0.92 ? 'slow decay / long memory' : 'near-resonant long tail';
+    readoutsEl.innerHTML = `
+      <div class="interactive-demo-readout"><strong>Behavior:</strong> ${escapeHtml(behavior)}. Larger |a| means the impulse response stays wide longer.</div>
+      <div class="interactive-demo-readout"><strong>Exam cue:</strong> h[n] is the zero-state output when the input is δ[n], not an arbitrary output sequence.</div>
+    `;
+  };
+  node.querySelectorAll('[data-control]').forEach((input) => {
+    const key = input.dataset.control;
+    const valueEl = node.querySelector(`[data-value="${key}"]`);
+    const update = () => {
+      state[key] = Number(input.value);
+      if (valueEl) valueEl.textContent = formatInteractiveDemoNumber(state[key]);
+      render();
+    };
+    input.addEventListener('input', update);
+    update();
+  });
+  window.addEventListener('resize', render, { passive: true });
 }
 
 function renderBriefDemoFallback(node, demo, family = 'brief') {
@@ -13135,10 +14049,16 @@ function findParentOverviewContextForSubsection(sectionId = '', sectionTitle = '
 function getOverviewLessonEntries(sectionId = '', sectionTitle = '', subsections = [], includeParentLesson = false) {
   const entries = [];
   const subList = Array.isArray(subsections) ? subsections : [];
-  if (includeParentLesson || !subList.length) {
+  if (includeParentLesson && subList.length) {
     entries.push({
       title: sectionTitle || sectionId,
       isParentLesson: true
+    });
+  }
+  if (!subList.length) {
+    entries.push({
+      title: sectionTitle || sectionId,
+      isParentLesson: false
     });
   }
   subList.forEach(subTitle => {
@@ -13722,6 +14642,7 @@ async function startLesson(options = {}) {
     if (!isCurrentLearnRequest(requestSeq, requestSectionId, requestSectionTitle, ['lesson'])) return;
     learnBody.classList.remove('hidden');
     learnExplainContent.innerHTML = `<div class="error-box"><strong>Failed to load lesson</strong><p>${escapeHtml(err.message)}</p></div>`;
+    setLearnLoading(false);
   }
 }
 
@@ -17202,10 +18123,12 @@ let isResizing = false;
 if (learnResizer && learnExplainCol && learnChatCol) {
   const LEARN_LAYOUT_KEY = 'aquarius-learn-split';
   const learnBodyInner = learnResizer.closest('.learn-body-inner') || learnExplainCol.parentElement;
-  const MIN_EXPLAIN_WIDTH = 420;
-  const MIN_CHAT_WIDTH = 320;
+  const MIN_EXPLAIN_WIDTH = 320;
+  const MIN_CHAT_WIDTH = 260;
+  const MIN_CHAT_RATIO = 0.16;
+  const MAX_CHAT_RATIO = 0.78;
   const DEFAULT_CHAT_RATIO = 0.45;
-  const DEFAULT_SPLIT_VERSION = '2026-05-23-strict-55-45-full-lecture';
+  const DEFAULT_SPLIT_VERSION = '2026-06-14-flex-resizable-v2';
   try {
     const storedVersion = localStorage.getItem(`${LEARN_LAYOUT_KEY}-version`);
     if (storedVersion !== DEFAULT_SPLIT_VERSION) {
@@ -17219,27 +18142,62 @@ if (learnResizer && learnExplainCol && learnChatCol) {
     if (input) autoResize(input);
   };
 
+  const getSplitConstraints = (availableWidth) => {
+    let explainMin = Math.min(MIN_EXPLAIN_WIDTH, Math.max(220, availableWidth * 0.22));
+    let chatMin = Math.min(MIN_CHAT_WIDTH, Math.max(210, availableWidth * 0.16));
+
+    if (explainMin + chatMin > availableWidth) {
+      const scale = availableWidth / Math.max(1, explainMin + chatMin);
+      explainMin = Math.floor(explainMin * scale);
+      chatMin = Math.floor(chatMin * scale);
+    }
+
+    return {
+      explainMin: Math.max(0, Math.floor(explainMin)),
+      chatMin: Math.max(0, Math.floor(chatMin)),
+    };
+  };
+
+  const clampSplitValue = (value, min, max) => Math.max(min, Math.min(value, max));
+
+  const clearLearnSplitStyles = () => {
+    const shell = learnBody || document.getElementById('learnBody');
+    learnBodyInner.style.removeProperty('grid-template-columns');
+    learnBodyInner.dataset.customSplit = '';
+    if (shell) {
+      shell.style.removeProperty('--learn-explain-basis');
+      shell.style.removeProperty('--learn-chat-basis');
+    }
+    [learnExplainCol, learnChatCol].forEach((col) => {
+      col.style.removeProperty('flex');
+      col.style.removeProperty('flex-basis');
+      col.style.removeProperty('width');
+      col.style.removeProperty('min-width');
+      col.style.removeProperty('max-width');
+    });
+  };
+
   const applyLearnSplit = (chatRatio) => {
     if (!learnBodyInner) return;
     if (isLearnChatCollapsed || isLearnExplainCollapsed || learnPanelFocus !== 'normal' || window.matchMedia('(max-width: 900px)').matches) {
-      learnBodyInner.style.removeProperty('grid-template-columns');
-      learnBodyInner.dataset.customSplit = '';
+      clearLearnSplitStyles();
       return;
     }
-    const boundedChatRatio = Math.max(0.24, Math.min(0.56, Number(chatRatio) || DEFAULT_CHAT_RATIO));
+    const boundedChatRatio = clampSplitValue(Number(chatRatio) || DEFAULT_CHAT_RATIO, MIN_CHAT_RATIO, MAX_CHAT_RATIO);
     const rect = learnBodyInner.getBoundingClientRect();
     const resizerWidth = learnResizer.offsetWidth || 10;
     const availableWidth = Math.max(0, rect.width - resizerWidth);
     if (!availableWidth) return;
 
+    const { explainMin, chatMin } = getSplitConstraints(availableWidth);
     let chatWidth = Math.round(availableWidth * boundedChatRatio);
-    chatWidth = Math.max(MIN_CHAT_WIDTH, Math.min(chatWidth, availableWidth - MIN_EXPLAIN_WIDTH));
-    const explainWidth = Math.max(MIN_EXPLAIN_WIDTH, availableWidth - chatWidth);
+    chatWidth = clampSplitValue(chatWidth, chatMin, Math.max(chatMin, availableWidth - explainMin));
+    const explainWidth = Math.max(explainMin, availableWidth - chatWidth);
     const shell = learnBody || document.getElementById('learnBody');
 
     learnBodyInner.style.setProperty(
       'grid-template-columns',
-      `minmax(0, ${explainWidth}px) ${resizerWidth}px minmax(${MIN_CHAT_WIDTH}px, ${chatWidth}px)`,
+      `minmax(0, ${explainWidth}px) ${resizerWidth}px minmax(0, ${chatWidth}px)`,
       'important'
     );
     learnBodyInner.dataset.customSplit = 'true';
@@ -17247,12 +18205,16 @@ if (learnResizer && learnExplainCol && learnChatCol) {
       shell.style.setProperty('--learn-explain-basis', `${explainWidth}px`);
       shell.style.setProperty('--learn-chat-basis', `${chatWidth}px`);
     }
-    learnExplainCol.style.removeProperty('width');
-    learnExplainCol.style.removeProperty('max-width');
-    learnExplainCol.style.removeProperty('flex');
-    learnChatCol.style.removeProperty('width');
-    learnChatCol.style.removeProperty('max-width');
-    learnChatCol.style.removeProperty('flex');
+    learnExplainCol.style.setProperty('flex', `0 0 ${explainWidth}px`, 'important');
+    learnExplainCol.style.setProperty('flex-basis', `${explainWidth}px`, 'important');
+    learnExplainCol.style.setProperty('width', `${explainWidth}px`, 'important');
+    learnExplainCol.style.setProperty('min-width', '0', 'important');
+    learnExplainCol.style.setProperty('max-width', `${explainWidth}px`, 'important');
+    learnChatCol.style.setProperty('flex', `0 0 ${chatWidth}px`, 'important');
+    learnChatCol.style.setProperty('flex-basis', `${chatWidth}px`, 'important');
+    learnChatCol.style.setProperty('width', `${chatWidth}px`, 'important');
+    learnChatCol.style.setProperty('min-width', '0', 'important');
+    learnChatCol.style.setProperty('max-width', `${chatWidth}px`, 'important');
     resizeFollowupInput();
   };
   window.applyLearnSplit = applyLearnSplit;
@@ -17284,8 +18246,9 @@ if (learnResizer && learnExplainCol && learnChatCol) {
     const availableWidth = Math.max(0, rect.width - resizerWidth);
     if (!availableWidth) return;
 
+    const { explainMin, chatMin } = getSplitConstraints(availableWidth);
     let explainWidth = e.clientX - rect.left;
-    explainWidth = Math.max(MIN_EXPLAIN_WIDTH, Math.min(explainWidth, availableWidth - MIN_CHAT_WIDTH));
+    explainWidth = clampSplitValue(explainWidth, explainMin, Math.max(explainMin, availableWidth - chatMin));
     const chatWidth = availableWidth - explainWidth;
     const chatRatio = chatWidth / availableWidth;
     applyLearnSplit(chatRatio);
@@ -17307,8 +18270,7 @@ if (learnResizer && learnExplainCol && learnChatCol) {
   document.addEventListener('pointercancel', stopResize);
   window.addEventListener('resize', () => {
     if (window.matchMedia('(max-width: 900px)').matches) {
-      learnBodyInner.style.removeProperty('grid-template-columns');
-      learnBodyInner.dataset.customSplit = '';
+      clearLearnSplitStyles();
       return;
     }
     try {

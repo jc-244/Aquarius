@@ -1,0 +1,103 @@
+%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6Indpa2lfcmVmZXJlbmNlIiwicmF0aW9uYWxlIjoiVGhpcyBzaG9ydCBzZWN0aW9uIGlzIG1haW5seSBzeW1ib2xpYywgYnV0IHN0dWRlbnRzIGJlbmVmaXQgZnJvbSBzZWVpbmcgdGhlIGNhc2NhZGUgc3RydWN0dXJlOiBpbnB1dCBwYXNzZXMgdGhyb3VnaCBTLCB0aGVuIHRocm91Z2ggaXRzIGludmVyc2UsIGFuZCB0aGUgb3ZlcmFsbCBlZmZlY3QgaXMgdGhlIGlkZW50aXR5IHN5c3RlbS4gTm8gdGV4dGJvb2sgZmlndXJlIGlzIGF2YWlsYWJsZSwgc28gYSBXaWtpcGVkaWEvV2lraW1lZGlhLXN0eWxlIGJsb2NrIGRpYWdyYW0gc2hvdWxkIGJlIHNlYXJjaGVkIGZpcnN0IGJlZm9yZSBhbnkgZ2VuZXJhdGVkIGltYWdlIGlzIGNvbnNpZGVyZWQuIiwiY3JhbSI6IlVzZSB0aGUgdmlzdWFsIHRvIGluc3RhbnRseSByZWNvZ25pemUgdGhlIGV4YW0gcGF0dGVybjogY2FzY2FkZSBwbHVzIHJlY2lwcm9jYWwgdHJhbnNmZXIgZnVuY3Rpb25zIG1lYW5zIGlkZW50aXR5LiIsInN0YW5kYXJkIjoiVXNlIHRoZSB2aXN1YWwgdG8gY29ubmVjdCB0aGUgZm9ybXVsYSBIX2kocyk9MS9IKHMpIHdpdGggdGhlIGJsb2NrLWRpYWdyYW0gaWRlYSBvZiB1bmRvaW5nIGEgc3lzdGVtLiIsInRvcF9zY29yZSI6IlVzZSB0aGUgdmlzdWFsIHRvIHNlcGFyYXRlIHRoZSBjb3JyZWN0IGludmVyc2Utc3lzdGVtIGlkZWEgZnJvbSB0aGUgY29tbW9uIHRyYXAgb2YgdGFraW5nIHRoZSByZWNpcHJvY2FsIG9mIHRoZSBzaWduYWwgaXRzZWxmLiJ9" style="display:none;"></div>%%KC_END%%
+# 4.3-4 Inverse Systems
+
+> **Section Objective:** Learn how an inverse system is defined by its transfer function and why cascading a system with its inverse gives the identity system.
+
+---
+
+## Concepts In This Section
+
+- Inverse transfer function
+- Cascade identity condition
+- Identity system impulse response
+- Integrator–differentiator inverse pair
+
+## 1. Inverse transfer function
+
+If a system \(S\) has transfer function \(H(s)\), its **inverse system** \(S_i\) is defined so that its transfer function \(H_i(s)\) is the reciprocal of \(H(s)\).
+
+**Symbol guide:**
+- \(H(s)\) — transfer function of the original system in the Laplace domain
+- \(H_i(s)\) — transfer function of the inverse system
+- \(s\) — the Laplace-domain complex frequency variable
+
+**When to use:** Whenever a problem asks for the system that *undoes* another system when placed in cascade.
+
+### EXAM TRIGGER
+
+Watch for phrases like "inverse system", "undoes the effect", or "cascade gives identity" — these all point to this formula.
+
+### COMMON MISUSE
+
+Do **not** take the reciprocal of the input signal or output signal. The reciprocal applies to the **transfer function** \(H(s)\), not to any signal.
+
+$$H_i(s) = \frac{1}{H(s)}$$
+
+
+## 2. Example: integrator and differentiator
+
+**Cascade identity condition:** When two systems are connected in cascade, their transfer functions **multiply**. For the cascade of \(S\) and its inverse \(S_i\) to behave as an identity system, the product of their transfer functions must equal 1.
+
+**Symbol guide:**
+- \(H(s)\) — original system transfer function
+- \(H_i(s)\) — inverse system transfer function
+- Product equals 1 → overall system is identity
+
+**Use case:** To verify whether a proposed system is truly the inverse of another, check that their transfer functions multiply to 1.
+
+### EXAM TRIGGER
+
+A cascade diagram or a question asking you to verify an inverse system — check the product of transfer functions.
+
+### COMMON MISUSE
+
+Do **not** add transfer functions in cascade. Cascade means multiplication: \(H(s) \cdot H_i(s)\), not \(H(s) + H_i(s)\).
+
+$$H(s) \cdot H_i(s) = 1$$
+
+$$h_{\text{identity}}(t) = \delta(t)$$
+The cascade of a system and its inverse behaves as an **identity system** — a system that leaves any input signal completely unchanged.
+
+**Symbol guide:**
+- \(h_{\text{identity}}(t)\) — impulse response of the overall cascade
+- \(\delta(t)\) — the Dirac delta function
+
+An identity system has transfer function 1 in the Laplace domain, and its impulse response is \(\delta(t)\) in the time domain.
+
+### EXAM TRIGGER
+
+If a problem asks for the impulse response of the overall inverse cascade, the answer is \(\delta(t)\).
+
+### COMMON MISUSE
+
+The **inverse system itself** does not have impulse response \(\delta(t)\). Only the **cascade** of the original system and its inverse has impulse response \(\delta(t)\).
+
+## 2. Example: integrator and differentiator
+
+An ideal **integrator** has transfer function \(1/s\). An ideal **differentiator** has transfer function \(s\). Their product is:
+
+$$\frac{1}{s} \cdot s = 1$$
+
+so they form an **inverse pair** in the transfer-function sense.
+
+**Concrete example:** If \(S\) is an ideal integrator with \(H(s) = 1/s\), then choosing \(S_i\) as an ideal differentiator with \(H_i(s) = s\) makes the cascade identity, since \((1/s) \cdot s = 1\).
+
+### EXAM TRIGGER
+
+Seeing \(1/s\) and \(s\) in the same cascade is a direct signal that an integrator–differentiator inverse pair is being used.
+
+### COMMON MISUSE
+
+Do **not** conclude that each system is identity by itself. The integrator alone is not identity, and the differentiator alone is not identity. Only their **cascade** is identity.
+
+$$\frac{1}{s} \cdot s = 1$$
+
+---
+**📌 Key Takeaways**
+- Inverse system definition: \(H_i(s) = 1/H(s)\) — the transfer function is the reciprocal of the original system's transfer function.
+- Cascade identity condition: \(H(s) \cdot H_i(s) = 1\) — transfer functions multiply in cascade; product of 1 means identity system.
+- Identity system impulse response: \(h_{\text{identity}}(t) = \delta(t)\); classic inverse pair: \((1/s) \cdot s = 1\) (integrator and differentiator).
+
+*Next, we will use transformed-domain ideas to analyze electrical networks more efficiently.*
+
+%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NSwicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo0LCJtYXgiOjZ9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6ImludmVyc2VfdHJhbnNmZXJfZnVuY3Rpb24iLCJsYWJlbCI6IkludmVyc2UgdHJhbnNmZXIgZnVuY3Rpb24iLCJpbXBvcnRhbmNlIjoiaGlnaCIsImV4YW1fd2VpZ2h0IjoiaGlnaCIsIm1hc3RlcnlfcnVsZSI6eyJjb3JyZWN0X3N0cmVha19yZXF1aXJlZCI6Mn0sInF1ZXN0aW9ucyI6W3siaWQiOiJrcDFfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IkEgc3lzdGVtIGhhcyB0cmFuc2ZlciBmdW5jdGlvbiBcXChIKHMpXFwpLiBXaGF0IGlzIHRoZSB0cmFuc2ZlciBmdW5jdGlvbiBvZiBpdHMgaW52ZXJzZSBzeXN0ZW0/Iiwib3B0aW9ucyI6WyJBLiBcXChIX2kocykgPSBIKHMpXFwpIiwiQi4gXFwoSF9pKHMpID0gMS9IKHMpXFwpIiwiQy4gXFwoSF9pKHMpID0gSChzKSArIDFcXCkiLCJELiBcXChIX2kocykgPSBzSChzKVxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6IlRoZSBpbnZlcnNlIHN5c3RlbSBpcyBkZWZpbmVkIGJ5IHRoZSByZWNpcHJvY2FsIHRyYW5zZmVyIGZ1bmN0aW9uOiBcXChIX2kocykgPSAxL0gocylcXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiVGhhdCB3b3VsZCByZXBlYXQgdGhlIHNhbWUgc3lzdGVtLCBub3QgdW5kbyBpdC4iLCJDIjoiSW52ZXJzZSBzeXN0ZW1zIGFyZSBub3QgZm9ybWVkIGJ5IGFkZGluZyAxIHRvIHRoZSB0cmFuc2ZlciBmdW5jdGlvbi4iLCJEIjoiTXVsdGlwbHlpbmcgYnkgXFwoc1xcKSBpcyBvbmx5IHJlbGV2YW50IGluIHNwZWNpYWwgY2FzZXMgc3VjaCBhcyBkaWZmZXJlbnRpYXRpbmcgYW4gaW50ZWdyYXRvci4ifSwiaGludCI6IlRoZSBpbnZlcnNlIHNob3VsZCBtdWx0aXBseSB3aXRoIHRoZSBvcmlnaW5hbCB0byBnaXZlIDEuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfSx7ImlkIjoia3AxX3EyIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJBIHN0dWRlbnQgc2F5czogJ1RvIGZpbmQgdGhlIGludmVyc2Ugc3lzdGVtLCB0YWtlIHRoZSByZWNpcHJvY2FsIG9mIHRoZSBpbnB1dCBzaWduYWwuJyBXaGF0IGlzIHdyb25nIHdpdGggdGhpcyBzdGF0ZW1lbnQ/Iiwib3B0aW9ucyI6WyJBLiBUaGUgcmVjaXByb2NhbCBhcHBsaWVzIHRvIHRoZSB0cmFuc2ZlciBmdW5jdGlvbiwgbm90IHRoZSBzaWduYWwuIiwiQi4gVGhlIHJlY2lwcm9jYWwgYXBwbGllcyB0byB0aW1lIFxcKHRcXCksIG5vdCB0aGUgc2lnbmFsLiIsIkMuIFRoZSBpbnZlcnNlIHN5c3RlbSBtdXN0IGFsd2F5cyBoYXZlIHRyYW5zZmVyIGZ1bmN0aW9uIFxcKEgocylcXCkuIiwiRC4gVGhlIGludmVyc2Ugc3lzdGVtIGlzIGZvdW5kIGJ5IGFkZGluZyB0aGUgaW5wdXQgYW5kIG91dHB1dC4iXSwiY29ycmVjdF9vcHRpb24iOiJBIiwiZXhwbGFuYXRpb24iOiJUaGUgaW52ZXJzZS1zeXN0ZW0gZm9ybXVsYSBpcyBcXChIX2kocykgPSAxL0gocylcXCkuIEl0IGlzIGEgc3RhdGVtZW50IGFib3V0IHRyYW5zZmVyIGZ1bmN0aW9ucywgbm90IGFib3V0IHRha2luZyByZWNpcHJvY2FscyBvZiBzaWduYWxzLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQiI6IlRoZSBmb3JtdWxhIGlzIGluIHRoZSBMYXBsYWNlIGRvbWFpbiBhbmQgZG9lcyBub3QgdGFrZSB0aGUgcmVjaXByb2NhbCBvZiB0aW1lLiIsIkMiOiJVc2luZyB0aGUgc2FtZSB0cmFuc2ZlciBmdW5jdGlvbiB1c3VhbGx5IGRvZXMgbm90IHVuZG8gdGhlIG9yaWdpbmFsIHN5c3RlbS4iLCJEIjoiQWRkaW5nIGlucHV0IGFuZCBvdXRwdXQgaXMgbm90IGhvdyBpbnZlcnNlIHN5c3RlbXMgYXJlIGRlZmluZWQuIn0sImhpbnQiOiJBc2sgd2hhdCBvYmplY3QgYXBwZWFycyBpbiB0aGUgZGVub21pbmF0b3Igb2YgXFwoSF9pKHMpID0gMS9IKHMpXFwpLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX1dfSx7ImlkIjoiY2FzY2FkZV9pZGVudGl0eV9jb25kaXRpb24iLCJsYWJlbCI6IkNhc2NhZGUgaWRlbnRpdHkgY29uZGl0aW9uIiwiaW1wb3J0YW5jZSI6ImhpZ2giLCJleGFtX3dlaWdodCI6ImhpZ2giLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjJ9LCJxdWVzdGlvbnMiOlt7ImlkIjoia3AyX3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJUd28gc3lzdGVtcyBhcmUgY29ubmVjdGVkIGluIGNhc2NhZGUgd2l0aCB0cmFuc2ZlciBmdW5jdGlvbnMgXFwoSChzKVxcKSBhbmQgXFwoSF9pKHMpXFwpLiBXaGljaCBjb25kaXRpb24gY29uZmlybXMgdGhhdCB0aGUgc2Vjb25kIHN5c3RlbSBpcyB0aGUgaW52ZXJzZSBvZiB0aGUgZmlyc3Q/Iiwib3B0aW9ucyI6WyJBLiBcXChIKHMpICsgSF9pKHMpID0gMVxcKSIsIkIuIFxcKEgocykgLSBIX2kocykgPSAwXFwpIiwiQy4gXFwoSChzKSBcXGNkb3QgSF9pKHMpID0gMVxcKSIsIkQuIFxcKEgocykgLyBIX2kocykgPSAxXFwpIl0sImNvcnJlY3Rfb3B0aW9uIjoiQyIsImV4cGxhbmF0aW9uIjoiVHJhbnNmZXIgZnVuY3Rpb25zIG11bHRpcGx5IGluIGNhc2NhZGUuIEZvciB0aGUgdG90YWwgc3lzdGVtIHRvIGJlIGlkZW50aXR5LCB0aGUgcHJvZHVjdCBtdXN0IGJlIDEuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiQ2FzY2FkZSBzeXN0ZW1zIG11bHRpcGx5OyB0aGV5IGFyZSBub3QgY2hlY2tlZCBieSBhZGRpdGlvbi4iLCJCIjoiRXF1YWwgdHJhbnNmZXIgZnVuY3Rpb25zIGRvIG5vdCBuZWNlc3NhcmlseSB1bmRvIGVhY2ggb3RoZXIuIiwiRCI6IkEgcXVvdGllbnQgb2YgMSBtZWFucyB0aGUgdHdvIHRyYW5zZmVyIGZ1bmN0aW9ucyBhcmUgZXF1YWwsIG5vdCBpbnZlcnNlLiJ9LCJoaW50IjoiQ2FzY2FkZSBjb25uZWN0aW9uIG1lYW5zIG11bHRpcGxpY2F0aW9uIG9mIHRyYW5zZmVyIGZ1bmN0aW9ucy4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9LHsiaWQiOiJrcDJfcTIiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IlZpc3VhbCBjaGVjazogQSBibG9jayBkaWFncmFtIHNob3dzIGFuIGlucHV0IHBhc3NpbmcgdGhyb3VnaCBhIGJsb2NrIGxhYmVsZWQgXFwoSChzKVxcKSwgdGhlbiB0aHJvdWdoIGEgYmxvY2sgbGFiZWxlZCBcXChIX2kocylcXCksIGFuZCB0aGUgb3V0cHV0IGlzIHVuY2hhbmdlZCBmcm9tIHRoZSBpbnB1dC4gV2hhdCBtdXN0IHRoZSBvdmVyYWxsIHRyYW5zZmVyIGZ1bmN0aW9uIGJlPyIsIm9wdGlvbnMiOlsiQS4gXFwoMFxcKSIsIkIuIFxcKDFcXCkiLCJDLiBcXChIKHMpICsgSF9pKHMpXFwpIiwiRC4gXFwoXFxkZWx0YSh0KVxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6IklmIHRoZSBjYXNjYWRlIGxlYXZlcyB0aGUgc2lnbmFsIHVuY2hhbmdlZCwgaXQgaXMgYW4gaWRlbnRpdHkgc3lzdGVtIGluIHRoZSB0cmFuc2Zlci1mdW5jdGlvbiBzZW5zZSwgc28gdGhlIG92ZXJhbGwgdHJhbnNmZXIgZnVuY3Rpb24gaXMgMS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJBIHplcm8gdHJhbnNmZXIgZnVuY3Rpb24gd291bGQgZXJhc2UgdGhlIHNpZ25hbCwgbm90IGxlYXZlIGl0IHVuY2hhbmdlZC4iLCJDIjoiQ2FzY2FkZSB0cmFuc2ZlciBmdW5jdGlvbnMgbXVsdGlwbHk7IHRoZXkgZG8gbm90IGFkZC4iLCJEIjoiXFwoXFxkZWx0YSh0KVxcKSBpcyB0aGUgaW1wdWxzZSByZXNwb25zZSBvZiB0aGUgaWRlbnRpdHkgc3lzdGVtLCBub3QgaXRzIHRyYW5zZmVyIGZ1bmN0aW9uLiJ9LCJoaW50IjoiVW5jaGFuZ2VkIG91dHB1dCBtZWFucyBpZGVudGl0eSBzeXN0ZW0uIiwibmVlZHNfdmlzdWFsIjp0cnVlLCJ2aXN1YWxfdHlwZSI6ImNhc2NhZGVfYmxvY2tfZGlhZ3JhbSIsInNhbWVfcG9pbnRfdmFyaWFudCI6dHJ1ZX1dfSx7ImlkIjoiaWRlbnRpdHlfaW1wdWxzZV9yZXNwb25zZSIsImxhYmVsIjoiSWRlbnRpdHkgc3lzdGVtIGltcHVsc2UgcmVzcG9uc2UiLCJpbXBvcnRhbmNlIjoibWVkaXVtIiwiZXhhbV93ZWlnaHQiOiJtZWRpdW0iLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjF9LCJxdWVzdGlvbnMiOlt7ImlkIjoia3AzX3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJXaGVuIGEgc3lzdGVtIGFuZCBpdHMgaW52ZXJzZSBhcmUgY2FzY2FkZWQsIHRoZSBvdmVyYWxsIGltcHVsc2UgcmVzcG9uc2UgaXM6Iiwib3B0aW9ucyI6WyJBLiBcXCgwXFwpIiwiQi4gXFwoMS9zXFwpIiwiQy4gXFwoXFxkZWx0YSh0KVxcKSIsIkQuIFxcKEgocylcXCkiXSwiY29ycmVjdF9vcHRpb24iOiJDIiwiZXhwbGFuYXRpb24iOiJUaGUgY2FzY2FkZSBiZWNvbWVzIHRoZSBpZGVudGl0eSBzeXN0ZW0sIGFuZCB0aGUgaW1wdWxzZSByZXNwb25zZSBvZiB0aGUgaWRlbnRpdHkgc3lzdGVtIGlzIFxcKFxcZGVsdGEodClcXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiQSB6ZXJvIGltcHVsc2UgcmVzcG9uc2Ugd291bGQgcHJvZHVjZSBubyBvdXRwdXQuIiwiQiI6IlxcKDEvc1xcKSBpcyB0aGUgdHJhbnNmZXIgZnVuY3Rpb24gb2YgYW4gaWRlYWwgaW50ZWdyYXRvciwgbm90IHRoZSBpZGVudGl0eSBpbXB1bHNlIHJlc3BvbnNlLiIsIkQiOiJcXChIKHMpXFwpIGlzIGEgdHJhbnNmZXIgZnVuY3Rpb24sIG5vdCBhIHRpbWUtZG9tYWluIGltcHVsc2UgcmVzcG9uc2UuIn0sImhpbnQiOiJUaGUgaWRlbnRpdHkgc3lzdGVtIGxlYXZlcyB0aGUgaW5wdXQgdW5jaGFuZ2VkLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9XX0seyJpZCI6ImludGVncmF0b3JfZGlmZmVyZW50aWF0b3JfcGFpciIsImxhYmVsIjoiSW50ZWdyYXRvciBhbmQgZGlmZmVyZW50aWF0b3IgaW52ZXJzZSBwYWlyIiwiaW1wb3J0YW5jZSI6Im1lZGl1bSIsImV4YW1fd2VpZ2h0IjoibWVkaXVtIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoxfSwicXVlc3Rpb25zIjpbeyJpZCI6ImtwNF9xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiQW4gaWRlYWwgaW50ZWdyYXRvciBoYXMgdHJhbnNmZXIgZnVuY3Rpb24gXFwoMS9zXFwpLiBXaGljaCB0cmFuc2ZlciBmdW5jdGlvbiBhY3RzIGFzIGl0cyBpbnZlcnNlIGluIHRoaXMgc2VjdGlvbidzIHNlbnNlPyIsIm9wdGlvbnMiOlsiQS4gXFwoMS9zXFwpIiwiQi4gXFwoc1xcKSIsIkMuIFxcKHMgKyAxXFwpIiwiRC4gXFwoMFxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6IlRoZSBpbnZlcnNlIG11c3QgbXVsdGlwbHkgd2l0aCBcXCgxL3NcXCkgdG8gZ2l2ZSAxLiBTaW5jZSBcXCgoMS9zKSBcXGNkb3QgcyA9IDFcXCksIHRoZSBpbnZlcnNlIGlzIFxcKHNcXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJBIjoiXFwoKDEvcykoMS9zKSA9IDEvc14yXFwpLCBub3QgMS4iLCJDIjoiXFwoKDEvcykocysxKSA9IDEgKyAxL3NcXCksIG5vdCAxLiIsIkQiOiJNdWx0aXBseWluZyBieSAwIGdpdmVzIDAsIG5vdCBpZGVudGl0eS4ifSwiaGludCI6IlBpY2sgdGhlIG9wdGlvbiB0aGF0IG1ha2VzIHRoZSBwcm9kdWN0IGVxdWFsIDEuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwic2FtZV9wb2ludF92YXJpYW50IjpmYWxzZX1dfV19" style="display:none;"></div>%%KC_END%%

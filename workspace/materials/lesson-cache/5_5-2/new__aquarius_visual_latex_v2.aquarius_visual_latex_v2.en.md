@@ -1,0 +1,145 @@
+%%KC_BLOCK%%<div class="kc-visual-plan" data-visual-plan-b64="eyJwcmltYXJ5X2FuY2hvciI6InJlYWN0X2RlbW8iLCJyYXRpb25hbGUiOiJBbGlhc2luZyBpcyBlYXNpZXN0IHRvIHVuZGVyc3RhbmQgYnkgd2F0Y2hpbmcgZGlmZmVyZW50IGNvbnRpbnVvdXMtdGltZSBzaW51c29pZHMgY29sbGFwc2UgaW50byB0aGUgc2FtZSBzYW1wbGVkIHNlcXVlbmNlIGFzIHRoZSBzYW1wbGluZyBpbnRlcnZhbCBjaGFuZ2VzLiBUaGUgT0NSIHJlZmVyZW5jZXMgRmlnLiA1LjE4LCBidXQgbm8gY3JvcHBlZCB0ZXh0Ym9vayBmaWd1cmUgaXMgYXZhaWxhYmxlIGFuZCBmdWxsLXBhZ2Ugc2NyZWVuc2hvdHMgYXJlIGZvcmJpZGRlbi4gQSBSZWFjdCArIENhbnZhcyBkZW1vIGNhbiByZWNyZWF0ZSB0aGUgZXhhY3QgdGVhY2hpbmcgcG9pbnQgbW9yZSBjbGVhcmx5OiB0d28gc2ludXNvaWRzLCBzaGFyZWQgc2FtcGxlIHBvaW50cywgYW5kIHRoZSBhbGlhcyBib3VuZGFyeSBhdCBcXChmX3MvMlxcKS4iLCJjcmFtIjoiVXNlIHRoZSBkZW1vIHRvIG1lbW9yaXplIHRoZSB0cmlnZ2VyOiBpZiB0aGUgc2lnbmFsIGZyZXF1ZW5jeSBpcyBhYm92ZSBcXChmX3MvMlxcKSwgZXhwZWN0IGFsaWFzaW5nLiIsInN0YW5kYXJkIjoiVXNlIHRoZSBkZW1vIHRvIGNvbm5lY3QgdGhlIGZvcm11bGFzIFxcKFxcT21lZ2E9XFxvbWVnYSBUXFwpLCBcXChUPDEvKDJmX2gpXFwpLCBhbmQgXFwoZl9zPjJmX2hcXCkgdG8gdmlzaWJsZSBzYW1wbGVkIHBvaW50cy4iLCJ0b3Bfc2NvcmUiOiJVc2UgdGhlIGRlbW8gdG8gZXhwb3NlIHRoZSBzdHJpY3QgaW5lcXVhbGl0eSB0cmFwIGFuZCB0aGUgZmFjdCB0aGF0IGEgaGlnaCBmcmVxdWVuY3kgY2FuIG1hc3F1ZXJhZGUgYXMgYSBsb3dlciBvbmUsIGNvcnJ1cHRpbmcgYW1wbGl0dWRlcyBiZWxvdyBcXChmX3MvMlxcKS4ifQ==" style="display:none;"></div>%%KC_END%%
+# 5.5-2 Aliasing and Sampling Rate
+
+> **Section Objective:** Learn when sampling makes different continuous-time sinusoids look identical, and how to choose \(T\) or \(f_s\) to avoid that.
+
+---
+
+## Concepts In This Section
+
+- Aliasing
+- Discrete-time frequency identity
+- Sampling interval condition
+- Sampling frequency condition
+- Anti-aliasing filter
+
+%%KC_BLOCK%%<div class="kc-visual-meta" data-visual-kind="interactive_demo" data-teaching-role="concept_anchor" data-visual-use-b64="eyJjcmFtIjoiU2xpZGUgXFwoZl9zXFwpIHVudGlsIHRoZSBoaWdoLWZyZXF1ZW5jeSBzaW51c29pZCBhbGlhc2VzLCB0aGVuIHJlbWVtYmVyIHRoZSBib3VuZGFyeSBcXChmX3MvMlxcKS4iLCJzdGFuZGFyZCI6IlNob3cgaG93IHR3byBkaWZmZXJlbnQgY29udGludW91cy10aW1lIHdhdmVzIGNhbiBzaGFyZSB0aGUgc2FtZSBzYW1wbGUgZG90cy4iLCJ0b3Bfc2NvcmUiOiJUZXN0IG5lYXItYm91bmRhcnkgY2FzZXMgYW5kIG5vdGljZSB3aHkgZXF1YWxpdHkgaXMgbm90IHRyZWF0ZWQgYXMgc2FmZWx5IG5vLWFsaWFzaW5nLiJ9" style="display:none;"></div><div class="kc-interactive-demo" data-demo-b64="eyJ0eXBlIjoiaW50ZXJhY3RpdmVfZGVtbyIsImRlbW9fdGl0bGUiOiJBbGlhc2luZzogdHdvIGFuYWxvZyB3YXZlcywgb25lIHNhbXBsZWQgaWRlbnRpdHkiLCJ0ZWFjaGluZ19yb2xlIjoiY29uY2VwdF9hbmNob3IiLCJtb2RlX3NwZWNpZmljX3Zpc3VhbF91c2UiOnsiY3JhbSI6IlNsaWRlIFxcKGZfc1xcKSB1bnRpbCB0aGUgaGlnaC1mcmVxdWVuY3kgc2ludXNvaWQgYWxpYXNlcywgdGhlbiByZW1lbWJlciB0aGUgYm91bmRhcnkgXFwoZl9zLzJcXCkuIiwic3RhbmRhcmQiOiJTaG93IGhvdyB0d28gZGlmZmVyZW50IGNvbnRpbnVvdXMtdGltZSB3YXZlcyBjYW4gc2hhcmUgdGhlIHNhbWUgc2FtcGxlIGRvdHMuIiwidG9wX3Njb3JlIjoiVGVzdCBuZWFyLWJvdW5kYXJ5IGNhc2VzIGFuZCBub3RpY2Ugd2h5IGVxdWFsaXR5IGlzIG5vdCB0cmVhdGVkIGFzIHNhZmVseSBuby1hbGlhc2luZy4ifSwiaW1wbGVtZW50YXRpb24iOnsiZnJhbWV3b3JrIjoicmVhY3QiLCJjYW52YXMiOnRydWUsImRlc2NyaXB0aW9uIjoiQSBSZWFjdCArIENhbnZhcyBkZW1vIHdpdGggYSB3aGl0ZSBiYWNrZ3JvdW5kLiBUd28gb3ZlcmxhaWQgY29udGludW91cy10aW1lIHNpbnVzb2lkcyBhcmUgZHJhd24gb24gdGhlIHNhbWUgdGltZSBheGlzOiBtdXRlZCB0ZWFsIGZvciBjb3MoMs+AIGYxIHQpIGFuZCBuYXZ5IGZvciBjb3MoMs+AIGYyIHQpLiBCbGFjayBmaWxsZWQgZG90cyBtYXJrIHRoZSBzYW1wbGUgcG9pbnRzIGF0IHQgPSBuVC4gVGhyZWUgc2xpZGVycyBjb250cm9sOiBzYW1wbGluZyBmcmVxdWVuY3kgZnMgKHJhbmdlIDHigJMyMCBIeiwgZGVmYXVsdCA1IEh6KSwgbG93IHNpbnVzb2lkIGZyZXF1ZW5jeSBmMSAocmFuZ2UgMC414oCTNSBIeiwgZGVmYXVsdCAxIEh6KSwgYW5kIGhpZ2ggc2ludXNvaWQgZnJlcXVlbmN5IGYyIChyYW5nZSAx4oCTMTUgSHosIGRlZmF1bHQgNiBIeikuIExhYmVscyBzaG93bjogJ1NhbXBsZSBpbnRlcnZhbCBUID0gMS9mcycsICdOeXF1aXN0IGJvdW5kYXJ5IGZzLzInLCBhbmQgJ0FsaWFzaW5nIHJpc2s6IFlFUyAvIE5PJyAoWUVTIHdoZW4gZjIgPj0gZnMvMikuIEEgdG9nZ2xlIGJ1dHRvbiAnU2hvdyBvbmx5IHNhbXBsZXMnIGhpZGVzIHRoZSBjb250aW51b3VzIGN1cnZlcyBzbyBzdHVkZW50cyBzZWUgdGhhdCBzYW1wbGUgZG90cyBhbG9uZSBjYW5ub3QgcmV2ZWFsIHRoZSB0cnVlIGFuYWxvZyBmcmVxdWVuY3kuIiwiZGVmYXVsdF9wYXJhbXMiOnsiZnMiOjUsImYxIjoxLCJmMiI6Nn0sImNvbG9ycyI6eyJzaW51c29pZF8xIjoibXV0ZWQgdGVhbCIsInNpbnVzb2lkXzIiOiJuYXZ5Iiwic2FtcGxlX2RvdHMiOiJibGFjayBmaWxsZWQgY2lyY2xlcyJ9LCJsYWJlbHMiOlsiU2FtcGxlIGludGVydmFsIFQgPSAxL2ZzIiwiTnlxdWlzdCBib3VuZGFyeSBmcy8yIiwiQWxpYXNpbmcgcmlzazogWUVTIC8gTk8iXSwidG9nZ2xlIjoiU2hvdyBvbmx5IHNhbXBsZXMifSwib2JzZXJ2YXRpb25fYnVsbGV0cyI6WyJUaGUgc2FtcGxlIGRvdHMgYXJlIGFsbCB0aGUgZGlnaXRhbCBwcm9jZXNzb3IgZXZlciBzZWVzIOKAlCB0aGUgY29udGludW91cyBjdXJ2ZSBiZXR3ZWVuIHNhbXBsZXMgaXMgaW52aXNpYmxlIHRvIGl0LiIsIlR3byBhbmFsb2cgc2ludXNvaWRzIGF0IGRpZmZlcmVudCBmcmVxdWVuY2llcyBjYW4gcHJvZHVjZSBpZGVudGljYWwgc2FtcGxlIGRvdCBwYXR0ZXJucyB3aGVuIG9uZSBmcmVxdWVuY3kgZXhjZWVkcyBcXChmX3MvMlxcKS4iLCJGcmVxdWVuY2llcyBhYm92ZSBcXChmX3MvMlxcKSBtYXNxdWVyYWRlIGFzIGxvd2VyIGZyZXF1ZW5jaWVzIGluIHRoZSBzYW1wbGVkIHNlcXVlbmNlLCBjb3JydXB0aW5nIHRoZSBkaWdpdGFsIHNpZ25hbC4iXX0="></div>%%KC_END%%
+
+## 1. What Aliasing Means
+
+Sampling keeps only the signal values at discrete instants \(t = nT\). The digital processor receives a sequence of numbers — not the full analog curve. Everything that happens between sample instants is invisible.
+
+Consider the textbook example: \(\cos(2\pi t)\) and \(\cos(12\pi t)\) sampled every \(T = 0.2\) s. At each sample instant \(t = 0, 0.2, 0.4, \ldots\), both sinusoids return the same value. The processor cannot tell them apart.
+
+### WHY THIS IS SERIOUS
+
+Aliasing is not a drawing artifact. The true high-frequency component is lost and reappears as a lower-frequency component, distorting every downstream calculation — filtering, spectral analysis, reconstruction.
+
+#### Note
+
+If two curves look different between sample instants, that does not help the digital processor unless those differences are sampled.
+
+## 2. Continuous Frequency Becomes Discrete Frequency
+
+This is the bridge formula between analog and digital sinusoids.
+
+**Symbols:**
+- \(\omega\) — continuous-time angular frequency, in rad/s
+- \(T\) — sampling interval, in seconds
+- \(n\) — integer sample index (\(n = 0, 1, 2, \ldots\))
+- \(\Omega = \omega T\) — discrete-time radian frequency (dimensionless)
+
+**When to use it:** Any time an analog sinusoid is sampled and the exam asks what discrete-time sinusoid results. Trigger phrase: *sampled every \(T\) seconds*.
+
+**Common misuse:** Treating \(\omega\) and \(\Omega\) as interchangeable. They are not — \(\Omega\) is \(\omega\) scaled by \(T\). Also, discrete-time sinusoids repeat every \(2\pi\) in \(\Omega\), so \(\Omega = 2.4\pi\) and \(\Omega = 0.4\pi\) are the same discrete-time sinusoid.
+
+#### Mini-Example
+
+If \(\omega = 12\pi\) rad/s and \(T = 0.2\) s, then \(\Omega = 12\pi \times 0.2 = 2.4\pi\). Since \(2.4\pi = 2\pi + 0.4\pi\), this has the same discrete-time identity as \(\Omega = 0.4\pi\) — exactly the aliasing seen in the demo.
+
+$$x[n] = \cos(\omega n T) = \cos(\Omega n)$$
+
+## 3. The No-Aliasing Band in rad/s
+
+**Symbols:**
+- \(\omega_h\) — highest continuous-time angular frequency that must be processed without ambiguity, in rad/s
+- \(T\) — sampling interval, in seconds
+
+**Meaning:** Every processed sinusoid must satisfy \(\omega T < \pi\), keeping it inside the fundamental discrete-time band \((-\pi, \pi)\) where sampled sinusoids have unique identities.
+
+**When to use it:** When frequency is given in rad/s rather than hertz. Exam trigger: words like *angular frequency*, *rad/s*, or a sinusoid written as \(\cos(\omega t)\).
+
+**Common misuse:** Plugging hertz values directly into this formula. Hertz must be converted first using \(\omega = 2\pi f\).
+
+#### Mini-Example
+
+If \(T = 0.001\) s, then \(\pi / T = 1000\pi\) rad/s. All angular frequencies must stay below \(1000\pi\) rad/s to avoid aliasing.
+
+$$\omega_h < \frac{\pi}{T}$$
+
+## 4. Sampling interval condition
+
+**Symbols:**
+- \(f_h\) — highest frequency in the continuous-time signal that must survive without aliasing, in Hz
+- \(T\) — sampling interval, in seconds
+
+**Meaning:** A smaller \(T\) means more frequent samples, so higher signal frequencies can be processed safely. The two forms are equivalent — use whichever unknown you need to solve for.
+
+**When to use it:** When the question asks for the maximum allowable sampling interval, or the highest frequency for a given sampling interval.
+
+**Exam trigger:** Phrases like *maximum sampling interval*, *without aliasing*, or *highest frequency*.
+
+**Common misuse:** Writing \(T = 1/(2f_h)\) as acceptable. The textbook uses a **strict** less-than condition — equality is not treated as safely no-aliasing.
+
+#### Example
+
+For \(f_h = 50\text{ kHz}\):
+
+$$T < \frac{1}{2 \times 50{,}000} = 10\,\mu\text{s}$$
+
+The sampling interval must be strictly less than \(10\,\mu\text{s}\).
+
+$$f_h < \frac{1}{2T} \quad \text{or} \quad T < \frac{1}{2f_h}$$
+
+## 5. Sampling frequency condition
+
+**Symbols:**
+- \(f_s\) — sampling rate, in samples per second (Hz)
+- \(T\) — sampling interval, in seconds (\(T = 1/f_s\))
+- \(f_h\) — highest input frequency in Hz
+
+**Meaning:** \(f_s/2\) is the Nyquist boundary. Any component above \(f_s/2\) aliases into a lower frequency and corrupts the spectrum. The signal's highest frequency must stay strictly below this boundary.
+
+**When to use it:** When the problem gives sampling rate instead of sampling interval, or asks for the highest signal frequency a sampled system can process.
+
+**Exam trigger:** *Sampling frequency*, *sampling rate*, *samples per second*, or *Nyquist limit*.
+
+**Common misuse:** Thinking exactly two samples per cycle is safely enough. The section requires **strictly more** than two samples per cycle — equality is not sufficient.
+
+#### Example
+
+If \(T = 25\,\mu\text{s}\), then \(f_s = 1/(25 \times 10^{-6}) = 40\text{ kHz}\), so:
+
+$$f_h < \frac{f_s}{2} = 20\text{ kHz}$$
+
+$$f_s = \frac{1}{T} > 2f_h \quad \text{or} \quad f_h < \frac{f_s}{2}$$
+
+## 6. Anti-Aliasing Filter
+
+If a signal contains frequency components above \(f_s/2\), those components do not simply disappear after sampling — they fold back into the lower-frequency band and corrupt the spectrum below \(f_s/2\). A 3 kHz component that aliases into 1 kHz is indistinguishable from a genuine 1 kHz signal.
+
+### THE FIX
+
+Before sampling, pass the analog signal through a **lowpass anti-aliasing filter** with a cutoff at or below \(f_s/2\). This removes the dangerous high-frequency content before it can cause aliasing.
+
+### TRADEOFF
+
+The filter discards high-frequency content permanently. That is an acceptable loss — those frequencies cannot be sampled faithfully anyway. It is far better to discard them cleanly than to allow them to fold into the useful band as false low-frequency content.
+
+> **Exam sentence:** If the sampling rate is fixed, the anti-aliasing filter must protect the band below \(f_s/2\) — it cannot recover information after aliasing has already occurred.
+
+---
+**📌 Key Takeaways**
+- Aliasing: different analog sinusoids can share one sampled identity when a frequency exceeds \(f_s/2\), corrupting the digital signal.
+- Bridge formula: \(x[n] = \cos(\omega nT) = \cos(\Omega n)\), where discrete-time frequency \(\Omega = \omega T\) repeats every \(2\pi\).
+- No-aliasing band in rad/s: \(\omega_h < \pi/T\); keep every processed sinusoid inside the fundamental band.
+- Eq. (5.39) in Hz: \(f_h < 1/(2T)\) or \(T < 1/(2f_h)\) — strict inequality; \(T = 1/(2f_h)\) is not safe.
+- Eq. (5.40) in Hz: \(f_s = 1/T > 2f_h\) or \(f_h < f_s/2\) — anti-aliasing filter removes components above \(f_s/2\) before sampling.
+
+- Core formula: \(x[n] = \cos(\omega n T) = \cos(\Omega n)\).
+- Core formula: \(\omega_h < \frac{\pi}{T}\).
+- Core formula: \(f_h < \frac{1}{2T} \quad \text{or} \quad T < \frac{1}{2f_h}\).
+- Core formula: \(f_s = \frac{1}{T} > 2f_h \quad \text{or} \quad f_h < \frac{f_s}{2}\).
+*In the next section we will connect frequency response to pole-zero locations.*
+
+%%KC_BLOCK%%<div class="kc-quiz-plan" data-quiz-b64="eyJ0eXBlIjoicXVpel9wbGFuIiwidGFyZ2V0X3F1ZXN0aW9ucyI6NywicXVlc3Rpb25fcmFuZ2UiOnsibWluIjo2LCJtYXgiOjh9LCJrbm93bGVkZ2VfcG9pbnRzIjpbeyJpZCI6ImFsaWFzaW5nX2lkZW50aXR5IiwibGFiZWwiOiJBbGlhc2luZyBtZWFucyBkaWZmZXJlbnQgYW5hbG9nIGZyZXF1ZW5jaWVzIGNhbiBzaGFyZSBvbmUgc2FtcGxlZCBpZGVudGl0eSIsImltcG9ydGFuY2UiOiJoaWdoIiwiZXhhbV93ZWlnaHQiOiJoaWdoIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoyfSwicXVlc3Rpb25zIjpbeyJpZCI6ImFsaWFzaW5nX2lkZW50aXR5X3ExIiwidHlwZSI6Im11bHRpcGxlX2Nob2ljZSIsInN0ZW0iOiJJbiB0aGUgaW50ZXJhY3RpdmUgZGVtbywgdGhlIGNvbnRpbnVvdXMgY3VydmVzIFxcKFxcY29zKDJcXHBpIHQpXFwpIGFuZCBcXChcXGNvcygxMlxccGkgdClcXCkgbG9vayBkaWZmZXJlbnQgYmV0d2VlbiBzYW1wbGUgaW5zdGFudHMsIGJ1dCB0aGUgc2FtcGxlIGRvdHMgY2FuIGNvaW5jaWRlIHdoZW4gXFwoZl9zID0gNVxcdGV4dHsgSHp9XFwpLiBXaGF0IGRvZXMgdGhlIGRpZ2l0YWwgcHJvY2Vzc29yIHNlZT8iLCJvcHRpb25zIjpbIkEuIEl0IHNlZXMgYm90aCBvcmlnaW5hbCBjb250aW51b3VzLXRpbWUgY3VydmVzIHBlcmZlY3RseS4iLCJCLiBJdCBzZWVzIG9ubHkgdGhlIGhpZ2hlci1mcmVxdWVuY3kgY3VydmUgYmVjYXVzZSBpdCBjaGFuZ2VzIGZhc3Rlci4iLCJDLiBJdCBzZWVzIHRoZSBzYW1wbGVkIHNlcXVlbmNlLCBzbyB0aGUgdHdvIHNpbnVzb2lkcyBjYW4gaGF2ZSB0aGUgc2FtZSBkaXNjcmV0ZS10aW1lIGlkZW50aXR5LiIsIkQuIEl0IHNlZXMgdGhlIGF2ZXJhZ2Ugb2YgdGhlIHR3byBmcmVxdWVuY2llcy4iXSwiY29ycmVjdF9vcHRpb24iOiJDIiwiZXhwbGFuYXRpb24iOiJBZnRlciBzYW1wbGluZywgdGhlIHByb2Nlc3NvciBvbmx5IGhhcyB0aGUgc2VxdWVuY2Ugb2Ygc2FtcGxlIHZhbHVlcy4gSWYgdHdvIGFuYWxvZyBzaW51c29pZHMgcHJvZHVjZSB0aGUgc2FtZSBzYW1wbGUgdmFsdWVzLCB0aGVpciBvcmlnaW5hbCBmcmVxdWVuY3kgaWRlbnRpdGllcyBhcmUgYW1iaWd1b3VzLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6IlNhbXBsaW5nIGRvZXMgbm90IHByZXNlcnZlIHRoZSBmdWxsIGN1cnZlIGJldHdlZW4gc2FtcGxlIGluc3RhbnRzLiIsIkIiOiJDaGFuZ2luZyBmYXN0ZXIgZG9lcyBub3QgZ3VhcmFudGVlIGNvcnJlY3QgZGlnaXRhbCBpZGVudGl0eTsgaGlnaCBmcmVxdWVuY2llcyBhcmUgdGhlIG9uZXMgYXQgcmlzayBvZiBhbGlhc2luZy4iLCJEIjoiQWxpYXNpbmcgaXMgbm90IGZyZXF1ZW5jeSBhdmVyYWdpbmc7IGl0IGlzIG1pc3Rha2VuIGlkZW50aXR5IGNhdXNlZCBieSBzYW1wbGluZy4ifSwiaGludCI6IkFzayB3aGF0IGluZm9ybWF0aW9uIHJlbWFpbnMgYWZ0ZXIgdGhlIGNvbnRpbnVvdXMgY3VydmUgaXMgcmVwbGFjZWQgYnkgZG90cy4iLCJuZWVkc192aXN1YWwiOnRydWUsInZpc3VhbF90eXBlIjoiaW50ZXJhY3RpdmVfZGVtbyIsInF1ZXN0aW9uX3JvbGUiOiJkZW1vX29ic2VydmF0aW9uX2NoZWNrIiwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfSx7ImlkIjoiYWxpYXNpbmdfaWRlbnRpdHlfcTIiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IkEgaGlnaC1mcmVxdWVuY3kgY29tcG9uZW50IGFsaWFzZXMgZHVyaW5nIHNhbXBsaW5nLiBXaGljaCBzdGF0ZW1lbnQgYmVzdCBkZXNjcmliZXMgdGhlIGRhbWFnZT8iLCJvcHRpb25zIjpbIkEuIFRoZSBoaWdoLWZyZXF1ZW5jeSBjb21wb25lbnQgaXMgc2FmZWx5IGlnbm9yZWQgYW5kIGNhdXNlcyBubyBlZmZlY3QuIiwiQi4gVGhlIGhpZ2gtZnJlcXVlbmN5IGNvbXBvbmVudCBsb3NlcyBpdHMgaWRlbnRpdHkgYW5kIGFwcGVhcnMgYXMgYSBsb3dlci1mcmVxdWVuY3kgY29tcG9uZW50LiIsIkMuIFRoZSBzYW1wbGluZyBpbnRlcnZhbCBhdXRvbWF0aWNhbGx5IGJlY29tZXMgc21hbGxlciB0byBjYXB0dXJlIGl0LiIsIkQuIFRoZSBwcm9jZXNzb3IgY2FuIGFsd2F5cyByZWNvbnN0cnVjdCB0aGUgb3JpZ2luYWwgZnJlcXVlbmN5IGJ5IGludGVycG9sYXRpb24uIl0sImNvcnJlY3Rfb3B0aW9uIjoiQiIsImV4cGxhbmF0aW9uIjoiQWxpYXNpbmcgbWFrZXMgYSBoaWdoLWZyZXF1ZW5jeSBjb21wb25lbnQgbWFzcXVlcmFkZSBhcyBhIGxvd2VyIGZyZXF1ZW5jeSwgY29ycnVwdGluZyB0aGUgcHJvY2Vzc2VkIHNpZ25hbC4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJJdCBpcyBub3QgaGFybWxlc3M7IGl0IGNhbiBkaXN0b3J0IHRoZSBsb3dlci1mcmVxdWVuY3kgc3BlY3RydW0uIiwiQyI6IlRoZSBzYW1wbGluZyBpbnRlcnZhbCBpcyBjaG9zZW4gYnkgdGhlIHN5c3RlbTsgaXQgZG9lcyBub3QgYXV0b21hdGljYWxseSBhZGp1c3QuIiwiRCI6Ik9uY2UgYWxpYXNpbmcgaGFzIG9jY3VycmVkLCB0aGUgb3JpZ2luYWwgaWRlbnRpdHkgaXMgZ2VuZXJhbGx5IGxvc3QuIn0sImhpbnQiOiJBbGlhc2luZyBtZWFucyBmYWxzZSBpZGVudGl0eSwgbm90IHNpbXBsZSBkZWxldGlvbi4iLCJuZWVkc192aXN1YWwiOmZhbHNlLCJxdWVzdGlvbl9yb2xlIjoiY29yZV9jb25jZXB0X2NoZWNrIiwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfV19LHsiaWQiOiJjb250aW51b3VzX3RvX2Rpc2NyZXRlX2ZyZXF1ZW5jeSIsImxhYmVsIjoiQ29udGludW91cy10aW1lIGZyZXF1ZW5jeSBtYXBzIHRvIGRpc2NyZXRlLXRpbWUgZnJlcXVlbmN5IHRocm91Z2ggXFwoXFxPbWVnYSA9IFxcb21lZ2EgVFxcKSIsImltcG9ydGFuY2UiOiJoaWdoIiwiZXhhbV93ZWlnaHQiOiJtZWRpdW0iLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjF9LCJxdWVzdGlvbnMiOlt7ImlkIjoiZnJlcXVlbmN5X21hcHBpbmdfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IkEgc2ludXNvaWQgXFwoXFxjb3MoXFxvbWVnYSB0KVxcKSBpcyBzYW1wbGVkIGV2ZXJ5IFxcKFRcXCkgc2Vjb25kcy4gV2hpY2ggZXhwcmVzc2lvbiBnaXZlcyB0aGUgc2FtcGxlZCBzaW51c29pZD8iLCJvcHRpb25zIjpbIkEuIFxcKHhbbl0gPSBcXGNvcyhcXG9tZWdhIFQvbilcXCkiLCJCLiBcXCh4W25dID0gXFxjb3MoXFxvbWVnYSBuVClcXCkiLCJDLiBcXCh4W25dID0gXFxjb3MoXFxvbWVnYSB0VClcXCkiLCJELiBcXCh4W25dID0gXFxjb3Mobi9UKVxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkIiLCJleHBsYW5hdGlvbiI6IlNhbXBsaW5nIG1lYW5zIHN1YnN0aXR1dGluZyBcXCh0ID0gblRcXCksIHNvIFxcKFxcY29zKFxcb21lZ2EgdClcXCkgYmVjb21lcyBcXChcXGNvcyhcXG9tZWdhIG5UKVxcKS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJUaGUgc2FtcGxlIHRpbWUgaXMgXFwoblRcXCksIG5vdCBcXChUL25cXCkuIiwiQyI6IkFmdGVyIHNhbXBsaW5nLCB0aGUgaW5kZXBlbmRlbnQgdmFyaWFibGUgc2hvdWxkIGJlIFxcKG5cXCksIG5vdCBjb250aW51b3VzIHRpbWUgXFwodFxcKS4iLCJEIjoiVGhpcyBkcm9wcyB0aGUgb3JpZ2luYWwgYW5ndWxhciBmcmVxdWVuY3kgXFwoXFxvbWVnYVxcKS4ifSwiaGludCI6IlVzZSB0aGUgc2FtcGxpbmcgcnVsZSBcXCh0ID0gblRcXCkuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwicXVlc3Rpb25fcm9sZSI6ImZvcm11bGFfdHJpZ2dlcl9jaGVjayIsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9XX0seyJpZCI6InNhbXBsaW5nX2ludGVydmFsX2NvbmRpdGlvbiIsImxhYmVsIjoiVXNlIEVxLiAoNS4zOSkgdG8gZmluZCBtYXhpbXVtIHNhbXBsaW5nIGludGVydmFsIiwiaW1wb3J0YW5jZSI6ImhpZ2giLCJleGFtX3dlaWdodCI6ImhpZ2giLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjJ9LCJxdWVzdGlvbnMiOlt7ImlkIjoic2FtcGxpbmdfaW50ZXJ2YWxfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IkEgZGlzY3JldGUtdGltZSBvc2NpbGxhdG9yIG11c3QgZ2VuZXJhdGUgYSBzaW51c29pZCBvZiBcXCg1MFxcdGV4dHsga0h6fVxcKSB3aXRob3V0IGFsaWFzaW5nLiBXaGF0IGNvbmRpdGlvbiBtdXN0IHRoZSBzYW1wbGluZyBpbnRlcnZhbCBzYXRpc2Z5PyIsIm9wdGlvbnMiOlsiQS4gXFwoVCA8IDEwXFwsXFxtdVxcdGV4dHtzfVxcKSIsIkIuIFxcKFQgPiAxMFxcLFxcbXVcXHRleHR7c31cXCkiLCJDLiBcXChUIDwgMjBcXCxcXG11XFx0ZXh0e3N9XFwpIiwiRC4gXFwoVCA9IDUwXFwsXFxtdVxcdGV4dHtzfVxcKSJdLCJjb3JyZWN0X29wdGlvbiI6IkEiLCJleHBsYW5hdGlvbiI6IlVzaW5nIEVxLiAoNS4zOSk6IFxcKFQgPCAxLygyZl9oKSA9IDEvKDIgXFx0aW1lcyA1MHssfTAwMCkgPSAxMFxcLFxcbXVcXHRleHR7c31cXCkuIiwid3Jvbmdfb3B0aW9uX2V4cGxhbmF0aW9ucyI6eyJCIjoiQSBsYXJnZXIgc2FtcGxpbmcgaW50ZXJ2YWwgbWVhbnMgZmV3ZXIgc2FtcGxlcyBwZXIgc2Vjb25kLCBpbmNyZWFzaW5nIGFsaWFzaW5nIHJpc2suIiwiQyI6IlRoaXMgZm9yZ2V0cyB0aGUgZmFjdG9yIG9mIDIgaW4gdGhlIGRlbm9taW5hdG9yLiIsIkQiOiJUaGlzIGlzIHRoZSBwZXJpb2Qgb2YgYSAyMCBrSHogc2lnbmFsLCBub3QgdGhlIG5vLWFsaWFzaW5nIGxpbWl0IGhlcmUuIn0sImhpbnQiOiJVc2UgXFwoVCA8IDEvKDJmX2gpXFwpLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInF1ZXN0aW9uX3JvbGUiOiJmb3JtdWxhX3RyaWdnZXJfY2hlY2siLCJzYW1lX3BvaW50X3ZhcmlhbnQiOnRydWV9LHsiaWQiOiJzYW1wbGluZ19pbnRlcnZhbF9xMiIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiQSBzeXN0ZW0gc2FtcGxlcyB3aXRoIFxcKFQgPSAyNVxcLFxcbXVcXHRleHR7c31cXCkuIFdoYXQgaXMgdGhlIGhpZ2hlc3QgaW5wdXQgZnJlcXVlbmN5IHRoYXQgY2FuIGJlIHByb2Nlc3NlZCB3aXRob3V0IGFsaWFzaW5nPyIsIm9wdGlvbnMiOlsiQS4gXFwoMTBcXHRleHR7IGtIen1cXCkiLCJCLiBcXCgyMFxcdGV4dHsga0h6fVxcKSIsIkMuIFxcKDQwXFx0ZXh0eyBrSHp9XFwpIiwiRC4gXFwoMjVcXHRleHR7IGtIen1cXCkiXSwiY29ycmVjdF9vcHRpb24iOiJCIiwiZXhwbGFuYXRpb24iOiJFcS4gKDUuMzkpIGdpdmVzIFxcKGZfaCA8IDEvKDJUKSA9IDEvKDIgXFx0aW1lcyAyNSBcXHRpbWVzIDEwXnstNn0pID0gMS8oNTBcXCxcXG11XFx0ZXh0e3N9KSA9IDIwXFx0ZXh0eyBrSHp9XFwpLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6IlRoaXMgaXMgdG9vIGNvbnNlcnZhdGl2ZSBhbmQgY29tZXMgZnJvbSB1c2luZyBhbiBleHRyYSBmYWN0b3Igb2YgMi4iLCJDIjoiVGhpcyBmb3JnZXRzIHRoZSByZXF1aXJlZCBmYWN0b3Igb2YgMiBpbiB0aGUgZGVub21pbmF0b3IuIiwiRCI6IlRoaXMgaW5jb3JyZWN0bHkgdHJlYXRzIHRoZSBudW1lcmljYWwgdmFsdWUgb2YgXFwoVFxcKSBhcyBhIGZyZXF1ZW5jeSBsaW1pdC4ifSwiaGludCI6IkNvbnZlcnQgXFwoMjVcXCxcXG11XFx0ZXh0e3N9XFwpIHRvIHNlY29uZHMgYmVmb3JlIGNhbGN1bGF0aW5nLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInF1ZXN0aW9uX3JvbGUiOiJtaW5pX3RyYW5zZmVyX2NoZWNrIiwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfV19LHsiaWQiOiJzYW1wbGluZ19mcmVxdWVuY3lfY29uZGl0aW9uIiwibGFiZWwiOiJVc2UgRXEuICg1LjQwKTogXFwoZl9zID4gMmZfaFxcKSIsImltcG9ydGFuY2UiOiJoaWdoIiwiZXhhbV93ZWlnaHQiOiJoaWdoIiwibWFzdGVyeV9ydWxlIjp7ImNvcnJlY3Rfc3RyZWFrX3JlcXVpcmVkIjoyfSwicXVlc3Rpb25zIjpbeyJpZCI6InNhbXBsaW5nX2ZyZXF1ZW5jeV9xMSIsInR5cGUiOiJtdWx0aXBsZV9jaG9pY2UiLCJzdGVtIjoiQSBzaWduYWwgaGFzIGhpZ2hlc3QgZnJlcXVlbmN5IFxcKGZfaCA9IDhcXHRleHR7IGtIen1cXCkuIFdoaWNoIHNhbXBsaW5nIHJhdGUgc2F0aXNmaWVzIHRoZSB0ZXh0Ym9vayBuby1hbGlhc2luZyBjb25kaXRpb24/Iiwib3B0aW9ucyI6WyJBLiBcXChmX3MgPSA4XFx0ZXh0eyBrSHp9XFwpIiwiQi4gXFwoZl9zID0gMTJcXHRleHR7IGtIen1cXCkiLCJDLiBcXChmX3MgPSAxNlxcdGV4dHsga0h6fVxcKSIsIkQuIFxcKGZfcyA9IDIwXFx0ZXh0eyBrSHp9XFwpIl0sImNvcnJlY3Rfb3B0aW9uIjoiRCIsImV4cGxhbmF0aW9uIjoiRXEuICg1LjQwKSByZXF1aXJlcyBcXChmX3MgPiAyZl9oID0gMTZcXHRleHR7IGtIen1cXCkuIFRoZSBzYW1wbGluZyByYXRlIG11c3QgYmUgc3RyaWN0bHkgZ3JlYXRlciB0aGFuIHR3aWNlIHRoZSBoaWdoZXN0IGZyZXF1ZW5jeS4gT25seSBcXCgyMFxcdGV4dHsga0h6fVxcKSBzYXRpc2ZpZXMgdGhpcyBzdHJpY3QgaW5lcXVhbGl0eS4iLCJ3cm9uZ19vcHRpb25fZXhwbGFuYXRpb25zIjp7IkEiOiJUaGlzIGVxdWFscyBcXChmX2hcXCksIG5vdCB0d2ljZSBpdC4iLCJCIjoiVGhpcyBpcyBiZWxvdyBcXCgyZl9oID0gMTZcXHRleHR7IGtIen1cXCkuIiwiQyI6IlRoaXMgZXF1YWxzIFxcKDJmX2hcXCksIGJ1dCB0aGUgc2VjdGlvbiB1c2VzIGEgc3RyaWN0IGdyZWF0ZXItdGhhbiBjb25kaXRpb24g4oCUIGVxdWFsaXR5IGlzIG5vdCBzYWZlLiJ9LCJoaW50IjoiVGhlIHNhZmUgY29uZGl0aW9uIGlzIHN0cmljdGx5IG1vcmUgdGhhbiB0d28gc2FtcGxlcyBwZXIgY3ljbGUuIiwibmVlZHNfdmlzdWFsIjpmYWxzZSwicXVlc3Rpb25fcm9sZSI6ImNvbW1vbl90cmFwX2NoZWNrIiwic2FtZV9wb2ludF92YXJpYW50Ijp0cnVlfV19LHsiaWQiOiJhbnRpX2FsaWFzaW5nX2ZpbHRlciIsImxhYmVsIjoiQW50aS1hbGlhc2luZyBmaWx0ZXIgcHJvdGVjdHMgdGhlIGJhbmQgYmVsb3cgXFwoZl9zLzJcXCkiLCJpbXBvcnRhbmNlIjoibWVkaXVtIiwiZXhhbV93ZWlnaHQiOiJtZWRpdW0iLCJtYXN0ZXJ5X3J1bGUiOnsiY29ycmVjdF9zdHJlYWtfcmVxdWlyZWQiOjF9LCJxdWVzdGlvbnMiOlt7ImlkIjoiYW50aV9hbGlhc2luZ19maWx0ZXJfcTEiLCJ0eXBlIjoibXVsdGlwbGVfY2hvaWNlIiwic3RlbSI6IldoeSBpcyBhbiBhbnRpLWFsaWFzaW5nIGZpbHRlciBwbGFjZWQgYmVmb3JlIHNhbXBsaW5nPyIsIm9wdGlvbnMiOlsiQS4gVG8gYW1wbGlmeSBmcmVxdWVuY2llcyBhYm92ZSBcXChmX3MvMlxcKSBiZWZvcmUgdGhleSBhcmUgc2FtcGxlZC4iLCJCLiBUbyByZW1vdmUgY29tcG9uZW50cyBhYm92ZSBcXChmX3MvMlxcKSBzbyB0aGV5IGRvIG5vdCBtYXNxdWVyYWRlIGFzIGxvd2VyIGZyZXF1ZW5jaWVzLiIsIkMuIFRvIGNvbnZlcnQgZGlzY3JldGUtdGltZSBzYW1wbGVzIGJhY2sgaW50byBjb250aW51b3VzLXRpbWUgc2lnbmFscy4iLCJELiBUbyBtYWtlIHRoZSBzYW1wbGluZyBpbnRlcnZhbCBsYXJnZXIgd2l0aG91dCBhbnkgY29uc2VxdWVuY2UuIl0sImNvcnJlY3Rfb3B0aW9uIjoiQiIsImV4cGxhbmF0aW9uIjoiVGhlIGZpbHRlciByZW1vdmVzIGhpZ2gtZnJlcXVlbmN5IGNvbnRlbnQgdGhhdCB3b3VsZCBvdGhlcndpc2UgYWxpYXMgaW50byB0aGUgdXNlZnVsIGxvd2VyLWZyZXF1ZW5jeSBiYW5kIGFmdGVyIHNhbXBsaW5nLiIsIndyb25nX29wdGlvbl9leHBsYW5hdGlvbnMiOnsiQSI6IkFtcGxpZnlpbmcgdGhvc2UgZnJlcXVlbmNpZXMgd291bGQgbWFrZSBhbGlhc2luZyBjb3JydXB0aW9uIHdvcnNlLiIsIkMiOiJUaGF0IGlzIHJlY29uc3RydWN0aW9uLCBub3QgYW50aS1hbGlhcyBmaWx0ZXJpbmcgYmVmb3JlIHNhbXBsaW5nLiIsIkQiOiJBIGxhcmdlciBzYW1wbGluZyBpbnRlcnZhbCByZWR1Y2VzIHNhbXBsaW5nIHJhdGUgYW5kIGluY3JlYXNlcyBhbGlhc2luZyByaXNrLiJ9LCJoaW50IjoiVGhlIGFudGktYWxpYXNpbmcgZmlsdGVyIGFjdHMgYmVmb3JlIHRoZSBzYW1wbGVyLiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInF1ZXN0aW9uX3JvbGUiOiJjb3JlX2NvbmNlcHRfY2hlY2siLCJzYW1lX3BvaW50X3ZhcmlhbnQiOmZhbHNlfSx7ImlkIjoiYW50aV9hbGlhc2luZ19maWx0ZXJfcTIiLCJ0eXBlIjoic2hvcnRfYW5zd2VyIiwic3RlbSI6IkEgY2xhc3NtYXRlIHNheXMsICdJZiBhbGlhc2luZyBoYXBwZW5zLCB3ZSBjYW4ganVzdCB1c2UgYSBmaWx0ZXIgYWZ0ZXJ3YXJkIHRvIHJlY292ZXIgdGhlIHRydWUgaGlnaCBmcmVxdWVuY3kuJyBFeHBsYWluIHdoeSB0aGlzIGlzIHdyb25nLiIsImlkZWFsX2Fuc3dlciI6IkFmdGVyIGFsaWFzaW5nLCB0aGUgaGlnaC1mcmVxdWVuY3kgY29tcG9uZW50IGhhcyBhbHJlYWR5IHRha2VuIG9uIGEgbG93ZXItZnJlcXVlbmN5IHNhbXBsZWQgaWRlbnRpdHkuIFRoZSBvcmlnaW5hbCBmcmVxdWVuY3kgaW5mb3JtYXRpb24gaXMgYW1iaWd1b3VzIG9yIGxvc3QsIHNvIGZpbHRlcmluZyBhZnRlcndhcmQgY2Fubm90IHJlbGlhYmx5IHJlY292ZXIgaXQuIFRoZSBhbnRpLWFsaWFzaW5nIGZpbHRlciBtdXN0IHJlbW92ZSByaXNreSBjb21wb25lbnRzIGJlZm9yZSBzYW1wbGluZy4iLCJncmFkaW5nX3J1YnJpYyI6WyJNdXN0IHN0YXRlIHRoYXQgYWxpYXNpbmcgaGFwcGVucyBkdXJpbmcgc2FtcGxpbmciLCJNdXN0IHNheSB0aGUgaGlnaC1mcmVxdWVuY3kgaWRlbnRpdHkgaXMgbG9zdCBvciBiZWNvbWVzIGFtYmlndW91cyIsIk11c3QgaWRlbnRpZnkgcHJlLXNhbXBsaW5nIGFudGktYWxpYXMgZmlsdGVyaW5nIGFzIHRoZSBjb3JyZWN0IHByZXZlbnRpb24iXSwiZXhwbGFuYXRpb24iOiJUaGlzIGNoZWNrcyB3aGV0aGVyIHRoZSBzdHVkZW50IHVuZGVyc3RhbmRzIGFudGktYWxpYXNpbmcgYXMgcHJldmVudGlvbiwgbm90IHBvc3QtcHJvY2Vzc2luZyByZXBhaXIuIiwiaGludCI6IkFzayB3aGV0aGVyIHRoZSBzYW1wbGVkIHNlcXVlbmNlIHN0aWxsIGNvbnRhaW5zIGVub3VnaCBpbmZvcm1hdGlvbiB0byBkaXN0aW5ndWlzaCB0aGUgb3JpZ2luYWwgZnJlcXVlbmN5LiIsIm5lZWRzX3Zpc3VhbCI6ZmFsc2UsInF1ZXN0aW9uX3JvbGUiOiJjb21tb25fdHJhcF9jaGVjayIsInNhbWVfcG9pbnRfdmFyaWFudCI6ZmFsc2V9XX1dfQ==" style="display:none;"></div>%%KC_END%%
