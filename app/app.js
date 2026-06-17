@@ -16096,6 +16096,31 @@ function inlineFormat(text) {
       feedbackEl.style.display = 'block';
       feedbackEl.innerHTML = '<div style="padding:12px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:10px;">Nice. The quiz engine thinks you have passed the current section\'s major knowledge points. You can still use Haiku below to ask about any item.</div>';
       if(document.getElementById('kcAskWrap')) document.getElementById('kcAskWrap').style.display = 'flex';
+      // Issue 8 fix: don't leave the "Next Knowledge Point" button as a no-op.
+      // Mark completion + repurpose the button to "Next Topic" so the user can
+      // advance to the next sub-sub-chapter without leaving the modal manually.
+      try { window.__ftutorMarkCompleted && window.__ftutorMarkCompleted(kcSectionId, kcSectionTitle); } catch(_) {}
+      const _nextBtn = document.getElementById('kcNextBtn');
+      if (_nextBtn) {
+        const nextSub = (typeof window.__ftutorPeekNextSubsection === 'function')
+          ? window.__ftutorPeekNextSubsection(kcSectionId, kcSectionTitle)
+          : null;
+        _nextBtn.dataset.kcAtEnd = '1';
+        _nextBtn.style.display = 'inline-block';
+        if (nextSub) {
+          _nextBtn.textContent = 'Next Topic →';
+          _nextBtn.title = `Continue to: ${nextSub.title}`;
+          _nextBtn.style.background = '#38BDF8';
+          _nextBtn.style.borderColor = '#0284C7';
+          _nextBtn.style.boxShadow = '0 4px 0px #0284C7';
+        } else {
+          _nextBtn.textContent = 'Back to Syllabus';
+          _nextBtn.title = 'You finished this lesson — return to the syllabus.';
+          _nextBtn.style.background = '#10B981';
+          _nextBtn.style.borderColor = '#059669';
+          _nextBtn.style.boxShadow = '0 4px 0px #059669';
+        }
+      }
       renderProgress();
       clearQuizProgress();
       return;
@@ -16451,6 +16476,22 @@ function inlineFormat(text) {
   }
   if (stNextBtn) {
     stNextBtn.addEventListener('click', () => {
+      // Issue 8: after mastery-complete, the same button advances to the next
+      // sub-sub-chapter (or returns to the syllabus when none is left).
+      if (stNextBtn.dataset.kcAtEnd === '1') {
+        try { saveQuizProgress(); } catch(_) {}
+        modal.style.display = 'none';
+        // Reset button so the next quiz opens with the default look.
+        stNextBtn.dataset.kcAtEnd = '';
+        stNextBtn.style.background = '#10b981';
+        stNextBtn.style.borderColor = '#059669';
+        stNextBtn.style.boxShadow = '0 4px 0px #059669';
+        stNextBtn.textContent = 'Next Knowledge Point';
+        stNextBtn.style.display = 'none';
+        const advance = window.__ftutorAdvanceSubsection;
+        if (typeof advance === 'function') advance(kcSectionId, kcSectionTitle);
+        return;
+      }
       const state = kcPointStates[kcCurrentPointId] || { passed: false };
       if (state.passed) {
         advanceToNextPoint();
@@ -19727,3 +19768,381 @@ function updateRecentConversations(source = 'unknown') {
   `;
   document.head.appendChild(style);
 })();
+
+// ============================================================
+// UI Friction Fix Pack v1.2.3 (2026-06-17)
+// Issues 1, 2, 3, 4, 5 — see /mnt/d/Github/fourier-tutor-agent/CLAUDE.md
+// ============================================================
+(function ftutorUiFrictionFixV123() {
+  // ── Issue 5: persistent completion store ──────────────────────────
+  const STORE_KEY = 'aquariusCompletedSubsections.v1';
+  const COMPLETION_EVENT = 'ftutor:completion-changed';
+
+  function loadCompletionSet() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      return new Set(raw ? JSON.parse(raw) : []);
+    } catch (_) { return new Set(); }
+  }
+  function saveCompletionSet(set) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(Array.from(set))); } catch(_) {}
+    window.dispatchEvent(new CustomEvent(COMPLETION_EVENT));
+  }
+  function variantsFor(value) {
+    const out = new Set();
+    const raw = String(value || '').trim();
+    if (!raw) return out;
+    out.add(raw);
+    try {
+      const parsed = parseSectionTitleParts(raw, raw, raw);
+      if (parsed && parsed.code) out.add(parsed.code);
+    } catch(_) {}
+    return out;
+  }
+  function markCompleted(idOrTitle, titleHint) {
+    if (!idOrTitle && !titleHint) return;
+    const set = loadCompletionSet();
+    let changed = false;
+    [idOrTitle, titleHint].forEach(v => {
+      variantsFor(v).forEach(key => {
+        if (!set.has(key)) { set.add(key); changed = true; }
+      });
+    });
+    if (changed) saveCompletionSet(set);
+  }
+  function isCompleted(idOrTitle, titleHint) {
+    const set = loadCompletionSet();
+    if (!set.size) return false;
+    let hit = false;
+    [idOrTitle, titleHint].forEach(v => {
+      variantsFor(v).forEach(key => { if (set.has(key)) hit = true; });
+    });
+    return hit;
+  }
+  window.__ftutorMarkCompleted = markCompleted;
+  window.__ftutorIsCompleted = isCompleted;
+
+  // ── Apply completion indicators to the syllabus DOM ───────────────
+  function applyCompletionIndicators() {
+    const root = document.getElementById('courseSyllabus');
+    if (!root) return;
+    const data = (typeof syllabusData !== 'undefined' ? syllabusData : window.syllabusData) || [];
+
+    root.querySelectorAll('.syllabus-subsection').forEach(btn => {
+      const sub = btn.getAttribute('data-subsection') || btn.textContent.trim();
+      btn.classList.toggle('is-completed', isCompleted(sub, sub));
+    });
+    root.querySelectorAll('.syllabus-section-wrap').forEach(wrap => {
+      const sectionBtn = wrap.querySelector('.syllabus-section');
+      if (!sectionBtn) return;
+      const subs = Array.from(wrap.querySelectorAll('.syllabus-subsection'));
+      let done = false;
+      if (subs.length) {
+        done = subs.every(s => s.classList.contains('is-completed'));
+      } else {
+        const t = sectionBtn.getAttribute('data-section') || sectionBtn.textContent.trim();
+        done = isCompleted(t, t);
+      }
+      sectionBtn.classList.toggle('is-completed', done);
+    });
+    const items = root.querySelectorAll('.syllabus-item');
+    data.forEach((chapter, chIdx) => {
+      const item = items[chIdx];
+      if (!item) return;
+      const chBtn = item.querySelector('.syllabus-chapter');
+      if (!chBtn) return;
+      const sections = (chapter.sections || []).map(s => typeof s === 'string' ? { title: s, subsections: [] } : s);
+      let total = 0, done = 0;
+      sections.forEach(sec => {
+        const subs = (sec.subsections && sec.subsections.length) ? sec.subsections : [sec.title];
+        subs.forEach(t => {
+          total += 1;
+          if (isCompleted(t, t)) done += 1;
+        });
+      });
+      const old = chBtn.querySelector('.chapter-progress');
+      if (old) old.remove();
+      if (total > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'chapter-progress';
+        if (done === total) badge.classList.add('is-done');
+        badge.textContent = done === total ? '✓ done' : (done + '/' + total);
+        chBtn.appendChild(badge);
+      }
+      chBtn.classList.toggle('is-completed', total > 0 && done === total);
+    });
+  }
+  window.__ftutorApplyCompletionIndicators = applyCompletionIndicators;
+  window.addEventListener(COMPLETION_EVENT, applyCompletionIndicators);
+
+  // Re-wrap renderSyllabus so post-render we re-apply indicators + chapter hooks.
+  if (typeof renderSyllabus === 'function') {
+    const _origRenderSyllabus = renderSyllabus;
+    function wrappedRenderSyllabus() {
+      const r = _origRenderSyllabus.apply(this, arguments);
+      try { applyCompletionIndicators(); } catch(e) { console.warn('[ftutor] completion-render failed', e); }
+      try { patchChapterClicks(); } catch(e) { console.warn('[ftutor] chapter hook failed', e); }
+      return r;
+    }
+    try { renderSyllabus = wrappedRenderSyllabus; } catch(_) {}
+    window.renderSyllabus = wrappedRenderSyllabus;
+  }
+  // Initial pass for the syllabus already rendered at module init.
+  setTimeout(() => {
+    applyCompletionIndicators();
+    patchChapterClicks();
+  }, 250);
+
+  // ── Issue 2: Chapter click also opens first section overview ──────
+  function patchChapterClicks() {
+    const root = document.getElementById('courseSyllabus');
+    if (!root) return;
+    const data = (typeof syllabusData !== 'undefined' ? syllabusData : window.syllabusData) || [];
+    root.querySelectorAll('.syllabus-chapter').forEach(btn => {
+      if (btn.dataset.ftutorChapterHook === '1') return;
+      btn.dataset.ftutorChapterHook = '1';
+      btn.addEventListener('click', () => {
+        const chIdx = Number(btn.getAttribute('data-idx'));
+        const chapter = data[chIdx];
+        if (!chapter || !Array.isArray(chapter.sections) || !chapter.sections.length) return;
+        const first = chapter.sections[0];
+        const firstObj = typeof first === 'string' ? { title: first, subsections: [] } : first;
+        if (!firstObj || !firstObj.title) return;
+        try {
+          if (typeof openChapterOverviewMode === 'function') {
+            openChapterOverviewMode(firstObj.title, firstObj.title, Array.isArray(firstObj.subsections) ? firstObj.subsections : []);
+          }
+        } catch(e) { console.warn('[ftutor] chapter overview open failed', e); }
+      });
+    });
+  }
+
+  // ── Issue 4: Cross-subsection / cross-section advance ─────────────
+  function locateSubsection(idOrTitle, titleHint) {
+    const data = (typeof syllabusData !== 'undefined' ? syllabusData : window.syllabusData) || [];
+    const candidates = [idOrTitle, titleHint].filter(Boolean).map(v => String(v).trim());
+    function matches(value) {
+      return candidates.some(c => {
+        if (!c) return false;
+        if (c === value) return true;
+        try {
+          const pV = parseSectionTitleParts(value, value, value);
+          const pC = parseSectionTitleParts(c, c, c);
+          return pV && pC && pV.code && pC.code && pV.code === pC.code;
+        } catch(_) { return false; }
+      });
+    }
+    for (let ci = 0; ci < data.length; ci++) {
+      const sections = (data[ci].sections || []).map(s => typeof s === 'string' ? { title: s, subsections: [] } : s);
+      for (let si = 0; si < sections.length; si++) {
+        const sec = sections[si];
+        const subs = Array.isArray(sec.subsections) ? sec.subsections : [];
+        for (let i = 0; i < subs.length; i++) {
+          if (matches(subs[i])) {
+            return { chapterIdx: ci, sectionIdx: si, subIdx: i, level: 'sub' };
+          }
+        }
+        if (matches(sec.title)) {
+          return { chapterIdx: ci, sectionIdx: si, subIdx: -1, level: 'section' };
+        }
+      }
+    }
+    return null;
+  }
+  function pickAdjacentSubsection(loc, direction) {
+    if (!loc) return null;
+    const data = (typeof syllabusData !== 'undefined' ? syllabusData : window.syllabusData) || [];
+    let { chapterIdx, sectionIdx, subIdx } = loc;
+    const safety = 256;
+    let n = 0;
+    while (chapterIdx >= 0 && chapterIdx < data.length && n++ < safety) {
+      const sections = (data[chapterIdx].sections || []).map(s => typeof s === 'string' ? { title: s, subsections: [] } : s);
+      while (sectionIdx >= 0 && sectionIdx < sections.length) {
+        const sec = sections[sectionIdx];
+        const subs = Array.isArray(sec.subsections) ? sec.subsections : [];
+        const nextSubIdx = subIdx + direction;
+        if (nextSubIdx >= 0 && nextSubIdx < subs.length) {
+          return {
+            title: subs[nextSubIdx],
+            sectionTitle: sec.title,
+            sectionSubsections: subs.slice(),
+            chapterIdx, sectionIdx, subIdx: nextSubIdx
+          };
+        }
+        // step to next/prev section
+        sectionIdx += direction;
+        if (direction > 0) {
+          subIdx = -1;
+        } else {
+          const ns = sections[sectionIdx] && Array.isArray(sections[sectionIdx].subsections) ? sections[sectionIdx].subsections.length : 0;
+          subIdx = ns; // so subIdx-1 = last subsection
+        }
+      }
+      chapterIdx += direction;
+      if (chapterIdx >= 0 && chapterIdx < data.length) {
+        const nsLen = (data[chapterIdx].sections || []).length;
+        sectionIdx = direction > 0 ? 0 : nsLen - 1;
+        if (direction > 0) {
+          subIdx = -1;
+        } else {
+          const lastSec = data[chapterIdx].sections[nsLen - 1];
+          const lastSecObj = typeof lastSec === 'string' ? { subsections: [] } : (lastSec || { subsections: [] });
+          subIdx = Array.isArray(lastSecObj.subsections) ? lastSecObj.subsections.length : 0;
+        }
+      }
+    }
+    return null;
+  }
+  function peekNextSubsection(sectionId, sectionTitle) {
+    const loc = locateSubsection(sectionId, sectionTitle);
+    return pickAdjacentSubsection(loc, +1);
+  }
+  function advanceSubsection(sectionId, sectionTitle, direction) {
+    const loc = locateSubsection(sectionId, sectionTitle);
+    const next = pickAdjacentSubsection(loc, direction);
+    if (!next) return false;
+    try {
+      const parentContext = (typeof findParentOverviewContextForSubsection === 'function')
+        ? findParentOverviewContextForSubsection(next.title, next.title)
+        : null;
+      if (typeof openLearnModeKeepToc === 'function') {
+        openLearnModeKeepToc(next.title, next.title, parentContext);
+      } else if (typeof openLearnMode === 'function') {
+        openLearnMode(next.title, next.title, [], { parentOverviewContext: parentContext });
+      }
+      return true;
+    } catch (e) { console.warn('[ftutor] advanceSubsection failed', e); return false; }
+  }
+  window.__ftutorPeekNextSubsection = peekNextSubsection;
+  window.__ftutorAdvanceSubsection = (id, title) => advanceSubsection(id, title, +1);
+  window.__ftutorRetreatSubsection = (id, title) => advanceSubsection(id, title, -1);
+
+  // ── Issue 1 + 4: bottom pager wiring ──────────────────────────────
+  const pager = document.getElementById('learnExplainPager');
+  const pagerPrevBtn = document.getElementById('learnPagerPrevBtn');
+  const pagerNextBtn = document.getElementById('learnPagerNextBtn');
+  const pagerPos = document.getElementById('learnPagerPosition');
+  const pagerNextLabel = document.getElementById('learnPagerNextLabel');
+
+  function getKnowledgePointState() {
+    const points = (typeof learnKnowledgePoints !== 'undefined' ? learnKnowledgePoints : (window.learnKnowledgePoints || []));
+    const idx = (typeof currentKnowledgePointIndex !== 'undefined') ? currentKnowledgePointIndex : (window.currentKnowledgePointIndex || 0);
+    return { points: Array.isArray(points) ? points : [], idx: Number(idx) || 0 };
+  }
+  function inLessonMode() {
+    const body = document.getElementById('learnBody');
+    if (!body) return false;
+    if (body.classList.contains('chapter-overview-active')) return false;
+    if (body.classList.contains('chapter-overview-split-active')) return false;
+    if (body.classList.contains('hidden')) return false;
+    return true;
+  }
+  function currentSectionRefs() {
+    const id = (typeof learnSectionId !== 'undefined' ? learnSectionId : window.learnSectionId) || '';
+    const title = (typeof learnSectionTitle !== 'undefined' ? learnSectionTitle : window.learnSectionTitle) || '';
+    return { id, title };
+  }
+  function refreshPager() {
+    if (!pager || !pagerPrevBtn || !pagerNextBtn) return;
+    const learnView = document.getElementById('learnView');
+    const learnVisible = learnView && !learnView.classList.contains('hidden') && inLessonMode();
+    if (!learnVisible) {
+      pager.classList.add('hidden');
+      return;
+    }
+    const { points, idx } = getKnowledgePointState();
+    const total = Math.max(points.length, 1);
+    const cur = Math.min(Math.max(idx, 0), total - 1);
+    pager.classList.remove('hidden');
+    if (pagerPos) pagerPos.textContent = (cur + 1) + ' / ' + total;
+    pagerPrevBtn.disabled = cur <= 0;
+    const atEnd = cur >= total - 1;
+    const { id, title } = currentSectionRefs();
+    if (atEnd) {
+      const next = peekNextSubsection(id, title);
+      if (next) {
+        pagerNextBtn.disabled = false;
+        pagerNextBtn.classList.add('is-next-topic');
+        if (pagerNextLabel) pagerNextLabel.textContent = 'Next topic';
+        pagerNextBtn.title = 'Continue to: ' + next.title;
+      } else {
+        pagerNextBtn.disabled = true;
+        pagerNextBtn.classList.remove('is-next-topic');
+        if (pagerNextLabel) pagerNextLabel.textContent = 'End';
+        pagerNextBtn.title = 'You finished the syllabus.';
+      }
+    } else {
+      pagerNextBtn.disabled = false;
+      pagerNextBtn.classList.remove('is-next-topic');
+      if (pagerNextLabel) pagerNextLabel.textContent = 'Next';
+      pagerNextBtn.title = 'Next page';
+    }
+  }
+  window.__ftutorRefreshPager = refreshPager;
+
+  if (pagerPrevBtn) {
+    pagerPrevBtn.addEventListener('click', () => {
+      const moved = (typeof moveLearnKnowledgePoint === 'function') ? moveLearnKnowledgePoint(-1) : false;
+      if (!moved) {
+        const { id, title } = currentSectionRefs();
+        advanceSubsection(id, title, -1);
+      }
+      if (typeof animateLectureNavButton === 'function') animateLectureNavButton(-1);
+      setTimeout(refreshPager, 60);
+    });
+  }
+  if (pagerNextBtn) {
+    pagerNextBtn.addEventListener('click', () => {
+      const moved = (typeof moveLearnKnowledgePoint === 'function') ? moveLearnKnowledgePoint(1) : false;
+      if (!moved) {
+        const { id, title } = currentSectionRefs();
+        if (id || title) markCompleted(id, title);
+        advanceSubsection(id, title, +1);
+      }
+      if (typeof animateLectureNavButton === 'function') animateLectureNavButton(1);
+      setTimeout(refreshPager, 60);
+    });
+  }
+
+  // Watch learn view for class/state changes; light interval to catch
+  // text-only updates (page indicator changes don't fire mutations
+  // we observe otherwise).
+  const learnViewEl = document.getElementById('learnView');
+  if (learnViewEl) {
+    const mo = new MutationObserver(() => refreshPager());
+    mo.observe(learnViewEl, { attributes: true, attributeFilter: ['class', 'data-panel-focus'], subtree: true });
+  }
+  setInterval(refreshPager, 700);
+
+  // Mark a subsection complete the moment the user reaches the last page.
+  function maybeMarkAtEnd() {
+    if (!inLessonMode()) return;
+    const { points, idx } = getKnowledgePointState();
+    if (!points.length) return;
+    if (idx >= points.length - 1) {
+      const { id, title } = currentSectionRefs();
+      if (id || title) markCompleted(id, title);
+    }
+  }
+  setInterval(maybeMarkAtEnd, 1500);
+
+  // ── Issue 3: Auto-open syllabus panel after login ─────────────────
+  function autoOpenSyllabus() {
+    try {
+      const panel = document.getElementById('sidebarSyllabusPanel');
+      const welcome = document.getElementById('welcomeScreen');
+      if (!panel || !welcome) return;
+      if (welcome.classList.contains('hidden')) return;
+      if (typeof toggleSyllabusPanel === 'function') toggleSyllabusPanel(true);
+    } catch(_) {}
+  }
+  const welcomeEl = document.getElementById('welcomeScreen');
+  if (welcomeEl) {
+    const wm = new MutationObserver(() => {
+      if (!welcomeEl.classList.contains('hidden')) autoOpenSyllabus();
+    });
+    wm.observe(welcomeEl, { attributes: true, attributeFilter: ['class'] });
+    setTimeout(autoOpenSyllabus, 400);
+  }
+})();
+
