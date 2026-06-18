@@ -12588,7 +12588,6 @@ function stripDuplicatePageHeading(innerHtml, displayTitle) {
 
 function buildLessonPageFrameHtml(innerHtml, block, index, total) {
   const rawType = compactWhitespace(block?.type || 'lesson').toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
-  const pageLabel = `${index + 1} / ${Math.max(total || 1, 1)}`;
   const extraHtml = String(block?.extraHtml || '').trim();
   const displayTitle = getLessonPageDisplayTitle(block, index);
   const pageBodyHtml = displayTitle ? stripDuplicatePageHeading(innerHtml, displayTitle) : String(innerHtml || '');
@@ -12602,9 +12601,6 @@ function buildLessonPageFrameHtml(innerHtml, block, index, total) {
         ${pageBodyHtml || '<p class="ghost">No explanation available.</p>'}
       </div>
       ${extraHtml ? `<div class="lesson-page-extra">${extraHtml}</div>` : ''}
-      <div class="lesson-page-footer" aria-label="Lesson page ${pageLabel}">
-        <span>${pageLabel}</span>
-      </div>
     </article>
   `;
 }
