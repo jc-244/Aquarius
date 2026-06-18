@@ -35731,6 +35731,22 @@ body {
   pointer-events: none !important;
 }
 
+/* Darker backdrop behind the flipping leaf so its corner has real contrast
+   against the receiving page (which is itself cream). Lives on ::after so we
+   don't disturb the existing leaf gradient on ::before. */
+#learnView #learnExplainContent.learn-page-turn-active::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 75 !important;
+  pointer-events: none !important;
+  border-radius: 34px !important;
+  background:
+    radial-gradient(ellipse at left center, rgba(36,24,12,0.34), rgba(36,24,12,0.18) 55%, rgba(36,24,12,0.08) 100%),
+    linear-gradient(180deg, rgba(28,20,10,0.20), rgba(28,20,10,0.28)) !important;
+  animation: learnPageTurnBackdrop 720ms ease-out both !important;
+}
+
 #learnView #learnExplainContent.learn-page-turn-active::before {
   content: "" !important;
   position: absolute !important;
@@ -35738,16 +35754,26 @@ body {
   z-index: 80 !important;
   pointer-events: none !important;
   border-radius: 34px !important;
+  /* Darker book-paper tone + stronger spine shading so the curling edge
+     reads clearly against the receiving page underneath. */
   background:
-    linear-gradient(90deg, rgba(255,255,255,0.03), rgba(241,228,202,0.92) 44%, rgba(255,255,255,0.98) 57%, rgba(183,158,121,0.16)),
-    repeating-linear-gradient(0deg, rgba(15,23,42,0.035) 0 1px, transparent 1px 32px),
-    #fffdf7 !important;
+    linear-gradient(90deg, rgba(70,48,20,0.18), rgba(212,189,148,0.96) 44%, rgba(238,222,192,0.99) 57%, rgba(118,90,52,0.32)),
+    repeating-linear-gradient(0deg, rgba(15,23,42,0.06) 0 1px, transparent 1px 32px),
+    #f1e1bf !important;
   box-shadow:
-    0 26px 60px rgba(15,23,42,0.22),
-    inset 18px 0 34px rgba(88,63,35,0.13),
-    inset -14px 0 28px rgba(255,255,255,0.7) !important;
+    0 32px 70px rgba(15,23,42,0.42),
+    0 0 0 1px rgba(82,58,28,0.28),
+    inset 22px 0 40px rgba(72,50,22,0.28),
+    inset -18px 0 32px rgba(255,248,228,0.55) !important;
   transform-origin: left center !important;
   backface-visibility: hidden !important;
+}
+
+@keyframes learnPageTurnBackdrop {
+  0%   { opacity: 0; }
+  18%  { opacity: 1; }
+  82%  { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 #learnView #learnExplainContent.learn-page-turn-next::before {
@@ -35921,6 +35947,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   #learnView #learnExplainContent.learn-page-turn-active::before,
+  #learnView #learnExplainContent.learn-page-turn-active::after,
   #learnView #learnExplainContent.learn-page-turn-next > *,
   #learnView #learnExplainContent.learn-page-turn-prev > *,
   #learnView #learnExplainContent.learn-page-turn-reveal > * {

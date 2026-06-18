@@ -12910,6 +12910,11 @@ function ensureOverviewPreludePagination(markdown = '', chooserHtml = '') {
   return true;
 }
 
+// Returns false when the move was a no-op. The "no-op" reason is overloaded:
+// it can mean (a) no knowledge points loaded, (b) a page-turn animation is in
+// flight, or (c) we're already at the boundary. Callers MUST NOT treat false
+// as "at boundary" — gate boundary-triggered actions (e.g. cross-subsection
+// advance) on an explicit index check first.
 function moveLearnKnowledgePoint(delta) {
   if (!learnKnowledgePoints.length) return false;
   if (isLearnPageTurning) return false;
@@ -20111,29 +20116,30 @@ function updateRecentConversations(source = 'unknown') {
   }
   window.__ftutorRefreshPager = refreshPager;
 
-  if (pagerPrevBtn) {
-    pagerPrevBtn.addEventListener('click', () => {
-      const moved = (typeof moveLearnKnowledgePoint === 'function') ? moveLearnKnowledgePoint(-1) : false;
-      if (!moved) {
+  // Cross-topic advance must trigger ONLY at the true boundary, never as a
+  // side-effect of clicking during a page-turn animation. The handler checks
+  // the boundary explicitly instead of relying on moveLearnKnowledgePoint's
+  // overloaded false return (see its JSDoc).
+  function bindPager(btn, delta) {
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      if (isLearnPageTurning) return;
+      const { points, idx } = getKnowledgePointState();
+      const total = Math.max(points.length, 1);
+      const atEdge = delta < 0 ? idx <= 0 : idx >= total - 1;
+      if (!atEdge) {
+        moveLearnKnowledgePoint(delta);
+      } else {
         const { id, title } = currentSectionRefs();
-        advanceSubsection(id, title, -1);
+        if (delta > 0 && (id || title)) markCompleted(id, title);
+        advanceSubsection(id, title, delta);
       }
-      if (typeof animateLectureNavButton === 'function') animateLectureNavButton(-1);
+      animateLectureNavButton(delta);
       refreshPager();
     });
   }
-  if (pagerNextBtn) {
-    pagerNextBtn.addEventListener('click', () => {
-      const moved = (typeof moveLearnKnowledgePoint === 'function') ? moveLearnKnowledgePoint(1) : false;
-      if (!moved) {
-        const { id, title } = currentSectionRefs();
-        if (id || title) markCompleted(id, title);
-        advanceSubsection(id, title, +1);
-      }
-      if (typeof animateLectureNavButton === 'function') animateLectureNavButton(1);
-      refreshPager();
-    });
-  }
+  bindPager(pagerPrevBtn, -1);
+  bindPager(pagerNextBtn, +1);
 
   // Observe only the learn-body class flag (lesson vs chapter-overview mode)
   // and the lecture page indicator's text — NOT the whole #learnView subtree.
