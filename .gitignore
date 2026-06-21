@@ -38,3 +38,11 @@ workspace/memory/visual-audit-*/
 
 # UI smoke run artifact (regenerated each run by tools/smoke.js)
 tools/smoke-report.md
+
+# Visual-diff harness — baseline/ is committed, current/ + diff/ + report are ephemeral
+tools/visual-current/
+tools/visual-diff/
+tools/visual-diff-report.md
+
+# CSS unused-selector scan output — regenerated each run by tools/scan-unused-css.js
+tools/unused-css-report.md
