@@ -2,19 +2,36 @@
 
 Owner: FlyM1ss
 Started: 2026-06-19
-Status: Phase 0 merged (#15). Phase 1 complete (#17, #20-29). Phase 2 — 6
-of 7 items merged on 2026-06-20: #12 mistake-notebook (#30), #14
-preference-profile (#31), #15 attachments (#32), #16 clerk-auth (#33),
-#17 recent-conversations (#34), and #13 Homework deletion (#36) after
-the owner ratified the aggressive delete-all path. Version 1.3.5 →
-1.4.1. Only #19 Glass + chapter-overview CSS remains deferred (13
-scattered regions across style.css with interleaved non-glass rules,
-needs visual-diff verification beyond smoke). app.js: 17,650 → 14,434
-(-3,216, -18.2%). style.css: 45,286 → 44,845 (-441).
+Last refreshed: 2026-06-22 (after PR #43)
+Status:
+
+- **Phase 0** merged (#15).
+- **Phase 1** complete (#17, #20–29).
+- **Phase 2** — 6 of 7 items merged on 2026-06-20. Only #19
+  (Glass + chapter-overview CSS, 16,402 lines) and #18 (interactive
+  demos subsystem, ~1,500 lines after #21) remain — both unblocked but
+  deferred until the visual-diff harness expands beyond 9 views.
+- **Phase 3 Pass 1** complete on 2026-06-21..22 — 6 PRs merged:
+  - #38 (PR #21) hydrateInteractiveDemos split into 19 family modules.
+  - 589be97 visual-diff baseline refresh + 3 lesson-chrome views.
+  - #39 (PR #22) runtime inject*Styles → static `runtime-collapsed.css`.
+  - #40 / #41 / #42 (PR #20a/b/c Pass 1) orphan-selector strips.
+  - #43 (PR #23) dispatcher arms → `INTERACTIVE_DEMO_FAMILY_RENDERERS`
+    lookup table.
+- **Phase 3 Pass 2** is the active frontier — see §"Roadmap from
+  here". Deferred punch-list lives in `docs/phase3_deferred.md`.
+
+Cumulative deltas through end of Phase 3 Pass 1:
+
+- `app/app.js`: 17,650 → 9,384 (−8,266, **−46.8%**).
+- `app/style.css`: 45,286 → 44,680 (−606).
+- `app/index.html`: 3,153 → 1,652 (−1,501, ~48% — Phase 1 #11 extract).
 
 This is the single source of truth for the multi-phase refactor of the
 Fourier Tutor Agent repo. It is the canonical document — `workspace/memory/`
 holds the source map and session logs, but the plan you act on lives here.
+The forward-looking sequence is the "Roadmap from here" section near the
+bottom; phase tables above it record what has already shipped.
 
 ## Rules
 
@@ -130,60 +147,132 @@ trivially small.
 
 ## Phase 2 — Tier 2 extractions (few-PRs, medium risk)
 
-**Status: not started.**
+**Status: 6 of 8 merged; #18 and #19 unblocked but deferred.**
 
 Big payoff per item but each owns state, persistence, or runtime DOM.
-Plan one-PR-per-item; expect 2-3 review rounds per.
+One-PR-per-item; 2-3 review rounds per.
 
-| # | Extraction | Location | Lines |
-|---|---|---|---|
-| 12 | Mistake Notebook subsystem | `app/app.js` L1779–2270 + index.html view | 491 |
-| 13 | ~~Homework subsystem~~ — **DELETED in #36** (not extracted). DOM was already removed in Phase 0; the JS subsystem + `/api/homework` endpoint + `/homework-assets/*` static route + supporting helpers + 441 lines of CSS were dead code. Owner ratified the aggressive delete-all path; net diff −1096 lines. | — | — |
-| 14 | Preference profile subsystem | `app/app.js` L1007–1152, L2271–2399 | 274 |
-| 15 | Attachments pipeline (parse + preview + DOCX) | `app/app.js` L3216–3760 | 545 |
-| 16 | Clerk auth + return-intent state machine | `app/app.js` L147–855 | 700 |
-| 17 | Recent-conversations storage | `app/app.js` L18653–19200 | 547 |
-| 18 | Interactive demos subsystem (split per family) | `app/app.js` L7825–11842 | 4,018 |
-| 19 | Glass + chapter-overview CSS blocks | `app/style.css` L31257–47658 | 16,402 |
+| # | Extraction | Location | Lines | Status |
+|---|---|---|---|---|
+| 12 | Mistake Notebook subsystem | `app/app.js` L1779–2270 + index.html view | 491 | **Merged #30.** |
+| 13 | ~~Homework subsystem~~ — DOM already removed in Phase 0; JS subsystem + `/api/homework` + `/homework-assets/*` + 441 lines of CSS were dead code. Net diff −1,096. | — | — | **Deleted in #36** (owner ratified aggressive delete). |
+| 14 | Preference profile subsystem | `app/app.js` L1007–1152, L2271–2399 | 274 | **Merged #31.** |
+| 15 | Attachments pipeline (parse + preview + DOCX) | `app/app.js` L3216–3760 | 545 | **Merged #32.** |
+| 16 | Clerk auth + return-intent state machine | `app/app.js` L147–855 | 700 | **Merged #33.** |
+| 17 | Recent-conversations storage | `app/app.js` L18653–19200 | 547 | **Merged #34.** |
+| 18 | Interactive demos subsystem (split per family) | `app/app.js` (post-#21 supporting infra only) | ~1,500 | **Deferred.** Originally 4,018; #21 took the family bodies. Remaining scope = demo registration, state stores, control wiring. Unblocked, but blocked behind harness expansion + #20 Pass 2 to avoid CSS regression confusion. |
+| 19 | Glass + chapter-overview CSS blocks | `app/style.css` L31257–47658 | 16,402 | **Deferred.** Needs harness coverage beyond current 9 views; schedule after #20 Pass 2 proves the override-collapse technique. |
 
-## Phase 3 — Tier 3 (multi-week, high payoff)
+## Phase 3 — Tier 3 (Pass 1 complete, Pass 2 = active frontier)
 
-**Status: not started.**
+**Status: Pass 1 complete (PR #38, #39, #40, #41, #42, #43).
+Pass 2 outstanding (~5,400 CSS lines + helpers consolidation).**
 
-Largest cleanups. All CSS or runtime-style-injection.
+Largest cleanups. Detailed PR-by-PR plan lives in
+`docs/PHASE3_PLAN.md`; this section tracks status and points forward.
 
-| # | Extraction | Location | Lines |
-|---|---|---|---|
-| 20 | Home Ask EOF cluster consolidation | `app/style.css` L33181–45296 (12+ named passes) | ~6,000 |
-| 21 | `hydrateInteractiveDemos` dispatcher split | `app/app.js` L8580–9819 | 1,240 |
-| 22 | 5 `inject*Styles` runtime CSS-injection helpers (collapse with style.css) | `app/app.js` L5894–7327 | 1,430 |
+| # | Extraction | Location (current) | Pass 1 result | Pass 2 outstanding |
+|---|---|---|---|---|
+| 20 | Home Ask EOF cluster consolidation | `app/style.css` L33181–44680 | −165 lines (orphan strips across #20a/b/c) | Override-chain collapse, ~5,400 lines target. Per-property timeline mandatory. Needs harness expansion first. |
+| 21 | `hydrateInteractiveDemos` dispatcher split | `app/app.js` (was L3652–4891) | 19 family modules under `app/interactive-demos/`; app.js −2,894; dispatcher lookup table (#43) −43 more | Shared helpers module `app/interactive-demos/helpers.js` (~600 lines net delete; reconciles `drawArrow` / `sizeCanvas` signature drift). |
+| 22 | `inject*Styles` runtime CSS collapse | (deleted) | 6 sites → `app/css/runtime-collapsed.css`; app.js −2,111 | None (self-review came back clean). |
+
+### Phase 3.5 — Visual-diff harness expansion (gating prereq for #20 Pass 2)
+
+**Status: not started. User-confirmed next focus.**
+
+The 9-view baseline currently exercises only one lesson (Background §1
+"Signal Energy"), which short-circuits at `isChapterOneDemo` BEFORE the
+#21 family lookup. None of the 13 lookup-table keys are regression-covered.
+This is documented in `docs/phase3_deferred.md` §2b as a Sev-1 risk
+against future refactors of the dispatcher.
+
+Until the harness expands, **#20 Pass 2 cannot land safely** — 5,373
+`!important` declarations live in the #20 range and the only signal
+proving cascade preservation is pixel-diff. Each new view must capture
+overrides the current 9 views miss.
+
+Minimum view additions before #20 Pass 2:
+
+1. **Chapter-2+ family-routed lesson** — opens a section whose primary
+   demo's `family` is one of the 13 table keys (e.g., `convolution_lab`
+   or `pole_zero_roc_lab`). Closes the #43 dispatcher gap.
+2. **Hover / focus / disabled states** on the lecture toolbar, pager
+   buttons, and Home-Ask composer (#20 Pass 2 surfaces).
+3. **Logged-in Home with Ask focused** — the `home-ask-stage`,
+   `home-mode-menu`, `home-ask-composer`, and `home-ask-web-toggle`
+   selectors (top-4 #20c duplications, ~70 override occurrences).
+4. **Preference page + course-tracker + feedback-board** — #20b
+   surfaces; not covered today.
+
+After harness expansion lands, refresh baseline; that becomes the
+pre-#20-Pass-2 reference.
 
 ## Phase 4 — Deferred
 
-Out of scope until after Phase 3.
+Out of scope until after Phase 3 + the harness-unblocked items.
 
 - **Database for user data** (rule #3). Currently filesystem JSON in
   `app/users/`. Render free-tier ephemeral filesystem already breaks the
-  multi-user case. Schedule the design conversation when Phase 3 lands.
+  multi-user case. Schedule the design conversation after the harness +
+  Pass 2 + #18 + #19 land.
+
+## Roadmap from here
+
+The "main refactor" finishes when items A–G below land. Deferred
+follow-ups (`docs/phase3_deferred.md`) are then addressed in order, then
+Phase 4 (DB) opens.
+
+| Step | Work item | Source of truth | Gating prereq |
+|---|---|---|---|
+| **A** | **Visual-diff harness expansion** (Phase 3.5 above) | this plan §"Phase 3.5" | none — start anytime |
+| **B** | **PR #20a Pass 2** — lesson + lecture override-chain collapse, ~1,200 lines net delete | `docs/PHASE3_PLAN.md` §6 + `docs/phase3_deferred.md` §3a | A |
+| **C** | **PR #20b Pass 2** — preference + MN + course-tracker + feedback-board collapse, ~900 lines | same + `docs/phase3_deferred.md` §3b | A; recommend B first to validate technique |
+| **D** | **PR #20c Pass 2** — Home Ask + answer-workspace + login + intro collapse, ~3,500 lines | same + `docs/phase3_deferred.md` §3c | A; recommend B+C first |
+| **E** | **PR #20c RUNTIME-INJECTED CSS OVERRIDE banner deletion** (L33581 + L43149) | `docs/phase3_deferred.md` §3d | D landed |
+| **F** | **PR #21 Pass 2** — shared `app/interactive-demos/helpers.js` (~600 lines) | `docs/phase3_deferred.md` §1a + `PHASE3_PLAN.md` §4.4 | A (so visual-diff confirms `drawArrow` / `sizeCanvas` reconciliation) |
+| **G** | **Phase 2 #18 + #19** — interactive demos subsystem (~1,500) + Glass/chapter-overview CSS (16,402) | this plan Phase 2 table | E, F; #19 also needs harness re-expansion for Glass surfaces |
+
+**Then** address the deferred punch-list (`docs/phase3_deferred.md`):
+
+- §1c — PR #21 carry-forward bugs in `sinusoid-phasor.js` and `phasor.js`
+  (Sev-2/3, batch one PR per family module).
+- §4 — Plan-inventory corrections (false-orphan flags for
+  `.preference-signal-card`, `.mistake-note-image-empty`, etc.) — folded
+  into the relevant #20b/c Pass 2 PR if not already.
+
+**Then** open Phase 4 (DB migration).
 
 ## Sequence Rules
 
 These dependencies are baked into the order above; do not reorder without
 re-checking them.
 
-- Phase 1 #1 (markdown engine) must come before Phase 2 #12-14 and #17.
-- Phase 1 #2 (static data) must come before Phase 1 #11 and any
-  syllabus-helper extraction.
-- Phase 2 #18 (interactive demos) depends on Phase 3 #21 helper extraction
-  landing first.
-- Phase 2 #19 (glass + overview CSS) must respect cascade order — each
-  split file must keep its `<link>` slot in the same position.
-- Every extraction preserves the Hard Invariants section above.
+- **Phase 1 #1** (markdown engine) was a prereq for Phase 2 #12-14 and
+  #17. Honored.
+- **Phase 1 #2** (static data) was a prereq for Phase 1 #11 and syllabus
+  helpers. Honored.
+- **Phase 2 #18** (interactive demos) depends on Phase 3 #21 (Pass 1)
+  landing first. Honored — #18 scope shrank to ~1,500 lines after #21.
+- **Phase 3 Pass 2 #20a/b/c** all gate on Phase 3.5 harness expansion
+  (A above). The current 9-view harness does not exercise the
+  override-sensitive surfaces #20 touches.
+- **Phase 2 #19** (glass + overview CSS) must respect cascade order —
+  each split file keeps its `<link>` slot in the same position.
+- Every extraction preserves the **Hard Invariants** section above.
 
 ## References
 
+- `docs/PHASE3_PLAN.md` — detailed PR-by-PR plan for Phase 3 (Pass 1 +
+  Pass 2). Line numbers post-Phase-2; Pass 1 dispatcher ranges are now
+  stale but the override-collapse strategy in §6 is the live spec.
+- `docs/PHASE3_PREP.md` — `inject*Styles` inventory + dispatcher map
+  used for Pass 1 planning. Historical reference.
+- `docs/phase3_deferred.md` — live deferred punch-list. The companion
+  document to this plan.
 - `workspace/memory/codebase-map-2026-06-19.md` — full source map with
   per-candidate effort/risk/payoff scores and `mustNotBreak` checklists.
+  Also refreshed at `workspace/memory/codebase-map-2026-06-20.md`.
 - `workspace/memory/2026-06-19.md` — Phase 0 session log.
 - `docs/sync-policy.md` — workspace ↔ root materials sync rules.
 - `docs/WINDOWS_RAG_HANDOFF.md` — RAGFlow sidecar handoff.
