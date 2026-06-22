@@ -2,15 +2,16 @@
 
 Owner: FlyM1ss
 Started: 2026-06-19
-Last refreshed: 2026-06-22 (after PR #59 — Step F / PR #21 Pass 2)
+Last refreshed: 2026-06-22 (after PR #60/#61 — Step G.1+G.2 / Phase 2 #18 complete)
 Status:
 
 - **Phase 0** merged (#15).
 - **Phase 1** complete (#17, #20–29).
-- **Phase 2** — 6 of 7 items merged on 2026-06-20. Only #19
-  (Glass + chapter-overview CSS, 16,402 lines) and #18 (interactive
-  demos subsystem, ~1,500 lines after #21) remain — both unblocked but
-  scheduled after Phase 3 Pass 2.
+- **Phase 2** — 7 of 8 items merged. #18 (interactive demos subsystem)
+  shipped 2026-06-22 in PR #60 + #61 (Step G.1 + G.2; −1,042 lines from
+  app.js across two new files: dispatcher.js 584L + chapter-one.js 473L).
+  Only #19 (Glass + chapter-overview CSS, 16,402 lines) remains — gated
+  on Phase 3.5 follow-up harness re-expansion for Glass surfaces.
 - **Phase 3 Pass 1** complete on 2026-06-21..22 — 6 PRs merged:
   - #38 (PR #21) hydrateInteractiveDemos split into 19 family modules.
   - 589be97 visual-diff baseline refresh + 3 lesson-chrome views.
@@ -29,11 +30,11 @@ Status:
 - **Phase 3 Pass 2** is the active frontier — see §"Roadmap from
   here". Deferred punch-list lives in `docs/phase3_deferred.md`.
 
-Cumulative deltas through end of Step F (PR #59, 2026-06-22):
+Cumulative deltas through end of Step G.2 (PR #60/#61, 2026-06-22):
 
-- `app/app.js`: 17,650 → 9,382 (−8,268, **−46.8%**).
+- `app/app.js`: 17,650 → 8,339 (−9,311, **−52.7%**).
 - `app/style.css`: 45,286 → 44,261 (−1,025).
-- `app/index.html`: 3,153 → 1,653 (−1,500, ~48% — Phase 1 #11 extract).
+- `app/index.html`: 3,153 → 1,654 (−1,499, ~47.5% — Phase 1 #11 extract).
 
 This is the single source of truth for the multi-phase refactor of the
 Fourier Tutor Agent repo. It is the canonical document — `workspace/memory/`
@@ -168,7 +169,7 @@ One-PR-per-item; 2-3 review rounds per.
 | 15 | Attachments pipeline (parse + preview + DOCX) | `app/app.js` L3216–3760 | 545 | **Merged #32.** |
 | 16 | Clerk auth + return-intent state machine | `app/app.js` L147–855 | 700 | **Merged #33.** |
 | 17 | Recent-conversations storage | `app/app.js` L18653–19200 | 547 | **Merged #34.** |
-| 18 | Interactive demos subsystem (split per family) | `app/app.js` (post-#21 supporting infra only) | ~1,500 | **Deferred.** Originally 4,018; #21 took the family bodies. Remaining scope = demo registration, state stores, control wiring. Unblocked, but blocked behind harness expansion + #20 Pass 2 to avoid CSS regression confusion. |
+| 18 | Interactive demos subsystem (split per family) | `app/app.js` (post-#21 supporting infra only) | 1,042 | **Shipped 2026-06-22 in PR #60 (G.1, dispatcher + spec helpers + lab-shell + Laplace) + PR #61 (G.2, chapter-one renderer).** Original estimate ~1,500 was conservative — actual app.js delta was 1,042 lines. The remaining "supporting infrastructure" (demo registration, state stores, control wiring) turned out to live entirely inside the family modules' own closures + the dispatcher; no separate registration layer to extract. |
 | 19 | Glass + chapter-overview CSS blocks | `app/style.css` L31257–47658 | 16,402 | **Deferred.** Needs harness coverage beyond current 9 views; schedule after #20 Pass 2 proves the override-collapse technique. |
 
 ## Phase 3 — Tier 3 (Pass 1 complete, Pass 2 = active frontier)
@@ -251,7 +252,7 @@ Phase 4 (DB) opens.
 | **D** | **PR #20c Pass 2** — Home Ask + answer-workspace + login + intro collapse. **Partially shipped 2026-06-22 across PRs #56/#57/#58 (−147 lines).** S3 (login + intro) verified at 0 deletable lines — plan §6.1 inverted-preference assumption wrong against current file state, see `docs/phase3_deferred.md` §3c.ii. S4 RUNTIME-INJECTED banners also verified 0 — see row E below. Remaining home-Ask state-variant candidates (~145 lines, safe-on-cascade but harness can't pixel-verify) deferred — see `docs/phase3_deferred.md` §3c.i. Original ~3,500-line target rescoped — structural-ceiling note in §3c. | `docs/PHASE3_PLAN.md` §6 + `docs/phase3_deferred.md` §3c | A **partially unblocked**: views 10/11 cover composer `:focus-within` + mode-menu `.show` cascade. State variants on `#webSearchToggleBtnMain.home-ask-web-toggle` (21× — single most-duplicated #20c selector) NOT covered. login/intro NOT covered. |
 | **E** | **PR #20c RUNTIME-INJECTED CSS OVERRIDE banner deletion** (L33490 + L42594). **Shipped 2026-06-22 inside Step D evaluation: VERIFIED LOAD-BEARING — neither banner deleted.** Plan §3d entry-point check confirmed style.css banners win on doubled-/tripled-ID specificity vs `runtime-collapsed.css` rules that set DIFFERENT values on the same properties. See `docs/phase3_deferred.md` §3d for the per-banner per-property analysis. | `docs/phase3_deferred.md` §3d | D evaluated; banners stay. |
 | **F** | **PR #21 Pass 2** — shared `app/interactive-demos/helpers.js`. **Shipped 2026-06-22 in PR #59 (82d4ade).** Extracted `applyCanvasDpr`, `drawCanvasArrow`, `coalesceFrames` across complex-plane / sinusoid-phasor / phasor + the chapter-one demo rerender in app.js. Net repo delta **−18 lines**, well below the deferred-doc §1a "~600 lines" aspirational estimate — see `docs/phase3_deferred.md` §1a for the plan-inventory correction. | `docs/phase3_deferred.md` §1a + `PHASE3_PLAN.md` §4.4 | F shipped. |
-| **G** | **Phase 2 #18 + #19** — interactive demos subsystem (~1,500) + Glass/chapter-overview CSS (16,402) | this plan Phase 2 table | E, F; #19 also needs harness re-expansion for Glass surfaces (separate harness expansion when G lands — listed in phase3_deferred.md §"Phase 3.5 follow-ups"). |
+| **G** | **Phase 2 #18 + #19** — interactive demos subsystem + Glass/chapter-overview CSS. **#18 shipped 2026-06-22 across PRs #60 (G.1) and #61 (G.2) — net app.js delta −1,042 lines.** G.1 extracted the dispatcher + spec helpers + lab-shell + Laplace flow renderer (584 lines to `app/interactive-demos/dispatcher.js`). G.2 extracted `hydrateChapterOneDemo` (473 lines to `app/interactive-demos/chapter-one.js`) and consolidated its local helpers against helpers.js + dispatcher.js (drawArrow → drawCanvasArrow shim, setupCanvas → applyCanvasDpr delegate, removed redundant local `fmt`). **#19 (Glass + chapter-overview CSS, 16,402 lines) NOT shipped** — explicitly gated on Phase 3.5 follow-up harness expansion for Glass surfaces. See `docs/phase3_deferred.md` §7 for the harness gap inventory. | this plan Phase 2 table | #18 done; #19 still gated on harness re-expansion. |
 
 **Then** address the deferred punch-list (`docs/phase3_deferred.md`):
 
