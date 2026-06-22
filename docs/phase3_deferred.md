@@ -388,40 +388,163 @@ Pre-req: harness expansion to capture these states on views 12/14
 
 ### 3c. PR #20c Pass 2 — Home Ask + answer workspace + login + intro
 
-Plan target: ~3,500 lines net delete (the largest single payoff).
-The top-4 duplicated selectors per plan §6.1 account for ~70 rule
-occurrences alone:
-- `#webSearchToggleBtnMain.home-ask-web-toggle` 21x
-- `#homeModeMenu.home-mode-menu` 17x
-- `#searchBox.home-ask-composer` 16x
-- `.home-ask-stage` 15x
+**Status (2026-06-22, end of session): partially complete.** Step D
+shipped 3 PRs (#56/#57/#58) totalling **−147 lines** in `app/style.css`,
+all visual-diff-verified at 0.000% on all 18 baseline views. Plan target
+was ~3,500 lines; 4.2% of plan was reachable, well below even the
+Step B/C 14% structural ceiling because S3 (login + intro) and S4
+(RUNTIME-INJECTED banners) were both verified at **0 deletable lines**.
 
-**Inverted preference for the intro/login surface** (banners 81-88):
-the `.intro-*`, `.scrap-*`, `.proof-*` rules in
+#### What shipped in Step D
+
+- **PR #56 — S1 RIGHT-QA REDESIGN dead overrides** — 14 home-Ask rules
+  inside `TRUE EOF HOME ASK RIGHT-QA REDESIGN` banner fully shadowed
+  by later `SCREENSHOT MATCH` (L41542+) + `GLOBAL SHRINK` (L41833+)
+  banners at identical specificity, !important. Per-property timeline
+  built for each rule (`.home-ask-icon`, `.home-ask-empty h1/p`,
+  `.home-ask-tag`, `.home-ask-tag svg`, `.home-ask-attach/.send`,
+  `.home-mode-icon`, `web-toggle svg`, `#homeModeMenu .home-mode-option`,
+  `.home-feature-actions`, `.home-feature-chip` + svg + span,
+  `:has(.home-mode-menu.show)`). 115 lines.
+- **PR #57 — S1b SCREENSHOT MATCH tail** — 5 more home-Ask rules in
+  the `SCREENSHOT MATCH` banner shadowed by `GLOBAL SHRINK` (L41754+
+  post-#56). Includes `.home-ask-tag svg`, `.home-ask-input-row` (with
+  align-items: start fallback to L41225's RIGHT-QA REDESIGN survivor),
+  `#homeModeCurrentText`, `web-toggle` standalone, `#homeModeMenu`
+  positional. 28 lines.
+- **PR #58 — S2 followup-bar-row gap** — bare `.followup-bar-row
+  { gap: 16px !important }` (specificity 0,0,1,0) shadowed by
+  `.answer .followup-bar-row { gap: 8px !important }` (0,0,2,0) at
+  L43811. DOM coverage verified: `.followup-bar-row` only renders
+  inside `.answer` per `app/index.html` L518/L572. The discovery +
+  2-skeptic adversarial verify workflow found ONLY this candidate
+  across the full Section 2 surface (~1,400 lines pre-scan). 4 lines.
+
+**Cumulative Step D delta: −147 lines (44408 → 44261).**
+
+#### Why the 3,500-line plan target proved unreachable
+
+Same structural-ceiling pattern as Step B/C, plus two surfaces with
+verified zero recoverable lines:
+
+- Pass 1 (#42) had already shipped −20 in this range — easy wins
+  taken. The L33490 / L42594 RUNTIME-INJECTED banners were deferred
+  to S4 (see §3d below) — removing them from the available pool.
+- After PR #56 + #57 took ~143 lines from the home-Ask cascade,
+  remaining home-Ask candidates from the discovery workflow are
+  state-variant-only (`:focus-within` transform/animation deletes)
+  which the 18-view harness cannot pixel-verify. Deferred to §3c.i
+  below.
+- **Section 3 (login + intro/trial scrapbook) = 0 lines deletable.**
+  The plan's "inverted preference" claim that `app/css/inline-styles.css`
+  is a canonical source for `.intro-*`, `.scrap-*`, `.proof-*`, and
+  `.login-*` rules is wrong against the current file state. Verified:
+  inline-styles.css has ZERO `.login-*` rules at all. The
+  `.intro-landing-new .scrap-*` rules in inline-styles.css define
+  base structure (position, dimensions, base background-color #fff,
+  animations); the style.css L44048+ "Trial intro glass skin" banner
+  OVERLAYS them with glass effects (background gradients,
+  backdrop-filter, box-shadow). Both layers are live; neither is
+  dead. See §3c.ii below.
+- **Section 4 (RUNTIME-INJECTED CSS OVERRIDE banners L33490 + L42594)
+  = 0 lines deletable.** Verified load-bearing — see §3d below.
+
+Realistic Step D ceiling post-analysis: ~165 lines if the remaining
+state-variant candidates were ship-able. The ~3,350-line gap to the
+original 3,500 target is structural (S3 + S4 both verified zero,
+state-variant blind spot blocks remaining home-Ask).
+
+#### 3c.i — DEFERRED: remaining home-Ask state-variant candidates
+
+The discovery workflow for S1 surfaced ~145 additional safe-on-cascade
+lines that were intentionally not shipped:
+
+- **`:focus-within` transform/animation deletes** in cluster-B/C/D
+  banners (L40492, L40681, L40890 — pre-#56 lines; ~52 lines total).
+  Each is byte-identical to a later same-selector same-specificity
+  rule, so deletion does not change the active value. But the
+  harness has NO `:focus-within` coverage on the home-Ask composer
+  (view 10 captures focus state on the composer container, not on
+  the dropdown sub-state). Safe by cascade analysis, unverifiable
+  by pixel diff. Held back to keep the "every Step D PR hit 0.000%
+  on 18 views" invariant intact.
+- **DEBUG LOCK / INTERACTION LOCK tail** (~45 lines from L39192,
+  L40081 pre-#56 lines). Cluster-A/B candidates verified by both
+  cascade and harness lenses but not yet shipped — all are tightly
+  shadowed by later GLOBAL SHRINK / MODE GLASS overrides.
+- **Cluster-A initial `.home-mode-icon i`, `.qa-caret-icon`,
+  web-toggle svg, `.home-mode-option.selected`** (~18 lines from
+  L38762-L38818). Earlier control glass banner. Safe on cascade,
+  state-variant-free, but small enough that ROI on the PR ceremony
+  is poor.
+
+**Entry point:** rebase the existing discovery output
+(`/tmp/claude-1000/-mnt-d-Github-fourier-tutor-agent/.../wzd6pqscb.output`)
+against post-#58 line numbers (each candidate shifts down by 4 lines
+in the L42278+ region only; everything below L41434 is shifted by 115
+from #56 and 28 from #57; everything below L42278 is also shifted by
+4 from #58). Re-verify each candidate's cited override line in the
+post-merge file before edit.
+
+#### 3c.ii — Plan-inventory correction: inverted-preference S3 is wrong
+
+Plan §6.1 says: "Inverted preference for the intro/login surface
+(banners 81-88): the `.intro-*`, `.scrap-*`, `.proof-*` rules in
 `app/css/inline-styles.css` are the canonical source; the style.css
-copies are duplicates. Prefer keeping inline-styles.css and deleting
-style.css copies — opposite to the rest of the strategy. Threshold
-for this surface stays at 0.5% per plan §3 (animated noise from
-`aquarius-glow`, `text-gradient-aurora`).
+copies are duplicates."
+
+**This is wrong against the current file state.** Verified during
+Step D Section 3:
+
+1. `app/css/inline-styles.css` has ZERO `.login-*` selectors. The
+   plan's premise that login rules duplicate inline-styles.css does
+   not match reality.
+2. The `.intro-landing-new .scrap-window/sticky/polaroid/paper/
+   proof-card` rules ARE in inline-styles.css (L443-L666 area), but
+   they set BASE structure: `position: absolute; background: #fff;
+   transform: rotate(Xdeg); animation: float ...`.
+3. The corresponding rules in style.css L44049+ ("Trial intro glass
+   skin") set DIFFERENT properties: glass gradients, backdrop-filter,
+   box-shadow. They are layered OVERLAYS, not duplicates.
+
+Conclusion: no Section 3 deletes are possible under the inverted-
+preference rule. Future Phase 4 work on this surface should be
+scoped as "consolidate the L44048+ glass skin into inline-styles.css"
+(a STRUCTURAL refactor, not a delete), and that's only worth doing
+if the visual-diff harness gains login + intro coverage first.
 
 ### 3d. PR #20c — RUNTIME-INJECTED CSS OVERRIDE banner deletion
 
-**What:** Delete the L33581 and L43149 "RUNTIME-INJECTED CSS OVERRIDE"
-banners that the plan decision #5 marked for removal in #20c.
+**Status (2026-06-22, end of session): VERIFIED LOAD-BEARING — stays.**
 
-**Why deferred from PR #20c Pass 1:** After PR #22 moved the runtime
-`<style>` blocks to a static `<link>` (`runtime-collapsed.css`), the
-banners may still be load-bearing via specificity (doubled-ID
-`#x#x` selectors give ~6-ID specificity vs ~2-ID in
-runtime-collapsed.css). Per-property cascade analysis required to
-confirm they're truly obsolete vs still defending against
-runtime-collapsed.css overrides on the same properties.
+Per plan §3d entry point, listed every property each banner sets and
+grep'd `runtime-collapsed.css` for overlap on the same elements:
 
-**Entry point:** for each banner, list every property it sets, then
-grep `runtime-collapsed.css` for any rule that sets the same property
-on a selector that would match the same element. Where there's
-overlap, the banner is load-bearing and stays. Where there isn't,
-the banner can be deleted.
+- **L33490 banner (`LEARN Q&A RUNTIME INJECTION OVERRIDE`)** — uses
+  doubled-ID specificity (`#learnView#learnView #learnBody#learnBody
+  #learnChatCol#learnChatCol` = 6 IDs). `runtime-collapsed.css`
+  L1430-L1451 sets `background: var(--theme-page-surface-soft)
+  !important` on `#learnView #learnChatCol` (2 IDs). Style.css's
+  6-ID rule beats with a custom radial-gradient cyan/green
+  background. Deleting the banner reverts to the runtime-collapsed
+  background-color — visible regression.
+- **L42594 banner (`RUNTIME-INJECTED CSS OVERRIDE`)** — uses tripled-
+  ID specificity (`#learnView#learnView#learnView ... #learnFollowupBar
+  #learnFollowupBar #learnFollowupBar` = 12 IDs). `runtime-collapsed.css`
+  L1975-L2002 has a doubled-ID rule (8 IDs) on the same selector with
+  DIFFERENT values: width `min(820px, calc(100% - 36px))` vs banner's
+  `calc(100% - 36px)`, min-height 112 vs 152, border-radius 18 vs 28,
+  different background gradient. Deleting the banner regresses 8+
+  properties on the followup-bar.
+
+Plan decision #5 ("delete in #20c") was based on the assumption that
+the runtime-injected `<style>` blocks were the SOLE source of the
+duplicated-ID rules. PR #22 actually MOVED those doubled-ID rules into
+runtime-collapsed.css (not just the targeted overrides). So the
+defended-against rules came along with the moved blocks, and the
+banners still need higher specificity to beat them.
+
+**No follow-up entry — both banners stay.**
 
 ---
 
@@ -455,22 +578,32 @@ Both pairs were verified during the Pass 1 work and skipped. Update
 
 ---
 
-## 6. Cumulative Phase 3 delivery (this session)
+## 6. Cumulative Phase 3 delivery (all sessions)
 
-| PR  | Title                                      | Net lines |
-| --- | ------------------------------------------ | --------- |
-| #21 (PR #38) | hydrateInteractiveDemos split    | −2,894 in `app/app.js`; +19 family modules |
-| —   | Visual-diff baseline refresh + 3 views     | tooling   |
+| PR / step | Title | Net lines |
+| --- | --- | --- |
+| #21 (PR #38) | hydrateInteractiveDemos split | −2,894 in `app/app.js`; +19 family modules |
+| — | Visual-diff baseline refresh + 3 views | tooling |
 | #22 (PR #39) | runtime inject*Styles → static CSS link | −2,111 in `app/app.js`; +1 CSS file |
-| #20a (PR #40) | lesson + lecture orphan deletes  | −131 in `app/style.css` |
-| #20b (PR #41) | preference + MN orphan strips    | −14 in `app/style.css` |
+| #20a (PR #40) | lesson + lecture orphan deletes | −131 in `app/style.css` |
+| #20b (PR #41) | preference + MN orphan strips | −14 in `app/style.css` |
 | #20c (PR #42) | mistake-draft-actions orphan delete | −20 in `app/style.css` |
+| #23 (PR #43) | interactive-demos family lookup table | −43 in `app/app.js` |
+| Step B (Pass 2 PRs #46–#51) | lesson + lecture override collapse | −169 in `app/style.css` |
+| Step C (Pass 2 PRs #52–#55) | preference + MN + course-tracker + feedback-board | −123 in `app/style.css` |
+| **Step D (Pass 2 PRs #56–#58)** | **home Ask + answer-workspace cascade collapse** | **−147 in `app/style.css`** |
 
-`app/app.js`: **14,434 → 9,428 lines (−5,005, −34.7%)**.
-`app/style.css`: **44,845 → 44,680 lines (−165)**.
+`app/app.js`: **14,434 → 9,385 lines (−5,049, −35.0%)**.
+`app/style.css`: **44,845 → 44,261 lines (−584, −1.3%)**.
 
-The Phase 3 JS work is structurally complete. The CSS work landed Pass
-1 across all 3 sub-PRs; Pass 2 is the next-session focus.
+The Phase 3 JS work is structurally complete. CSS Pass 1 + Pass 2
+Steps A through D shipped; the structural ceiling on the L33181–L44261
+cluster is ~12% of the original ~5,600-line target (Pass 1 + Pass 2 =
+584 lines actual). The remaining ~5,000 lines on this cluster are
+specificity-graded defenses, state-variant override stacks not covered
+by the harness, banner-rewrite candidates requiring coordinated multi-
+banner refactors, or canonical-source-clash candidates where the
+plan's inverted-preference assumption did not match the file state.
 
 ---
 
