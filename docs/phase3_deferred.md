@@ -12,27 +12,57 @@ suggested next-session entry point. Use this as the starting point for
 
 ### 1a. Pass 2 — shared interactive-demos helpers
 
-**What:** Create `app/interactive-demos/helpers.js` and consolidate the
-per-family local closures (`drawArrow`, `sizeCanvas`, `formatNum`,
-`getA`/`getB`/`getThetaRad`/`getThetaDeg`/`getR`/`getC`, `formatAngle`,
-`drawGrid`, the `pendingFrame` rAF coalescing pattern, the control
-wiring loop) that today live duplicated inside `complex-plane.js`,
-`sinusoid-phasor.js`, `phasor.js`, and `matrix-conformability.js`.
+**Status: shipped 2026-06-22 in PR #59 (82d4ade).**
 
-**Why deferred:** Plan §4.4 Pass 2 calls out subtle per-branch
-differences that block a naive consolidation:
-- `drawArrow` signature: ctx-as-first-arg (sinusoid + phasor) vs
-  outer-ctx-capture (complex_plane).
-- `sizeCanvas` dpr/sizing math drift between sinusoid (uses
-  `fallbackHeight`) and complex (computes height from width).
+`app/interactive-demos/helpers.js` created. Three free-name helpers
+extracted across complex-plane / sinusoid-phasor / phasor + the
+chapter-one demo rerender in app.js:
 
-Pass 2 must reconcile these signatures and confirm no visual
-regression. Estimated ~600 lines net delete (the per-family
-duplicated closures total roughly 200 lines × 3 families).
+- `applyCanvasDpr(canvas, ctx, width, height)` — replaces the
+  shared dpr+setTransform tail of each family's `sizeCanvas`.
+- `drawCanvasArrow(ctx, x1, y1, x2, y2, color, opts)` — reconciles
+  the three divergent `drawArrow` closures. `opts.headLength`
+  defaults to 10 (sinusoid/phasor); complex-plane passes 11.
+- `coalesceFrames(callback)` — replaces the `pendingFrame` rAF
+  coalesce pattern.
 
-**Entry point:** start by reading the §4.4 Pass 2 list in
-`docs/phase3_plan.md`, then diff the existing `drawArrow` /
-`sizeCanvas` implementations across the 3 large family modules.
+**Plan-inventory correction:** the original §1a estimate of "~600
+lines net delete" was wildly aspirational. Realistic measurement:
+
+| File | Before | After | Delta |
+|---|---|---|---|
+| complex-plane.js | 291 | 261 | −30 |
+| sinusoid-phasor.js | 292 | 266 | −26 |
+| phasor.js | 323 | 295 | −28 |
+| app.js (chapter-one rerender) | — | — | −8 |
+| helpers.js | 0 | 72 | +72 |
+| **Net** |  |  | **−18** |
+
+The 600-line estimate counted full per-family closure consolidation
+across 4 modules (including `matrix-conformability.js`), but the
+following did NOT consolidate per-family divergence is intentional:
+
+- `formatNum` / `formatValue` precision (toFixed 3 vs 2)
+- `getA` / `getB` / `getThetaRad` / `getC` defaults + sign
+  conventions (phasor flips b via `atan2(-b, a)`)
+- `sizeCanvas` width/height calc (min 320 / 180 / 160; height-from-
+  width vs fallback-height vs parent-padding subtraction)
+- `drawGrid` (single-use in sinusoid-phasor)
+- Control-wiring loop (per-family CSS class names —
+  parameterization exceeds savings)
+- `matrix-conformability.js` (no canvas helpers at all — only
+  shares the broader control-wiring loop pattern)
+
+The structural win is **one-place-to-change** for future `drawArrow`
+/ dpr tweaks, not the line count.
+
+**Harness gap (recorded for future work):** the visual-diff harness
+covers `convolution_lab` + `pole_zero_roc_lab` family keys only.
+The 3 modified families (`complex_plane`, `sinusoid_phasor_projection`,
+`phasor`) are NOT pixel-verified by the harness. Save/restore behavior
+of `drawCanvasArrow` is benign because every post-`drawArrow` callsite
+in sinusoid/phasor explicitly resets fillStyle/strokeStyle/lineWidth
+before next use (hand-verified in self-review).
 
 ### 1b. Dispatcher simplification: 13 family arms → lookup table
 

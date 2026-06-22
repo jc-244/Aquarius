@@ -2,7 +2,7 @@
 
 Owner: FlyM1ss
 Started: 2026-06-19
-Last refreshed: 2026-06-22 (after PR #56/#57/#58 — Step D / PR #20c Pass 2)
+Last refreshed: 2026-06-22 (after PR #59 — Step F / PR #21 Pass 2)
 Status:
 
 - **Phase 0** merged (#15).
@@ -29,11 +29,11 @@ Status:
 - **Phase 3 Pass 2** is the active frontier — see §"Roadmap from
   here". Deferred punch-list lives in `docs/phase3_deferred.md`.
 
-Cumulative deltas through end of Phase 3 Pass 1:
+Cumulative deltas through end of Step F (PR #59, 2026-06-22):
 
-- `app/app.js`: 17,650 → 9,384 (−8,266, **−46.8%**).
-- `app/style.css`: 45,286 → 44,680 (−606).
-- `app/index.html`: 3,153 → 1,652 (−1,501, ~48% — Phase 1 #11 extract).
+- `app/app.js`: 17,650 → 9,382 (−8,268, **−46.8%**).
+- `app/style.css`: 45,286 → 44,261 (−1,025).
+- `app/index.html`: 3,153 → 1,653 (−1,500, ~48% — Phase 1 #11 extract).
 
 This is the single source of truth for the multi-phase refactor of the
 Fourier Tutor Agent repo. It is the canonical document — `workspace/memory/`
@@ -250,7 +250,7 @@ Phase 4 (DB) opens.
 | **C** | **PR #20b Pass 2** — preference + MN + course-tracker + feedback-board collapse. **Partially shipped 2026-06-22 across PRs #52/#53/#54/#55 (−123 lines).** State-variant collapses + feedback tripled-duplications + course-tracker .overview/.grid bundle + MN doubled-ID patterns deferred — see `docs/phase3_deferred.md` §3b.i–§3b.iv. Original ~900-line target rescoped — structural-ceiling note in §3b. | `docs/PHASE3_PLAN.md` §6 + `docs/phase3_deferred.md` §3b | A **partially unblocked**: views 03/12/13/14 cover resting state only — `:hover`/`:disabled`/`:focus` variants on `.feedback-board-card` (27×), `.preference-profile-preview` (18×), `.preference-preview-card` (14×), `.preference-primary-btn` (10×) intentionally untouched. |
 | **D** | **PR #20c Pass 2** — Home Ask + answer-workspace + login + intro collapse. **Partially shipped 2026-06-22 across PRs #56/#57/#58 (−147 lines).** S3 (login + intro) verified at 0 deletable lines — plan §6.1 inverted-preference assumption wrong against current file state, see `docs/phase3_deferred.md` §3c.ii. S4 RUNTIME-INJECTED banners also verified 0 — see row E below. Remaining home-Ask state-variant candidates (~145 lines, safe-on-cascade but harness can't pixel-verify) deferred — see `docs/phase3_deferred.md` §3c.i. Original ~3,500-line target rescoped — structural-ceiling note in §3c. | `docs/PHASE3_PLAN.md` §6 + `docs/phase3_deferred.md` §3c | A **partially unblocked**: views 10/11 cover composer `:focus-within` + mode-menu `.show` cascade. State variants on `#webSearchToggleBtnMain.home-ask-web-toggle` (21× — single most-duplicated #20c selector) NOT covered. login/intro NOT covered. |
 | **E** | **PR #20c RUNTIME-INJECTED CSS OVERRIDE banner deletion** (L33490 + L42594). **Shipped 2026-06-22 inside Step D evaluation: VERIFIED LOAD-BEARING — neither banner deleted.** Plan §3d entry-point check confirmed style.css banners win on doubled-/tripled-ID specificity vs `runtime-collapsed.css` rules that set DIFFERENT values on the same properties. See `docs/phase3_deferred.md` §3d for the per-banner per-property analysis. | `docs/phase3_deferred.md` §3d | D evaluated; banners stay. |
-| **F** | **PR #21 Pass 2** — shared `app/interactive-demos/helpers.js` (~600 lines) | `docs/phase3_deferred.md` §1a + `PHASE3_PLAN.md` §4.4 | A **partially unblocked — 2 of 13 families covered.** `drawArrow`/`sizeCanvas` reconciliation is regression-protected for `convolution_lab` and `pole_zero_roc_lab` paths only. The 11 other family renderers still require hand-walking per #43. |
+| **F** | **PR #21 Pass 2** — shared `app/interactive-demos/helpers.js`. **Shipped 2026-06-22 in PR #59 (82d4ade).** Extracted `applyCanvasDpr`, `drawCanvasArrow`, `coalesceFrames` across complex-plane / sinusoid-phasor / phasor + the chapter-one demo rerender in app.js. Net repo delta **−18 lines**, well below the deferred-doc §1a "~600 lines" aspirational estimate — see `docs/phase3_deferred.md` §1a for the plan-inventory correction. | `docs/phase3_deferred.md` §1a + `PHASE3_PLAN.md` §4.4 | F shipped. |
 | **G** | **Phase 2 #18 + #19** — interactive demos subsystem (~1,500) + Glass/chapter-overview CSS (16,402) | this plan Phase 2 table | E, F; #19 also needs harness re-expansion for Glass surfaces (separate harness expansion when G lands — listed in phase3_deferred.md §"Phase 3.5 follow-ups"). |
 
 **Then** address the deferred punch-list (`docs/phase3_deferred.md`):
