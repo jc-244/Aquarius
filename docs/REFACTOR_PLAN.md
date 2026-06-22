@@ -2,7 +2,7 @@
 
 Owner: FlyM1ss
 Started: 2026-06-19
-Last refreshed: 2026-06-22 (after PR #44 — Phase 3.5 harness expansion)
+Last refreshed: 2026-06-22 (after PR #52/#53/#54/#55 — Step C / PR #20b Pass 2)
 Status:
 
 - **Phase 0** merged (#15).
@@ -247,7 +247,7 @@ Phase 4 (DB) opens.
 |---|---|---|---|
 | **A** | **Visual-diff harness expansion** (Phase 3.5 above) | this plan §"Phase 3.5" | **Shipped in PR #44 (f28055b), 2026-06-22.** |
 | **B** | **PR #20a Pass 2** — lesson + lecture override-chain collapse. **Partially shipped 2026-06-22 across PRs #46/#47/#48/#49/#50/#51 (~169 lines).** S5 feedback-tones + B25 remaining cluster-G findings deferred — `docs/phase3_deferred.md` §3a.i / §3a.ii. Original ~1,200-line target rescoped — see §3a structural-ceiling note. | `docs/PHASE3_PLAN.md` §6 + `docs/phase3_deferred.md` §3a | A **partially unblocked**: views 06/07/15/16 cover layout + `chapter-overview-active` / `split-active` class flips; pager `:active`/`:focus-visible` state variants still uncovered. #20a top selectors are layout-mostly and `:hover` is covered by view 07, so cascade-collapse risk is reduced but not eliminated. |
-| **C** | **PR #20b Pass 2** — preference + MN + course-tracker + feedback-board collapse, ~900 lines | same + `docs/phase3_deferred.md` §3b | A **partially unblocked**: views 03/12/13/14 cover resting state. `:hover`/`:disabled`/`:focus` variants on `.feedback-board-card` (27×), `.preference-profile-preview` (18×), `.preference-preview-card` (14×), `.preference-primary-btn` (10×) NOT covered. Pass 2 must NOT touch state-variant overrides without expanding the harness. Recommend B first to validate technique. |
+| **C** | **PR #20b Pass 2** — preference + MN + course-tracker + feedback-board collapse. **Partially shipped 2026-06-22 across PRs #52/#53/#54/#55 (−123 lines).** State-variant collapses + feedback tripled-duplications + course-tracker .overview/.grid bundle + MN doubled-ID patterns deferred — see `docs/phase3_deferred.md` §3b.i–§3b.iv. Original ~900-line target rescoped — structural-ceiling note in §3b. | `docs/PHASE3_PLAN.md` §6 + `docs/phase3_deferred.md` §3b | A **partially unblocked**: views 03/12/13/14 cover resting state only — `:hover`/`:disabled`/`:focus` variants on `.feedback-board-card` (27×), `.preference-profile-preview` (18×), `.preference-preview-card` (14×), `.preference-primary-btn` (10×) intentionally untouched. |
 | **D** | **PR #20c Pass 2** — Home Ask + answer-workspace + login + intro collapse, ~3,500 lines | same + `docs/phase3_deferred.md` §3c | A **partially unblocked**: views 10/11 cover composer `:focus-within` + mode-menu `.show` cascade. `#webSearchToggleBtnMain.home-ask-web-toggle` (21× — single most-duplicated #20c selector) state variants NOT covered. login/intro NOT covered. Recommend B+C first. |
 | **E** | **PR #20c RUNTIME-INJECTED CSS OVERRIDE banner deletion** (L33581 + L43149) | `docs/phase3_deferred.md` §3d | D landed; A **partially unblocked** — banner selectors inside Home Ask / preference / course-tracker / feedback-board / lesson chrome resting state are covered. Login/intro banner selectors remain unprotected; per-selector audit required. |
 | **F** | **PR #21 Pass 2** — shared `app/interactive-demos/helpers.js` (~600 lines) | `docs/phase3_deferred.md` §1a + `PHASE3_PLAN.md` §4.4 | A **partially unblocked — 2 of 13 families covered.** `drawArrow`/`sizeCanvas` reconciliation is regression-protected for `convolution_lab` and `pole_zero_roc_lab` paths only. The 11 other family renderers still require hand-walking per #43. |

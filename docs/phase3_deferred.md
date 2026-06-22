@@ -280,10 +280,111 @@ Future Step C / Step D discovery prompts should explicitly require
 
 ### 3b. PR #20b Pass 2 — preference + MN + course-tracker + feedback-board
 
-Plan target: ~900 lines net delete. Same approach as 3a, with the
-extra wrinkle that the duplicate "EOF FEEDBACK AUTHOR COLORS" banner
-appears at both L35037 and L38774 — must read both before merging
-either.
+**Status (2026-06-22, late session): partially complete.** Step C shipped
+4 sub-PRs (#52/#53/#54/#55) totalling **−123 lines** in `app/style.css`,
+all visual-diff-verified at 0.000% on all 18 baseline views.
+
+#### What shipped in Step C
+
+- **PR #52 — S1 feedback-thread tone-background dedup** — delete
+  byte-identical duplicate of `#feedbackView .feedback-thread[class*="tone-"]
+  { background: ... }` between the two "EOF FEEDBACK AUTHOR COLORS" and
+  "TRUE FINAL FEEDBACK AUTHOR TONES" banners (6 lines incl. blank).
+- **PR #53 — S2 course-tracker originals superseded by redesign** —
+  delete `.course-tracker-stat-value` + `span:last-child` (unused),
+  `.course-tracker-stat-card, .course-tracker-card` background/border
+  group + padding group (overridden by L36989/L37147 with !important),
+  `.course-tracker-table-wrap` (replaced by `.course-tracker-timeline`
+  in redesign) (37 lines).
+- **PR #54 — S3 Mistake Notebook tail dead overrides** — delete
+  horizontal-split layout using never-wired `--mistake-note-left/--right`,
+  `min-height: 150px` overridden by `210px` 30 lines later, mobile
+  `@media` block byte-identical to a sibling 17 lines later (29 lines).
+- **PR #55 — S4 Preference PIN LOCK + save-state tones** — delete
+  `.preference-profile-card .preference-card-tape` overridden by
+  `#preferenceView .preference-card-tape { display: none !important }`
+  at L35781, and unscoped `.preference-save-state[data-tone="*"]`
+  variants overridden by `#preferenceView`-scoped rules at L35830+
+  (51 lines incl. banner).
+
+**Cumulative Step C delta: −123 lines (plan target was ~900).**
+
+#### Why the 900-line plan target proved unreachable
+
+Same structural-ceiling pattern as Step B (#20a Pass 2 hit 169 vs
+1,200 target). Per-property cascade analysis surfaced:
+
+- Pass 1 (#41) had already harvested orphan deletes from this range
+  (14 lines), removing the easy wins before Pass 2 started.
+- Most "duplicate" rules in the cluster are NOT dead — they defend
+  against later overrides at higher specificity. The 4 surfaces have
+  bona-fide redesign passes (liquid-glass, glass refresh, glass
+  intensity, etc.) where the cascade is structurally load-bearing.
+- The harness coverage gate (resting state only — Roadmap matrix
+  Step C explicitly notes :hover / :disabled / :focus on
+  `.feedback-board-card` 27×, `.preference-profile-preview` 18×,
+  `.preference-preview-card` 14×, `.preference-primary-btn` 10× are
+  NOT covered) blocks roughly 60–70% of the candidate pool.
+- Tripled byte-identical duplications (e.g. `.feedback-reply[class*="tone-"]::before`
+  at L34909 / L34992 / L38513) require coordinated banner-consolidation
+  refactoring, not simple per-rule delete; discovery flagged these as
+  needing more cascade reasoning than safe within a single Pass-2 PR.
+
+Realistic Step C ceiling, post-analysis: ~125 lines for the no-state-variant
+no-banner-rewrite subset. The 775-line gap to the original 900 target is
+structural (harness gap + banner-rewrite complexity), not a deferral.
+
+#### 3b.i — DEFERRED: feedback-board banner consolidation
+
+Tripled byte-identical `.feedback-reply[class*="tone-"]::before` rules
+at L34909-L34923 / L34992-L35006 / L38513-L38527 (and matching
+`.is-left::before` / `.is-right::before` variants). Plus duplicate
+tone-variable declarations at L34870-L34881 vs L34944-L34955
+(`#feedbackView .feedback-thread.tone-N, #feedbackView .feedback-reply.tone-N
+{ --author-rgb: ...; --author-ink: ...; }`) — both byte-for-byte
+identical 12-line blocks.
+
+These require a coordinated banner-consolidation refactor (merge
+"EOF FEEDBACK AUTHOR COLORS" + "TRUE FINAL FEEDBACK AUTHOR TONES" +
+"EOF FEEDBACK AUTHOR COLORS (duplicate at L38480)" into a single tone
+definition section) rather than per-rule cascade-collapse. Estimated
+~80 lines recoverable.
+
+**Entry point:** read L34869-L35275 + L38480-L38565 in parallel,
+diff each banner pair, propose a single canonical placement
+(probably the L38480 location since it's after the lane overrides at
+L38122-L38275 that need to lose to per-author tones).
+
+#### 3b.ii — DEFERRED: course-tracker overview + grid bundle
+
+`.course-tracker-overview` and `.course-tracker-grid` share a media
+query at (originally L14869, post-S2 shifted to ~L14832). Discovery
+intentionally excluded these from S2 to avoid an orphaned media-query
+block. Re-verify the media-query and bundle the deletion as a
+single follow-up. ~25 lines.
+
+#### 3b.iii — DEFERRED: MN doubled-ID specificity patterns
+
+Discovery noted "Doubled-ID specificity patterns checked at L35492-L35493
+(True EOF layout lock): those use #id#id.selector syntax and beat
+single-ID at L35604; no collapse opportunity there (out of scope for
+0.2% harness)." Pattern is similar to Step B's S4 (PR #49) but for
+MN, not the sidebar. Needs separate harness expansion before any
+action — leave as-is.
+
+#### 3b.iv — DEFERRED: state-variant override collapses (#20b)
+
+Per Roadmap matrix Step C, the following state-variant override stacks
+are NOT covered by the current harness and were intentionally skipped:
+- `:hover`/`:disabled`/`:focus` on `.feedback-board-card` (27×)
+- `:hover`/`:disabled`/`:focus` on `.preference-profile-preview` (18×)
+- `:hover`/`:disabled`/`:focus` on `.preference-preview-card` (14×)
+- `:hover`/`:disabled`/`:focus` on `.preference-primary-btn` (10×)
+
+Pre-req: harness expansion to capture these states on views 12/14
+(probably as additional Page-B views: `12b-preference-hover`,
+`14b-feedback-hover`, …). Estimate net delete after harness lands:
+~150-200 lines.
 
 ### 3c. PR #20c Pass 2 — Home Ask + answer workspace + login + intro
 
