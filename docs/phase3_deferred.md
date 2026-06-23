@@ -903,3 +903,42 @@ bubble.
 
 **Entry point:** if Phase 4 ever touches the TONE LOCK block, verify
 the value-diff before treating it as a duplicate of FINAL LOCK.
+
+### 9c — DEFERRED: opened-mistake-case view + narrow-viewport preference
+
+Identified during PR #65 (Step G.3.3) adversarial review on 2026-06-22.
+
+**Coverage gap 1 — view 03 mistake-notebook never opens a case.**
+View 03 (`03-mistake-notebook`) only captures the landing surface. It
+does not click a case to open `.mistake-workspace`, so the
+`.mistake-workspace` (display + grid-template-columns), `.mistake-ai-
+instruction` (min-height), and `.mistake-note-columns` (min-height +
+height + grid-template-rows) deletions in PR #65 are NOT pixel-
+validated. Cascade analysis is the sole correctness guarantee for
+these 3 deletions:
+
+- `.mistake-workspace` candidate shadowed by EARLIER doubled-
+  `#mistakeNotebookView#mistakeNotebookView .mistake-workspace` at
+  strictly higher specificity (0,2,1,0 vs 0,1,1,0) — always wins
+- `.mistake-ai-instruction min-height: 94px` shadowed by same-spec
+  later rule with min-height: 96px
+- `.mistake-note-columns` first declaration shadowed by same-spec
+  later declaration with different clamp values
+
+**Entry point:** add a `03b-mistake-notebook-open-case` view that
+seeds a fixture mistake case (`app/users/mistakes.json` or similar),
+opens it, and captures the workspace. Then re-run all 3 deletions
+against the populated baseline as a retroactive empirical check.
+
+**Coverage gap 2 — narrow-viewport @media never captured.**
+Harness viewport is 1280x800 (`tools/visual-diff.js` L42, > 1180px).
+The `@media (max-width: 1180px) #preferenceView .preference-page-grid`
+deletion in PR #65 is INVISIBLE to the harness. Cascade-shadow
+analysis confirmed the rule is dead (later same-query block with
+identical selector + property set wins by source order), but no
+pixel-diff can validate.
+
+**Entry point:** either add a separate narrow-viewport visual-diff
+sweep (run at 800x600 or similar against all preference / chapter
+overview / responsive surfaces), or document that ALL `@media (max-
+width)` deletions are cascade-only-verified for future sub-PR reviews.
