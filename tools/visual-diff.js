@@ -35,6 +35,9 @@ const {
     assertOrThrow,
     resolveLessonCachePath,
     closeFeaturePopovers,
+    seedFeedbackFixture,
+    restoreFeedbackBoard,
+    FEEDBACK_FIXTURE_POPULATED_PATH,
 } = require('./test-utils.js');
 
 const PORT = Number(process.env.TUTOR_VDIFF_PORT || 9125);
@@ -129,6 +132,14 @@ const COVERAGE_REPORT_PATH = path.join(TOOLS, 'visual-diff-coverage.json');
 // expansion. Views 19-25 = Phase 3.5 v2 (Glass coverage gate for Step G.3 /
 // Phase 2 #19). See docs/superpowers/specs/2026-06-22-harness-expansion-design.md
 // + docs/phase3_deferred.md §7d.8.
+//
+// Numbering convention for state-variant additions to an existing view: use
+// the existing view's NN with a lowercase letter suffix (NN[a-z]). Example:
+// view 14 captures the EMPTY feedback-board state and 14b captures the
+// POPULATED state — same page-key, adjacent semantic surface, no number
+// shift to the views after 14. A new view that does NOT share an existing
+// surface should take the next free integer (26, 27, …) instead. This
+// convention was set when adding 14b for Phase 3.5 v3 §9a (see PR #69).
 
 // Pagination helper used by Phase 3.5 v2 views 21 + 22 to walk the lesson
 // pager until a sentinel selector lands in the current KP. Watches
@@ -304,9 +315,21 @@ const sharedViews = [
         );
         await page.waitForTimeout(200);
     } },
-    // View 14 — Page B — feedback board resting state. loadFeedbackBoard()
+    // View 14 — Page B — feedback board EMPTY resting state. loadFeedbackBoard()
     // is async; wait until the "Loading suggestions..." placeholder is gone.
+    // Idempotent restore at top: if a prior --check run (or crashed --baseline)
+    // left tools/fixtures/feedback-board.populated.json seeded into app/users/,
+    // view 14b's content would leak into view 14. restoreFeedbackBoard deletes
+    // the seeded file ONLY when its content matches a known fixture (so real
+    // dev data is preserved — see test-utils.js for the safety contract).
+    //
+    // INVARIANT (PR #69 review finding #17): any future view that seeds the
+    // feedback board MUST run AFTER view 14, OR call restoreFeedbackBoard()
+    // in its own setup() prologue. View 14's assertOrThrow on .feedback-empty
+    // depends on this — a sibling view seeding feedback before 14 would fail
+    // the assertion in a misleading way.
     { name: '14-feedback-board', page: 'B', setup: async (page) => {
+        restoreFeedbackBoard();
         await page.click('#navFeedbackBtn');
         await page.waitForSelector('#feedbackView:not(.hidden)', { timeout: 5000 });
         await page.waitForFunction(() => {
@@ -314,7 +337,91 @@ const sharedViews = [
             if (!v || v.classList.contains('hidden')) return false;
             return !v.textContent.includes('Loading suggestions');
         }, { timeout: 10000 });
+        // Confirm empty-state chrome — defends against the fixture leaking
+        // via a future code path that bypasses restoreFeedbackBoard.
+        const empty = await page.evaluate(() =>
+            !!document.querySelector('#feedbackView .feedback-empty')
+        );
+        assertOrThrow(empty, 'view 14: feedback board did not render the empty-state placeholder — fixture may have leaked from a prior run');
         await page.waitForTimeout(300);
+    } },
+    // View 14b — Page B — POPULATED feedback board (Phase 3.5 v3 §9a). Seeds
+    // tools/fixtures/feedback-board.populated.json into app/users/feedback-
+    // board.json so the bridge's /api/feedback GET returns 2 threads + 6
+    // replies covering:
+    //   - tone-0..5 across thread 1 (toneForAuthor at app.js L6258 round-
+    //     robins per author per item; thread 1 has 6 distinct authors so
+    //     all 6 tones materialize)
+    //   - is-left + is-right reply lanes (laneForAuthor alternates each NEW
+    //     reply author starting at right)
+    //   - .feedback-reply.is-left .feedback-reply-context (Bravo has replyTo)
+    //   - .feedback-reply.is-right .feedback-reply-context (Charlie has replyTo)
+    //   - inter-thread spacing on .feedback-list (thread 2 sits below thread 1
+    //     so margin/gap regressions on the list container produce pixel diff)
+    //   - .feedback-replies gap rule, .feedback-thread-pin, .feedback-reply-count
+    // Then exercises BOTH .is-target variants by clicking once in each thread:
+    //   - Thread 1: Charlie's reply → .feedback-reply.is-target
+    //   - Thread 2: thread-head     → .feedback-thread-click-target.is-target
+    //     (the deferred-doc §9a entry-point asked for the head-click variant)
+    //
+    // Retroactively pixel-verifies G.3.2 (PR #64, 121 lines of #feedbackView
+    // deletions) and unlocks deferred §3a.i (feedback-author-tones 5-banner
+    // cascade collapse, ~140 lines) since tone-1..5 are now under harness
+    // coverage. Cleanup runs in the IIFE finally — see restoreFeedbackBoard
+    // call there. Path constant FEEDBACK_FIXTURE_POPULATED_PATH lives in
+    // test-utils.js so a sibling view (14c, …) shares one resolution site.
+    { name: '14b-feedback-board-populated', page: 'B', setup: async (page) => {
+        seedFeedbackFixture(FEEDBACK_FIXTURE_POPULATED_PATH);
+        // #feedbackRefreshBtn → loadFeedbackBoard() → fetch /api/feedback →
+        // renderFeedbackBoard(items). Refresh (rather than nav away + back)
+        // keeps Page B sticky and avoids re-running view 12/13 setup churn.
+        await page.click('#feedbackRefreshBtn');
+        await page.waitForSelector('#feedbackView .feedback-thread', { timeout: 5000 });
+        // The first .feedback-thread shows up before the SECOND thread + all
+        // replies render. renderFeedbackBoard is synchronous in the page tick
+        // following the fetch resolve, so a single rAF settle is enough.
+        // (Avoid page.waitForFunction here — its second-arg-options form is
+        // unreliable in this codebase's Playwright version, defaulting to a
+        // 30s timeout when no convergence happens.)
+        await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+        const counts = await page.evaluate(() => ({
+            threads: document.querySelectorAll('#feedbackView .feedback-thread').length,
+            replies: document.querySelectorAll('#feedbackView .feedback-thread .feedback-reply').length,
+        }));
+        assertOrThrow(
+            counts.threads === 2 && counts.replies === 6,
+            `view 14b: expected 2 threads + 6 replies, got ${counts.threads} threads + ${counts.replies} replies`,
+        );
+        // Two .is-target variants are reachable via click:
+        //   - .feedback-reply.feedback-click-reply.is-target (click a reply)
+        //   - .feedback-thread-body.feedback-click-reply.is-target (click thread body <p>)
+        // Note: .feedback-thread-click-target.is-target IS NOT reachable —
+        // setFeedbackReplyTarget at app.js L6220 looks up
+        // [data-feedback-reply-anchor="${target.id}"]; the thread-head
+        // binding passes target.id = item.id (the fixture's thread id), but
+        // the click-target div carries data-feedback-reply-anchor="thread"
+        // (literal). The id never matches, so .is-target never lands on
+        // .feedback-thread-click-target. Any CSS keyed on that combo is
+        // dead — calling it out so a future reader doesn't try to "cover"
+        // it via a different selector.
+        //
+        // Click 1 of 2: Charlie's reply on thread 1 → .feedback-reply.is-target.
+        await page.click('[data-feedback-reply-anchor="fb_reply_charlie"]');
+        await page.waitForSelector('#feedbackView .feedback-reply.is-target', { timeout: 2000 });
+        // Click 2 of 2: thread 2's BODY <p> → .feedback-thread-body.is-target.
+        // The body element is selected by data-feedback-reply-anchor="thread-body";
+        // scope to thread 2 by article id.
+        await page.click('article[data-feedback-id="fb_thread_fixture_02"] [data-feedback-reply-anchor="thread-body"]');
+        await page.waitForSelector(
+            'article[data-feedback-id="fb_thread_fixture_02"] .feedback-thread-body.is-target',
+            { timeout: 2000 },
+        );
+        // Both threads now show .feedback-reply-target chip un-hidden (one per thread).
+        const visibleChips = await page.evaluate(() =>
+            document.querySelectorAll('#feedbackView .feedback-reply-target:not(.hidden)').length
+        );
+        assertOrThrow(visibleChips === 2, `view 14b: expected 2 visible reply-target chips, got ${visibleChips}`);
+        await page.waitForTimeout(200);
     } },
     // ----- Page A (continued — lesson chrome class flips) -----
     // View 15 — Page A — forces learnBody.classList.add('chapter-overview-active')
@@ -805,6 +912,35 @@ async function runPageCView(page, viewName) {
 let cachePresent = new Set();
 
 // ---------- runner ----------
+// Signal-handler cleanup for the seeded feedback fixture (view 14b) AND
+// the spawned bridge subprocess. The IIFE finally block restores on normal
+// exit and on caught exceptions; SIGINT/SIGTERM short-circuit that path.
+//
+// PR #69 review finding #9: the original signal handler called process.exit
+// without killing the bridge subprocess, orphaning ws-bridge on port :9125
+// and breaking subsequent runs with EADDRINUSE. The bridge handle is now
+// tracked at module scope (bridgeProcess) so the signal handler can SIGTERM
+// it before exiting. signalHandled prevents re-entry if two signals arrive
+// (e.g. impatient double ctrl-C).
+let bridgeProcess = null;
+let signalHandled = false;
+function signalCleanupRestore(signal) {
+    if (signalHandled) return;
+    signalHandled = true;
+    try { restoreFeedbackBoard(); } catch (_) {}
+    if (bridgeProcess && !bridgeProcess.killed) {
+        try { bridgeProcess.kill('SIGTERM'); } catch (_) {}
+    }
+    // process.exit is synchronous — the bridge gets the SIGTERM signal but
+    // doesn't get a tick to clean up its listening socket before this
+    // process dies. Bridge typically takes <100ms to release :9125; if a
+    // subsequent run hits EADDRINUSE the operator can pkill manually.
+    // exitCode 130 = standard SIGINT (128+2); 143 = SIGTERM (128+15).
+    process.exit(signal === 'SIGTERM' ? 143 : 130);
+}
+process.once('SIGINT', () => signalCleanupRestore('SIGINT'));
+process.once('SIGTERM', () => signalCleanupRestore('SIGTERM'));
+
 (async () => {
     const repoRoot = path.resolve(__dirname, '..');
     cachePresent = preFlightCacheCheck(repoRoot);
@@ -826,6 +962,7 @@ let cachePresent = new Set();
         env: { ...process.env, PORT: String(PORT) },
         stdio: ['ignore', 'pipe', 'pipe'],
     });
+    bridgeProcess = server; // expose to signal handler — see signalCleanupRestore
     server.stdout.on('data', () => {});
     server.stderr.on('data', d => process.stderr.write(`  [bridge-err] ${d}`));
 
@@ -874,7 +1011,21 @@ let cachePresent = new Set();
         // addInitScript runs immediately after document creation (BEFORE the
         // app's <link rel=stylesheet>); the mask CSS leans on `!important` +
         // selector specificity to win the cascade regardless of order.
-        const context = await browser.newContext({ viewport: VIEWPORT });
+        //
+        // timezoneId + locale pinned (PR #69 review findings #10, #16) so
+        // formatFeedbackTime (app.js L6182: date.toLocaleString([], {...}))
+        // renders byte-identical strings on every machine. Without pinning,
+        // view 14b's .feedback-thread-meta width drifts between an author's
+        // local TZ and CI's UTC by up to one character per timestamp, which
+        // shifts downstream layout under the MASK_CSS color:transparent
+        // overlay. All other views' visible timestamps are already masked
+        // visibility:hidden (recent-list, settings UID) so pinning is
+        // pixel-neutral on the existing 25 baselines.
+        const context = await browser.newContext({
+            viewport: VIEWPORT,
+            timezoneId: 'UTC',
+            locale: 'en-US',
+        });
         await context.addInitScript(({ css }) => {
             const inject = () => {
                 const s = document.createElement('style');
@@ -934,6 +1085,11 @@ let cachePresent = new Set();
         console.error('[visual-diff] FATAL', err);
         exitCode = 1;
     } finally {
+        // Restore app/users/feedback-board.json to its pre-run state — deletes
+        // the seeded fixture if no backup existed, restores the developer's
+        // file otherwise. Runs BEFORE bridge SIGTERM so a slow bridge shutdown
+        // doesn't widen the contamination window.
+        try { restoreFeedbackBoard(); } catch (_) {}
         // Attach the exit listener BEFORE sending SIGTERM so a fast-exiting
         // bridge can't race the listener; race against a 2s timeout and warn
         // if it hits so "real exit" and "never exited" don't look identical.
