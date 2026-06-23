@@ -2,7 +2,7 @@
 
 Owner: FlyM1ss
 Started: 2026-06-19
-Last refreshed: 2026-06-23 (after PRs #69 + #70 — Phase 3.5 v3 §9a populated feedback-board + §9c gap 1 opened mistake-case)
+Last refreshed: 2026-06-23 (after PR #71 — Phase 3 §3a.i feedback-tones cascade collapse, -95 lines; first regression caught by adversarial review, harness-gap incident filed)
 Status:
 
 - **Phase 0** merged (#15).
@@ -62,13 +62,31 @@ Status:
   - REMAINING: §9c gap 2 (narrow-viewport `@media (max-width: ...)`
     coverage at L36230 / L38335 / L36240). Documentation-only close
     or separate harness sweep — see deferred-doc §9c gap 2.
+- **Phase 3 §3a.i** (feedback-tones cascade collapse) shipped 2026-06-23
+  in PR #71 (bc03542) — **−95 lines** from `app/style.css`. Per-property
+  cascade walk via dispatched workflow (109 agents, 1080 declarations
+  tagged); 23 delete blocks survived adversarial verification. Initial
+  delete list (-103 lines) was partially reverted after medium-effort
+  code-review (9 angles → 1-vote verify → sweep) caught a (1,4,0)→(1,3,0)
+  cascade fall-through on `.feedback-reply.is-{left,right}[class*="tone-"]
+  .feedback-reply-context` — the cascade-analysis workflow had treated
+  L34742-L34748 as a duplicate of L34825-L34829 at the rule-body level
+  but missed that the deleted rule carried TWO (1,4,0) selectors that
+  the duplicate did NOT carry. Border-color flipped from
+  `rgba(var(--author-rgb),0.22)` (tone-tinted) to `rgba(52,211,153,0.34)`
+  (lane green) / `rgba(244,114,182,0.32)` (lane pink). Fix in commit
+  8d8bce6 restores the 3-selector rule with a DO-NOT-DELETE comment.
+  **The visual-diff harness did NOT catch the regression** — see
+  `docs/visual-diff-harness-gap.md` for the property-specific
+  blindspot and the direct-probe workaround required for future
+  #feedbackView cascade work.
 - **Phase 3 Pass 2** is the active frontier — see §"Roadmap from
   here". Deferred punch-list lives in `docs/phase3_deferred.md`.
 
-Cumulative deltas through end of Step G.3 (PRs #63-#68, 2026-06-22):
+Cumulative deltas through end of PR #71 (§3a.i, 2026-06-23):
 
 - `app/app.js`: 17,650 → 8,339 (−9,311, **−52.7%**).
-- `app/style.css`: 45,286 → 43,743 (−1,543, **−3.4%**).
+- `app/style.css`: 45,286 → 43,648 (−1,638, **−3.6%**).
 - `app/index.html`: 3,153 → 1,654 (−1,499, ~47.5% — Phase 1 #11 extract).
 
 This is the single source of truth for the multi-phase refactor of the

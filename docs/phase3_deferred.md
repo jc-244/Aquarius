@@ -253,33 +253,58 @@ Realistic Step B ceiling, post-analysis: ~320 lines if all 5 sections
 shipped + a polished S5. The 880-line gap to the original 1,200 target
 is structural, not a deferral.
 
-#### 3a.i — DEFERRED: S5 feedback-author-tones (5-banner cascade)
+#### 3a.i — SHIPPED PR #71: S5 feedback-author-tones (-95 lines)
 
-Banners B19 (EOF FEEDBACK AUTHOR COLORS), B20 (TRUE FINAL FEEDBACK
-AUTHOR TONES), B22 (FINAL FEEDBACK AUTHOR COLOR LOCK), B23 (FEEDBACK
-AUTHOR TONE LOCK), plus a DUPLICATE "EOF FEEDBACK AUTHOR COLORS"
-banner at L38504+ in the #20b range — all interact. Cluster C's
-discovery scoped to L33346–L35828 and missed the L38504+ banner just
-like cluster E missed L36408+ (the bug that surfaced the S4 inversion).
+Per-property cascade walk of L34000–L39200 via dispatched workflow
+(109 agents, 1080 declarations tagged, 94 candidates → 23 confirmed-safe
+blocks → 22 blocks shipped after adversarial review caught one false-
+positive). Initial squash-merge (bc03542) deleted 95 lines net; the
+PR description listed a projected 103 but a (1,4,0) selector restore
+landed mid-review (see "Regression caught + fixed" below).
 
-**Specific cascade risk:** B19's
-`.feedback-reply.is-left[class*="tone-"] .feedback-reply-context` rule
-at (1, 5, 0) sets `border-color: rgba(var(--author-rgb), 0.22)`
-LITERAL. B22 at (1, 4, 0) sets `border-color: var(--author-mid)`,
-which B23 resolves to `rgba(var(--author-rgb), 0.24)` — deleting B19's
-context rule shifts the border alpha 0.22 → 0.24. The single
-`14-feedback-board` harness view doesn't exercise tone-1..5 hover or
-active variants, so a 0.02-alpha border shift may not register at
-0.20% threshold but is a real visual change.
+**Regression caught + fixed.** The cascade-analysis workflow flagged
+L34742-L34748 as a duplicate of L34825-L34829 — true ONLY for the
+single (1,3,0) selector `.feedback-reply[class*="tone-"]
+.feedback-reply-context`. The (1,4,0) selectors at L34743/L34744
+(`.is-left[class*="tone-"] .feedback-reply-context` + `.is-right`
+variant) were UNIQUELY defined and had no later duplicate. Deleting
+them dropped the cascade to two (1,3,0) candidates — the preserved
+tone-tint L34775 and the lane-lock at L37725 (FEEDBACK CONVERSATION
+COLOR LANES). Source-order tiebreak went to L37725 — chip border
+flipped from `rgba(var(--author-rgb), 0.22)` (tone-tinted teal/orange)
+to `rgba(52,211,153,0.34)` (lane green) / `rgba(244,114,182,0.32)`
+(lane pink). Background and color shifted analogously. Restored in
+commit 8d8bce6 with a load-bearing DO-NOT-DELETE comment.
 
-**Entry point for next session:** scope the property-timeline
-workflow to L34893–L38565 (not just the cluster's banner range).
-Walk every `.feedback-thread`, `.feedback-reply`,
-`.feedback-reply-meta`, `.feedback-reply-context`,
-`.feedback-thread::after`, `.feedback-reply::before` declaration; tag
-by (specificity, source-line). Identify what's safe to collapse vs
-what's beating the L38504+ duplicate banner. Estimate: ~140 lines
-recoverable.
+**Visual-diff harness FAILED to catch the regression.** The harness
+reported 14b at 0/1024000 pixels diff across two `--check` runs.
+A diagnostic test with `border: 5px solid magenta + background: yellow`
+on `.feedback-reply-context` also slipped past as 0%. The harness
+DOES detect total-removal changes (`display: none` produced 2.821%
+diff on view 14), so the bug is property/selector-specific, NOT
+total-blindness — possibly a Playwright/Chromium CSS-loading or
+disk-cache issue. **Direct Playwright computed-style probe was the
+load-bearing verification** for §3a.i (see docs/visual-diff-harness-
+gap.md if filed). All future #feedbackView CSS-cascade work MUST
+use direct computed-style probes until the harness gap is fixed.
+
+**Discovery-agent scoping lesson confirmed.** The deferred-doc warning
+"discovery agents stop at the cluster's banner boundary" turned out
+to be the wrong threat model. The actual failure mode was: workflow
+correctly walked the full L34000-L39200 range, found L34825 as the
+"byte-identical duplicate" — but failed to verify that the deleted
+RULE GROUP contained two (1,4,0) selectors that the duplicate at
+L34825 did NOT carry. The byte-identical check passed at the rule
+level but not the selector level. Future cascade-analysis prompts
+should explicitly compare comma-separated selector lists, not just
+declaration bodies, when claiming "duplicate."
+
+**Forward cleanup (deferred to §3a.ii or later):** Adversarial review
+also flagged L37980-L37991 (12-line tone-0..5 `--author-rgb`/`--author-
+ink` triplicate), L38006 `.feedback-reply-meta` tone-aware, and 4
+selector-only line deletes in L34751-L34762 — ~22 more lines available
+in a future pass once a paired-line atomic-delete tool is built (the
+comma-group syntax fragility blocks single-line deletion of those).
 
 #### 3a.ii — DEFERRED: cluster-G low/medium-confidence findings
 
