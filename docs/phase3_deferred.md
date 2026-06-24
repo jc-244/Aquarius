@@ -865,6 +865,44 @@ lines, partly shipped:
   (L40702+) is the source-order winner for the home-ask family — no
   later same-selector `!important` rules exist for its frosted-glass
   selectors. **Defer rule D3** — structural ceiling for both banners.
+- **§3c.i pass 6 — SHIPPED PR #99 (2026-06-24): −63 lines.** Earliest
+  HOME ASK banners (predating all "EOF" series) cleared:
+  - SPACING TIGHTEN (L28993+): 11 bare/prefixed rules — `.home-ask-stage`,
+    `.home-ask-icon`, `.home-ask-empty h1`, `.home-ask-empty p`,
+    `.home-ask-tags`, `.home-ask-tag`, `.welcome.home-ask-workspace
+    .home-ask-composer` (already prefixed), `.welcome.home-ask-workspace
+    .home-ask-input-row` (already prefixed), `.home-ask-toolbar`,
+    `.home-feature-actions`, `.home-feature-chip svg`. Each shadowed by
+    LEARN-QA MATCH (L39679+) or GLOBAL SHRINK (L40512+) at higher spec
+    `(0,2,1)+` `!important`. R11 `.home-feature-chip` and R13
+    `.home-feature-chip span` KEPT — both declare `letter-spacing: 0`
+    which is NOT re-declared by any later `.welcome.home-ask-workspace`-
+    scoped rule (verified: L39866 / L40428 / L40642 / L40449 all lack
+    `letter-spacing`). Banner header rewritten to reflect what survives.
+  - MODE BUTTON PARITY (L29058+): bare `.home-ask-toolbar { gap: 10px }`
+    shadowed 6× by later prefixed rules.
+  - MODULE POSITION (L29120-L29125): entire banner deleted. Single rule
+    `.home-ask-stage > .home-ask-empty, .home-ask-composer,
+    .home-feature-actions { transform: translateY(28px) }` has
+    IDENTICAL-selector / IDENTICAL-spec shadower at FINAL POSITION L29866
+    with `transform: translateY(56px) !important` — source-order tiebreak.
+  - **DOM-scope justification:** verified via `app/index.html:405-509`
+    that every `.home-ask-*` class only renders inside
+    `<div class="welcome home-ask-workspace">`. Therefore bare-selector
+    rules at (0,1,0) are subsumed by later prefixed (0,2,1)+ `!important`
+    rules wherever they target the same property.
+  - 7-angle `/code-review` medium-effort returned `[]` on all 3 correctness
+    angles. 35/35 views @ 0.000% across two consecutive `--check` runs.
+
+**Entry point for §3c.i pass 7 (if continued):** MODE BUTTON PARITY
+remaining 6 prefixed rules at L28996-L29055 post-#99 (`.home-mode-toggle`,
+`.home-mode-icon`, `.home-mode-icon i`, `.home-mode-toggle .qa-caret-icon`,
+`.home-ask-web-toggle`, `.home-ask-web-toggle svg`). These have many props
+each — would require careful per-property cascade walk against CONTROL
+GLASS LOCK (L37888+) and MODE GLASS (L40702+) shadowers. Conservative
+estimate: ~30-50 line ceiling. Then later cluster A initial rules
+(deferred note above) and remaining LIQUID GLASS TEST (L29993+, ~8000-line
+banner) which has rich content.
 
 **Entry point for §3c.i pass 3:** PR #95 (pass 2) covered the
 preceding HOME ASK CONTROL MOTION TUNE banner (L38064-L38128
@@ -1034,9 +1072,10 @@ a future contributor running the §6.2 orphan-sweep doesn't re-flag them.
 | §3c.i pass 3 (PR #96) | multi-banner shadowed cluster (14 rules across POLISH LOCK / UPWARD MENU FIX / LEARN-QA MATCH / SCALE CORRECTION) | −77 in `app/style.css` |
 | §3c.i pass 4 (PR #97) | SCREENSHOT MATCH .home-mode-toggle (3 props all shadowed by GLOBAL SHRINK L40649) — structural ceiling for RIGHT-QA REDESIGN + SCREENSHOT MATCH | −6 in `app/style.css` |
 | §3c.i pass 5 (PR #98) | SIZE RESTORE 6 whole-rule blocks (`.home-ask-empty p` + `.home-ask-tag svg` + `.home-ask-input-row` + `#userInput.search-input` + `.home-ask-toolbar` + `.home-feature-chip`, 20 props total) shadowed by LEARN-QA MATCH L39750+ — structural ceiling for SIZE RESTORE, GLOBAL SHRINK (zero candidates), MODE GLASS (zero candidates) | −38 in `app/style.css` |
+| §3c.i pass 6 (PR #99) | Earliest HOME ASK banners cleared: SPACING TIGHTEN 11 bare/prefixed rules + MODE BUTTON PARITY bare `.home-ask-toolbar gap` + MODULE POSITION whole banner. DOM-scope verified — `.home-ask-*` only renders inside `.welcome.home-ask-workspace`, so bare (0,1,0) loses to later prefixed (0,2,1)+ `!important`. R11 + R13 kept (letter-spacing genuinely unshadowed) | −63 in `app/style.css` |
 
 `app/app.js`: **14,434 → 8,339 lines (−6,095, −42.2%)** (includes post-PR #82 interactive-demos extractions in Step F/G PRs #59-#61).
-`app/style.css`: **44,845 → 43,074 lines (−1,771, −3.95%)**.
+`app/style.css`: **44,845 → 43,011 lines (−1,834, −4.09%)**.
 
 **Adversarial-review pattern (PR #91 + PR #93):** /code-review repeatedly
 returns inverted-cascade false-positives on state-variant and value-divergent
