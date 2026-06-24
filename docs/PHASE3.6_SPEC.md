@@ -357,14 +357,16 @@ L33191/33192/33213-33216/33238/37415/37416/37423-37426 (the §3d runtime-collaps
 
 ## 6.3 Branch progress (refactor/phase3.6-css-collapse, 2026-06-24/25)
 
-Doubled-IDs: **608 → 515** (textbook 35 + page-corner 58). All double-verified
-(css-probe byte-identical + visual-diff 36 views all green, incl. the `opacity:0`
-turner-content via css-probe state S-page-corner).
+**Cumulative this session (all double-verified):** doubled-IDs **608 → 437** (−171, −28%);
+`!important` lines **14,948 → 14,552** (−396); style.css **42,991 → 42,221** (−770) +
+runtime-collapsed.css **2,102 → 2,019** (−83). Every change verified by css-probe (byte-identical)
++ visual-diff (36 views ≤ threshold; lesson views covering live chrome at 0.000%).
 
-| Commit | Tranche | Δ doubled-IDs | Verification |
+| Commit | Tranche | Δ | Verification |
 |---|---|---|---|
-| `bac31d2` + `6f939a2` | textbook (Pilot 0) | −35 (608→573) | css-probe S12 + negative-tested gate |
-| `7fc0350` | page-corner (§6.2 #1) | −58 (573→515) | css-probe S-page-corner + visual-diff 06/17/18/21/22 @ 0.000% |
+| `bac31d2` + `6f939a2` | textbook (Pilot 0) | −35 doubled-IDs | css-probe S12 + negative-tested gate |
+| `7fc0350` | page-corner (§6.2 #1) | −58 doubled-IDs | css-probe S-page-corner + visual-diff 06/17/18/21/22 @ 0.000% |
+| `8cd712b` | dead-CSS (§6.3a) | **−853 lines, −78 doubled-IDs, −396 `!important`** | dead-ID grep 0; live `#learnFocusPageIndicator` intact; css-probe PASS; visual-diff exit 0 (06/07/08 @ 0.000%) |
 
 css-probe states on the branch: S2/S3 (§3d baseline), **S-page-corner** (NEW), S12.
 
