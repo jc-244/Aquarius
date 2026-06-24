@@ -331,12 +331,16 @@ comma-group syntax fragility blocks single-line deletion of those).
   `.learn-topbar-actions` (sibling of `#learnBody` per `index.html:625`
   + `app.js:943-946`), so the two `#learnBody`-descendant selectors
   match zero elements in every DOM state. 2 lines net.
-  **Mechanical extension available:** the identical dead-`:not()`
-  pattern repeats at 8 more line ranges (L20752-20754, L26137-26139,
-  L26198-26200, L26266-26268, L26439-26441, L26639-26641, L26695-26697,
-  L26979-26981 — pre-PR-#76 line numbers; shift by −2 below L25982
-  post-merge). Each block is mechanically identical and equally safe.
-  Easy follow-up PR if/when wanted, ~16 more lines.
+- **B17 extension — SHIPPED PR #77 (2026-06-24).** Remaining 8 sites of
+  the same dead-`:not()` pattern cleared: L20731, L26114, L26175, L26243,
+  L26416, L26616, L26672, L26956 (post-PR-#76 line numbers). Two sites
+  live inside `@container lecture-panel (max-width: 760px)` queries
+  (L20731 + L26114); the rest are top-level. All grep occurrences of
+  `#learnBody:not(.chapter-overview-active) #learnViewSelector` and
+  `.chapter-overview-split-active #learnViewSelector` in the file are
+  now gone. Visual-diff harness 28 views: runs 2+3 stable, all pass.
+  Run 1 view-22 0.765% flake confirmed to be Glass-card text-glyph
+  anti-aliasing via diff-PNG inspection (not topbar). 16 lines net.
 - **B18 [1] — SHIPPED.** L34702-L34705 deleted. Same selector
   (`.welcome.home-ask-workspace #homeModeMenu .home-mode-menu-icon i`),
   same specificity (0,1,3,1), both `!important`, both top-level (verified
@@ -684,10 +688,11 @@ Both pairs were verified during the Pass 1 work and skipped. Update
 | §3a.i (PR #71) | feedback author-tones cascade dedup | −95 in `app/style.css` |
 | §3a.i forward (PR #74) | feedback-cluster cleanup | −54 in `app/style.css` |
 | §3b.ii (PR #75) | orphan course-tracker bundle | −21 in `app/style.css` |
-| **§3a.ii (PR #76)** | **B17/B18/B25 cluster-G remnants** | **−11 in `app/style.css`** |
+| §3a.ii (PR #76) | B17/B18/B25 cluster-G remnants | −11 in `app/style.css` |
+| **§3a.ii extension (PR #77)** | **B17 mechanical 8-site sweep** | **−16 in `app/style.css`** |
 
 `app/app.js`: **14,434 → 9,385 lines (−5,049, −35.0%)**.
-`app/style.css`: **44,845 → 43,562 lines (−1,283, −2.9%)**.
+`app/style.css`: **44,845 → 43,546 lines (−1,299, −2.9%)**.
 
 The Phase 3 JS work is structurally complete. CSS Pass 1 + Pass 2
 Steps A through D shipped; the structural ceiling on the L33181–L44261
