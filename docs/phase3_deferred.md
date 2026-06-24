@@ -1006,9 +1006,10 @@ a future contributor running the §6.2 orphan-sweep doesn't re-flag them.
 | §3b.iv pass 6 (PR #93) | CT base cluster shadowed by #courseTrackerView !important block (2 rules — shell + title) | −18 in `app/style.css` |
 | §3c.i pass 1 (PR #94) | DEBUG LOCK shadowed cluster (.home-mode-option + :focus-within + dead @keyframes + reduced-motion duplicate) | −39 in `app/style.css` |
 | §3c.i pass 2 (PR #95) | MOTION TUNE shadowed cluster (9 rules: :focus-within + dead @keyframes home-ask-focus-soft-pop + .home-mode-toggle + .home-mode-icon + .qa-caret-icon + web-toggle base/svg + .home-mode-menu.show) | −57 in `app/style.css` |
+| §3c.i pass 3 (PR #96) | multi-banner shadowed cluster (14 rules across POLISH LOCK / UPWARD MENU FIX / LEARN-QA MATCH / SCALE CORRECTION) | −77 in `app/style.css` |
 
 `app/app.js`: **14,434 → 8,339 lines (−6,095, −42.2%)** (includes post-PR #82 interactive-demos extractions in Step F/G PRs #59-#61).
-`app/style.css`: **44,845 → 43,195 lines (−1,650, −3.68%)**.
+`app/style.css`: **44,845 → 43,118 lines (−1,727, −3.85%)**.
 
 **Adversarial-review pattern (PR #91 + PR #93):** /code-review repeatedly
 returns inverted-cascade false-positives on state-variant and value-divergent
