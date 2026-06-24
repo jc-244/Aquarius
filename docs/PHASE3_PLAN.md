@@ -583,11 +583,18 @@ glass, intro glass skin.
 zero-reference (after grep-checking against runtime template-literal
 patterns). Net delete: ~45 rules.
 
-- `.preference-signal-card` L36847, `.preference-signal-label`
-  L36862 (banner L36805, sub-PR #20b).
-- `.mistake-draft-actions` L38919, `.mistake-note-image-empty`
+- ~~`.preference-signal-card` L36847, `.preference-signal-label`
+  L36862 (banner L36805, sub-PR #20b).~~ **LIVE — DO NOT DELETE.**
+  Verified during Pass 1: both classes are emitted as static
+  `class="..."` strings by `app/preference-profile.js`. Skipped from
+  the orphan sweep; per `docs/phase3_deferred.md §4`.
+- ~~`.mistake-draft-actions` L38919,~~ `.mistake-note-image-empty`
   L38988, `.mistake-note-image-chip` L39001 (banner L38833,
   sub-PR #20c).
+  **`.mistake-note-image-empty` + `.mistake-note-image-chip` are
+  LIVE — DO NOT DELETE.** Verified during Pass 1: both are emitted
+  by `app/mistake-notebook.js`. `.mistake-draft-actions` was the
+  sole orphan and DID ship (PR #42); per `docs/phase3_deferred.md §4`.
 - `.lecture-explain-text` L34351, `.lecture-block-text` L34352,
   `.lesson-page-kicker` L34370, `.math-chip` L34371, `.formula-label`
   L34372 (banner L34341, sub-PR #20a).
