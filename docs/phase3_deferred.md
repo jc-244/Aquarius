@@ -959,9 +959,21 @@ a future contributor running the §6.2 orphan-sweep doesn't re-flag them.
 | §3b.iv pass 3 (PR #90) | preference-card grouped base + .preference-page-grid + min-height shadowed (bundled 3 rules) | −22 in `app/style.css` |
 | §3b.iv pass 4 (PR #91) | preference editor:focus + @media .preference-page-grid + feedback btn:hover shadowed (bundled 3 rules) | −22 in `app/style.css` |
 | §3b.iv pass 5 (PR #92) | MN base cluster shadowed by #mistakeNotebookView !important block (bundled 5 rules) | −43 in `app/style.css` |
+| §3b.iv pass 6 (PR #93) | CT base cluster shadowed by #courseTrackerView !important block (2 rules — shell + title) | −18 in `app/style.css` |
 
 `app/app.js`: **14,434 → 8,339 lines (−6,095, −42.2%)** (includes post-PR #82 interactive-demos extractions in Step F/G PRs #59-#61).
-`app/style.css`: **44,845 → 43,309 lines (−1,536, −3.43%)**.
+`app/style.css`: **44,845 → 43,291 lines (−1,554, −3.47%)**.
+
+**Adversarial-review pattern (PR #91 + PR #93):** /code-review repeatedly
+returns inverted-cascade false-positives on state-variant and value-divergent
+deletions. The reviewer asserts a regression based on the BASE rule's value
+without checking which side actually wins the cascade pre-delete. In every
+case the !important shadower was already winning, so the post-delete render
+is bit-identical to the pre-delete render — pixel-evidence (view 12c / view
+13 at 0.000%) is the definitive refutation. Lesson for future PRs: when
+the reviewer flags a value-divergence regression on a shadowed-base delete,
+ALWAYS verify by re-reading the shadower's specificity + !important parity
+and the relevant pixel-view's diff value, not just the verdict text.
 
 The Phase 3 JS work is structurally complete. CSS Pass 1 + Pass 2
 Steps A through D shipped; the structural ceiling on the L33181–L44261
