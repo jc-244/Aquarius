@@ -455,7 +455,7 @@ including strict-0.05% view 14c (the §3a.i regression-detector).
 Also dropped the stale `/* Per-author tint at (1,2,0)… */` comment at
 L34676 explaining the now-deleted block. 48 lines net.
 
-#### 3b.i.followup — DEFERRED (D1): banner-comment hardening
+#### 3b.i.followup — SHIPPED PR #82 (2026-06-24): banner-comment hardening (+13 lines)
 
 Review finding #2 (PR #80 `/code-review`): the L34660-L34667
 "EOF FEEDBACK AUTHOR COLORS" banner comment carries a DO-NOT-DELETE
@@ -517,6 +517,13 @@ untouched code. **Bundle these together as the same D1 follow-up:**
 All 7 sub-items are doc/whitespace-only, no cascade risk, no harness
 impact. Bundle into a single ~25-line cosmetic-cleanup PR when
 visiting this cluster next.
+
+**Shipped 2026-06-24 in PR #82** (chore/style-comment-hardening, +24/-11
+= +13 lines net). All 7 sub-items addressed. Light Explore-agent review
+caught one line-number error (L37552 → L37461) which was fixed before
+merge. Visual-diff unchanged (33 views — 30 at 0.000%, 3 known-noise
+unrelated). Harness coverage confirms comment edits + 1 indentation
+fix had zero rendering impact.
 
 #### 3b.ii — SHIPPED PR #75 (2026-06-24): course-tracker overview + grid bundle (-21 lines)
 
@@ -876,7 +883,8 @@ Both pairs were verified during the Pass 1 work and skipped. Update
 | §3.5 v4 harness (PR #78) | +5 state-variant views (12b/12c/12d/14d/14e) | +245 in `tools/visual-diff.js` |
 | §3b.iv pass 1 (PR #79) | 4 shadowed `:hover` / `:focus` / `:active` blocks | −30 in `app/style.css` |
 | §3b.i (PR #80) | feedback-cluster shadowed-block cleanup | −48 in `app/style.css` |
-| **§3a.i++/§3a.ii++ (PR #81)** | **cross-cluster shadowed cleanup (feedback + MN + lesson-page)** | **−41 in `app/style.css`** |
+| §3a.i++/§3a.ii++ (PR #81) | cross-cluster shadowed cleanup (feedback + MN + lesson-page) | −41 in `app/style.css` |
+| **§3b.i.followup (PR #82)** | **bundled comment-hardening + indentation fix** | **+13 in `app/style.css` (doc)** |
 
 `app/app.js`: **14,434 → 9,385 lines (−5,049, −35.0%)**.
 `app/style.css`: **44,845 → 43,427 lines (−1,418, −3.16%)**.
