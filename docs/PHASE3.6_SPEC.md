@@ -357,26 +357,43 @@ L33191/33192/33213-33216/33238/37415/37416/37423-37426 (the §3d runtime-collaps
 
 ## 6.3 Branch progress (refactor/phase3.6-css-collapse, 2026-06-24/25)
 
-**Cumulative this session (all double-verified):** doubled-IDs **608 → 426** (−182, −30%);
-`!important` lines **14,948 → 14,552** (−396); style.css **42,991 → 42,221** (−770) +
-runtime-collapsed.css **2,102 → 2,019** (−83). Every change verified by css-probe (byte-identical)
-+ visual-diff (36 views ≤ threshold; lesson views covering live chrome at 0.000%).
+**Cumulative this session (all verified):** style.css **42,991 → 41,559 (−1,432)** + runtime-collapsed.css
+**2,102 → 2,019 (−83)** = **−1,515 lines**; doubled-IDs **608 → 422 (−186, −30.6%)**;
+`!important` lines **14,948 → 14,231 (−717)**. Every change verified by css-probe (byte-identical)
++ visual-diff (lesson views covering live chrome at 0.000%); dead-CSS deletions additionally gated on
+distinct-live-selector-context invariants.
 
 | Commit | Tranche | Δ | Verification |
 |---|---|---|---|
 | `bac31d2` + `6f939a2` | textbook (Pilot 0) | −35 doubled-IDs | css-probe S12 + negative-tested gate |
-| `7fc0350` | page-corner (§6.2 #1) | −58 doubled-IDs | css-probe S-page-corner + visual-diff 06/17/18/21/22 @ 0.000% |
-| `8cd712b` | dead-CSS (§6.3a) | **−853 lines, −78 doubled-IDs, −396 `!important`** | dead-ID grep 0; live `#learnFocusPageIndicator` intact; css-probe PASS; visual-diff exit 0 (06/07/08 @ 0.000%) |
-| `10935a3` | learn-topbar (§6.2 #2) | −11 doubled-IDs | css-probe PASS; visual-diff exit 0 (06/07/08/15/16 @ 0.000%) |
+| `7fc0350` | page-corner (§6.2 #1) | −58 doubled-IDs | css-probe S-page-corner + visual-diff @ 0.000% |
+| `8cd712b` | dead-CSS page-indicators (§6.3a) | **−853 lines, −78 doubled-IDs, −396 `!important`** | dead-ID grep 0; live `#learnFocusPageIndicator` intact; both gates 0.000% |
+| `10935a3` | learn-topbar (§6.2 #2) | −11 doubled-IDs | css-probe PASS; visual-diff 06/07/08/15/16 @ 0.000% |
+| `71dd7c9` | mistake-notebook cards (§6.2 #3) | −4 doubled-IDs | css-probe PASS; visual-diff 03 + 03b @ 0.000% |
+| `6503947` | dead-CSS `.learn-explain-toggle-btn` + `#learnExplainToggleBtn` | **−662 lines, −321 `!important`** | distinct `#learnFocusBtn` selector-contexts unchanged (70=70); both gates @ 0.000% |
 
-**Clean COLLAPSE-SAFE-NOW wins are now harvested.** Remaining COLLAPSE-SAFE-NOW are small + need
-new probe coverage (MN 4 visible cards via views 03/03b; MN close-btn + close-btns L34088/89 +
-composer `.bottom-actions` are `display:none`/specific-prop → need css-probe states). The larger
-remaining value is the **`!important` removal on DOM-isolated views** (courseTracker 74.9% NOCOMP,
-preference 69.8%) — higher-risk (changes cascade outcomes), needs a per-view css-probe state with
-COMPREHENSIVE per-property coverage (probe every stripped property, not just the visible pixel).
-That + the harness-gated tranches (narrow-viewport, state-matrix) are the genuine multi-session
-Phase 3.6 grind.
+### 6.3c — dead-orphan sweep is the richest remaining SAFE vein (recommended next)
+
+Two dead-orphan deletions (page-indicators −853, toggle-btn −662) prove **renamed-away orphan
+classes/IDs** are the highest-value SAFE target (line + `!important` reduction, no cascade-rewrite
+risk). The toggle-btn subagent flagged MORE candidates (verify each: 0 refs in index.html + all
+app JS, not template-built): `.learn-chat-corner-toggle`, `.lecture-overlay-btn-left`,
+`.lecture-overlay-btn-right`, `.learn-chat-restore`, `.learn-chat-topbar`, `.learn-explain-bottom-rail`,
+plus a residual `#learnExplainToggleBtn` arm. A COMPREHENSIVE whole-file orphan scan (tools/scan-unused-css.js
+is scoped only to L33181+; extend it or run a custom scan, template-literal-aware) likely finds more.
+
+**Dead-orphan deletion protocol (corrected after a near-miss):** strict ARM-REMOVAL — delete only
+dead arm-lines; whole-rule-delete ONLY when EVERY arm is dead; for mixed groups keep the live arm
+(it may be re-emitted in `{`-form when the dead arm was last). **Definitive safety invariant: the SET
+of distinct live-selector-contexts (e.g. `grep '#liveId' | sed 's/[,{].*//' | sort -u`) must be
+UNCHANGED before/after** — this is viewport-independent and catches loss in harness-uncaptured states
+(e.g. `data-panel-focus="lecture-full"`), which a raw `-`-line diff or pixel-diff will MISS.
+
+### Remaining beyond the orphan sweep
+- Small COLLAPSE-SAFE-NOW (close-btns L34088/89 + composer `.bottom-actions`, `display:none`/specific → need css-probe states).
+- **`!important` removal on DOM-isolated views** (courseTracker 74.9% NOCOMP, preference 69.8%) — higher-risk;
+  needs a per-view css-probe state with comprehensive per-property coverage.
+- Harness-gated tranches (narrow-viewport, state-matrix) + the §3d composer chain (hardest).
 
 css-probe states on the branch: S2/S3 (§3d baseline), **S-page-corner** (NEW), S12.
 
