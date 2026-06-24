@@ -306,25 +306,46 @@ selector-only line deletes in L34751-L34762 — ~22 more lines available
 in a future pass once a paired-line atomic-delete tool is built (the
 comma-group syntax fragility blocks single-line deletion of those).
 
-#### 3a.ii — DEFERRED: cluster-G low/medium-confidence findings
+#### 3a.ii — SHIPPED PR #76 (2026-06-24): B17/B18/B25 cluster-G remnants (-11 lines)
 
-- **B25 (Textbook mode lock):** background shorthand allegedly
-  overridden by background-image. Synthesis was vague about the
-  property and the line numbers were partially drifted. Need a
-  fresh per-property check. ~4 lines.
+- **B25 (Textbook mode lock) — SHIPPED.** The `background:` shorthand
+  at L34982-34985 was deleted. Inside the same rule, the surviving
+  `background-image:` longhand at L34986-34989 carries the identical
+  gradient list at identical `!important` weight, winning the image
+  leg by source order. The shorthand's implicit color/position/repeat/
+  size/origin/clip resets fall through to the lower-specificity
+  `background:` shorthands at L32942 + L33583, which apply the same
+  resets in both `.learn-textbook-active` and
+  `.chapter-overview-active.learn-textbook-active` states.
+  Code-smell note for future textbook-lock edits: pick shorthand-only
+  OR longhand-only, not both — carrying both in one rule was the exact
+  pattern that produced this dead code. 4 lines net.
 - **B15 [2]:** `.learn-topbar-actions:has(#learnClose.learn-close)`
   rule looked dead because `#learnClose { display: none }`, but
   `#learnClose` IS rendered in the DOM (HTML L629; JS at app.js:891
   + 5334 wires it), so `:has()` still matches. NOT a delete.
-- **B17 [1]:** dead `:not()` selectors in a grouped rule — line
-  references drifted post-merge and the selector pattern couldn't
-  be re-located; needs a fresh grep. ~2 lines if real.
-- **B18 [1]:** `.home-mode-menu-icon i { font-size }` redundancy
-  with parent — but 3 LATER identical-selector rules at L39324,
-  L40268, L40829 each set a DIFFERENT font-size (30/25/22px),
-  defeating both inheritance and the cluster-G assumption. The
-  cluster of 4 duplicate selectors should be its own deferred item.
-  ~4 lines if rationalized.
+- **B17 [1] — SHIPPED (1 of 9).** L25982-L25983 dead `:not()` selectors
+  in the `#learnViewSelector` grouped rule were deleted. The third
+  co-selector `#learnView #learnViewSelector` matches every instance
+  unconditionally because `#learnViewSelector` lives in
+  `.learn-topbar-actions` (sibling of `#learnBody` per `index.html:625`
+  + `app.js:943-946`), so the two `#learnBody`-descendant selectors
+  match zero elements in every DOM state. 2 lines net.
+  **Mechanical extension available:** the identical dead-`:not()`
+  pattern repeats at 8 more line ranges (L20752-20754, L26137-26139,
+  L26198-26200, L26266-26268, L26439-26441, L26639-26641, L26695-26697,
+  L26979-26981 — pre-PR-#76 line numbers; shift by −2 below L25982
+  post-merge). Each block is mechanically identical and equally safe.
+  Easy follow-up PR if/when wanted, ~16 more lines.
+- **B18 [1] — SHIPPED.** L34702-L34705 deleted. Same selector
+  (`.welcome.home-ask-workspace #homeModeMenu .home-mode-menu-icon i`),
+  same specificity (0,1,3,1), both `!important`, both top-level (verified
+  no enclosing `@media`) — L40073's `font-size: 22px` wins by source
+  order over the deleted `font-size: 24px`. `line-height: 1` is
+  covered by unitless inheritance from the parent `.home-mode-menu-icon`
+  at L34689 (still live, `!important`). Doc B18's mention of L39324/
+  L40268/L40829 was based on stale line numbers — only 2 occurrences
+  existed at PR time, not 4. 4 lines net.
 
 **Discovery-agent scoping lesson:** for any banner-cluster discovery,
 the property-timeline analysis must walk the cascade to file end, not
@@ -410,13 +431,26 @@ diff each banner pair, propose a single canonical placement
 (probably the L38480 location since it's after the lane overrides at
 L38122-L38275 that need to lose to per-author tones).
 
-#### 3b.ii — DEFERRED: course-tracker overview + grid bundle
+#### 3b.ii — SHIPPED PR #75 (2026-06-24): course-tracker overview + grid bundle (-21 lines)
 
-`.course-tracker-overview` and `.course-tracker-grid` share a media
-query at (originally L14869, post-S2 shifted to ~L14832). Discovery
-intentionally excluded these from S2 to avoid an orphaned media-query
-block. Re-verify the media-query and bundle the deletion as a
-single follow-up. ~25 lines.
+Three orphan blocks deleted: `.course-tracker-overview { ... }`
+(L14139-L14145), `.course-tracker-grid { ... }` (L14204-L14210), and
+their shared `@media (max-width: 1100px)` wrapper (L14813-L14820).
+All three target classes that no live DOM element carries — the
+redesign replaced them with `.course-tracker-command` +
+`.course-tracker-hero-card` + `.course-tracker-layout` +
+`.course-tracker-side-rail`. Discovery + 3× adversarial verify
+confirmed `app/index.html`, `app.js`, and runtime-CSS files all
+contain zero references. The PR #53 cited `!important` shadowers
+(L36989/L37147) no longer match current line numbers but it does not
+matter — the rules are dead by element-absence, not cascade override.
+21 lines net (one blank separator preserved per block).
+
+**Workspace-mirror note:** `workspace/app-mirror/index.html` + `.css`
+still reference the old classes. Per `docs/sync-policy.md` the mirror
+is not served at runtime, so this is a non-issue today. If the mirror
+ever gets synced back into `app/`, drop the orphan classes from the
+mirror too.
 
 #### 3b.iii — DEFERRED: MN doubled-ID specificity patterns
 
@@ -646,10 +680,14 @@ Both pairs were verified during the Pass 1 work and skipped. Update
 | #23 (PR #43) | interactive-demos family lookup table | −43 in `app/app.js` |
 | Step B (Pass 2 PRs #46–#51) | lesson + lecture override collapse | −169 in `app/style.css` |
 | Step C (Pass 2 PRs #52–#55) | preference + MN + course-tracker + feedback-board | −123 in `app/style.css` |
-| **Step D (Pass 2 PRs #56–#58)** | **home Ask + answer-workspace cascade collapse** | **−147 in `app/style.css`** |
+| Step D (Pass 2 PRs #56–#58) | home Ask + answer-workspace cascade collapse | −147 in `app/style.css` |
+| §3a.i (PR #71) | feedback author-tones cascade dedup | −95 in `app/style.css` |
+| §3a.i forward (PR #74) | feedback-cluster cleanup | −54 in `app/style.css` |
+| §3b.ii (PR #75) | orphan course-tracker bundle | −21 in `app/style.css` |
+| **§3a.ii (PR #76)** | **B17/B18/B25 cluster-G remnants** | **−11 in `app/style.css`** |
 
 `app/app.js`: **14,434 → 9,385 lines (−5,049, −35.0%)**.
-`app/style.css`: **44,845 → 44,261 lines (−584, −1.3%)**.
+`app/style.css`: **44,845 → 43,562 lines (−1,283, −2.9%)**.
 
 The Phase 3 JS work is structurally complete. CSS Pass 1 + Pass 2
 Steps A through D shipped; the structural ceiling on the L33181–L44261
