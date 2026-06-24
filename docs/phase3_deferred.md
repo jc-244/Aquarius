@@ -894,15 +894,23 @@ lines, partly shipped:
   - 7-angle `/code-review` medium-effort returned `[]` on all 3 correctness
     angles. 35/35 views @ 0.000% across two consecutive `--check` runs.
 
-**Entry point for §3c.i pass 7 (if continued):** MODE BUTTON PARITY
-remaining 6 prefixed rules at L28996-L29055 post-#99 (`.home-mode-toggle`,
-`.home-mode-icon`, `.home-mode-icon i`, `.home-mode-toggle .qa-caret-icon`,
-`.home-ask-web-toggle`, `.home-ask-web-toggle svg`). These have many props
-each — would require careful per-property cascade walk against CONTROL
-GLASS LOCK (L37888+) and MODE GLASS (L40702+) shadowers. Conservative
-estimate: ~30-50 line ceiling. Then later cluster A initial rules
-(deferred note above) and remaining LIQUID GLASS TEST (L29993+, ~8000-line
-banner) which has rich content.
+**§3c.i pass 7 ceiling reached.** PR #100 deleted 3 of the 6 MODE
+BUTTON PARITY prefixed rules; the surviving 3 (.home-mode-toggle,
+.home-mode-icon, .home-mode-icon i) each have ≥1 unshadowed property
+(display, align-items, justify-content, line-height) per the §3c.i
+pass 7 discovery agent. The unshadowed props are foundational flex
++ typographic baseline values not re-declared by any later HOME ASK
+banner — they're load-bearing.
+
+**Entry point for §3c.i pass 8 (if continued):** LIQUID GLASS TEST
+banner (L29930+ post-#100, ~7,900-line span) is the largest unanalyzed
+chunk. Rich aesthetic content (composer glass, ::before/::after pseudo-
+elements, focus-within animation, prefers-reduced-motion @media block).
+Many rules may be shadowed by CONTROL GLASS LOCK (L37825+) onward, but
+the banner also contains the `home-ask-focus-bounce` keyframes which is
+referenced by its own focus-within rule — internal coupling needs care.
+Conservative ROI estimate: 50-150 lines possible, but per-property walks
+would be needed.
 
 **Entry point for §3c.i pass 3:** PR #95 (pass 2) covered the
 preceding HOME ASK CONTROL MOTION TUNE banner (L38064-L38128
@@ -1073,9 +1081,10 @@ a future contributor running the §6.2 orphan-sweep doesn't re-flag them.
 | §3c.i pass 4 (PR #97) | SCREENSHOT MATCH .home-mode-toggle (3 props all shadowed by GLOBAL SHRINK L40649) — structural ceiling for RIGHT-QA REDESIGN + SCREENSHOT MATCH | −6 in `app/style.css` |
 | §3c.i pass 5 (PR #98) | SIZE RESTORE 6 whole-rule blocks (`.home-ask-empty p` + `.home-ask-tag svg` + `.home-ask-input-row` + `#userInput.search-input` + `.home-ask-toolbar` + `.home-feature-chip`, 20 props total) shadowed by LEARN-QA MATCH L39750+ — structural ceiling for SIZE RESTORE, GLOBAL SHRINK (zero candidates), MODE GLASS (zero candidates) | −38 in `app/style.css` |
 | §3c.i pass 6 (PR #99) | Earliest HOME ASK banners cleared: SPACING TIGHTEN 11 bare/prefixed rules + MODE BUTTON PARITY bare `.home-ask-toolbar gap` + MODULE POSITION whole banner. DOM-scope verified — `.home-ask-*` only renders inside `.welcome.home-ask-workspace`, so bare (0,1,0) loses to later prefixed (0,2,1)+ `!important`. R11 + R13 kept (letter-spacing genuinely unshadowed) | −63 in `app/style.css` |
+| §3c.i pass 7 (PR #100) | MODE BUTTON PARITY 3 prefixed rules (.qa-caret-icon + .home-ask-web-toggle + .home-ask-web-toggle svg) — web-toggle element has id `#webSearchToggleBtnMain` so later (1,2,1) `#webSearchToggleBtnMain.home-ask-web-toggle` rules always win; caret/svg shadowed by CONTROL GLASS LOCK + MODE GLASS at same/higher spec. Structural ceiling reached — 3 surviving rules each have unshadowed display/align-items/line-height | −20 in `app/style.css` |
 
 `app/app.js`: **14,434 → 8,339 lines (−6,095, −42.2%)** (includes post-PR #82 interactive-demos extractions in Step F/G PRs #59-#61).
-`app/style.css`: **44,845 → 43,011 lines (−1,834, −4.09%)**.
+`app/style.css`: **44,845 → 42,991 lines (−1,854, −4.13%)**.
 
 **Adversarial-review pattern (PR #91 + PR #93):** /code-review repeatedly
 returns inverted-cascade false-positives on state-variant and value-divergent
