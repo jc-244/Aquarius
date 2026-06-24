@@ -902,15 +902,44 @@ pass 7 discovery agent. The unshadowed props are foundational flex
 + typographic baseline values not re-declared by any later HOME ASK
 banner — they're load-bearing.
 
-**Entry point for §3c.i pass 8 (if continued):** LIQUID GLASS TEST
-banner (L29930+ post-#100, ~7,900-line span) is the largest unanalyzed
-chunk. Rich aesthetic content (composer glass, ::before/::after pseudo-
-elements, focus-within animation, prefers-reduced-motion @media block).
-Many rules may be shadowed by CONTROL GLASS LOCK (L37825+) onward, but
-the banner also contains the `home-ask-focus-bounce` keyframes which is
-referenced by its own focus-within rule — internal coupling needs care.
-Conservative ROI estimate: 50-150 lines possible, but per-property walks
-would be needed.
+**§3c.i pass 8 — STRUCTURAL CEILING (defer rule D3): zero candidates
+in LIQUID GLASS TEST (L29930-L30048, post-#100).** Discovery walked
+the banner against all later HOME ASK banners (CONTROL GLASS LOCK
+L37825 → MODE GLASS L40581). Findings:
+
+- 2 rules (L29961 grouped background+border+box-shadow on input-row /
+  composer / #userInput, L29970 .home-ask-input-row border-radius) are
+  NOT-SHADOWED. No later rule re-declares these aesthetic props.
+- 1 rule (L30028 `.home-ask-send` border + background + box-shadow +
+  backdrop-filter) is NOT-SHADOWED. Later `.home-ask-send` rules only
+  declare sizing/border-radius.
+- 1 rule (L30011 grouped 4-arm glass on .home-ask-tag/.home-mode-toggle/
+  .home-ask-web-toggle/.home-feature-chip) is PARTIAL — 2 arms fully
+  shadowed (mode-toggle + web-toggle by L37846), 2 arms PARTIAL
+  (.home-ask-tag + .home-feature-chip — backdrop-filter unshadowed).
+  Splitting a 4-arm grouped selector to delete 2 arms is risky for the
+  cascade-walk pattern this loop uses; deferred.
+- 1 rule (L29954 grouped position+z-index on input-row/toolbar/attach-
+  preview) is PARTIAL — only `.home-ask-toolbar` arm shadowed.
+- ::before / ::after / :focus-within / :disabled / @keyframes / @media
+  rules all skipped (harness D2 blindspot for state-variant + pseudo-
+  element coverage).
+
+**Pattern note:** the earlier HOME ASK banners declared AESTHETIC
+properties (glass, shadows, blur, backdrop-filter, ::before /::after
+positioning); later "EOF" banners declare DIMENSIONAL + TYPOGRAPHIC
+properties (height, padding, gap, font-size). The two property sets
+are largely disjoint, so the aesthetic rules in LIQUID GLASS TEST
+remain the only source of their values and cannot be deleted without
+adversely affecting the rendered glass effect.
+
+**Entry point for future §3c.i pass 9 (LOW PRIORITY):** L30011
+grouped selector split into 4 separate rules — delete the 2 arms
+`.home-mode-toggle, #webSearchToggleBtnMain.home-ask-web-toggle`
+(shadowed by L37846) and keep the 2 arms `.home-ask-tag,
+.home-feature-chip` (backdrop-filter unshadowed). Would save ~12 lines
+if executed cleanly. Requires careful grouped-selector splitting —
+defer until a future pass that bundles multiple similar splits.
 
 **Entry point for §3c.i pass 3:** PR #95 (pass 2) covered the
 preceding HOME ASK CONTROL MOTION TUNE banner (L38064-L38128
