@@ -477,6 +477,47 @@ the PR.
 of dot-marker chrome" line to the existing DO-NOT-DELETE block. ≤5
 line doc-only edit; no cascade impact.
 
+**Update (2026-06-24, post-PR-#81):** the 9-angle `/code-review` of
+PR #81 surfaced 6 additional comment-hardening / formatting concerns
+on the same feedback + mistake-notebook cluster, all on pre-existing
+untouched code. **Bundle these together as the same D1 follow-up:**
+
+- `app/style.css:34660` — banner comment doesn't cross-reference
+  L37552-L37562 lane-color overrides (only mentions L37452 in older
+  language). Add: "The (1,4,0) tone-rules here shadow the (1,3,0)
+  lane-color overrides at L37552+ — deleting them lets lane green/pink
+  win over per-author tones."
+- `app/style.css:34705` — `.feedback-reply::before` triple-group has
+  no guard comment despite being load-bearing positioning for is-left/
+  is-right dot markers. Add a short header noting "sets position:
+  absolute + content for L34777 / L34781 offsets."
+- `app/style.css:34729` — "FEEDBACK AUTHOR TONE LOCK" comment doesn't
+  cross-reference L34660-L34667's specificity explanation. Add: "see
+  L34660 banner for the (1,4,0) > (1,3,0) cascade rationale."
+- `app/style.css:34735` — `--author-mid` definition lacks a "still
+  consumed by L34699 (feedback-reply-count border) after PR #81 deleted
+  the L34786 consumer" note. Add: "consumers: .feedback-reply-count
+  (L34699)."
+- `app/style.css:35077` — "Mistake Notebook layout shuffle" comment was
+  written when the section header preceded shell + header + toolbar +
+  styling rules; after PR #81 deleted the shell + header, the section
+  now starts at the toolbar. Comment is still accurate as a generic
+  layout header but consider tightening to "Mistake Notebook toolbar
+  + list-card layout."
+- `app/style.css:36078` — "True tail lock 2: remove the remaining
+  lecture-page gutters" comment describes width/max-width/margin
+  rules, but the deleted L36141-L36145 padding-left/right resets were
+  the more on-point "gutter removal" rules. Comment now slightly
+  mismatches what follows.
+- `app/style.css:35073` — pre-existing indentation inconsistency
+  inside the `@media (max-width:820px)` block (the `.mistake-list`
+  rule's selector starts at column 0 while siblings are indented).
+  Quick whitespace fix, not cascade-impacting.
+
+All 7 sub-items are doc/whitespace-only, no cascade risk, no harness
+impact. Bundle into a single ~25-line cosmetic-cleanup PR when
+visiting this cluster next.
+
 #### 3b.ii — SHIPPED PR #75 (2026-06-24): course-tracker overview + grid bundle (-21 lines)
 
 Three orphan blocks deleted: `.course-tracker-overview { ... }`
@@ -497,6 +538,43 @@ still reference the old classes. Per `docs/sync-policy.md` the mirror
 is not served at runtime, so this is a non-issue today. If the mirror
 ever gets synced back into `app/`, drop the orphan classes from the
 mirror too.
+
+#### 3a.i++ / 3a.ii++ — SHIPPED PR #81 (2026-06-24): cross-cluster shadowed cleanup (-41 lines)
+
+Fresh-discovery pass against post-PR-#80 file state surfaced 7 more
+cascade-shadowed blocks across the feedback, mistake-notebook, and
+lesson-page surfaces:
+
+- `app/style.css:34721-34723` `.feedback-reply.is-left::before
+  { right: auto !important }` — CSS default for position:absolute
+  pseudo-elements is right:auto; L34705 base group sets position
+  without right; L34777 sets left:-5px. Deletion produces identical
+  computed values.
+- `app/style.css:34725-34730` `.feedback-reply-context` triple-group
+  (background + color) — same selector + same (1,3,0) spec as the
+  L34786 block (also deleted); for real DOM, L34668 [class*="tone-"]
+  at (1,4,0) wins on both props anyway.
+- `app/style.css:34757-34762` `.feedback-thread`
+  (border-color + background) — zero-match selector because
+  app.js:6276 always emits tone-N on threads; L34676 covers all real
+  threads.
+- `app/style.css:34786-34792` `.feedback-reply-context` triple-group
+  (border + background + color) — L34668 (1,4,0) wins for every real
+  reply (each has tone-N + is-left|is-right per app.js:6292).
+- `app/style.css:35104-35107` `.mistake-notebook-shell`
+  (width + padding-top) — L35578 (later same-spec) shorthand was
+  already winning pre-deletion via shorthand-overrides-longhand.
+- `app/style.css:35109-35111` `.mistake-notebook-header`
+  (margin-bottom) — L35589 `margin: 0 0 clamp(...)` shorthand was
+  already winning.
+- `app/style.css:36141-36145` `.lesson-page-content p, li`
+  (padding-left/right: 0) — byte-for-byte duplicate of L36107-L36111
+  (verified via `diff`).
+
+Verification: 5-subrange parallel discovery → 15 raw → 15 verified →
+7 confirmed safe-delete after 1-skeptic adversarial review. Visual-
+diff: 33 views @ 0.000% across two consecutive `--check` runs,
+including strict-0.05% view 14c. 41 lines net.
 
 #### 3b.iii — DEFERRED: MN doubled-ID specificity patterns
 
@@ -797,10 +875,11 @@ Both pairs were verified during the Pass 1 work and skipped. Update
 | §3a.ii extension (PR #77) | B17 mechanical 8-site sweep | −16 in `app/style.css` |
 | §3.5 v4 harness (PR #78) | +5 state-variant views (12b/12c/12d/14d/14e) | +245 in `tools/visual-diff.js` |
 | §3b.iv pass 1 (PR #79) | 4 shadowed `:hover` / `:focus` / `:active` blocks | −30 in `app/style.css` |
-| **§3b.i (PR #80)** | **feedback-cluster shadowed-block cleanup** | **−48 in `app/style.css`** |
+| §3b.i (PR #80) | feedback-cluster shadowed-block cleanup | −48 in `app/style.css` |
+| **§3a.i++/§3a.ii++ (PR #81)** | **cross-cluster shadowed cleanup (feedback + MN + lesson-page)** | **−41 in `app/style.css`** |
 
 `app/app.js`: **14,434 → 9,385 lines (−5,049, −35.0%)**.
-`app/style.css`: **44,845 → 43,468 lines (−1,377, −3.07%)**.
+`app/style.css`: **44,845 → 43,427 lines (−1,418, −3.16%)**.
 
 The Phase 3 JS work is structurally complete. CSS Pass 1 + Pass 2
 Steps A through D shipped; the structural ceiling on the L33181–L44261
