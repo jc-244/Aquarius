@@ -1279,3 +1279,141 @@ surfaces (preference, course-tracker, mistake-notebook, feedback-board
 — roughly 6-10 views), (c) new baselines + signal-handling. ~150-line
 implementation, ~half-session of work. Worth doing only if a future
 Phase 4 cascade-shadow round proposes 5+ @media deletions in one PR.
+
+---
+
+## 10. Phase 3.5 v5 follow-up (state-variant harness gaps closed)
+
+Drafted 2026-06-24 after PRs #83 + #84 landed.
+
+PR #83 closed the 3 sev3 latent blind spots flagged in §3b.iv.followup:
+
+- **View 12e (`12e-preference-primary-btn-active`)** — `page.mouse.down()`
+  over `#preferenceSaveBtn` bounding box, asserts the
+  `matrix(1, 0, 0, 1, 0, 1)` (+1px translateY) from L35563's `:active`
+  rule. STRICT_FAIL_RATIO = 0.05%.
+- **View 14f (`14f-feedback-input-focused`)** — focuses
+  `#feedbackTitleInput` so the L37095 grouped selector's
+  `.feedback-input` arm is pixel-covered (view 14d only exercised the
+  `.feedback-textarea` arm). STRICT_FAIL_RATIO = 0.05%.
+- **View 14d outline assert** — added `outline-style/-width/-color`
+  computed-style probe so a deletion of L37095's `outline: none
+  !important` (or the L9405 broad reset that backs it up) would
+  fail-fast on the assertion rather than waiting for a pixel-diff
+  fluke. See [[reference-feedback-input-outline-cascade]] for the
+  cascade rationale.
+
+PR #84 (§3b.iv pass 2) shipped −42 lines bundled with PR #83's harness
+work — all 4 deleted blocks were verified safe by the new state-variant
+views.
+
+No remaining items in §10. State-variant harness coverage on the
+preference primary-btn / secondary-btn / editor / feedback compose
+input + textarea / feedback-board thread bodies is complete for the
+35-view bar set today.
+
+---
+
+## 11. Lesson + mistake-notebook baseline refresh (Phase 3.5 v6)
+
+**Drafted 2026-06-24.** Discovered while planning a "should we refresh
+the drifted baselines?" PR.
+
+### Root cause
+
+9 baselines drift consistently at 1.3-1.4% on every `--check` run
+(reproduced 2× on clean post-PR-#83/#84 main, commit 48fdddc):
+
+| View | Drift (px) | Drift (%) |
+| --- | --- | --- |
+| 06-lesson-view | 13645 / 1024000 | 1.333% |
+| 07-lesson-pager-states | 13645 | 1.333% |
+| 08-lesson-lecture-toolbar | 13645 | 1.333% |
+| 09-lesson-qa-column | 13645 | 1.333% |
+| 15-lesson-chapter-overview | 13645 | 1.333% |
+| 16-lesson-chapter-overview-split | 13645 | 1.333% |
+| 21-lesson-key-takeaways | 13715 | 1.339% |
+| 22-lesson-quick-check | 13706 (±~0.4% extra cold-cache flake) | 1.338% |
+| 03b-mistake-notebook-open-case | 14100 | 1.377% |
+
+All 9 share the same root cause: the **left sidebar's vertical
+layout shifted ~1-2px per row** between the baseline capture (PR #70,
+commit 9c2329b on 2026-06-22) and HEAD (commit 48fdddc on 2026-06-24).
+Diff inspection (`tools/visual-diff/06-lesson-view.png`) shows
+overlapping `Background` / `Chapter 1 (Signals and Systems)` /
+`1.1 Size of a Signal` text at the same horizontal position but
+offset vertically — exactly the signature of a per-row padding /
+line-height / margin shift accumulating down the list.
+
+Source: 9 cascade-shadow-removal PRs landed between PR #70 and HEAD
+(#71 −95, #74 −54, #76 −11, #77 −16, #79 −30, #80 −48, #81 −41,
+#82 +13, #83 −42). Every one was adversarial-reviewed and harness-
+verified at 0.000% on its **then-current baseline set**, but no PR
+re-baselined the lesson-page sidebar surface. The accumulated
+rounding error is the visible drift.
+
+**MEMORY mischaracterization correction:**
+[[project-phase3-status]] Step G.3 finding #3 claims this is a
+"first-run cold-cache sidebar flake" that resolves on the second
+`--check` run. Falsified 2026-06-24: both runs land at identical
+pixel counts on the deterministic views (06/07/08/09/15/16 = 13645
+px exactly, 03b = 14100 px exactly, 21 = 13715 px stable, 22 = 13706
+px ±~0.4% extra cold-cache flake on the quick-check rendering only).
+The "run twice" mitigation never worked on these views — it papered
+over a real drift.
+
+### Why deferred (defer rule D2 — Harness blindspot)
+
+The baseline files are STALE artifacts, not a code problem. Refreshing
+them is the right move *iff* every shipped PR (#71-#83) actually was
+safe on the rendering surface it claimed not to affect. That assumption
+holds: each PR's cascade-shadow analysis cited the specific later-source
+or higher-specificity rule that wins after deletion, and all 35 views
+remained green against their then-current baselines. The drift is
+expected layout micro-shift, not a real regression.
+
+### Plan
+
+**PR scope:** baseline-only edit. No code changes. No harness changes.
+
+1. Copy `tools/visual-current/{06,07,08,09,15,16,21,22,03b}-*.png`
+   → `tools/visual-baseline/` (9 files).
+2. Run `node tools/visual-diff.js --check` twice. Pass-condition:
+   - 6 deterministic views (06/07/08/09/15/16) at 0.000% both runs.
+   - 21/03b at 0.000% both runs.
+   - 22 at ≤0.05% on the second-or-later run (the ~0.4% cold-cache
+     flake is a separate latent issue; document but do not block
+     refresh on it).
+3. Commit + open PR. No `/code-review` value-add expected (no code
+   diff to review).
+4. After merge: update [[project-phase3-status]] Step G.3 finding #3
+   to remove the "cold-cache flake" mischaracterization; replace with
+   pointer to this §11.
+
+**Next-session entry point:** `tools/visual-current/` already holds
+post-refresh-ready PNGs (captured 2026-06-24 17:04 against current
+main). `cp tools/visual-current/06-*.png tools/visual-current/07-*.png
+tools/visual-current/08-*.png tools/visual-current/09-*.png
+tools/visual-current/15-*.png tools/visual-current/16-*.png
+tools/visual-current/21-*.png tools/visual-current/22-*.png
+tools/visual-current/03b-*.png tools/visual-baseline/` then verify.
+
+### 11a — DEFERRED follow-up: view 22 cold-cache ~0.4% flake
+
+View 22 (`22-lesson-quick-check`) shows ~0.4% additional pixel drift
+on the first `--check` of a session, then stabilizes. First observed
+2026-06-24: run 1 = 17862 px (1.744%); run 2 = 13706 px (1.338%);
+delta = 4156 px ≈ 0.4%. The shared ~1.338% sidebar drift is real (§11
+above); the extra 0.4% is quick-check-KP-specific cold-cache noise
+(probably KaTeX render or `advanceLessonUntil(#testBannerCard)`
+sentinel timing).
+
+**Why deferred (D2 — Harness blindspot):** investigating requires
+running `--check` 5-10× to characterize the noise distribution, then
+correlating with `advanceLessonUntil` waitFor timing vs KaTeX render
+completion. Out of scope for the baseline refresh.
+
+**Entry point:** if it flakes in CI or starts producing false-negative
+fails on §11's pass-condition, add a `data-quick-check-ready`
+sentinel emitted by `renderTestBanner` (app.js) and have view 22 wait
+for it before the screenshot. ~10-line fix.
