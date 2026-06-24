@@ -1824,3 +1824,44 @@ whatever the baseline records. Adding a new probe STATE requires re-baselining
 (the §13 symmetric guard now errors on a current-only state so the gap is loud,
 not silent). Same design as `visual-diff.js`. When Surface 6 (§3d composer chain)
 is attacked, add states S4-S11 (spec §4.2) and re-baseline on pre-collapse main.
+
+## 14. The redeclaration-pileup `!important` lever — DEFERRED (D2), the biggest remaining reduction
+
+**Status: deferred 2026-06-25 (defer rule D2 — harness blindspot).**
+
+**What:** `app/style.css` carries the "FINAL/EOF/LOCK" redeclaration-pileup pattern the
+spec §0 named: the *same selector* sets the *same property* in multiple rule blocks within
+the *same `@media`/`@supports` context*; only the last block wins, so every earlier
+same-property declaration is provably dead (cascade-neutral to delete). An importance- and
+media-context-aware detector (built 2026-06-25, run on HEAD) found **696 such dead
+declarations across 179 selectors, of which 620 are `!important`.** This is the single
+largest remaining `!important`-count lever in the file — bigger than any dead-orphan sweep.
+
+**Why deferred (D2 — verification needs harness expansion first):** a context-aware split
+showed **0 of the 696 are top-level — every one lives inside a media query**, dominated by
+`@media (max-width: 1024px)` (~150 dead) with a long tail down to ~430–600px. The css-probe
++ visual-diff harnesses both render at **desktop width (1280)**, so they cannot observe any
+of these declarations — deleting them now would be flying blind in exactly the
+narrow-viewport blindspot spec §4 warns about. A naive (media-unaware) detector reported
+4,422 "dead" decls; **3,726 of those were responsive/theme overrides that would have BROKEN
+if deleted** (e.g. `:root[data-theme="dark"]` vars redefined per breakpoint) — proof that
+this lever is a trap without viewport-aware verification.
+
+**Two hard prerequisites before this is safe to execute:**
+1. **Narrow-viewport harness coverage.** Add css-probe STATES (and ideally visual-diff views)
+   that render the affected learn-view chrome at ≤1024px (and a second tier ~760px and ~560px
+   to cover the tail), probing the literal cascade value of each property a deleted decl
+   touched. Re-baseline on pre-collapse main. This is a Step-2 (per-PR-to-main) task and is
+   the concrete unblocker.
+2. **A correctness-hardened parser.** The throwaway detector's `@`-context *stack* over-
+   accumulates conditions across sibling blocks (errs safe for counting — under-groups, so
+   696 is a LOWER bound — but unfit for deletion). The deletion pass needs a brace-accurate
+   parser that pops context correctly and handles comments/`content:"}"`/data-URIs. Validate
+   it against the spec's known ground truth (`.learn-explain-toggle-btn` height redeclared
+   11× at (0,1,0)) before trusting it to cut.
+
+**Next-session entry point:** extend `tools/css-probe.js` `PROBE_STATES` with a
+`viewport:{width,height}` field + narrow-viewport learn-view states → `--baseline` on
+pre-collapse main → then build the hardened detector → cut earlier-dead decls on the
+`refactor/phase3.6-css-collapse` branch → `npm run test:css-probe:check` must stay
+byte-identical at every probed viewport. Est. reward: ~620 `!important` + ~696 lines.
