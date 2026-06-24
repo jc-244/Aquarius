@@ -2,7 +2,7 @@
 
 Owner: FlyM1ss
 Started: 2026-06-19
-Last refreshed: 2026-06-23 (after PR #71 — Phase 3 §3a.i feedback-tones cascade collapse, -95 lines; first regression caught by adversarial review, harness-gap incident filed)
+Last refreshed: 2026-06-24 (after §3c.i pass 8 D3 ceiling — `app/style.css` now 42,991 lines; status overview + "Should we split further?" outlook section added)
 Status:
 
 - **Phase 0** merged (#15).
@@ -83,11 +83,23 @@ Status:
 - **Phase 3 Pass 2** is the active frontier — see §"Roadmap from
   here". Deferred punch-list lives in `docs/phase3_deferred.md`.
 
-Cumulative deltas through end of PR #71 (§3a.i, 2026-06-23):
+Cumulative deltas through 2026-06-24 (post §3c.i pass 8 D3 ceiling):
 
-- `app/app.js`: 17,650 → 8,339 (−9,311, **−52.7%**).
-- `app/style.css`: 45,286 → 43,648 (−1,638, **−3.6%**).
-- `app/index.html`: 3,153 → 1,654 (−1,499, ~47.5% — Phase 1 #11 extract).
+| File | Original | Now | Δ |
+|---|---|---|---|
+| `app/app.js` | 20,250 | **8,339** | **−58.8%** (−11,911) |
+| `app/style.css` | 47,865 | **42,991** | **−10.2%** (−4,874) |
+| `app/ws-bridge.js` | 6,868 | **5,348** | **−22.1%** (−1,520) |
+| `app/index.html` | 3,147 | **1,655** | **−47.4%** (−1,492) |
+
+21 focused modules extracted under `app/`: `markdown-engine`, `llm-client`,
+`lesson-cache`, `ragflow-client`, `search-helpers`, `static-routes`,
+`user-memory`, `login-cosmos`, `mistake-notebook`, `attachments`,
+`clerk-auth`, `preference-profile`, `recent-conversations`, plus
+`app/data/*` (course-metadata / preferences / quiz-questions / syllabus-data)
+and `app/css/*` (inline-styles / runtime-collapsed / ui-friction-v123). The
+interactive-demos engine adds 19 family modules + `dispatcher.js` +
+`chapter-one.js` + `helpers.js` under `app/interactive-demos/`.
 
 This is the single source of truth for the multi-phase refactor of the
 Fourier Tutor Agent repo. It is the canonical document — `workspace/memory/`
@@ -334,6 +346,87 @@ re-checking them.
 - **Phase 2 #19** (glass + overview CSS) must respect cascade order —
   each split file keeps its `<link>` slot in the same position.
 - Every extraction preserves the **Hard Invariants** section above.
+
+## Forward outlook — should we split the remaining monoliths?
+
+Recorded 2026-06-24 in response to the question "when can we split the
+couple monoliths into smaller files, or should we?".
+
+### Where we are
+
+The JS monolith story is largely solved: `app/app.js` is down 58.8% (20,250
+→ 8,339) and `app/ws-bridge.js` is down 22.1%. The remaining headline
+problem is CSS — `app/style.css` is down only 10.2% and still carries
+~15,594 `!important` declarations, ~104 named `FINAL` / `EOF` / `_LOCK`
+override blocks, and ~452 `#learnView#learnView` doubled-ID specificity
+hacks (the structural debt numbers from `reference-codebase-map`; verify
+with a fresh `grep -c` before quoting in a PR).
+
+The realized/planned ratio across the four big Phase 3 CSS steps has been
+consistent: Step B 14%, Step C 14%, Step D 4.2%, Step G.3 3.2% — mean ~9%
+of plan-target lines actually deletable per session. The §3c.i pass 8
+zero-candidate finding (commit c45b205, "D3 ceiling") confirms the
+home-Ask shadowed-banner vein is mined out under the current verification
+discipline.
+
+### Recommendation: split `app.js` further; do NOT split `style.css` yet
+
+**`app.js` at 8,339 lines — keep extracting.** Natural seams that remain:
+
+- Lesson-rendering pipeline (around `parseLessonKnowledgePoints` /
+  `runLearnPageTurn`).
+- Syllabus / pagination subsystem.
+- Feedback-board UI controller (`setFeedbackReplyTarget` etc.).
+- Quick-Check / Key-Takeaways KP rendering (separate KP pages, see
+  Phase 3.5 v2 finding #1).
+
+Each subsystem is internally cohesive, has well-defined entry points
+already, and would not touch the CSS cascade. Sequence them one PR each
+with the existing 35-view visual-diff harness as the regression net.
+
+**`style.css` at 42,991 lines — don't split.** The cascade is the value.
+Splitting a single cascade-ordered file into per-feature files would
+either (a) require `@import` (preserves order but hides it across files),
+or (b) re-bundle in a build step (we have none, and adding one for
+ordering alone is overkill). Either way the one debugging affordance the
+current setup offers — "search for the selector, read down the file, the
+last rule wins" — gets lost. Step G.3 finding #5 (Home-Ask redesign
+chain is 10 banners deep at the same specificity) was only tractable
+because all 10 banners live physically adjacent in one file. Split first
+and you're chasing specificity through 10 files instead of one.
+
+### The right sequence from here
+
+1. **Finish the cheap §3c.i / §3b tail** (a few hundred more lines,
+   likely 1–2 more dev days). Diminishing returns past pass 8.
+2. **Expand the visual-diff harness for state variants** — `:hover`,
+   `:focus-within`, `:disabled`, `:active` on the top-duplicated #20b/c
+   selectors. Unblocks ~300 deferred lines (§3b.iv, §3c.i tail).
+3. **Then** the big CSS structural attack: collapse the `!important`
+   wall and the doubled-ID `#learnView#learnView` pattern. That's where
+   the real bytes live (~15.6 k `!important` ≫ all line-count work to
+   date). It needs a coordinated banner-rewrite, not more deletion
+   passes — design it as a Phase 3.6 spec, not a continuation of §3c.
+4. **JS module splits can run in parallel** with any of the above —
+   they don't touch CSS.
+
+### Realistic finish line
+
+- `app/app.js`: reachable target is **~5 K lines** with 2–3 more
+  extraction PRs (≈1 dev day each).
+- `app/style.css` under ~38 K: requires the `!important` / doubled-ID
+  structural attack, which is a multi-session project (~4–6 dev days,
+  with the state-variant harness expansion as a prerequisite).
+- `app/ws-bridge.js` at 5,348 lines: no extraction pressure remaining.
+  Next change here is Phase 4 (DB swap), not refactor.
+- `app/index.html` at 1,655 lines: already extracted as far as the
+  inline-style block allowed. No further structural target.
+
+The "main refactor" finish line (Steps A–G in the Roadmap matrix) is
+already crossed except for the harness-blocked state-variant tail. The
+Phase 3.6 `!important`-collapse work and the JS extractions above are
+the natural follow-ons; both are scoped enough to plan as separate spec
+docs rather than expansions of `phase3_plan.md`.
 
 ## References
 
