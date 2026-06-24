@@ -264,14 +264,45 @@ pre-collapse baseline is captured against `main` and every future surface verifi
 
 | # | Commit | Where | Risk | Status |
 |---|---|---|---|---|
-| spec | this document | main (docs) | none | — |
-| H | `tools/css-probe.js` + `css-probe-baseline.json` | main (step-2 harness PR) | none (test-only) | — |
-| 1 | textbook Step 1: de-double 29 non-indicator rules, keep `!important` | branch | provably safe (zero cross-file competitor) | — |
-| 2 | textbook Step 2: page-indicator → 0-2-0 | branch | safe (specificity pre-verified + probe) | — |
-| 3+ | courseTracker / preference `!important`-NOCOMP strip | branch | stretch (touches cascade outcomes) | — |
+| spec | this document | main (docs) | none | ✅ `1598c6f` |
+| H | `tools/css-probe.js` + `css-probe-baseline.json` | main (PR #101) | none (test-only) | ✅ merged `a6c8b5b` (reviewed: 10-agent /code-review caught false-confidence holes, all fixed) |
+| 1 | textbook Step 1: de-double 29 non-indicator rules, keep `!important` | branch | provably safe (zero cross-file competitor) | ✅ `bac31d2` — css-probe --check PASS, −32 doubled-IDs |
+| 2 | textbook Step 2: page-indicator → 0-2-0 | branch | safe (specificity pre-verified + probe) | ✅ `6f939a2` — PASS, −3 doubled-IDs (textbook = 0 doubled-IDs) |
+| 3+ | courseTracker / preference `!important`-NOCOMP strip | branch | needs per-view probe coverage first | ⏸ deferred — see §6.1 |
 | 6 | §3d composer chain lockstep | branch (later nights) | high — full css-probe S2-S12 gate | deferred |
 
-Branch: `refactor/phase3.6-css-collapse`.
+Branch: `refactor/phase3.6-css-collapse` (2 commits; **no PR** — Phase 3.6 incomplete).
+Doubled-IDs: **608 → 573** (textbook pilot). `!important`: 14,948 (untouched — no `!important` work shipped yet).
+
+## 6.1 Post-pilot finding (2026-06-24) — the textbook pilot was the clean EXCEPTION
+
+The textbook surface had **zero cross-file competitors AND zero within-file `@media`
+competitors**, so its 35 doubled-IDs collapsed as a provable no-op (css-probe-verified,
+incl. a true-positive negative test: a deliberate 24px→25px regression was correctly
+caught). **Every remaining doubled-ID surface is entangled** and is NOT a clean de-double:
+
+- **`#mistakeNotebookView#mistakeNotebookView`** (17, DOM-isolated, zero cross-file): but
+  `.mistake-workspace` L34808 (doubled, 0,3,0) has a LATER single-ID competitor at L35745
+  (0,2,0) **inside an `@media`**. De-doubling L34808 → (0,2,0) ties L35745, which wins by
+  source order at narrow viewports — a regression the 1280px harness **cannot see** (§9c
+  blindspot). Other MN targets have 4-8 single-ID/bare competitors each.
+- **page-corner / lecture-overlay** (~99, GRATUITOUS bucket): **272 selector lines**, deeply
+  nested (`#learnView #learnBody:not(.chapter-overview-active) #learnExplainToolbar #lecture*OverlayBtn`),
+  multi-state, many `@media`-wrapped. Per-property/per-state/per-viewport analysis required.
+- **`#learnView#learnView` core** (353): interleaves the LOAD-BEARING §3d composer chain
+  (~120 tokens, Report 1 §4) with safe UNIFORM-FLOOR/GRATUITOUS instances. No global
+  `replace_all` is safe.
+
+**Prerequisite for the bulk (next-session entry point):**
+1. **Narrow-viewport probe coverage** — add a second BrowserContext at ~800px to `css-probe.js`
+   (or a sibling harness) so `@media (max-width:…)` competitors (L35745 etc.) are verifiable.
+   This is the §9c-deferred ~150-line task; it is the gate for de-doubling MN + learn-view.
+2. **Full S4-S11 state matrix** in css-probe (spec §4.2) before touching the §3d composer chain.
+3. **Per-instance cascade classification** of the 573 remaining doubled-IDs (extend the
+   inventory workflow to instance granularity) → the exact safe-collapse work-list.
+Only the **DOM-isolated single-instance** doubled-IDs (`#courseTrackerView#courseTrackerView`,
+`#preferenceView#preferenceView`, `#settingsView#settingsView`, `#feedbackView#feedbackView`
+— 1 each) might be quick wins once their view has probe coverage; verify each, do not assume.
 
 ## References
 - `docs/REFACTOR_PLAN.md` — "The right sequence from here" (step 3 = this spec).
