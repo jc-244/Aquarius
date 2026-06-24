@@ -6833,17 +6833,29 @@ function renderMainConversationThread(options = {}) {
   const pendingAssistantClass = options.pendingAssistantClass || '';
   const turns = [];
 
+  const renderUserImages = (images) => (Array.isArray(images) && images.length)
+    ? `<div class="main-chat-user-images" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;">${
+        images.map(im => `<img src="${escapeHtml((im && im.dataUrl) || '')}" alt="${escapeHtml((im && im.name) || 'image')}" style="max-width:200px;max-height:200px;border-radius:12px;object-fit:cover;display:block;">`).join('')
+      }</div>`
+    : '';
+
   history.forEach((item) => {
-    if (!item || !item.role || !String(item.content || '').trim()) return;
+    if (!item || !item.role) return;
+    const hasText = !!String(item.content || '').trim();
+    const hasImages = Array.isArray(item.images) && item.images.length > 0;
     if (item.role === 'user') {
+      if (!hasText && !hasImages) return;
+      const textHtml = hasText ? `<div class="main-chat-user-text">${escapeHtml(item.content).replace(/\n/g, '<br>')}</div>` : '';
       turns.push(`
         <article class="main-chat-turn main-chat-turn-user">
           <div class="main-chat-label">You</div>
-          <div class="main-chat-user-text">${escapeHtml(item.content).replace(/\n/g, '<br>')}</div>
+          ${renderUserImages(item.images)}
+          ${textHtml}
         </article>
       `);
       return;
     }
+    if (!hasText) return;
     if (item.role === 'assistant') {
       turns.push(`
         <article class="main-chat-turn main-chat-turn-assistant">
@@ -6854,11 +6866,13 @@ function renderMainConversationThread(options = {}) {
     }
   });
 
-  if (pendingPrompt) {
+  if (pendingPrompt || (Array.isArray(options.pendingImages) && options.pendingImages.length)) {
+    const ptext = pendingPrompt ? `<div class="main-chat-user-text">${escapeHtml(pendingPrompt).replace(/\n/g, '<br>')}</div>` : '';
     turns.push(`
       <article class="main-chat-turn main-chat-turn-user">
         <div class="main-chat-label">You</div>
-        <div class="main-chat-user-text">${escapeHtml(pendingPrompt).replace(/\n/g, '<br>')}</div>
+        ${renderUserImages(options.pendingImages)}
+        ${ptext}
       </article>
     `);
   }
@@ -7087,6 +7101,11 @@ async function sendQuestion(rawPrompt, source = 'auto') {
     prompt = buildAttachmentOnlyPrompt(attachments, 'zh');
   }
 
+  // Image attachments shown inline in the user's message bubble for this turn.
+  const turnImages = visibleAttachments
+    .filter(a => a && a.type === 'image' && a.dataUrl)
+    .map(a => ({ dataUrl: a.dataUrl, name: a.name || 'image' }));
+
   const answerStyleToggle = isFollowup
     ? (document.getElementById('answerLengthToggleLearn')?.value || 'balanced')
     : (answerLengthToggleMain?.value || document.getElementById('answerLengthToggleLearn')?.value || 'balanced');
@@ -7123,6 +7142,7 @@ async function sendQuestion(rawPrompt, source = 'auto') {
   setReferencesOpen(false);
   renderMainConversationThread({
     pendingPrompt: prompt,
+    pendingImages: turnImages,
     pendingAssistantHtml: buildSearchProgressMarkup('thinking', detectLang(prompt)),
     pendingAssistantClass: 'main-chat-turn-pending'
   });
@@ -7138,7 +7158,7 @@ async function sendQuestion(rawPrompt, source = 'auto') {
   let casualReply = '';
   if (!hasReadableAttachments) {
     const intent = await callIntent(prompt, currentAbortController.signal, {
-      history: tutorState.chatHistory.slice(-6),
+      history: tutorState.chatHistory.slice(-6).map(({ role, content }) => ({ role, content })),
       language: detectLang(prompt)
     });
     groundedTurn = intent.grounded !== false;
@@ -7148,7 +7168,7 @@ async function sendQuestion(rawPrompt, source = 'auto') {
     currentAbortController = null;
     stopBtn.classList.add('hidden');
     tutorState.chatHistory.push(
-      { role: 'user', content: prompt },
+      { role: 'user', content: prompt, images: turnImages },
       { role: 'assistant', content: casualReply }
     );
     tutorState.currentBookPages = [];
@@ -7162,6 +7182,7 @@ async function sendQuestion(rawPrompt, source = 'auto') {
   // Grounded turn: swap the neutral "Thinking…" card for the grounded one.
   renderMainConversationThread({
     pendingPrompt: prompt,
+    pendingImages: turnImages,
     pendingAssistantHtml: buildSearchProgressMarkup(isFollowup ? 'followup' : 'answer', detectLang(prompt)),
     pendingAssistantClass: 'main-chat-turn-pending'
   });
@@ -7180,7 +7201,7 @@ async function sendQuestion(rawPrompt, source = 'auto') {
   try {
     const data = await callAsk(prompt, currentAbortController.signal, {
       mode: isFollowup ? 'followup' : 'ask',
-      history: tutorState.chatHistory.slice(-8),
+      history: tutorState.chatHistory.slice(-8).map(({ role, content }) => ({ role, content })),
       bookPages: hasReadableAttachments ? [] : tutorState.currentBookPages,
       webSources: hasReadableAttachments ? [] : tutorState.currentWebSources,
       attachmentFirst: hasReadableAttachments,
@@ -7202,7 +7223,7 @@ async function sendQuestion(rawPrompt, source = 'auto') {
     stopBtn.classList.add('hidden');
 
     tutorState.chatHistory.push(
-      { role: 'user', content: prompt },
+      { role: 'user', content: prompt, images: turnImages },
       { role: 'assistant', content: data.explanation || '' }
     );
     tutorState.currentBookPages = data.bookPages || [];
