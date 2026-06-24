@@ -840,6 +840,31 @@ lines, partly shipped:
   per-rule edits that change cascade winners; needs case-by-case
   analysis. **Defer rule D3** — structural ceiling: the cleanly-
   deletable subset is captured by pass 1.
+- **§3c.i pass 5 — SHIPPED PR #98 (2026-06-24): −38 lines.** SIZE
+  RESTORE banner (L39544+ pre-PR-#98) 6 whole-rule blocks shadowed
+  by LEARN-QA MATCH (L39716+) at identical selector + specificity +
+  `!important`: `.home-ask-empty p` (5 props), `.home-ask-tag svg`
+  (2 props), `.home-ask-input-row` (2 props), `#userInput.search-input`
+  (4 props), `.home-ask-toolbar` (2 props), `.home-feature-chip`
+  (5 props). LEARN-QA MATCH covers all 20 props at L39750/L39785/L39828/
+  L39845/L39859/L39904 — later banners (GLOBAL SHRINK, SCREENSHOT MATCH)
+  also re-cover most props, but LEARN-QA is the first shadow so SIZE
+  RESTORE's values never reach the cascade. Discovery via single Explore
+  agent (VERY THOROUGH breadth) + manual per-property verification +
+  7-angle `/code-review` medium-effort (all 3 correctness angles
+  returned `[]`). 35/35 views @ 0.000% across two consecutive `--check`
+  runs (incl. views 10 home-ask-focused + 11 home-mode-menu-open as
+  pixel guards). **Structural ceiling for SIZE RESTORE reached at the
+  6-rule slice** — remaining SIZE RESTORE rules each have at least one
+  property not shadowed by any later banner.
+- **VERIFIED ZERO: GLOBAL SHRINK + MODE GLASS.** Pass 5 discovery
+  confirmed both banners have **zero** whole-rule SAFE-DELETE
+  candidates. GLOBAL SHRINK (L40550+) is the cascade winner for almost
+  all its props (MODE GLASS only re-declares glass/background props,
+  not the dimensional/typographic props GLOBAL SHRINK owns). MODE GLASS
+  (L40702+) is the source-order winner for the home-ask family — no
+  later same-selector `!important` rules exist for its frosted-glass
+  selectors. **Defer rule D3** — structural ceiling for both banners.
 
 **Entry point for §3c.i pass 3:** PR #95 (pass 2) covered the
 preceding HOME ASK CONTROL MOTION TUNE banner (L38064-L38128
@@ -1008,9 +1033,10 @@ a future contributor running the §6.2 orphan-sweep doesn't re-flag them.
 | §3c.i pass 2 (PR #95) | MOTION TUNE shadowed cluster (9 rules: :focus-within + dead @keyframes home-ask-focus-soft-pop + .home-mode-toggle + .home-mode-icon + .qa-caret-icon + web-toggle base/svg + .home-mode-menu.show) | −57 in `app/style.css` |
 | §3c.i pass 3 (PR #96) | multi-banner shadowed cluster (14 rules across POLISH LOCK / UPWARD MENU FIX / LEARN-QA MATCH / SCALE CORRECTION) | −77 in `app/style.css` |
 | §3c.i pass 4 (PR #97) | SCREENSHOT MATCH .home-mode-toggle (3 props all shadowed by GLOBAL SHRINK L40649) — structural ceiling for RIGHT-QA REDESIGN + SCREENSHOT MATCH | −6 in `app/style.css` |
+| §3c.i pass 5 (PR #98) | SIZE RESTORE 6 whole-rule blocks (`.home-ask-empty p` + `.home-ask-tag svg` + `.home-ask-input-row` + `#userInput.search-input` + `.home-ask-toolbar` + `.home-feature-chip`, 20 props total) shadowed by LEARN-QA MATCH L39750+ — structural ceiling for SIZE RESTORE, GLOBAL SHRINK (zero candidates), MODE GLASS (zero candidates) | −38 in `app/style.css` |
 
 `app/app.js`: **14,434 → 8,339 lines (−6,095, −42.2%)** (includes post-PR #82 interactive-demos extractions in Step F/G PRs #59-#61).
-`app/style.css`: **44,845 → 43,112 lines (−1,733, −3.87%)**.
+`app/style.css`: **44,845 → 43,074 lines (−1,771, −3.95%)**.
 
 **Adversarial-review pattern (PR #91 + PR #93):** /code-review repeatedly
 returns inverted-cascade false-positives on state-variant and value-divergent
