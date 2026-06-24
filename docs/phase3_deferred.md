@@ -1314,10 +1314,14 @@ input + textarea / feedback-board thread bodies is complete for the
 
 ---
 
-## 11. Lesson + mistake-notebook baseline refresh (Phase 3.5 v6)
+## 11. Lesson + mistake-notebook baseline refresh (Phase 3.5 v6) — SHIPPED PR #86 (2026-06-24)
 
 **Drafted 2026-06-24.** Discovered while planning a "should we refresh
-the drifted baselines?" PR.
+the drifted baselines?" PR. **Shipped 2026-06-24 in PR #86** via
+Option A (mask `#sidebarSyllabusPanel` with `display: none` from view
+06 onward on Page A) + refresh of the 9 affected baselines. Verified
+by 5 consecutive `--check` runs all 35/35 green. View 22 still shows
+~0.3% cold-cache flake (§11a) under the 0.5% default threshold.
 
 ### Root cause
 
