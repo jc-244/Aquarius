@@ -1372,48 +1372,100 @@ or higher-specificity rule that wins after deletion, and all 35 views
 remained green against their then-current baselines. The drift is
 expected layout micro-shift, not a real regression.
 
-### Plan
+### Plan (REVISED 2026-06-24 after attempted fix in PR #85)
 
-**PR scope:** baseline-only edit. No code changes. No harness changes.
+**Original plan: baseline-only PR.** Refuted on first attempt — the
+captures themselves are non-deterministic across runs, so any baseline
+becomes immediately stale.
 
-1. Copy `tools/visual-current/{06,07,08,09,15,16,21,22,03b}-*.png`
-   → `tools/visual-baseline/` (9 files).
-2. Run `node tools/visual-diff.js --check` twice. Pass-condition:
-   - 6 deterministic views (06/07/08/09/15/16) at 0.000% both runs.
-   - 21/03b at 0.000% both runs.
-   - 22 at ≤0.05% on the second-or-later run (the ~0.4% cold-cache
-     flake is a separate latent issue; document but do not block
-     refresh on it).
-3. Commit + open PR. No `/code-review` value-add expected (no code
-   diff to review).
-4. After merge: update [[project-phase3-status]] Step G.3 finding #3
-   to remove the "cold-cache flake" mischaracterization; replace with
-   pointer to this §11.
+**Attempt 1 — PR #85 (closed unmerged):** added
+`normalizeSidebarSyllabusScroll(page)` helper in `tools/test-utils.js`
+called at the end of `openSubtopic`. Pinned scrollTop=0 on
+`#sidebarSyllabusPanel` + `.sidebar-syllabus-panel-inner` + every
+scrollable descendant. Also tried (in later iteration) `waitForFunction`
+on `.is-animating` clearing, and double-rAF settle. Result: REDUCED
+drift from ~13645 px to ~12379 px but did NOT eliminate it. Three
+consecutive `--check` runs produced different MD5s on the same code:
 
-**Next-session entry point:** `tools/visual-current/` already holds
-post-refresh-ready PNGs (captured 2026-06-24 17:04 against current
-main). `cp tools/visual-current/06-*.png tools/visual-current/07-*.png
-tools/visual-current/08-*.png tools/visual-current/09-*.png
-tools/visual-current/15-*.png tools/visual-current/16-*.png
-tools/visual-current/21-*.png tools/visual-current/22-*.png
-tools/visual-current/03b-*.png tools/visual-baseline/` then verify.
+| Run | View 06 px-diff | View 22 px-diff |
+| --- | --- | --- |
+| 1 | 12379 | 16136 |
+| 2 | 12379 (vs Run-1 baseline) | 12423 |
+| 3 | 13346 (vs Run-2 baseline) | 12423 |
+
+The two-state-attractor hypothesis (oscillation between two specific
+post-openSubtopic sidebar layouts) is partly explained but not fully
+characterized — even between two runs with identical-MD5 captures, a
+third run flips to a different state. Closed PR #85 without merging
+2026-06-24.
+
+### Real root cause hypothesis (next-session entry point)
+
+The drift is in the sidebar's vertical layout — `tools/visual-diff/06-*.png`
+diff inspection shows sidebar text rendered at slightly different
+vertical positions, NOT lesson content drift. Three contributors,
+ordered by likelihood:
+
+1. **Chapter accordion height jitter.** `setAccordionOpen` at
+   `app.js:522` uses `max-height` transition that ends with
+   `.is-animating` removed, but the FINAL height depends on the
+   transition's animation phase quantization at the moment the
+   transition-end listener fires. Subpixel rounding produces ±1 px on
+   the panel's settled height, which shifts every sidebar row below
+   it.
+2. **Font subpixel hinting variance.** Chromium's font rasterization is
+   not bit-exact deterministic across BrowserContext fresh-starts even
+   with same font + same DPI. May explain the high-frequency 1-2 px
+   row-by-row offset across the whole sidebar.
+3. **MathJax typeset re-flow.** `settleLesson` waits for
+   `MathJax.typesetPromise`, but only at the CALLER time — if MathJax
+   does deferred work after settle resolves, layout can re-shift
+   after the screenshot.
+
+### Revised plan
+
+Three options, in order of ambition:
+
+**Option A — Mask the sidebar entirely on lesson views.** Add a
+`PER_VIEW_MASKS['06-lesson-view'] = '#sidebarSyllabusPanel * { visibility: hidden !important }'`
+(and same for 07/08/09/15/16/21/22/03b). The harness then ignores
+sidebar pixel state for these views, focuses on lesson chrome
+correctness. Loses sidebar regression coverage on lesson views; gains
+back to other views (12-preference etc.) which already cover sidebar
+rendering separately. **~15 line PR, fixes drift, ships in 30 min.**
+
+**Option B — Replace settleLesson's MathJax wait with a layout-stable
+sentinel.** Have app.js emit a `document.documentElement.dataset.lessonLayoutStable = '1'`
+attribute after MathJax + chapter accordion + scrollIntoViewIfNeeded
+have ALL fully resolved (probably gated on `requestIdleCallback` +
+2× rAF). settleLesson waits for that attribute instead of inferring
+from MathJax + rAFs. Heavier — needs app.js instrumentation. **~60
+line PR across app.js + test-utils.js, ships in 1-2h.**
+
+**Option C — Per-view loose threshold.** Set per-view
+`failRatio = 0.015` (1.5%) on the 9 lesson views. Mechanical;
+deceives the harness into "passing" with deeply-degraded coverage.
+**Not recommended** — defeats the purpose of regression coverage on
+exactly the surface where Phase 3 cascade work happens.
+
+**Recommendation:** Option A is the cheapest reasonable fix. The
+sidebar rendering is exercised by views 12/13/14 (preference,
+course-tracker, feedback-board) which all show the sidebar in
+deterministic resting states. Lesson views care about lesson chrome,
+not sidebar chrome.
+
+### Why ultimately deferred (defer rule D2 — Harness blindspot)
+
+Each option needs harness expansion + verification + per-view
+threshold tuning. Out of scope for a baseline-only PR. Schedule as
+its own focused session.
 
 ### 11a — DEFERRED follow-up: view 22 cold-cache ~0.4% flake
 
 View 22 (`22-lesson-quick-check`) shows ~0.4% additional pixel drift
-on the first `--check` of a session, then stabilizes. First observed
-2026-06-24: run 1 = 17862 px (1.744%); run 2 = 13706 px (1.338%);
-delta = 4156 px ≈ 0.4%. The shared ~1.338% sidebar drift is real (§11
-above); the extra 0.4% is quick-check-KP-specific cold-cache noise
-(probably KaTeX render or `advanceLessonUntil(#testBannerCard)`
-sentinel timing).
-
-**Why deferred (D2 — Harness blindspot):** investigating requires
-running `--check` 5-10× to characterize the noise distribution, then
-correlating with `advanceLessonUntil` waitFor timing vs KaTeX render
-completion. Out of scope for the baseline refresh.
-
-**Entry point:** if it flakes in CI or starts producing false-negative
-fails on §11's pass-condition, add a `data-quick-check-ready`
-sentinel emitted by `renderTestBanner` (app.js) and have view 22 wait
-for it before the screenshot. ~10-line fix.
+on the first `--check` of a session vs subsequent runs. Likely
+quick-check-KP-specific (probably KaTeX render or
+`advanceLessonUntil(#testBannerCard)` sentinel timing). Subsumed by
+the §11 main investigation if Option B above is pursued (Option A
+also masks it via sidebar-hidden; Option C absorbs it via loose
+threshold).
