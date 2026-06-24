@@ -465,19 +465,82 @@ single-ID at L35604; no collapse opportunity there (out of scope for
 MN, not the sidebar. Needs separate harness expansion before any
 action — leave as-is.
 
-#### 3b.iv — DEFERRED: state-variant override collapses (#20b)
+#### 3b.iv — PARTIALLY SHIPPED: state-variant override collapses (#20b)
 
 Per Roadmap matrix Step C, the following state-variant override stacks
-are NOT covered by the current harness and were intentionally skipped:
+were NOT covered by the 28-view harness and were intentionally skipped:
 - `:hover`/`:disabled`/`:focus` on `.feedback-board-card` (27×)
 - `:hover`/`:disabled`/`:focus` on `.preference-profile-preview` (18×)
 - `:hover`/`:disabled`/`:focus` on `.preference-preview-card` (14×)
 - `:hover`/`:disabled`/`:focus` on `.preference-primary-btn` (10×)
 
-Pre-req: harness expansion to capture these states on views 12/14
-(probably as additional Page-B views: `12b-preference-hover`,
-`14b-feedback-hover`, …). Estimate net delete after harness lands:
-~150-200 lines.
+**Phase 3.5 v4 harness expansion — SHIPPED PR #78 (2026-06-24).**
+Added 5 state-variant capture views (28 → 33 views):
+- `12b-preference-primary-btn-hover` — `page.hover('#preferenceSaveBtn')`
+- `12c-preference-editor-focused` — `page.focus('#preferenceProfileEditor')`
+- `12d-preference-secondary-btn-hover` — `page.hover('#preferenceResetBtn')`
+  (closes the L13985 / L35558 grouped-selector blind spot from primary-only)
+- `14d-feedback-compose-input-focused` — `page.focus('#feedbackBodyInput')`
+- `14e-feedback-compose-btn-hover` — `page.hover('#feedbackSubmitBtn')`
+  + child icon `i` (covers both the L35040 parent and L35050 child cascade)
+
+Each new view uses **exact-match transform asserts** (`matrix(1, 0, 0, 1, 0, -1)`
+literal) plus `failRatio: 0.0005` (0.05% strict) — not the weak `t !== 'none'`
+check. The pre-review iteration found the loose assert would silently pass
+cascade-arm swaps (1-2 px translateY shifts diff at ~0.023% of the 1280×800
+frame, well under the default 0.5%). Review caught 6 sev1 / 2 sev2 findings
+before the PR landed; all fixed.
+
+**§3b.iv first refactor pass — SHIPPED PR #79 (2026-06-24): −30 lines.**
+Deleted 4 fully-shadowed cascade blocks:
+- L13985 `.preference-primary-btn:hover, .preference-secondary-btn:hover
+  { transform: translateY(-2px) }` — shadowed by L35558 (3-ID + !important,
+  -1px wins). Verified by views 12b + 12d at 0.000%.
+- L13998 `.preference-primary-btn:active, .preference-secondary-btn:active
+  { transform + box-shadow }` — shadowed by L35563. **Cascade-only:** no
+  `:active` capture view exists (see §3b.iv.followup below).
+- L16757 `.feedback-input:focus, .feedback-textarea:focus, ...:focus
+  { border-color + box-shadow }` — shadowed by L29380 → L37095. Verified
+  by view 14d at 0.000%.
+- L29380 `.feedback-input:focus, ...:focus { border-color + background +
+  box-shadow !important }` — shadowed by L37095 (1-ID `#feedbackView` +
+  !important). Verified by view 14d.
+
+**Remaining §3b.iv candidates (estimated ~120-170 lines):** the
+`.feedback-board-card` 27×, `.preference-profile-preview` 18×,
+`.preference-preview-card` 14× rules listed above. These are mostly
+property duplicates across the 5 banners in the L33181-L44261 cluster;
+each needs per-block cascade-shadow analysis like §3a.i / §3a.ii had.
+Some are covered by existing views 14 / 14b / 12 (resting state) since
+deletions to non-state-variant property duplicates don't require state
+capture.
+
+#### 3b.iv.followup — Harness gaps surfaced by PR #79 self-review
+
+Three sev3 latent blind spots in the v4 harness (none block any landed
+work; they apply to FUTURE refactors of the same cluster):
+
+- **No `:active` view** for any button. PR #79's deletion of L13998
+  (`.preference-primary-btn:active` block) was cascade-shadow-only.
+  A future delete or reorder of L35563 (the current winner) would
+  silently regress mousedown chrome on `#preferenceSaveBtn` and
+  siblings. Add a `12e-preference-primary-btn-active` view that holds
+  `page.mouse.down()` over the button bounding box (or addStyleTag
+  forces `.preference-primary-btn:active`) and asserts
+  `matrix(1, 0, 0, 1, 0, 1)` from L35563.
+- **View 14d only covers `.feedback-textarea:focus`** (the textarea
+  arm). The L37095 grouped selector also covers `.feedback-input`,
+  `.feedback-reply-name`, `.feedback-reply-input`. Add a
+  `14f-feedback-input-focused` view focusing `#feedbackNameInput`
+  (or `#feedbackTitleInput`) to validate the `.feedback-input` arm;
+  the reply-input arms only appear when a thread is rendered AND
+  the user clicks "Reply", so a `14g-feedback-reply-input-focused`
+  view would need 14b's seeded fixture + a click-to-open-reply step.
+- **L37095 sets `outline: none !important`** — not present in any
+  view's assertion. A future delete of L37095 leaves the textarea
+  with the default browser focus ring, a ~2-3 px outline that would
+  diff visibly but is hard to assert precisely. View 14d's pixel
+  diff IS the guard; document the dependency.
 
 ### 3c. PR #20c Pass 2 — Home Ask + answer workspace + login + intro
 
@@ -689,10 +752,12 @@ Both pairs were verified during the Pass 1 work and skipped. Update
 | §3a.i forward (PR #74) | feedback-cluster cleanup | −54 in `app/style.css` |
 | §3b.ii (PR #75) | orphan course-tracker bundle | −21 in `app/style.css` |
 | §3a.ii (PR #76) | B17/B18/B25 cluster-G remnants | −11 in `app/style.css` |
-| **§3a.ii extension (PR #77)** | **B17 mechanical 8-site sweep** | **−16 in `app/style.css`** |
+| §3a.ii extension (PR #77) | B17 mechanical 8-site sweep | −16 in `app/style.css` |
+| §3.5 v4 harness (PR #78) | +5 state-variant views (12b/12c/12d/14d/14e) | +245 in `tools/visual-diff.js` |
+| **§3b.iv pass 1 (PR #79)** | **4 shadowed `:hover` / `:focus` / `:active` blocks** | **−30 in `app/style.css`** |
 
 `app/app.js`: **14,434 → 9,385 lines (−5,049, −35.0%)**.
-`app/style.css`: **44,845 → 43,546 lines (−1,299, −2.9%)**.
+`app/style.css`: **44,845 → 43,516 lines (−1,329, −2.96%)**.
 
 The Phase 3 JS work is structurally complete. CSS Pass 1 + Pass 2
 Steps A through D shipped; the structural ceiling on the L33181–L44261
