@@ -1825,9 +1825,48 @@ whatever the baseline records. Adding a new probe STATE requires re-baselining
 not silent). Same design as `visual-diff.js`. When Surface 6 (§3d composer chain)
 is attacked, add states S4-S11 (spec §4.2) and re-baseline on pre-collapse main.
 
-## 14. The redeclaration-pileup `!important` lever — DEFERRED (D2), the biggest remaining reduction
+## 14. The redeclaration-pileup `!important` lever — TOP-LEVEL SLICE EXECUTED; media-gated slice DEFERRED (D2)
 
-**Status: deferred 2026-06-25 (defer rule D2 — harness blindspot). Prerequisite 1 SATISFIED 2026-06-25 (narrow-viewport css-probe states); prerequisite 2 + a corrected scope below.**
+**Status: prereq 1 (narrow harness) DONE 2026-06-25; prereq 2 (hardened parser) BUILT 2026-06-25; TOP-LEVEL slice EXECUTED on branch `refactor/phase3.6-css-collapse` 2026-06-25 (−4,065 lines, −2,889 `!important`) + empty-husk follow-up (−1,249 lines); MEDIA-GATED slice (78 decls / 72 `!important`) remains DEFERRED (D2 — harness blindspot). Ships in the single Phase 3.6 PR when STEP 3's cascade-changing buckets get a risk decision.**
+
+**Update 2026-06-25 (pass 2) — prereq 2 built, finding corrected, top-level slice executed.**
+
+The correctness-hardened parser is built: `tools/find-dead-redeclarations.js` (character-level
+state machine; comment/string/paren-dataURI/brace aware; correct push/pop `@`-context stack;
+`@keyframes`/`@font-face` opaque). It `--validate`s against main's ground-truth toggle-btn height
+pileup and passes 14 redeclaration + 9 empty-rule synthetic edge-case unit tests; wired into
+`npm run check`. Building it **corrected §14's central finding**: the throwaway detector's
+never-pop `@`-context bug had reported "0 of 696 dead are top-level — all media-gated." The truth
+is the **opposite** — on the branch, **3,679 of 3,757 dead declarations (98%) are TOP-LEVEL**
+(desktop-verifiable, never actually D2-blocked) and only **78 are media-gated**. The top-level
+slice was swept (`--write --top-level`) and the 515 empty `sel { }` husks it left behind removed
+(`--write --empty-rules`, 5 of which eliminated doubled-ID selectors outright).
+
+*Verification (four independent layers, all green):* (a) a **winner-preservation differential**
+(parser groups before vs after) confirmed **16,562/16,562 groups preserved, 0 winning values
+changed, 0 vanished**, idempotent (0 top-level dead remaining); (b) css-probe `--check`
+byte-identical, 9 states / 76 probes; (c) visual-diff `--check`, all 35 views pass (the only
+non-zero diffs are a stable 38px on `12-preference-page`, present identically pre/post collapse,
+and lesson views that flake 0↔hundreds across repeated runs of the SAME file — content
+non-determinism from the keyless `/api/section` fallback, not the change). The winner-preservation
+layer also **caught a real excision bug mid-run**: a comment between the previous `;` and a
+property name pushed the decl byte-span into that comment, deleting its closing `*/` and
+commenting-out 103 `:root` custom-property groups — fixed (commit 67af365) by tracking real
+source offsets (declFirst/declLast) instead of buffer arithmetic, before any of it was committed.
+
+*Why the media-gated 78 stay D2:* the visual-diff harness renders only at desktop 1280 (cannot
+observe any <1280 decl), and the css-probe narrow states probe just 3 selectors
+(`.learn-explain-toolbar`, `.learn-toolbar-center`, `.learn-body`) — the 78 media-gated dead decls
+sit overwhelmingly on UNprobed selectors (home-ask, feedback, login, mistake-notebook,
+chapter-overview, settings) and in contexts the harness can't reach (`@media (max-width:560px)`,
+`@container lecture-panel`, `prefers-reduced-motion`). Deleting them now would be "flying blind in
+the narrow-viewport blindspot" exactly as warned below. Reward is marginal (~78 lines / 72
+`!important`) vs the 5,314-line top-level+husk win already banked; unblocking needs the harness
+expansion in the next-session entry point. The cascade theorem + winner-preservation say they ARE
+dead, but the agreed bar for this lever requires browser-observable verification per band.
+
+---
+*(Original deferral analysis below — retained for the prerequisite list and the media-unaware-trap evidence.)*
 
 **Update 2026-06-25 — prerequisite 1 satisfied + a correction to the analysis below.**
 
@@ -1893,14 +1932,17 @@ this lever is a trap without viewport-aware verification.
    it against the spec's known ground truth (`.learn-explain-toggle-btn` height redeclared
    11× at (0,1,0)) before trusting it to cut.
 
-**Next-session entry point:** prerequisite 1 is DONE (the four narrow states above). Remaining:
-(a) the easy half — sweep the **top-level** redeclaration pileup (L941–L1030+ and its kin) using
-the EXISTING 1280 harness; it was never harness-blocked. (b) the hard half — build the
-correctness-hardened parser (prereq 2), then cut the genuinely media-gated earlier-dead decls on
-the `refactor/phase3.6-css-collapse` branch → `npm run test:css-probe:check` must stay
-byte-identical at every probed viewport (the five banded states N0–N4 + the three desktop states
-S2/S3/S12). Est. reward: ~620 `!important` + ~696 lines, now split across a desktop-verifiable
-slice and a narrow-viewport-verifiable slice.
+**Next-session entry point (media-gated slice only — the top-level slice is DONE on branch):**
+the 78 remaining media-gated dead decls need harness expansion before they are safe to cut:
+(1) add per-selector css-probe narrow probes covering the media-gated selectors (home-ask /
+feedback / login / mistake-notebook / chapter-overview / settings families — run
+`node tools/find-dead-redeclarations.js app/style.css --media --json` for the exact list);
+(2) add a `@container lecture-panel` panel-width driver state (the 10 `@container` decls key off
+the explain-panel's own width, not the viewport — the documented §15 follow-up); (3) add a ≤560px
+css-probe state (the `@media (max-width:560px)` 4 decls). Then
+`node tools/find-dead-redeclarations.js app/style.css --write --media` on the branch and re-verify
+winner-preservation + css-probe `--check` byte-identical + visual-diff. Est. remaining reward:
+~72 `!important` + ~78 lines (marginal — the 98% top-level bulk is already banked).
 
 ## 15. css-probe S2/S3 panelFocus JS-var desync — DEFERRED (D1), harness-fidelity only
 

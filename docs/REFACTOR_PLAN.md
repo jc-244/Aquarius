@@ -355,14 +355,25 @@ couple monoliths into smaller files, or should we?".
 ### Phase 3.6 execution status (2026-06-25) — key findings first
 
 Step 3 below ("the big CSS structural attack") is **in progress on branch
-`refactor/phase3.6-css-collapse`** (11 verified commits, no PR yet — it ships
+`refactor/phase3.6-css-collapse`** (16 verified commits, no PR yet — it ships
 as one PR when complete). Cumulative, every commit gated by css-probe
-(byte-identical computed styles) + visual-diff (35/35 @ 0.000%):
+(byte-identical computed styles) + visual-diff (35/35) + (for the redeclaration
+collapse) a parser-level winner-preservation differential:
 
-- `app/style.css` **42,991 → 38,771 (−4,220)**; `runtime-collapsed.css`
-  **2,102 → 1,734 (−368)** = **−4,588 lines**.
-- `!important` (style.css) **14,948 → 13,206 (−1,742)**; doubled-IDs
-  **608 → 418 (−190, −31.3%)**.
+- `app/style.css` **42,991 → 33,457 (−9,534)**; `runtime-collapsed.css`
+  **2,102 → 1,734 (−368)** = **−9,902 lines**.
+- `!important` (style.css) **14,948 → 10,509 (−4,439, −29.7%)**; doubled-IDs
+  **608 → ~413**.
+
+**2026-06-25 pass 2 — the redeclaration-pileup lever was executed.** The hardened
+parser (`tools/find-dead-redeclarations.js`) corrected the earlier "0 top-level"
+finding (a never-pop `@`-context artifact): the dead pileup is **98% top-level**,
+not media-gated. Swept the top-level slice (**−3,679 dead decls / −2,889
+`!important` / −4,065 lines**) + the 515 empty `sel { }` husks it left behind
+(**−1,249 lines**). Verified render-neutral: winner-preservation 16,562/16,562
+groups, 0 winning values changed; css-probe 9 states byte-identical; visual-diff
+35/35 pass. The media-gated slice (78 decls) stays D2 (harness blindspot). See
+`docs/phase3_deferred.md` §14.
 
 **What worked:** the dominant lever was deleting **renamed-away dead rules/
 orphans** — the residue of the "FINAL/EOF/LOCK" redesign passes (e.g. the
@@ -371,27 +382,26 @@ orphans** — the residue of the "FINAL/EOF/LOCK" redesign passes (e.g. the
 design; the bytes come from dead-rule deletion. **This vein is now exhausted**
 for the lecture/learn-chrome surfaces.
 
-**The biggest remaining lever — partly unblocked 2026-06-25.** The
+**The biggest lever — EXECUTED 2026-06-25 (top-level slice).** The
 redeclaration-pileup pattern (same selector + same property + same context, only
-the last wins) holds **696 provably-dead `!important`-heavy declarations (620
-`!important`)**. A media-*unaware* detector over-reported 4,422 — **3,726 of those
-were responsive/theme overrides that would have broken if deleted** (proof this
-lever is a trap without viewport-aware verification). **Correction (verified
-2026-06-25):** the earlier "0 top-level; dominated by `max-width:1024px`" claim was
-a parser artifact — the one `1024px` block touches only the landing page, and the
-mis-grouped dead decls are actually **top-level** (the "Edge tabs v3 → v6" pileup,
-L941+), so a material slice is desktop-visible and sweepable now with the existing
-harness. The genuinely viewport-gated slice (bands 1180/1120/900/820/760/720) is
-now covered: **the narrow-viewport css-probe harness landed** (four states
-N1@1160/N2@890/N3@740/N4@700, negative-control-proven). Full record + the remaining
-hardened-parser prereq: `docs/phase3_deferred.md` §14.
+the last wins). A media-*unaware* throwaway detector had over-reported 4,422 dead
+(**3,726 were responsive/theme overrides that would have broken if deleted** —
+proof the lever is a trap without context-aware verification) AND mislabeled the
+real dead decls as media-gated (a never-pop `@`-context bug). The hardened parser
+corrected this: **3,679 of 3,757 dead decls are top-level**, swept this session
+(−2,889 `!important` / −4,065 lines + 515 empty husks / −1,249 lines, all verified
+render-neutral). The 78 media-gated decls remain D2 (harness blindspot). Full
+record: `docs/phase3_deferred.md` §14.
 
-**Remaining buckets:** (1) ~~narrow-viewport harness coverage~~ **DONE** → the
-top-level slice is desktop-sweepable now; the media-gated slice needs the hardened
-parser (§14 prereq 2); (2) **`!important`-stripping
-on DOM-isolated views** (`#courseTrackerView` 74.9% NOCOMP, `#preferenceView`
-69.8%) — line-neutral but *cascade-changing*, needs an explicit risk decision;
-(3) **§3d composer chain** — hardest, cross-file lockstep. Strategy detail in
+**Remaining buckets — all cascade-changing / risk-gated (need a FlyM1ss decision):**
+(1) the **media-gated redeclaration slice** (78 decls) — D2, needs css-probe
+narrow-probe expansion to the home-ask/feedback/login/MN/chapter-overview families
++ a `@container` panel-width driver + a ≤560 state (marginal ~78-line reward);
+(2) **`!important`-stripping on DOM-isolated views** (`#courseTrackerView` 74.9%
+NOCOMP, `#preferenceView` 69.8%) — line-neutral but *cascade-changing*, needs an
+explicit risk decision; (3) **§3d composer chain** — hardest, cross-file lockstep;
+(4) **doubled-ID `#X#X` de-specificity** (~413 remain) — a specificity rewrite, not
+dead-code deletion, so cascade-changing. Strategy detail in
 `docs/PHASE3.6_SPEC.md`.
 
 ### Where we are
@@ -449,12 +459,15 @@ and you're chasing specificity through 10 files instead of one.
    negative-control-proven). The viewport-gated half of the 620-`!important` pileup
    sweep is now verifiable; the remaining gap is non-viewport (chapter-overview /
    lecture-overlay / `@container` — recorded in §14).
-3. **The big CSS structural attack — IN PROGRESS** on branch
+3. **The big CSS structural attack — SAFE PORTION DONE** on branch
    `refactor/phase3.6-css-collapse` (see the execution-status callout above for
-   live numbers). Designed as `docs/PHASE3.6_SPEC.md`. Finding to date: the
-   real bytes came from deleting renamed-away dead rules, not banner-rewrites;
-   the remaining `!important` reduction is harness-gated (D2) or
-   cascade-changing (needs a risk decision), not more free deletion.
+   live numbers). Designed as `docs/PHASE3.6_SPEC.md`. The free-deletion vein is
+   now exhausted: renamed-away dead rules/orphans (earlier passes) + the top-level
+   redeclaration pileup + empty husks (this session) = **−9,902 lines, −4,439
+   `!important` (−29.7%)**, every commit verified render-neutral. **What remains is
+   all cascade-changing and needs a FlyM1ss risk decision** (media-gated slice D2,
+   `!important`-stripping on isolated views, §3d composer, doubled-ID
+   de-specificity) — see the "Remaining buckets" list above. No more free deletion.
 4. **JS module splits can run in parallel** with any of the above —
    they don't touch CSS.
 
