@@ -1825,9 +1825,62 @@ whatever the baseline records. Adding a new probe STATE requires re-baselining
 not silent). Same design as `visual-diff.js`. When Surface 6 (§3d composer chain)
 is attacked, add states S4-S11 (spec §4.2) and re-baseline on pre-collapse main.
 
-## 14. The redeclaration-pileup `!important` lever — TOP-LEVEL SLICE EXECUTED; media-gated slice DEFERRED (D2)
+## 14. The redeclaration-pileup `!important` lever — TOP-LEVEL + MEDIA-GATED SLICES EXECUTED
 
-**Status: prereq 1 (narrow harness) DONE 2026-06-25; prereq 2 (hardened parser) BUILT + self-reviewed 2026-06-25; TOP-LEVEL slice EXECUTED on branch `refactor/phase3.6-css-collapse` in PR #105 (style.css −3,631 dead / −2,844 `!important`; rcc −68 / −68; + empty husks −509 style / −12 rcc); MEDIA-GATED slice (78 style + 6 rcc decls) remains DEFERRED (D2 — harness blindspot). The xhigh self-review caught the detector over-deleting 48 decls and was fixed before merge (see below).**
+**Status: prereq 1 (narrow harness) DONE 2026-06-25; prereq 2 (hardened parser) BUILT + self-reviewed 2026-06-25; TOP-LEVEL slice EXECUTED on branch `refactor/phase3.6-css-collapse` in PR #105 (style.css −3,631 dead / −2,844 `!important`; rcc −68 / −68; + empty husks −509 style / −12 rcc); MEDIA-GATED slice EXECUTED 2026-06-25 (see pass 3 below). The xhigh self-review caught the detector over-deleting 48 decls and was fixed before merge (see below).**
+
+**Update 2026-06-25 (pass 3) — media-gated slice swept + Surfaces 1-3 `!important`-strip executed (branch).**
+
+Two render-neutral tranches landed on `refactor/phase3.6-css-collapse`:
+
+- **`d719707` — media-gated redecl sweep (−182 lines).** `find-dead-redeclarations.js --media`
+  excised the 78 style.css + 6 rcc media-gated dead decls (provably cascade-dead losers: same
+  selector + same `@media`/`@container` context, later/higher-importance winner preserved);
+  `--empty-rules` then cleared the 35+2 husks the sweep emptied. Verified: re-scan 0 dead / 0
+  husks / braces balanced; css-probe `--check` byte-identical incl. narrow bands N0-N4
+  (1280/1160/890/740/700px, which exercise the touched `@media` regions); visual-diff 35/35.
+  This closes the §14 redeclaration lever (top-level + media-gated both done).
+
+- **`3385050` — Surfaces 1-3 `!important`-strip on `#courseTrackerView` + `#preferenceView`
+  (−384 `!important`, line-neutral).** Both views are cross-file-isolated (0 refs in rcc /
+  ui-friction / inline css), so their `!important` only defended within-`style.css`. Of 476
+  view-scoped `!important` decls, **384 had no surviving competitor** (downgrade changes no
+  cascade winner) and were stripped; **92 are load-bearing** (a base / doubled-ID rule wins
+  once the flag drops — kept, incl. 2 `:active` decls). The empirical NOCOMP count (~81%)
+  came in ABOVE the planning-grade 74.9%/69.8% estimate. courseTracker 254→52, preference
+  236→41. Verified by a new exhaustive computed-style arbiter (`tools/_view-cascade-probe.js`,
+  committed `a71dbda`): 108 states = themes{dawn,dusk,dark} × viewports{1280,1180,980,760} ×
+  interactions{rest,hover,focus,tone}, geometry + 72 props/element + `::before`/`::after`,
+  WAAPI-frozen, sensitivity-tested — **byte-identical**; plus visual-diff 35/35
+  (12/12b-e/13 @ 0.000%; view 12 @ 0.004% pre-existing text-AA noise).
+  This is the spec §3 Surfaces 1-3 pilot.
+
+- **`26c4370` — Surface 4 `#settingsView` strip (−21 `!important`).** Also cross-file-isolated
+  (42 refs in style.css, 0 elsewhere). Of 87 candidates only **21 had no competitor**; **66 are
+  load-bearing** — settings is a glass-paint fortress (background/border/box-shadow/backdrop-filter
+  each beaten by a base card/button rule once the flag drops), a far lower NOCOMP rate than
+  courseTracker/preference. Force-kept 1 cross-view group shared with `#learnView`/`#topbarCloseBtn`
+  (outside probe coverage). Arbiter generalized (`537d3aa`): added `:active` probing + fail-fast
+  interaction queries; 120 states byte-identical (settings controls carry GLOBAL :hover/:focus/:active
+  competitors, so those states are probed); visual-diff 35/35 (05-settings @ 0.000%).
+
+- **`b0c1871` — `#mistakeNotebookView` strip (−193 `!important`).** Isolated (186 refs, 0 elsewhere).
+  447 candidates → **193 strippable, 254 load-bearing** (43%). Arbiter extended (`5bec499`): probes a
+  seeded open-case fixture (03b localStorage pattern) across 5 viewports incl. 820px, snapshots
+  `::placeholder`, re-opens the case after resize. Converged in 2 passes — the first keep-set under-kept
+  layout roots (a stripped box-model `!important` shifted container heights 1px), caught by the probe's
+  reflow flips and fixed with a "keep box-model candidates on any rect-flipped element" guard. 150 states
+  byte-identical; visual-diff 35/35 (03/03b @ 0.000%).
+
+Post-tranche file state: style.css 33,353 lines / 9,694 `!important` / 404 doubled-IDs;
+rcc 1,602 lines / 888 `!important`. Total `!important` stripped on isolated views this session: 598
+(courseTracker/preference 384 + settings 21 + mistakeNotebook 193) + 78 dead `!important` swept.
+
+**Remaining `!important`-strip targets (all reuse the cascade arbiter — edit its `VIEWS`):**
+`#feedbackView` (528, isolated — docs §3a.i make a computed-style probe MANDATORY here; visual-diff has
+a documented blindspot on feedback cascade; needs a seeded multi-tone thread fixture), `.app .sidebar`
+(656, NOT isolated — needs multi-view probe coverage), and the §3d composer chain (hardest, cross-file
+lockstep — needs FlyM1ss's risk-appetite call).
 
 **Update 2026-06-25 (pass 2) — prereq 2 built + self-reviewed, finding corrected, top-level slice executed.**
 
