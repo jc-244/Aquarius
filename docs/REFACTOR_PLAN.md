@@ -371,19 +371,24 @@ orphans** — the residue of the "FINAL/EOF/LOCK" redesign passes (e.g. the
 design; the bytes come from dead-rule deletion. **This vein is now exhausted**
 for the lecture/learn-chrome surfaces.
 
-**The biggest remaining lever is harness-blocked (D2).** The
-redeclaration-pileup pattern (same selector + same property + same `@media`
-context, only the last wins) holds **696 provably-dead `!important`-heavy
-declarations (620 `!important`)** — but **0 are top-level; every one is
-`@media`-nested** (dominated by `max-width: 1024px`). The css-probe/visual-diff
-harnesses render at desktop 1280 only, so none can be verified yet. A
-media-*unaware* detector over-reported 4,422 — **3,726 of those were responsive/
-theme overrides that would have broken if deleted** (proof this lever is a trap
-without viewport-aware verification). Full record + unblock path:
-`docs/phase3_deferred.md` §14.
+**The biggest remaining lever — partly unblocked 2026-06-25.** The
+redeclaration-pileup pattern (same selector + same property + same context, only
+the last wins) holds **696 provably-dead `!important`-heavy declarations (620
+`!important`)**. A media-*unaware* detector over-reported 4,422 — **3,726 of those
+were responsive/theme overrides that would have broken if deleted** (proof this
+lever is a trap without viewport-aware verification). **Correction (verified
+2026-06-25):** the earlier "0 top-level; dominated by `max-width:1024px`" claim was
+a parser artifact — the one `1024px` block touches only the landing page, and the
+mis-grouped dead decls are actually **top-level** (the "Edge tabs v3 → v6" pileup,
+L941+), so a material slice is desktop-visible and sweepable now with the existing
+harness. The genuinely viewport-gated slice (bands 1180/1120/900/820/760/720) is
+now covered: **the narrow-viewport css-probe harness landed** (four states
+N1@1160/N2@890/N3@740/N4@700, negative-control-proven). Full record + the remaining
+hardened-parser prereq: `docs/phase3_deferred.md` §14.
 
-**Remaining buckets:** (1) **narrow-viewport harness coverage** (Step-2,
-per-PR-to-main) → unlocks the 620-`!important` sweep; (2) **`!important`-stripping
+**Remaining buckets:** (1) ~~narrow-viewport harness coverage~~ **DONE** → the
+top-level slice is desktop-sweepable now; the media-gated slice needs the hardened
+parser (§14 prereq 2); (2) **`!important`-stripping
 on DOM-isolated views** (`#courseTrackerView` 74.9% NOCOMP, `#preferenceView`
 69.8%) — line-neutral but *cascade-changing*, needs an explicit risk decision;
 (3) **§3d composer chain** — hardest, cross-file lockstep. Strategy detail in
@@ -437,11 +442,13 @@ and you're chasing specificity through 10 files instead of one.
 1. ~~**Finish the cheap §3c.i / §3b tail.**~~ **DONE** — confirmed at the
    D3 zero-candidate ceiling (commit c45b205, pass 8); the home-Ask
    shadowed-banner vein is mined out under current verification discipline.
-2. ~~**Expand the visual-diff harness for state variants.**~~ **DONE (desktop
-   tier)** — shipped the computed-style `tools/css-probe.js` harness (PR #101,
-   states S2/S3/S-page-corner/S12) + the 35-view pixel harness. **Gap:** both
-   render at desktop 1280; **narrow-viewport coverage is the next harness task**
-   and the prerequisite that unblocks the 620-`!important` pileup sweep (§14).
+2. ~~**Expand the visual-diff harness for state variants.**~~ **DONE** — shipped
+   the computed-style `tools/css-probe.js` harness (PR #101, desktop states
+   S2/S3/S12) + the 35-view pixel harness, **then added the narrow-viewport tier**
+   (states N1@1160/N2@890/N3@740/N4@700, sentinel-gated literal probes,
+   negative-control-proven). The viewport-gated half of the 620-`!important` pileup
+   sweep is now verifiable; the remaining gap is non-viewport (chapter-overview /
+   lecture-overlay / `@container` — recorded in §14).
 3. **The big CSS structural attack — IN PROGRESS** on branch
    `refactor/phase3.6-css-collapse` (see the execution-status callout above for
    live numbers). Designed as `docs/PHASE3.6_SPEC.md`. Finding to date: the

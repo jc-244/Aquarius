@@ -1827,7 +1827,40 @@ is attacked, add states S4-S11 (spec §4.2) and re-baseline on pre-collapse main
 
 ## 14. The redeclaration-pileup `!important` lever — DEFERRED (D2), the biggest remaining reduction
 
-**Status: deferred 2026-06-25 (defer rule D2 — harness blindspot).**
+**Status: deferred 2026-06-25 (defer rule D2 — harness blindspot). Prerequisite 1 SATISFIED 2026-06-25 (narrow-viewport css-probe states); prerequisite 2 + a corrected scope below.**
+
+**Update 2026-06-25 — prerequisite 1 satisfied + a correction to the analysis below.**
+
+*Narrow-viewport harness (prereq 1) is now in place.* `tools/css-probe.js` gained an optional
+per-state `viewport:{width,height}` field and four narrow learn-chrome states — N1@1160 (inside
+the ≤1180 band), N2@890 (≤900), N3@740 (≤820, also ≤760), N4@700 (≤720) — pinning only LITERAL
+cascade values (toolbar `grid-template-areas` + `flex-wrap`, toolbar-center `flex-wrap`, and the
+inherited `--learn-edge-tab-top` px custom property). The clamp()/cqi toolbar-center `gap`
+(17.92→16.24→12.46px) is deliberately NOT probed — it is a layout-derived used value that drifts
+across machines. Re-baselined on pre-collapse main; `--check` is byte-identical across two
+independent runs; a negative control (neutralizing the ≤900 `flex-wrap:wrap !important` rule at
+`app/style.css` L12999) is caught by three states (N2's sentinel + N3/N4 probe diffs), proving
+the harness detects exactly the width-gated deletions this lever performs. **KNOWN GAP (recorded,
+not covered):** chapter-overview book-spread (≤1120/≤760), lecture-overlay nav buttons
+(≤1320/≤900), and collapsed-panel edge tabs (≤900) are absent from a §1.1-1 lesson DOM, and
+`runtime-collapsed.css` responsiveness keys off `@container lecture-panel` (the explain-panel's
+own width, not the viewport) — covering them needs a chapter-overview lesson state and/or a
+container-width driver, a follow-up harness task.
+
+*CORRECTION to "dominated by `@media (max-width:1024px)` (~150 dead)" below (verified on HEAD).*
+There is exactly ONE `@media (max-width:1024px)` block in `app/style.css` (L912–939) and it
+touches ZERO learn-chrome rules and ZERO `!important` — it only restyles `.intro-landing-new`
+(landing hero / ui-mockup / constellation). The ~150 dead decls the throwaway detector attributed
+to 1024px are actually **top-level** (brace depth 0): the "Edge tabs v3 → v6 final-final"
+redeclaration pileup at L941–L1030+ (`.learn-body` custom props + `.learn-explain-toggle-btn` /
+`#learnFocusBtn` / `.learn-side-restore-*` redeclared across successive "vN" rewrites). The buggy
+`@`-context stack never popped the 1024px context after L939, so it mis-labeled top-level dead
+decls as media-gated. **Consequence: a material (still-unquantified) fraction of the 696 is
+desktop-visible and was never actually D2-blocked** — it is verifiable by the EXISTING 1280
+harness and can be swept now, separately from the media-gated slice. The true narrow-viewport
+learn-chrome bands are 1180/1120/900/820/760/720 (inside-media `!important` load
+47/36/99/67/108/64), NOT 1024. The exact top-level-vs-media split awaits prerequisite 2 (the
+hardened parser).
 
 **What:** `app/style.css` carries the "FINAL/EOF/LOCK" redeclaration-pileup pattern the
 spec §0 named: the *same selector* sets the *same property* in multiple rule blocks within
@@ -1860,8 +1893,11 @@ this lever is a trap without viewport-aware verification.
    it against the spec's known ground truth (`.learn-explain-toggle-btn` height redeclared
    11× at (0,1,0)) before trusting it to cut.
 
-**Next-session entry point:** extend `tools/css-probe.js` `PROBE_STATES` with a
-`viewport:{width,height}` field + narrow-viewport learn-view states → `--baseline` on
-pre-collapse main → then build the hardened detector → cut earlier-dead decls on the
-`refactor/phase3.6-css-collapse` branch → `npm run test:css-probe:check` must stay
-byte-identical at every probed viewport. Est. reward: ~620 `!important` + ~696 lines.
+**Next-session entry point:** prerequisite 1 is DONE (the four narrow states above). Remaining:
+(a) the easy half — sweep the **top-level** redeclaration pileup (L941–L1030+ and its kin) using
+the EXISTING 1280 harness; it was never harness-blocked. (b) the hard half — build the
+correctness-hardened parser (prereq 2), then cut the genuinely media-gated earlier-dead decls on
+the `refactor/phase3.6-css-collapse` branch → `npm run test:css-probe:check` must stay
+byte-identical at every probed viewport (the four narrow states + the three desktop states).
+Est. reward: ~620 `!important` + ~696 lines, now split across a desktop-verifiable slice and a
+narrow-viewport-verifiable slice.
