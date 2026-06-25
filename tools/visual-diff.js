@@ -592,7 +592,7 @@ const sharedViews = [
     // tools/fixtures/feedback-board.populated.json into app/users/feedback-
     // board.json so the bridge's /api/feedback GET returns 2 threads + 6
     // replies covering:
-    //   - tone-0..5 across thread 1 (toneForAuthor at app.js L6258 round-
+    //   - tone-0..5 across thread 1 (toneForAuthor in feedback-board.js round-
     //     robins per author per item; thread 1 has 6 distinct authors so
     //     all 6 tones materialize)
     //   - is-left + is-right reply lanes (laneForAuthor alternates each NEW
@@ -639,7 +639,7 @@ const sharedViews = [
         //   - .feedback-reply.feedback-click-reply.is-target (click a reply)
         //   - .feedback-thread-body.feedback-click-reply.is-target (click thread body <p>)
         // Note: .feedback-thread-click-target.is-target IS NOT reachable —
-        // setFeedbackReplyTarget at app.js L6220 looks up
+        // setFeedbackReplyTarget (feedback-board.js) looks up
         // [data-feedback-reply-anchor="${target.id}"]; the thread-head
         // binding passes target.id = item.id (the fixture's thread id), but
         // the click-target div carries data-feedback-reply-anchor="thread"
@@ -1628,7 +1628,7 @@ process.once('SIGTERM', () => signalCleanupRestore('SIGTERM'));
         // selector specificity to win the cascade regardless of order.
         //
         // timezoneId + locale pinned (PR #69 review findings #10, #16) so
-        // formatFeedbackTime (app.js L6182: date.toLocaleString([], {...}))
+        // formatFeedbackTime (feedback-board.js: date.toLocaleString([], {...}))
         // renders byte-identical strings on every machine. Without pinning,
         // view 14b's .feedback-thread-meta width drifts between an author's
         // local TZ and CI's UTC by up to one character per timestamp, which
