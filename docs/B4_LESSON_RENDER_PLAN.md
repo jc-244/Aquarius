@@ -69,7 +69,10 @@ bottom-up** to preserve line numbers.
     do not let it block the cut).
 13. `2422–2436` `moveLearnKnowledgePoint` (include doc comment @2422–2426).
 14. `2496–2507` `buildLessonTestBannerHtml` (static HTML; external callers @3490,
-    @3804 call cross-scope at runtime — safe) + `2509–2526` `syncFocusModeContent`.
+    @3804 call cross-scope at runtime — safe). **2026-06-26 update:** the
+    `2509–2526` `syncFocusModeContent` second half of this entry was deleted
+    as dead code in PR #114 alongside the `#learnFocusModal` removal — no
+    longer in the move scope.
 
 ## State
 
@@ -141,7 +144,7 @@ list.
    module.
 3. `node tools/test-lesson-open-no-hang.js` (needs `npx playwright install
    chromium`) — exercises openLearnMode → parseLessonKnowledgePoints →
-   renderCurrentKnowledgePoint → syncFocusModeContent + KP nav. Run before AND
+   renderCurrentKnowledgePoint + KP nav. Run before AND
    after; must stay green. **This catches cross-file redeclaration** (blank page).
 4. **Stash-diff visual-diff** (not literal 0.000% — lesson views carry 0.06–0.46%
    AA/flake noise, see [[reference-visual-diff-baseline-noise]]): report on main,
@@ -149,12 +152,13 @@ list.
    known per-view noise floor = render-neutral.
 5. **Manual / Playwright interactive smoke** (`npm start`,
    `http://127.0.0.1:9000`): open a cached lesson → KP pager prev/next +
-   page-turn animation → focus-mode modal (decorate + visual-meta) →
-   Start-Quick-Check banner → chapter-overview render (the path that writes the
-   staying state lets AND calls moved `decorateLectureContent`/
-   `enhanceVisualMetadataUI`) → recent-conversations history restore (cross-module
+   page-turn animation → Start-Quick-Check banner → chapter-overview render
+   (the path that writes the staying state lets AND calls moved
+   `decorateLectureContent`/`enhanceVisualMetadataUI`) →
+   recent-conversations history restore (cross-module
    `setLearnLessonContent`/`renderLearnPages` callers). **This is the step that
-   benefits from the owner's eyes.**
+   benefits from the owner's eyes.** *(2026-06-26: focus-mode modal removed
+   in PR #114 — no longer a manual smoke target.)*
 6. Bump cache-buster + add the `<script>` tag + npm-check entry.
 
 ## External callers (all runtime — no TDZ regardless of load order)
@@ -164,8 +168,8 @@ list.
 - `ui-friction-fixes.js` (after app.js): `moveLearnKnowledgePoint` @374 (handler)
   + `parseSectionTitleParts` @36/183/184 (stays).
 - `dispatcher.js` (before app.js): `hydrateInteractiveDemos` is called BY the
-  engine (`renderCurrentKnowledgePoint` @2160, `syncFocusModeContent` @2517)
-  cross-scope; dispatcher loads first so the symbol is available.
+  engine (`renderCurrentKnowledgePoint` @2160) cross-scope; dispatcher loads
+  first so the symbol is available.
 - `interactive-demos/*.js`: call `decodeInlineMarkdownFragment` (stays) at runtime.
 
 ## Source
