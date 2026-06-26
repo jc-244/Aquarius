@@ -1050,6 +1050,178 @@ const sharedViews = [
             });
         });
     } },
+    // View 26 — Page A — FLOW view. Bounds the B4 lesson-render.js
+    // extraction by exercising the KP pager engine through real clicks:
+    // page-frame data-lesson-page must change, prev/next disabled state
+    // must update, the 720ms page-turn animation lock must resolve so
+    // the second click registers. Covers B4 §6 (renderCurrentKnowledgePoint)
+    // + §11 (runLearnPageTurn) + KP-state writes
+    // (learnKnowledgePoints / currentKnowledgePointIndex).
+    //
+    // Placement rationale: AFTER view 22 (which leaves the lesson at the
+    // final 'quiz' KP via advanceLessonUntil). Inserting view 26 between
+    // view 20 and 21 instead perturbed views 21-22 baselines because the
+    // correct hardened flow leaves the lesson at KP 2, while the
+    // original baselines were taken with view 21 starting at KP 0
+    // (post-view-06 state). Running view 26 LAST among Page A lesson
+    // views removes that coupling — only view 23 (textbook-focus modal
+    // overlay) and view 03b (mistake-notebook) come after, and neither
+    // reads lesson chrome / KP state.
+    //
+    // Setup: reset chrome state, clear sidebar-collapsed from view 20,
+    // rewind pager from view 22's final-KP state back to KP 0 via a
+    // waitForFunction-gated prev-loop (gates the 720ms animation lock so
+    // iterations aren't burned on no-op clicks).
+    //
+    // failRatio CALIBRATED: 3 baseline runs all measured 0.000% noise
+    // (the screenshot at KP 2 is fully settled — settle:'lesson' fires
+    // font rasterization + MathJax typesetting before capture). Default
+    // would be 0.500%; we tighten to 0.100% — comfortably above the
+    // 0.061% lesson-AA noise floor recorded for views 06-08 (in case
+    // future Chromium drift surfaces AA jitter on this view too) but
+    // 5x tighter than default so a real KP-render regression surfaces.
+    { name: '26-kp-pager-advance', page: 'A', failRatio: 0.001,
+      setup: async (page) => {
+        await resetLessonChromeState(page);
+        await page.evaluate(() => {
+            document.querySelector('.app')?.classList.remove('sidebar-collapsed');
+            document.getElementById('leftSidebar')?.classList.remove('collapsed');
+            // Defensive: clear any stale stash from a hypothetical prior
+            // run of view 26 on the same shared Page A. Page A persists
+            // across all views per pageMap cache; step 1's assert is the
+            // only writer today, but if step 1 ever early-returns without
+            // writing (e.g. transient empty framePage on a B4 regression),
+            // step 2 could otherwise compare against a stale value.
+            try { delete window.__ftutorFlowKp1Page; } catch (_) {}
+        });
+        // Rewind to KP 0. Mirrors advanceLessonUntil's pattern: capture
+        // current data-lesson-page, click prev, wait for the value to
+        // CHANGE (gates the 720ms learn-page-turn-active animation lock
+        // — a 150ms waitForTimeout undershoots the lock and burns
+        // iterations on no-op clicks). Bounded to 25 iterations.
+        for (let i = 0; i < 25; i++) {
+            const prevPage = await page.evaluate(() =>
+                document.querySelector('#learnExplainContent .lesson-page-frame')
+                    ?.getAttribute('data-lesson-page') || '');
+            const clicked = await page.evaluate(() => {
+                const btn = document.querySelector('#learnKpPrevBtn:not([disabled])');
+                if (!btn) return false;
+                btn.click();
+                return true;
+            });
+            if (!clicked) break;
+            await page.waitForFunction(
+                ({ prev }) => {
+                    const cur = document.querySelector('#learnExplainContent .lesson-page-frame')
+                        ?.getAttribute('data-lesson-page');
+                    return Boolean(cur) && cur !== prev;
+                },
+                { prev: prevPage },
+                { timeout: 2000 },
+            ).catch(() => {});
+        }
+        // Wait for the LAST rewind animation to clear before the flow
+        // begins. Without this, step 0's settle:'rAF' lets step 1's
+        // click fire while isLearnPageTurning is still true (animation
+        // clears at +540ms after the rewind's last click) — the click
+        // silently no-ops and step 1's assert times out.
+        await page.waitForFunction(
+            () => !document.querySelector('#learnExplainContent.learn-page-turn-active'),
+            null,
+            { timeout: 2000 },
+        ).catch(() => {});
+      },
+      flow: { steps: [
+        // Step 0 — assert pager is at KP 0 BEFORE any flow click. prev
+        // disabled / next enabled is the canonical first-page contract
+        // emitted by renderCurrentKnowledgePoint (app.js L2172-2173).
+        {
+            name: 'assert-pager-at-kp-0',
+            action: async () => {},
+            assert: async (p) => p.evaluate(() => {
+                const prev = document.getElementById('learnKpPrevBtn');
+                const next = document.getElementById('learnKpNextBtn');
+                return prev?.disabled === true && next?.disabled === false;
+            }),
+            settle: 'rAF',
+            timeoutMs: 3000,
+        },
+        // Step 1 — first KP advance. Asserts (a) prev enabled (KP-state
+        // write fired) AND (b) stashes KP 1's data-lesson-page so step 2
+        // can prove the frame VALUE changes (not just exists). Without
+        // the stash, a B4 regression that leaves KP 1's frame in DOM but
+        // doesn't re-emit a new one would pass step 2.
+        {
+            name: 'click-next-advance-from-kp-0',
+            action: async (p) => {
+                const ok = await p.evaluate(() => {
+                    const btn = document.querySelector('#learnKpNextBtn:not([disabled])');
+                    if (!btn) return false;
+                    btn.click();
+                    return true;
+                });
+                if (!ok) throw new Error('next button unexpectedly disabled at KP 0');
+            },
+            assert: async (p) => p.evaluate(() => {
+                const prev = document.getElementById('learnKpPrevBtn');
+                const frame = document.querySelector('#learnExplainContent .lesson-page-frame');
+                const framePage = frame?.getAttribute('data-lesson-page');
+                if (prev?.disabled !== false || !framePage) return false;
+                window.__ftutorFlowKp1Page = framePage;
+                return true;
+            }),
+            settle: 'lesson',
+            timeoutMs: 4000,
+        },
+        // Step 2 — second KP advance. Asserts (a) prev enabled, (b)
+        // data-lesson-page DIFFERS from step 1's stash (proves
+        // renderCurrentKnowledgePoint re-emitted a NEW frame, not just
+        // left the old one in DOM). Bounds B4 §11 page-turn AND the
+        // KP-render write-through.
+        //
+        // The action waits for step 1's page-turn animation to clear
+        // before clicking — moveLearnKnowledgePoint (app.js L2429)
+        // early-returns while isLearnPageTurning is true, so a click
+        // mid-animation is a silent no-op and the stale-frame assert
+        // would never pass. The wait is bounded to 2s (lock clears at
+        // +540ms after a click).
+        {
+            name: 'click-next-advance-from-kp-1',
+            action: async (p) => {
+                await p.waitForFunction(
+                    () => !document.querySelector('#learnExplainContent.learn-page-turn-active'),
+                    null,
+                    { timeout: 2000 },
+                ).catch((err) => {
+                    // Don't throw — let the downstream stale-frame assert
+                    // surface the failure. But log so a B4 regression in
+                    // clearLearnPageTurnClasses (which fires the 720ms
+                    // timeout at app.js L2334+) is debuggable without
+                    // chasing the KP-render path first.
+                    console.warn(`[flow:26-kp-pager-advance] learn-page-turn-active never cleared within 2000ms: ${err?.message || err}`);
+                });
+                const ok = await p.evaluate(() => {
+                    const btn = document.querySelector('#learnKpNextBtn:not([disabled])');
+                    if (!btn) return false;
+                    btn.click();
+                    return true;
+                });
+                if (!ok) throw new Error('next button unexpectedly disabled at KP 1');
+            },
+            assert: async (p) => p.evaluate(() => {
+                const prev = document.getElementById('learnKpPrevBtn');
+                const frame = document.querySelector('#learnExplainContent .lesson-page-frame');
+                const framePage = frame?.getAttribute('data-lesson-page');
+                const kp1Page = window.__ftutorFlowKp1Page;
+                return prev?.disabled === false
+                    && Boolean(framePage)
+                    && (!kp1Page || framePage !== kp1Page);
+            }),
+            settle: 'lesson',
+            timeoutMs: 4000,
+        },
+      ] },
+    },
     // View 23 — Page A — show `#textbookFocusModal` + add body class
     // `textbook-focus-active`. The TEXTBOOK FOCUS GLASS LOCK cluster at
     // style.css L42981+ uses `#textbookFocusModal#textbookFocusModal`
