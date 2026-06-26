@@ -96,6 +96,66 @@ const VIEWS = [
       { label: 'input-focus', focus: '#feedbackView .feedback-input' },
       { label: 'textarea-focus', focus: '#feedbackView .feedback-textarea' },
       { label: 'replyinput-focus', focus: '#feedbackView .feedback-reply-input' },
+      // submit btn :active/:disabled (L25240, L25244-25247) are NOT probed
+      // here — synthetic mouse.down + el.disabled=true produced false-positive
+      // flips that didn't match the real submit flow. The 5 lines are
+      // protected by _keep-important.json (now committed; see .gitignore).
+    ],
+  },
+  // -------------------------------------------------------------------------
+  // .app .sidebar — NOT DOM-isolated. The sidebar paints on every navigated
+  // view; cascade competitors live both within the .sidebar subtree (own
+  // descendants) AND in cross-cutting grouped rules (.learn-close, .book-nav-btn,
+  // .feature-close-btn-compact, .syllabus-section, etc.) that share a rule
+  // with sidebar arms — those 51 mixed candidates are force-kept upfront by
+  // _grow-keep-from-report.js's --force-mixed flag. The expanded + collapsed
+  // contexts cover the two sidebar layout modes; the home subtree is the
+  // default after enterGuestMode (no navigation needed).
+  {
+    id: 'sidebar-expanded', root: '.app .sidebar',
+    // ORDER-DEPENDENCE WARNING: this view does NOT navigate or reset DOM state
+    // — it reads the page in whatever state the prior view left active. VIEWS
+    // must keep `feedback` first so sidebar-expanded inherits feedback-active
+    // chrome (a side effect baked into the baseline). Reordering VIEWS or
+    // adding a view between feedback and sidebar-expanded would silently shift
+    // the baseline. A deterministic state-reset (page.evaluate that toggles
+    // view-class via DOM directly without firing app handlers / animations)
+    // is the right long-term fix — recorded as Phase 3.6a §18 in
+    // docs/phase3_deferred.md. Naive `page.click('#navHomeBtn')` triggers
+    // showWelcome() async animations that race the snapshot.
+    //
+    // Real DOM IDs in app/index.html: the prior list named `.sidebar-toggle`,
+    // `#navRecentConversationsBtn`, `#navSettingsBtn` — none exist (real IDs
+    // are `#menuToggleBtn`, `#navRecentBtn`, `#sidebarSettingsBtn`). The
+    // missing selectors silently skipped via present(), so 3 label-cells were
+    // baselined as duplicates of `rest`.
+    interactions: [
+      { label: 'rest' },
+      { label: 'menu-toggle-hover', hover: '#menuToggleBtn' },
+      { label: 'recent-hover', hover: '#navRecentBtn' },
+      { label: 'settings-hover', hover: '#sidebarSettingsBtn' },
+      { label: 'feedback-hover', hover: '.app .sidebar #navFeedbackBtn' },
+    ],
+  },
+  {
+    id: 'sidebar-collapsed', root: '.app .sidebar',
+    preNav: async (page) => {
+      await page.evaluate(() => {
+        document.querySelector('.app')?.classList.add('sidebar-collapsed');
+        document.getElementById('leftSidebar')?.classList.add('collapsed');
+      });
+    },
+    // Ensure the collapsed class is reapplied after each viewport resize —
+    // some app-level resize handlers reset chrome state.
+    ensureState: async (page) => {
+      await page.evaluate(() => {
+        document.querySelector('.app')?.classList.add('sidebar-collapsed');
+        document.getElementById('leftSidebar')?.classList.add('collapsed');
+      });
+    },
+    interactions: [
+      { label: 'rest' },
+      { label: 'menu-toggle-hover', hover: '#menuToggleBtn' },
     ],
   },
 ];
@@ -152,9 +212,11 @@ async function captureView(page, view, snapFn) {
   await page.setViewportSize({ width: 1280, height: 800 });
   await settle(page);
   if (view.preNav) await view.preNav(page);   // e.g. seed a localStorage fixture before opening
-  await page.click(view.nav);
-  await page.waitForSelector(`${view.root}:not(.hidden)`, { timeout: 8000 });
-  await page.waitForFunction(view.ready, { timeout: 8000 });
+  if (view.nav) {
+    await page.click(view.nav);
+    await page.waitForSelector(`${view.root}:not(.hidden)`, { timeout: 8000 });
+  }
+  if (view.ready) await page.waitForFunction(view.ready, { timeout: 8000 });
 
   for (const theme of THEMES) {
     for (const vp of VIEWPORTS) {
@@ -316,7 +378,25 @@ process.once('SIGTERM', () => cleanup('SIGTERM'));
     }
     return true;
   }
-  const rectEq = (a, b) => a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) <= PX_TOL);
+  const rectEq = (a, b) => {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      const va = a[i], vb = b[i];
+      // SVG elements expose `undefined` for offsetLeft/Top/Width/Height; both
+      // sides see the same undefined → null round-trip, so treat null==null
+      // as equal explicitly (`Math.abs(null - null)` is 0 but NaN once one
+      // side survives as undefined in memory).
+      const aNil = va == null, bNil = vb == null;
+      if (aNil !== bNil) return false;
+      if (aNil && bNil) continue;
+      // Reject non-finite values explicitly — `Math.abs('auto' - 0)` is NaN,
+      // and `NaN > PX_TOL` is false, which would silently treat a real flip
+      // as equal. Guard so any non-numeric survivor flags as unequal.
+      if (!Number.isFinite(va) || !Number.isFinite(vb)) return false;
+      if (Math.abs(va - vb) > PX_TOL) return false;
+    }
+    return true;
+  };
 
   const diffs = [];
   for (const state of Object.keys(base)) {
@@ -333,15 +413,38 @@ process.once('SIGTERM', () => cleanup('SIGTERM'));
       if (!valEq(eb.placeholder, ec.placeholder)) diffs.push(`${tag} | ::placeholder "${eb.placeholder}" → "${ec.placeholder}"`);
     }
   }
-  const lines = [`# view-cascade-probe report`, ``, `states: ${Object.keys(base).length}  props/element: ${PROP_LIST.length}`, ``];
+  const header = [`# view-cascade-probe report`, ``, `states: ${Object.keys(base).length}  props/element: ${PROP_LIST.length}`, ``];
   if (diffs.length === 0) {
-    lines.push(`**PASS — byte-identical across all states.**`);
+    header.push(`**PASS — byte-identical across all states.**`);
+    fs.writeFileSync(REPORT, header.join('\n') + '\n');
     console.log(`\n[view-probe] PASS — ${Object.keys(base).length} states byte-identical`);
   } else {
-    lines.push(`**FAIL — ${diffs.length} cascade flips:**`, ``, ...diffs.map((d) => `- ${d}`));
+    // Stream the diffs to disk in chunks — spreading 100k+ lines into one push
+    // overflows the call stack, and diffs.join() builds a huge intermediate string.
+    // Wrap in try/catch so a transient Windows EBUSY (AV holding the file briefly
+    // between the truncate-write and the append-open) doesn't leave a truncated
+    // report on disk that poisons the next grow-keep parse.
+    try {
+      fs.writeFileSync(REPORT, header.join('\n') + '\n' + `**FAIL — ${diffs.length} cascade flips:**\n\n`);
+      const fd = fs.openSync(REPORT, 'a');
+      try {
+        const CHUNK = 1000;
+        for (let i = 0; i < diffs.length; i += CHUNK) {
+          const slice = diffs.slice(i, i + CHUNK);
+          let s = '';
+          for (const d of slice) s += '- ' + d + '\n';
+          fs.writeSync(fd, s);
+        }
+      } finally { fs.closeSync(fd); }
+    } catch (err) {
+      // Partial report on disk would mislead the next iteration; clean it up
+      // and surface the error so the run aborts visibly rather than silently.
+      try { fs.unlinkSync(REPORT); } catch (_) {}
+      console.error(`[view-probe] failed to write report: ${err.message}`);
+      process.exit(2);
+    }
     console.log(`\n[view-probe] FAIL — ${diffs.length} flips (see ${REPORT})`);
-    for (const d of diffs.slice(0, 40)) console.log(`  ✗ ${d}`);
+    for (const d of diffs.slice(0, 20)) console.log(`  ✗ ${d}`);
   }
-  fs.writeFileSync(REPORT, lines.join('\n') + '\n');
   process.exit(diffs.length ? 1 : 0);
 })();
