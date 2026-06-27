@@ -23,6 +23,17 @@ triaged backlog.
 
 ---
 
+> ## 🔄 RECONCILED 2026-06-27 (git HEAD `2d7a757` = origin/main)
+>
+> This doc's §1 checklist + §3 workstreams stay valid; only counts/status move since the 2026-06-25 draft:
+> - **#118** (`2d7a757`) shipped a **partial** feedback+sidebar strip (feedback 528→472, sidebar 656→620) — so **A1 and A3 are STARTED, not complete**; A1 is no longer "the next untouched target."
+> - **Workstream B is COMPLETE** — B4 (`app/lesson-render.js`) shipped in **#116**; `app/app.js` = **5,720** lines (marginally above the ~5,100 stretch target; "reasonably split" met). The §1 `app.js` box can be checked.
+> - **Landmine C1** (unclosed `.learn-followup-bar {` brace, §C1) shipped in **#111** (`bd56ef9`). **C2** (panelFocus desync) still OPEN — still gates A4.
+> - Current metrics (supersede §2's 06-25 table): `app/style.css` **32,279** lines / **9,286** `!important`-lines / **404** doubled-IDs; `runtime-collapsed.css` **1,523** / **876** / **58**.
+> - §2 per-view dispositions are git-CONFIRMED (per-view trajectory in `PHASE3.6_SPEC.md` top STATUS block): settings & MN were ✅ stripped by #106 — **do not re-seed them**. Genuinely-next strip = **A1 `#feedbackView` completion**.
+
+---
+
 ## 0. Scope decisions (locked 2026-06-25 with FlyM1ss)
 
 | # | Decision | Choice |
@@ -186,7 +197,12 @@ selectors** — a true cross-file specificity war. Five named war-pairs
 **Invariant to preserve on every pair:** *style.css effective specificity > runtime-collapsed effective specificity* (runtime loads last).
 **Gate:** full css-probe S2–S12 byte-identical (A0) — this is the load-bearing gate; visual-diff is catch-all only.
 
-#### A5 — Media-gated dead-redeclaration slice (78 style + 6 runtime)
+#### A5 — Media-gated dead-redeclaration slice (78 style + 6 runtime) — ✅ SHIPPED in #106
+
+> **✅ DONE (#106, `6593c19`):** the media-gated sweep (`find-dead-redeclarations.js
+> --media`, 78 dead style decls / 72 `!important` + 6 runtime) shipped as #106's first
+> sub-commit. The prose below is historical; this box can be checked.
+
 
 Deferred from #105 (which swept the ~98% top-level slice). The 78 sit on
 **unprobed selectors** (home-ask/feedback/login/MN/chapter-overview/settings)

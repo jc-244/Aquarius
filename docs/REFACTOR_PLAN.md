@@ -2,7 +2,7 @@
 
 Owner: FlyM1ss
 Started: 2026-06-19
-Last refreshed: 2026-06-25 (Phase 3.6 structural attack underway on branch — see the "Phase 3.6 execution status" callout in Forward outlook)
+Last refreshed: 2026-06-27 — Phase 3.6 partially merged to main (#105/#106/#118); Workstream B (app.js split) COMPLETE (#116). Canonical current status: `docs/REFACTOR_DONE.md`. (The 2026-06-25 "Phase 3.6 execution status" callout in Forward outlook is a frozen branch-era snapshot — see its reconciliation note.)
 Status:
 
 - **Phase 0** merged (#15).
@@ -353,6 +353,14 @@ Recorded 2026-06-24 in response to the question "when can we split the
 couple monoliths into smaller files, or should we?".
 
 ### Phase 3.6 execution status (2026-06-25) — key findings first
+
+> **🔄 RECONCILED 2026-06-27:** the text below is a frozen 2026-06-25 branch-era
+> snapshot (it describes #105 as "open on branch" and CT/preference/§3d as future).
+> Since then **#106** (`6593c19`) stripped `!important` on FOUR isolated views
+> (CT/pref/settings/MN, −598) and **#118** (`2d7a757`) did a partial feedback+sidebar
+> strip — both merged to `origin/main`; Workstream B is COMPLETE (#116). Authoritative
+> current status: **`docs/REFACTOR_DONE.md`** + `docs/PHASE3.6_SPEC.md` top STATUS
+> block. Read the snapshot below for the technique/findings, not the status.
 
 Step 3 below ("the big CSS structural attack") is **PR #105 on branch
 `refactor/phase3.6-css-collapse`** (open for review). Cumulative, every commit

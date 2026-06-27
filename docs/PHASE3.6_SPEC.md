@@ -11,6 +11,48 @@ doubled-ID and `!important` declaration, and stress-tested the `@layer`
 alternative. Numbers below are grep/cascade-resolver verified; treat per-surface
 percentages as planning-grade, not per-line ground truth.
 
+> ## ⚠️ STATUS RECONCILIATION — 2026-06-27 (read this first)
+>
+> **This spec's forward-looking prose (§3 surface order, §6 execution table + AFK
+> "branch-only" constraint, §6.3/§6.3c "remaining"/"natural seam") is a FROZEN
+> 2026-06-24/25 branch-era snapshot. It never recorded what actually merged.** For
+> authoritative current status use **`docs/REFACTOR_DONE.md`** (the live "Definition
+> of Done"); where it and this spec disagree, REFACTOR_DONE wins. Reconciled against
+> `git` HEAD `2d7a757` (origin/main).
+>
+> **What actually merged to main (incremental PRs — the "one mega-PR when complete"
+> constraint in §6 was abandoned and is SUPERSEDED):**
+> - `#105` (`da9fe92`) — −10k-line dead-CSS / redeclaration / doubled-ID collapse.
+> - `#106` (`6593c19`) — `!important` strip on **FOUR** DOM-isolated views (NOT the
+>   two its §6 row names): courseTracker, preference, **settings**, **mistakeNotebook**
+>   (−598 decls) via the `_view-cascade-probe.js` arbiter. `PHASE3.6A_PLAN.md` had this right.
+> - `#118` (`2d7a757`) — **partial** feedback + sidebar strip (−92 only; far from done).
+> - `#111` (`bd56ef9`) — landmine C1 (unclosed `.learn-followup-bar {` brace) deleted.
+>
+> **Per-view `!important` trajectory (git-measured — THE antidote to re-seeding
+> already-done surfaces):**
+>
+> | View | pre-#105 | now (HEAD) | Disposition |
+> |---|--:|--:|---|
+> | `#courseTrackerView` | 254 | **52** | ✅ DONE (#106, full arbiter) |
+> | `#preferenceView` | 243 | **41** | ✅ DONE (#106, full arbiter) |
+> | `#settingsView` | 100 | **66** | ✅ stripped by #106 (−34); 66 ≈ DEFENSIVE floor — a fresh strip is a **NO-OP** |
+> | `#mistakeNotebookView` | 560 | **254** | ✅ stripped by #106 (−211); verify floor |
+> | `#feedbackView` | 651 | **472** | ◐ PARTIAL (#118 −56) — A1 strip not complete |
+> | `.app .sidebar` | 769 | **620** | ◐ BARELY (#118 −36) — A3 blocked on arbiter overlay mode |
+> | `#learnView` (incl §3d) | 5776 | **3469** | ◐ bulk untouched — A4 composer chain (hardest, last) |
+>
+> **Totals:** style.css 42,991→**32,279** lines, 14,948→**9,286** `!important`-lines,
+> 608→**404** doubled-IDs; runtime-collapsed 1,158→**876** `!important`, 58→58 doubled.
+>
+> **Process guard (why this block exists):** the Trellis trial seeded a task off this
+> spec's §6.3 prose + §3 surface order and TWICE landed on already-merged work
+> (courseTracker/preference, then settings). **Before seeding ANY task from a
+> CSS-collapse plan, reconcile against git** — `git merge-base --is-ancestor` for the
+> cited commit AND a per-view `!important` count (the metric is ground truth; the prose
+> is narration). The genuinely-next strip is **`#feedbackView` completion**
+> (REFACTOR_DONE §A1), not any view in the ✅ rows above.
+
 ## 0. Problem statement
 
 `app/style.css` is 42,991 lines carrying **14,948 `!important` lines**

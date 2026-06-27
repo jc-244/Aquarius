@@ -5,6 +5,15 @@ Drafted: 2026-06-26 (AFK loop session)
 Continues `docs/PHASE3.6_SPEC.md` §6 surface execution (PRs #105/#106 already
 shipped). Companion to `docs/phase3_deferred.md` §14 (remaining buckets).
 
+> **⚠️ STATUS 2026-06-27:** the feedback+sidebar strip planned here shipped only
+> **PARTIALLY** as **#118** (`2d7a757`, −92 total): `#feedbackView` 528→472,
+> `.app .sidebar` 656→620. **Both surfaces remain OPEN** — feedback (A1) is not
+> arbiter-complete; sidebar (A3) is still blocked on the §2.2 arbiter-overlay
+> extension. Authoritative current status: `docs/REFACTOR_DONE.md` §A1/§A3 +
+> `PHASE3.6_SPEC.md` top STATUS block (git HEAD `2d7a757`). NB: the §0 line claiming
+> #106 also covered settings/mistakeNotebook is **CORRECT** (git-confirmed: settings
+> 100→66, MN 465→254) — those two are done; do not re-seed them.
+
 ## 0. What this is
 
 Phase 3.6a is the next slice of the CSS structural collapse: the

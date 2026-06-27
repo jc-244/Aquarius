@@ -6,6 +6,12 @@ Lists everything intentionally left unfinished, with the rationale and a
 suggested next-session entry point. Use this as the starting point for
 "Phase 3.5" (or fold the largest items into Phase 4 scoping).
 
+> **🔄 RECONCILED 2026-06-27:** this is a large 2026-06-21-era punch-list and many
+> items have since shipped (#105/#106/#111/#116/#118). Do NOT treat any item here as
+> open without checking git first. Authoritative current refactor status:
+> **`docs/REFACTOR_DONE.md`** (live Definition of Done) + `docs/PHASE3.6_SPEC.md` top
+> STATUS block (git HEAD `2d7a757`).
+
 ---
 
 ## 1. PR #21 follow-ups
